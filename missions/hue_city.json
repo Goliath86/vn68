@@ -1,0 +1,131 @@
+{
+  "name": "Hue City — Distretto della Cittadella",
+  "description": "Febbraio 1968. Le forze NVA si sono barricato nella Cittadella imperiale. Attraversate il Fiume Profumo e riprendete il cuore della città.",
+  "width": 960,
+  "height": 768,
+  "tileSize": 64,
+  "cols": 15,
+  "rows": 12,
+
+  "tileTypes": {
+    "W": { "id": "wall",     "label": "Mura Cittadella",  "moveCost": 0, "coverBonus": 0, "color": "#4a4030", "impassable": true },
+    "T": { "id": "temple",   "label": "Palazzo/Tempio",   "moveCost": 1, "coverBonus": 2, "color": "#7a5c28" },
+    "G": { "id": "garden",   "label": "Giardino",         "moveCost": 1, "coverBonus": 1, "color": "#3a5a20" },
+    "U": { "id": "street",   "label": "Strada Urbana",    "moveCost": 1, "coverBonus": 0, "color": "#5a5040" },
+    "R": { "id": "river",    "label": "Fiume Profumo",    "moveCost": 0, "coverBonus": 0, "color": "#1a4d7a", "impassable": true },
+    "F": { "id": "bridge",   "label": "Ponte",            "moveCost": 2, "coverBonus": 0, "color": "#8a7050" },
+    "B": { "id": "building", "label": "Edificio",         "moveCost": 1, "coverBonus": 3, "color": "#3a3030" },
+    "D": { "id": "debris",   "label": "Macerie",          "moveCost": 2, "coverBonus": 2, "color": "#6a5040" },
+    "P": { "id": "plaza",    "label": "Piazza",           "moveCost": 1, "coverBonus": 0, "color": "#9a8060" },
+    "O": { "id": "objective","label": "Sala del Trono",   "moveCost": 1, "coverBonus": 0, "color": "#cc9900" }
+  },
+
+  "grid": [
+    ["W","W","W","W","W","W","W","W","W","W","W","W","W","W","W"],
+    ["W","T","T","G","G","T","T","T","T","G","G","T","T","T","W"],
+    ["W","G","T","G","G","G","T","O","T","G","G","G","T","G","W"],
+    ["W","T","G","T","G","T","G","G","G","T","G","T","G","T","W"],
+    ["W","W","F","W","W","W","W","W","W","W","W","W","F","W","W"],
+    ["U","U","U","U","U","U","P","P","U","U","U","U","U","U","U"],
+    ["R","R","F","R","R","R","R","R","R","R","R","R","F","R","R"],
+    ["U","U","U","B","B","U","U","U","B","B","U","U","U","U","U"],
+    ["U","B","U","U","D","D","U","U","D","D","U","U","B","U","U"],
+    ["U","U","U","B","U","U","P","P","U","U","B","U","U","U","U"],
+    ["D","U","B","U","U","D","U","U","D","U","B","U","U","D","U"],
+    ["U","U","U","U","U","U","U","U","U","U","U","U","U","U","U"]
+  ],
+
+  "playerStart": [
+    { "col": 5, "row": 11 },
+    { "col": 6, "row": 11 },
+    { "col": 7, "row": 11 },
+    { "col": 8, "row": 11 }
+  ],
+
+  "vcSpawnZones": [
+    { "colMin": 1,  "colMax": 13, "rowMin": 1, "rowMax": 3  },
+    { "colMin": 1,  "colMax": 12, "rowMin": 7, "rowMax": 10 }
+  ],
+  "vcCount": 8,
+
+  "objectives": {
+    "recon": [
+      { "col": 2,  "row": 4,  "label": "Porta Sud" },
+      { "col": 7,  "row": 2,  "label": "Sala del Trono" },
+      { "col": 7,  "row": 6,  "label": "Ponte Centrale" }
+    ],
+    "search_destroy": {
+      "eliminateAll": false,
+      "minKills": 5
+    },
+    "rescue_pilot": {
+      "pilotCol": 7, "pilotRow": 2,
+      "extractCol": 7, "extractRow": 11
+    },
+    "capture_objective": [
+      { "col": 7, "row": 2, "label": "Sala del Trono", "holdTurns": 3 }
+    ]
+  },
+
+  "supportedMissions": ["recon", "search_destroy", "rescue_pilot", "capture_objective"],
+
+  "ambient": "missions/hue_city_ambient.ogg",
+  "ambushChance": 0.20,
+  "reinforcementTurn": 4,
+  "reinforcementCount": 2,
+
+  "translations": {
+    "it": {
+      "name": "Hue City — Distretto della Cittadella",
+      "description": "Febbraio 1968. Le forze NVA si sono barricato nella Cittadella imperiale. Attraversate il Fiume Profumo e riprendete il cuore della città.",
+      "tileLabels": {
+        "wall":      "Mura Cittadella",
+        "temple":    "Palazzo/Tempio",
+        "garden":    "Giardino",
+        "street":    "Strada Urbana",
+        "river":     "Fiume Profumo",
+        "bridge":    "Ponte",
+        "building":  "Edificio",
+        "debris":    "Macerie",
+        "plaza":     "Piazza",
+        "objective": "Sala del Trono"
+      },
+      "objectives": {
+        "recon": [
+          { "label": "Porta Sud" },
+          { "label": "Sala del Trono" },
+          { "label": "Ponte Centrale" }
+        ],
+        "capture_objective": [
+          { "label": "Sala del Trono" }
+        ]
+      }
+    },
+    "en": {
+      "name": "Hue City — Citadel District",
+      "description": "February 1968. NVA forces have barricaded themselves in the Imperial Citadel. Cross the Perfume River and retake the heart of the city.",
+      "tileLabels": {
+        "wall":      "Citadel Wall",
+        "temple":    "Palace/Temple",
+        "garden":    "Garden",
+        "street":    "Urban Street",
+        "river":     "Perfume River",
+        "bridge":    "Bridge",
+        "building":  "Building",
+        "debris":    "Rubble",
+        "plaza":     "Plaza",
+        "objective": "Throne Room"
+      },
+      "objectives": {
+        "recon": [
+          { "label": "South Gate" },
+          { "label": "Throne Room" },
+          { "label": "Central Bridge" }
+        ],
+        "capture_objective": [
+          { "label": "Throne Room" }
+        ]
+      }
+    }
+  }
+}

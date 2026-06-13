@@ -1,0 +1,22 @@
+[
+  {
+    "file": "rung_sat.json",
+    "icon": "🌿",
+    "color": "#2d5a1b",
+    "theaterColor": "#2d5a1b",
+    "labels": {
+      "it": { "label": "Rung Sat",  "subtitle": "Delta del Mekong · 1967",    "theater": "GIUNGLA" },
+      "en": { "label": "Rung Sat",  "subtitle": "Mekong Delta · 1967",         "theater": "JUNGLE"  }
+    }
+  },
+  {
+    "file": "hue_city.json",
+    "icon": "🏯",
+    "color": "#4a4030",
+    "theaterColor": "#5a4a30",
+    "labels": {
+      "it": { "label": "Hue City",  "subtitle": "Cittadella Imperiale · 1968", "theater": "URBANO"  },
+      "en": { "label": "Hue City",  "subtitle": "Imperial Citadel · 1968",     "theater": "URBAN"   }
+    }
+  }
+]

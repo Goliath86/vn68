@@ -1,0 +1,210 @@
+{
+  "_meta": {
+    "lang": "it",
+    "name": "Italiano",
+    "version": "1.0.0"
+  },
+
+  "header": {
+    "title": "NAM '68",
+    "mission_initial": "CARICA UNA MISSIONE",
+    "label_turn": "TURNO",
+    "label_phase": "FASE",
+    "label_vc_remain": "VC RIMASTI"
+  },
+
+  "panels": {
+    "squad": "◈ SQUADRA",
+    "selected_unit": "◈ UNITÀ SELEZIONATA",
+    "actions": "◈ AZIONI",
+    "dice": "◈ TIRO DADI",
+    "objective": "◈ OBIETTIVO",
+    "sitrep": "◈ SITREP — RADIO LOG"
+  },
+
+  "buttons": {
+    "move": "Muovi (2AP)",
+    "attack": "Attacca (1AP)",
+    "special": "Abilità spec.",
+    "special_with_label": "{label} (1AP)",
+    "end_turn": "Fine turno",
+    "roll_dice": "⚄ LANCIA DADO",
+    "new_mission": "↺ NUOVA MISSIONE",
+    "start_mission": "▶ INIZIA MISSIONE",
+    "next": "AVANTI ▶",
+    "change_theater": "← Cambia teatro"
+  },
+
+  "phases": {
+    "player": "GIOCATORE",
+    "enemy": "VIETCONG"
+  },
+
+  "units": {
+    "no_unit_selected": "Seleziona un'unità",
+    "no_unit_selected_long": "Seleziona un'unità sulla mappa o dalla lista",
+    "classes": {
+      "assault": {
+        "name": "Assalto",
+        "symbol": "A",
+        "desc": "Forte in attacco ravvicinato, mediocre copertura",
+        "special_label": "Fuoco Soppressivo"
+      },
+      "sniper": {
+        "name": "Cecchino",
+        "symbol": "S",
+        "desc": "Gittata massima, fragile a corto raggio",
+        "special_label": "Overwatch"
+      },
+      "engineer": {
+        "name": "Geniere",
+        "symbol": "G",
+        "desc": "Può rimuovere bunker e aprire passaggi",
+        "special_label": "Demolizione"
+      },
+      "medic": {
+        "name": "Medico",
+        "symbol": "M",
+        "desc": "Cura alleati, debole in combattimento",
+        "special_label": "Primo Soccorso"
+      }
+    },
+    "soldier_names": [
+      "Cpl. Hayes", "Sgt. Kovacs", "Pvt. Morales", "Cpt. Briggs",
+      "Pvt. Tucker", "Sgt. Webb", "Cpl. Diaz", "Lt. Burns"
+    ],
+    "vc_names": ["Guerrigliero", "Cecchino VC", "Pattuglia VC", "Comandante VC"],
+    "vc_reinforcement_name": "Rinforzo VC",
+    "status": {
+      "kia": "KIA",
+      "overwatch_tag": "OW",
+      "carry_pilot": "✈ Trasporta pilota",
+      "in_overwatch": "🔭 IN OVERWATCH",
+      "special_used": "Abilità usata",
+      "special_available": "Spec: {label}"
+    }
+  },
+
+  "missions": {
+    "recon": {
+      "label": "Ricognizione",
+      "icon": "🔭",
+      "desc": "Esplora tutte le zone indicate mantenendo la squadra operativa"
+    },
+    "search_destroy": {
+      "label": "Search & Destroy",
+      "icon": "💥",
+      "desc": "Elimina il numero richiesto di Vietcong o neutralizzali tutti"
+    },
+    "rescue_pilot": {
+      "label": "Recupero Pilota",
+      "icon": "🪂",
+      "desc": "Localizza il pilota abbattuto e scortalo al punto di estrazione"
+    },
+    "capture_objective": {
+      "label": "Conquista Obiettivo",
+      "icon": "🎯",
+      "desc": "Occupa e mantieni la posizione obiettivo per il numero di turni richiesto"
+    }
+  },
+
+  "modal": {
+    "select_theater_title": "SELEZIONA TEATRO",
+    "select_theater_desc": "Scegli il campo operativo per questa missione",
+    "briefing_title": "BRIEFING MISSIONE",
+    "loading": "Caricamento in corso..."
+  },
+
+  "gameover": {
+    "win_title": "MISSIONE COMPIUTA",
+    "lose_title": "MISSIONE FALLITA",
+    "win_desc": "Operazione conclusa con successo. Turno {turn}. VC eliminati: {vc}. Sopravvissuti: {survive}/4.",
+    "lose_desc": "La squadra è stata annientata. Turno {turn}. VC eliminati prima della fine: {vc}."
+  },
+
+  "tabs": {
+    "squad": "SQUADRA",
+    "actions": "AZIONI",
+    "dice": "DADO",
+    "objective": "OBJ",
+    "log": "LOG"
+  },
+
+  "log": {
+    "mission_start": "=== MISSIONE INIZIATA ===",
+    "mission_type": "Tipo: {type}",
+    "enemy_deployed": "Truppe nemiche: {count} Vietcong in campo",
+    "unit_move": "{name} si muove in ({col},{row}) [-{ap}AP]",
+    "overwatch_fire": "{name} OVERWATCH: fuoco su {target}!",
+    "hit_damage": "Colpito! -{dmg}HP",
+    "unit_eliminated": "{name} ELIMINATO",
+    "pilot_found": "{name} ha trovato il PILOTA! Portalo all'estrazione.",
+    "pilot_extracted": "PILOTA ESTRATTO! Missione completata!",
+    "zone_scouted": "Zona {label} rilevata!",
+    "objective_held": "Obiettivo \"{label}\" tenuto per {held}/{total} turni",
+    "player_turn_end": "--- Fine turno giocatore ---",
+    "vc_turn_start": "--- Turno VC ---",
+    "reinforcements": "RINFORZI VC in arrivo! +{count} guerriglieri",
+    "vc_turn_end": "━━━ Fine turno VC — Turno {turn} completato ━━━",
+    "player_turn_start": "══ Turno {turn} — Fase Giocatore ══",
+    "ambush": "IMBOSCATA! {name} attacca {target}!",
+    "vc_patrol": "{name} pattuglia",
+    "vc_attack": "{name} attacca {target}",
+    "vc_advance": "{name} avanza verso {target} (distanza: {dist})",
+    "vc_fire": "{name} apre il fuoco su {target}",
+    "attack_prompt": "{attacker} attacca {defender} — LANCIA IL DADO",
+    "attack_dice_context": "Attacco di {name}",
+    "overwatch_dice_context": "Overwatch: {name}",
+    "attack_result": "→ Tiro: {dice}={roll} (+{atk} ATK) vs {save} (DEF) → {result}",
+    "attack_hit": "COLPITO! -{dmg}HP",
+    "attack_miss": "MANCATO",
+    "out_of_range": "{name}: fuori gittata ({range}/{max})",
+    "overwatch_set": "{name} in OVERWATCH — attacca chiunque si muova nel range",
+    "medic_heal": "{name} cura {target}: +{healed}HP ({current}/{max})",
+    "demolition_start": "{name} tenta la demolizione — LANCIA IL DADO",
+    "demolition_success": "Bunker demolito!",
+    "demolition_fail": "Demolizione fallita — il bunker regge",
+    "dice_prompt": "⚄ {context} — lancia {count} dado",
+    "dice_result": "{context}: {dice}={sum}",
+    "vc_attack_auto": "Attacco VC: {name}"
+  },
+
+  "fx": {
+    "miss": "MANCATO",
+    "kia": "KIA",
+    "spot": "!",
+    "overwatch": "OW!",
+    "demolition_success": "DEMOLITO!",
+    "demolition_fail": "RESISTENTE"
+  },
+
+  "tooltip": {
+    "tile": "{label} | Costo:{cost} Copertura:{cover}",
+    "unit_append": " | {name} HP:{hp}/{maxHp} AP:{ap}",
+    "enemy_append": " | {name} HP:{hp}/{maxHp}"
+  },
+
+  "objective_panel": {
+    "no_mission": "Nessuna missione attiva",
+    "kills": "Eliminati: {kills}/{needed}",
+    "pilot_missing": "Pilota: da localizzare",
+    "pilot_found": "Pilota: trovato — porta all'LZ",
+    "pilot_extracted": "Pilota: ESTRATTO ✓",
+    "hold_controlled": "{label}: {held}/{total}T (OCCUPATO)",
+    "hold_uncontrolled": "{label}: {held}/{total}T"
+  },
+
+  "unit_panel": {
+    "stats": "{class} · ATK {atk} · DEF {def} · RNG {rng}",
+    "status": "HP {hp}/{maxHp} · AP {ap}/{maxAp} · ({col},{row})",
+    "tile": "Tile: {label}"
+  },
+
+  "ui": {
+    "no_dice": "Nessun dado"
+  },
+
+  "errors": {
+    "map_load_failed": "Errore caricamento mappa: {message}"
+  }
+}

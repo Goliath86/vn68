@@ -1,0 +1,210 @@
+{
+  "_meta": {
+    "lang": "en",
+    "name": "English",
+    "version": "1.0.0"
+  },
+
+  "header": {
+    "title": "NAM '68",
+    "mission_initial": "LOAD A MISSION",
+    "label_turn": "TURN",
+    "label_phase": "PHASE",
+    "label_vc_remain": "VC LEFT"
+  },
+
+  "panels": {
+    "squad": "◈ SQUAD",
+    "selected_unit": "◈ SELECTED UNIT",
+    "actions": "◈ ACTIONS",
+    "dice": "◈ DICE ROLL",
+    "objective": "◈ OBJECTIVE",
+    "sitrep": "◈ SITREP — RADIO LOG"
+  },
+
+  "buttons": {
+    "move": "Move (2AP)",
+    "attack": "Attack (1AP)",
+    "special": "Spec. ability",
+    "special_with_label": "{label} (1AP)",
+    "end_turn": "End turn",
+    "roll_dice": "⚄ ROLL DICE",
+    "new_mission": "↺ NEW MISSION",
+    "start_mission": "▶ START MISSION",
+    "next": "NEXT ▶",
+    "change_theater": "← Change theater"
+  },
+
+  "phases": {
+    "player": "PLAYER",
+    "enemy": "VIET CONG"
+  },
+
+  "units": {
+    "no_unit_selected": "Select a unit",
+    "no_unit_selected_long": "Select a unit on the map or from the list",
+    "classes": {
+      "assault": {
+        "name": "Assault",
+        "symbol": "A",
+        "desc": "Strong in close combat, poor cover usage",
+        "special_label": "Suppressive Fire"
+      },
+      "sniper": {
+        "name": "Sniper",
+        "symbol": "S",
+        "desc": "Maximum range, fragile at close range",
+        "special_label": "Overwatch"
+      },
+      "engineer": {
+        "name": "Engineer",
+        "symbol": "G",
+        "desc": "Can remove bunkers and clear passages",
+        "special_label": "Demolition"
+      },
+      "medic": {
+        "name": "Medic",
+        "symbol": "M",
+        "desc": "Heals allies, weak in combat",
+        "special_label": "First Aid"
+      }
+    },
+    "soldier_names": [
+      "Cpl. Hayes", "Sgt. Kovacs", "Pvt. Morales", "Cpt. Briggs",
+      "Pvt. Tucker", "Sgt. Webb", "Cpl. Diaz", "Lt. Burns"
+    ],
+    "vc_names": ["Guerrilla", "VC Sniper", "VC Patrol", "VC Commander"],
+    "vc_reinforcement_name": "VC Reinforcement",
+    "status": {
+      "kia": "KIA",
+      "overwatch_tag": "OW",
+      "carry_pilot": "✈ Carrying pilot",
+      "in_overwatch": "🔭 IN OVERWATCH",
+      "special_used": "Ability used",
+      "special_available": "Spec: {label}"
+    }
+  },
+
+  "missions": {
+    "recon": {
+      "label": "Reconnaissance",
+      "icon": "🔭",
+      "desc": "Explore all indicated areas while keeping the squad operational"
+    },
+    "search_destroy": {
+      "label": "Search & Destroy",
+      "icon": "💥",
+      "desc": "Eliminate the required number of Viet Cong or neutralize them all"
+    },
+    "rescue_pilot": {
+      "label": "Pilot Rescue",
+      "icon": "🪂",
+      "desc": "Locate the downed pilot and escort him to the extraction point"
+    },
+    "capture_objective": {
+      "label": "Capture Objective",
+      "icon": "🎯",
+      "desc": "Occupy and hold the objective position for the required number of turns"
+    }
+  },
+
+  "modal": {
+    "select_theater_title": "SELECT THEATER",
+    "select_theater_desc": "Choose the operational field for this mission",
+    "briefing_title": "MISSION BRIEFING",
+    "loading": "Loading..."
+  },
+
+  "gameover": {
+    "win_title": "MISSION ACCOMPLISHED",
+    "lose_title": "MISSION FAILED",
+    "win_desc": "Operation concluded successfully. Turn {turn}. VC eliminated: {vc}. Survivors: {survive}/4.",
+    "lose_desc": "The squad has been wiped out. Turn {turn}. VC eliminated before the end: {vc}."
+  },
+
+  "tabs": {
+    "squad": "SQUAD",
+    "actions": "ACTIONS",
+    "dice": "DICE",
+    "objective": "OBJ",
+    "log": "LOG"
+  },
+
+  "log": {
+    "mission_start": "=== MISSION STARTED ===",
+    "mission_type": "Type: {type}",
+    "enemy_deployed": "Enemy forces: {count} Viet Cong deployed",
+    "unit_move": "{name} moves to ({col},{row}) [-{ap}AP]",
+    "overwatch_fire": "{name} OVERWATCH: fires at {target}!",
+    "hit_damage": "Hit! -{dmg}HP",
+    "unit_eliminated": "{name} ELIMINATED",
+    "pilot_found": "{name} found the PILOT! Bring him to extraction.",
+    "pilot_extracted": "PILOT EXTRACTED! Mission complete!",
+    "zone_scouted": "Zone {label} scouted!",
+    "objective_held": "Objective \"{label}\" held for {held}/{total} turns",
+    "player_turn_end": "--- End of player turn ---",
+    "vc_turn_start": "--- VC Turn ---",
+    "reinforcements": "VC REINFORCEMENTS incoming! +{count} guerrillas",
+    "vc_turn_end": "━━━ VC turn end — Turn {turn} complete ━━━",
+    "player_turn_start": "══ Turn {turn} — Player Phase ══",
+    "ambush": "AMBUSH! {name} attacks {target}!",
+    "vc_patrol": "{name} on patrol",
+    "vc_attack": "{name} attacks {target}",
+    "vc_advance": "{name} advances toward {target} (distance: {dist})",
+    "vc_fire": "{name} opens fire on {target}",
+    "attack_prompt": "{attacker} attacks {defender} — ROLL THE DICE",
+    "attack_dice_context": "Attack by {name}",
+    "overwatch_dice_context": "Overwatch: {name}",
+    "attack_result": "→ Roll: {dice}={roll} (+{atk} ATK) vs {save} (DEF) → {result}",
+    "attack_hit": "HIT! -{dmg}HP",
+    "attack_miss": "MISSED",
+    "out_of_range": "{name}: out of range ({range}/{max})",
+    "overwatch_set": "{name} in OVERWATCH — fires at anyone moving in range",
+    "medic_heal": "{name} heals {target}: +{healed}HP ({current}/{max})",
+    "demolition_start": "{name} attempts demolition — ROLL THE DICE",
+    "demolition_success": "Bunker demolished!",
+    "demolition_fail": "Demolition failed — the bunker holds",
+    "dice_prompt": "⚄ {context} — roll {count} die",
+    "dice_result": "{context}: {dice}={sum}",
+    "vc_attack_auto": "VC Attack: {name}"
+  },
+
+  "fx": {
+    "miss": "MISSED",
+    "kia": "KIA",
+    "spot": "!",
+    "overwatch": "OW!",
+    "demolition_success": "BLOWN!",
+    "demolition_fail": "HELD"
+  },
+
+  "tooltip": {
+    "tile": "{label} | Cost:{cost} Cover:{cover}",
+    "unit_append": " | {name} HP:{hp}/{maxHp} AP:{ap}",
+    "enemy_append": " | {name} HP:{hp}/{maxHp}"
+  },
+
+  "objective_panel": {
+    "no_mission": "No active mission",
+    "kills": "Eliminated: {kills}/{needed}",
+    "pilot_missing": "Pilot: to locate",
+    "pilot_found": "Pilot: found — bring to LZ",
+    "pilot_extracted": "Pilot: EXTRACTED ✓",
+    "hold_controlled": "{label}: {held}/{total}T (HELD)",
+    "hold_uncontrolled": "{label}: {held}/{total}T"
+  },
+
+  "unit_panel": {
+    "stats": "{class} · ATK {atk} · DEF {def} · RNG {rng}",
+    "status": "HP {hp}/{maxHp} · AP {ap}/{maxAp} · ({col},{row})",
+    "tile": "Tile: {label}"
+  },
+
+  "ui": {
+    "no_dice": "No dice"
+  },
+
+  "errors": {
+    "map_load_failed": "Map load error: {message}"
+  }
+}
