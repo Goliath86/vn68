@@ -1,4 +1,4 @@
-# NAM '68 — Vietnam Wargame
+# VIETNAM '68 — Vietnam Wargame
 
 Un wargame tattico a turni ambientato nella Guerra del Vietnam, giocabile interamente nel browser senza installazioni.
 
