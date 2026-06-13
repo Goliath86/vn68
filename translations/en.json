@@ -162,8 +162,8 @@
     "overwatch_set": "{name} in OVERWATCH — fires at anyone moving in range",
     "medic_heal": "{name} heals {target}: +{healed}HP ({current}/{max})",
     "demolition_start": "{name} attempts demolition — ROLL THE DICE",
-    "demolition_success": "Bunker demolished!",
-    "demolition_fail": "Demolition failed — the bunker holds",
+    "demolition_success": "{label} demolished!",
+    "demolition_fail": "Demolition failed — the structure holds",
     "dice_prompt": "⚄ {context} — roll {count} die",
     "dice_result": "{context}: {dice}={sum}",
     "vc_attack_auto": "VC Attack: {name}"

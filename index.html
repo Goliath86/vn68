@@ -604,8 +604,99 @@
     background: var(--border);
     border-radius: 2px;
     margin: 7px auto 5px;
-    cursor: ns-resize;
+    cursor: pointer;
     flex-shrink: 0;
+  }
+
+  /* ── QUICK BAR (sheet collassata) ──────────────────────── */
+  #quick-bar {
+    display: none;
+    position: fixed;
+    z-index: 150;
+    background: var(--panel-bg);
+    align-items: stretch;
+    gap: 4px;
+  }
+  .qb-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    padding: 2px 4px;
+    min-height: unset;
+    height: 100%;
+  }
+  .qb-btn .qb-icon { font-size: 19px; line-height: 1; }
+  .qb-btn .qb-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--paper-dark); }
+  #qb-expand {
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--green-light);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Bottone collassa in fondo alla tab bar */
+  #btn-collapse-sheet {
+    flex: none;
+    width: 32px;
+    border-left: 1px solid rgba(255,255,255,0.08);
+    opacity: 0.55;
+    padding: 6px 2px;
+  }
+  #btn-collapse-sheet:active { opacity: 1; }
+
+  /* Portrait: quick-bar orizzontale in basso */
+  @media (max-width: 700px) {
+    body.sheet-collapsed #bottom-sheet { display: none; }
+    body.sheet-collapsed #quick-bar {
+      display: flex;
+      flex-direction: row;
+      bottom: 0; left: 0; right: 0;
+      height: 56px;
+      border-top: 2px solid var(--border);
+      padding: 4px 6px;
+    }
+    body.sheet-collapsed #qb-expand {
+      width: 30px;
+      align-self: center;
+      height: 40px;
+    }
+  }
+
+  /* Landscape phone: layout mobile + quick-bar verticale a sinistra */
+  @media (orientation: landscape) and (max-height: 450px) {
+    body { overflow: hidden; }
+    #app { flex-direction: column; height: calc(100dvh - 40px); }
+    #left-panel, #right-panel { display: none; }
+    #center { flex: 1; min-height: 0; }
+    #bottom-sheet { display: flex; height: var(--sheet-h, 38vh); }
+
+    body.sheet-collapsed #bottom-sheet { display: none; }
+    body.sheet-collapsed #center { margin-left: 56px; }
+    body.sheet-collapsed #quick-bar {
+      display: flex;
+      flex-direction: column;
+      left: 0; top: 40px; bottom: 0; right: auto;
+      width: 56px;
+      border-right: 2px solid var(--border);
+      border-top: none;
+      padding: 4px;
+    }
+    body.sheet-collapsed .qb-btn { height: unset; flex: 1; }
+    body.sheet-collapsed .qb-label { display: none; }
+    body.sheet-collapsed #qb-expand {
+      flex: none;
+      width: 100%;
+      height: 30px;
+      transform: rotate(90deg);
+    }
   }
 
   /* Dice badge su tab quando dado richiesto */
@@ -782,6 +873,9 @@
       <button class="tab-btn" data-tab="log">
         <span class="tab-icon">📻</span><span data-i18n="tabs.log">LOG</span>
       </button>
+      <button class="tab-btn" id="btn-collapse-sheet" title="Comprimi pannello">
+        <span class="tab-icon">⌄</span>
+      </button>
     </div>
 
     <!-- Tab: Squadra -->
@@ -826,6 +920,23 @@
     </div>
 
   </div><!-- /bottom-sheet -->
+
+  <!-- Quick action bar: visibile quando la sheet è collassata (mobile only) -->
+  <div id="quick-bar">
+    <button class="btn qb-btn" id="qb-move">
+      <span class="qb-icon">↗</span><span class="qb-label">Muovi</span>
+    </button>
+    <button class="btn btn-attack qb-btn" id="qb-attack">
+      <span class="qb-icon">🎯</span><span class="qb-label">Attacca</span>
+    </button>
+    <button class="btn qb-btn" id="qb-special">
+      <span class="qb-icon">⚡</span><span class="qb-label">Spec.</span>
+    </button>
+    <button class="btn btn-end qb-btn" id="qb-endturn">
+      <span class="qb-icon">⏎</span><span class="qb-label">Fine</span>
+    </button>
+    <button id="qb-expand">▲</button>
+  </div>
 
 </div>
 
@@ -1739,11 +1850,11 @@ function setActionMode(mode) {
       G.reachable = G.units.filter(t => t.alive && t.id!==u.id && dist(u,t)<=1);
     }
     // Cecchino: overwatch
-    // Geniere: demolisce bunker adiacente
+    // Geniere: demolisce tile adiacenti con demolishable:true (bunker, ostacoli, muri)
     if (u.cls === 'engineer') {
       const DIRS = [[0,-1],[0,1],[-1,0],[1,0]];
       G.reachable = DIRS.map(([dc,dr])=>({col:u.col+dc, row:u.row+dr}))
-        .filter(({col,row})=>{ const t=getTileAt(col,row); return t && t.id==='bunker'; });
+        .filter(({col,row})=>{ const t=getTileAt(col,row); return t && t.demolishable; });
     }
   }
   render();
@@ -1855,21 +1966,20 @@ async function handleSpecialAction(col, row) {
   if (u.cls === 'engineer') {
     const target = G.reachable.find(r=>r.col===col&&r.row===row);
     if (target) {
-      // Demolisci: lancia dado
+      const tileType = getTileAt(target.col, target.row);
       log(t('log.demolition_start', {name: u.name}), 'system');
       const dice = await waitForDice(1, 'Demolizione');
       if (diceSum(dice) >= 4) {
-        // Cambia bunker in giungla
-        G.mapData.grid[target.row][target.col] = 'J';
+        G.mapData.grid[target.row][target.col] = tileType.demolishResult || 'J';
         u.ap -= 1;
         u.specialUsed = true;
         sfx('demolition');
         addFX('demolition', {col:target.col, row:target.row, success:true}, 1200);
-        log(t('log.demolition_success'), 'success');
+        log(t('log.demolition_success', {label: tileType.label}), 'success');
       } else {
         sfx('demolition');
         addFX('demolition', {col:target.col, row:target.row, success:false}, 1000);
-        log(t('log.demolition_fail'), 'combat');
+        log(t('log.demolition_fail', {label: tileType.label}), 'combat');
         u.ap -= 1;
         u.specialUsed = true;
       }
@@ -3113,7 +3223,10 @@ function updateUI() {
 }
 
 // ── HELPER: is mobile? ────────────────────────────────────────────────
-function isMobile() { return window.innerWidth <= 700; }
+function isMobile() {
+  return window.innerWidth <= 700 ||
+    window.matchMedia('(orientation:landscape) and (max-height:450px)').matches;
+}
 
 // ── UNIT LIST ─────────────────────────────────────────────────────────
 function makeUnitCard(u, mobile) {
@@ -3265,6 +3378,12 @@ function updateActionButtons() {
     });
   });
 
+  // Sync disabled state ai bottoni della quick bar
+  [['btn-move','qb-move'],['btn-attack','qb-attack'],['btn-special','qb-special'],['btn-endturn','qb-endturn']].forEach(([src,dst])=>{
+    const s=document.getElementById(src), d=document.getElementById(dst);
+    if(s&&d) d.disabled=s.disabled;
+  });
+
   // Badge "dado richiesto" sul tab
   const tabDice = document.getElementById('tab-btn-dice');
   if (tabDice) {
@@ -3313,6 +3432,27 @@ function updateObjectivePanel() {
 }
 
 function renderUnitsOnMap() { render(); }
+
+// ── COLLAPSE / EXPAND BOTTOM SHEET ────────────────────────────────────
+function collapseSheet() {
+  document.body.classList.add('sheet-collapsed');
+  resizeCanvas();
+}
+function expandSheet() {
+  document.body.classList.remove('sheet-collapsed');
+  resizeCanvas();
+}
+
+document.getElementById('btn-collapse-sheet').addEventListener('click', collapseSheet);
+document.getElementById('qb-expand').addEventListener('click', expandSheet);
+document.getElementById('sheet-handle').addEventListener('click', collapseSheet);
+
+// Bottoni quick bar → delegano ai corrispondenti desktop
+['move','attack','special','endturn'].forEach(action => {
+  document.getElementById('qb-' + action).addEventListener('click', () => {
+    document.getElementById('btn-' + action).click();
+  });
+});
 
 // ── MOBILE TAB SYSTEM ─────────────────────────────────────────────────
 function switchTab(name) {
@@ -3366,6 +3506,7 @@ const _origWaitForDice = waitForDice;
 const origWaitForDice = waitForDice;
 waitForDice = function(count, context) {
   if (isMobile()) {
+    if (document.body.classList.contains('sheet-collapsed')) expandSheet();
     switchTab('dice');
     // Badge pulsa
     const tabDice = document.getElementById('tab-btn-dice');

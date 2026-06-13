@@ -9,31 +9,103 @@
   "rows": 11,
 
   "tileTypes": {
-    "J": { "id": "jungle",     "label": "Giungla",          "moveCost": 2, "coverBonus": 2, "color": "#2d5a1b" },
-    "S": { "id": "swamp",      "label": "Palude",            "moveCost": 3, "coverBonus": 1, "color": "#4a6741" },
-    "R": { "id": "river",      "label": "Fiume",             "moveCost": 0, "coverBonus": 0, "color": "#1a4d7a", "impassable": true },
-    "V": { "id": "village",    "label": "Villaggio",         "moveCost": 1, "coverBonus": 1, "color": "#8b6914" },
-    "C": { "id": "clearing",   "label": "Radura",            "moveCost": 1, "coverBonus": 0, "color": "#7a9e40" },
-    "T": { "id": "trail",      "label": "Sentiero",          "moveCost": 1, "coverBonus": 0, "color": "#a08060" },
-    "B": { "id": "bunker",     "label": "Bunker VC",         "moveCost": 1, "coverBonus": 3, "color": "#5a4a30" },
-    "X": { "id": "obstacle",   "label": "Ostacolo",          "moveCost": 0, "coverBonus": 0, "color": "#333333", "impassable": true },
-    "F": { "id": "ford",       "label": "Guado",             "moveCost": 2, "coverBonus": 0, "color": "#2e7a9e" },
-    "O": { "id": "objective",  "label": "Obiettivo",         "moveCost": 1, "coverBonus": 0, "color": "#cc9900" },
-    "P": { "id": "pilot",      "label": "Pilota abbattuto",  "moveCost": 1, "coverBonus": 0, "color": "#cc6600" }
+    "J": {
+      "id": "jungle",
+      "label": "Giungla",
+      "moveCost": 2,
+      "coverBonus": 2,
+      "color": "#2d5a1b"
+    },
+    "S": {
+      "id": "swamp",
+      "label": "Palude",
+      "moveCost": 3,
+      "coverBonus": 1,
+      "color": "#4a6741"
+    },
+    "R": {
+      "id": "river",
+      "label": "Fiume",
+      "moveCost": 0,
+      "coverBonus": 0,
+      "color": "#1a4d7a",
+      "impassable": true
+    },
+    "V": {
+      "id": "village",
+      "label": "Villaggio",
+      "moveCost": 1,
+      "coverBonus": 1,
+      "color": "#8b6914"
+    },
+    "C": {
+      "id": "clearing",
+      "label": "Radura",
+      "moveCost": 1,
+      "coverBonus": 0,
+      "color": "#7a9e40"
+    },
+    "T": {
+      "id": "trail",
+      "label": "Sentiero",
+      "moveCost": 1,
+      "coverBonus": 0,
+      "color": "#a08060"
+    },
+    "B": {
+      "id": "bunker",
+      "label": "Bunker VC",
+      "moveCost": 1,
+      "coverBonus": 3,
+      "color": "#5a4a30",
+      "demolishable": true,
+      "demolishResult": "J"
+    },
+    "X": {
+      "id": "obstacle",
+      "label": "Ostacolo",
+      "moveCost": 0,
+      "coverBonus": 0,
+      "color": "#333333",
+      "impassable": true,
+      "demolishable": true,
+      "demolishResult": "C"
+    },
+    "F": {
+      "id": "ford",
+      "label": "Guado",
+      "moveCost": 2,
+      "coverBonus": 0,
+      "color": "#2e7a9e"
+    },
+    "O": {
+      "id": "objective",
+      "label": "Obiettivo",
+      "moveCost": 1,
+      "coverBonus": 0,
+      "color": "#cc9900"
+    },
+    "P": {
+      "id": "pilot",
+      "label": "Pilota abbattuto",
+      "moveCost": 1,
+      "coverBonus": 0,
+      "color": "#cc6600"
+    }
   },
 
   "grid": [
-    ["J","J","J","J","J","R","R","R","J","J","J","J","J","J","J"],
-    ["J","J","S","S","J","R","F","R","J","B","J","J","J","J","J"],
-    ["J","S","S","J","J","F","J","J","J","J","J","V","V","J","J"],
-    ["J","J","J","C","T","T","T","J","J","J","V","V","J","J","J"],
-    ["J","J","J","J","T","J","J","J","J","J","J","J","J","J","J"],
-    ["J","J","J","J","T","J","B","J","J","O","J","J","J","J","J"],
-    ["J","J","S","S","T","J","J","J","J","J","J","J","J","J","J"],
-    ["J","S","S","S","J","J","J","J","J","J","S","S","J","J","J"],
-    ["J","J","S","J","J","J","J","J","J","S","S","J","J","J","J"],
-    ["J","J","J","J","J","J","J","J","J","J","J","J","J","J","J"],
-    ["J","J","J","J","J","J","J","J","J","J","J","J","J","J","J"]
+    ["J", "J", "J", "J", "J", "R", "R", "R", "J", "J", "J", "J", "J", "J", "J"],
+    ["J", "J", "S", "S", "J", "R", "F", "R", "J", "B", "J", "J", "J", "J", "J"],
+    ["J", "S", "S", "J", "J", "F", "J", "J", "X", "J", "J", "V", "V", "J", "J"],
+    ["J", "J", "J", "C", "T", "T", "T", "J", "J", "J", "V", "V", "J", "J", "J"],
+    ["J", "J", "J", "J", "T", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"],
+    ["J", "J", "J", "J", "T", "X", "B", "J", "J", "O", "J", "J", "J", "J", "J"],
+    ["J", "J", "S", "S", "T", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"],
+    ["J", "S", "S", "S", "J", "J", "J", "J", "J", "J", "S", "S", "J", "J", "J"],
+    ["J", "J", "S", "J", "J", "J", "J", "J", "J", "S", "S", "J", "J", "J", "J"],
+    ["J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"],
+    ["J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"]
   ],
 
   "playerStart": [
@@ -44,33 +116,40 @@
   ],
 
   "vcSpawnZones": [
-    { "colMin": 8,  "colMax": 14, "rowMin": 0, "rowMax": 4  },
+    { "colMin": 8, "colMax": 14, "rowMin": 0, "rowMax": 4 },
     { "colMin": 10, "colMax": 14, "rowMin": 5, "rowMax": 10 }
   ],
   "vcCount": 6,
 
   "objectives": {
     "recon": [
-      { "col": 9,  "row": 2,  "label": "LZ Alpha" },
-      { "col": 12, "row": 7,  "label": "Villaggio Nord" },
-      { "col": 6,  "row": 5,  "label": "Bunker Est" }
+      { "col": 9, "row": 2, "label": "LZ Alpha" },
+      { "col": 12, "row": 7, "label": "Villaggio Nord" },
+      { "col": 6, "row": 5, "label": "Bunker Est" }
     ],
     "search_destroy": {
       "eliminateAll": true,
       "minKills": 4
     },
     "rescue_pilot": {
-      "pilotCol": 11, "pilotRow": 3,
-      "extractCol": 0, "extractRow": 5
+      "pilotCol": 11,
+      "pilotRow": 3,
+      "extractCol": 0,
+      "extractRow": 5
     },
     "capture_objective": [
       { "col": 9, "row": 5, "label": "Postazione Radio", "holdTurns": 2 }
     ]
   },
 
-  "supportedMissions": ["recon", "search_destroy", "rescue_pilot", "capture_objective"],
+  "supportedMissions": [
+    "recon",
+    "search_destroy",
+    "rescue_pilot",
+    "capture_objective"
+  ],
 
-  "ambient": "missions/rung_sat_ambient.ogg",
+  "ambient": "missions/rung_sat_ambient.mp3",
   "ambushChance": 0.15,
   "reinforcementTurn": 5,
   "reinforcementCount": 2,
@@ -80,17 +159,17 @@
       "name": "Rung Sat Special Zone",
       "description": "Un'operazione nelle mangrovie del delta del Mekong. Terreno ostile, visibilità ridotta.",
       "tileLabels": {
-        "jungle":   "Giungla",
-        "swamp":    "Palude",
-        "river":    "Fiume",
-        "village":  "Villaggio",
+        "jungle": "Giungla",
+        "swamp": "Palude",
+        "river": "Fiume",
+        "village": "Villaggio",
         "clearing": "Radura",
-        "trail":    "Sentiero",
-        "bunker":   "Bunker VC",
+        "trail": "Sentiero",
+        "bunker": "Bunker VC",
         "obstacle": "Ostacolo",
-        "ford":     "Guado",
-        "objective":"Obiettivo",
-        "pilot":    "Pilota abbattuto"
+        "ford": "Guado",
+        "objective": "Obiettivo",
+        "pilot": "Pilota abbattuto"
       },
       "objectives": {
         "recon": [
@@ -98,26 +177,24 @@
           { "label": "Villaggio Nord" },
           { "label": "Bunker Est" }
         ],
-        "capture_objective": [
-          { "label": "Postazione Radio" }
-        ]
+        "capture_objective": [{ "label": "Postazione Radio" }]
       }
     },
     "en": {
       "name": "Rung Sat Special Zone",
       "description": "An operation in the mangroves of the Mekong Delta. Hostile terrain, reduced visibility.",
       "tileLabels": {
-        "jungle":   "Jungle",
-        "swamp":    "Swamp",
-        "river":    "River",
-        "village":  "Village",
+        "jungle": "Jungle",
+        "swamp": "Swamp",
+        "river": "River",
+        "village": "Village",
         "clearing": "Clearing",
-        "trail":    "Trail",
-        "bunker":   "VC Bunker",
+        "trail": "Trail",
+        "bunker": "VC Bunker",
         "obstacle": "Obstacle",
-        "ford":     "Ford",
-        "objective":"Objective",
-        "pilot":    "Downed Pilot"
+        "ford": "Ford",
+        "objective": "Objective",
+        "pilot": "Downed Pilot"
       },
       "objectives": {
         "recon": [
@@ -125,9 +202,7 @@
           { "label": "North Village" },
           { "label": "East Bunker" }
         ],
-        "capture_objective": [
-          { "label": "Radio Post" }
-        ]
+        "capture_objective": [{ "label": "Radio Post" }]
       }
     }
   }

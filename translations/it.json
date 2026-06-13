@@ -162,8 +162,8 @@
     "overwatch_set": "{name} in OVERWATCH — attacca chiunque si muova nel range",
     "medic_heal": "{name} cura {target}: +{healed}HP ({current}/{max})",
     "demolition_start": "{name} tenta la demolizione — LANCIA IL DADO",
-    "demolition_success": "Bunker demolito!",
-    "demolition_fail": "Demolizione fallita — il bunker regge",
+    "demolition_success": "{label} demolito!",
+    "demolition_fail": "Demolizione fallita — la struttura regge",
     "dice_prompt": "⚄ {context} — lancia {count} dado",
     "dice_result": "{context}: {dice}={sum}",
     "vc_attack_auto": "Attacco VC: {name}"
