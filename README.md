@@ -127,11 +127,15 @@ La partita finisce con una **vittoria** quando l'obiettivo è completato, o con 
 
 ### Fog of War (opzionale)
 
-Il bottone **👁** nell'header attiva la nebbia di guerra. Quando è ON:
+Il bottone **👁** nell'header attiva la nebbia di guerra. Per impostazione predefinita è disattivata.
+
+Quando è **ON**:
 
 - Le tile fuori dalla visibilità della squadra vengono oscurate
-- I nemici non visibili non vengono mostrati e non possono essere attaccati
-- Ogni classe ha un proprio raggio di visione:
+- I nemici non visibili non appaiono sulla mappa e non possono essere attaccati
+- Il tooltip non rivela informazioni su tile nella nebbia
+
+Ogni classe ha un proprio raggio di visione massimo:
 
 | Classe | Visione |
 |---|---|
@@ -140,7 +144,27 @@ Il bottone **👁** nell'header attiva la nebbia di guerra. Quando è ON:
 | Geniere | 4 tile |
 | Medico | 3 tile |
 
-Tieni la squadra unita per coprire più mappa, oppure usa il cecchino come avanzato per esplorare da lontano.
+Tieni la squadra unita per coprire più mappa; usa il cecchino come avanzato per esplorare da lontano.
+
+---
+
+### Line of Sight (LOS)
+
+Il raggio di visione non dipende solo dalla distanza: il terreno può bloccare o ridurre il cono visivo. Il gioco tracccia un raggio tra l'unità e ogni tile, controllando gli ostacoli intermedi.
+
+| Terreno intermedio | Effetto sul LOS |
+|---|---|
+| Giungla, Palude, Villaggio | −1 vision per ogni tile attraversato |
+| Macerie, Palazzo/Tempio | −1 vision per ogni tile attraversato |
+| Bunker, Ostacolo, Mura, Edificio | Blocca completamente il raggio |
+| Radura, Sentiero, Fiume, Strada, Ponte | Nessun effetto |
+
+Il tile bersaglio stesso è sempre visibile se il raggio arriva a raggiungerlo — i blocchi si applicano solo ai tile **intermedi**.
+
+Esempi pratici:
+- Un cecchino (visione 6) che guarda attraverso 3 tile di giungla ha vision residua 3 oltre la giungla.
+- Un assalto (visione 4) non vede un nemico nascosto dietro un bunker, nemmeno se è adiacente.
+- Demolire un muro trasforma un blocco totale in blocco parziale (macerie), aprendo sia un corridoio fisico che un varco visivo.
 
 ---
 

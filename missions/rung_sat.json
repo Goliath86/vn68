@@ -14,14 +14,16 @@
       "label": "Giungla",
       "moveCost": 2,
       "coverBonus": 2,
-      "color": "#2d5a1b"
+      "color": "#2d5a1b",
+      "losBlock": "partial"
     },
     "S": {
       "id": "swamp",
       "label": "Palude",
       "moveCost": 3,
       "coverBonus": 1,
-      "color": "#4a6741"
+      "color": "#4a6741",
+      "losBlock": "partial"
     },
     "R": {
       "id": "river",
@@ -36,7 +38,8 @@
       "label": "Villaggio",
       "moveCost": 1,
       "coverBonus": 1,
-      "color": "#8b6914"
+      "color": "#8b6914",
+      "losBlock": "partial"
     },
     "C": {
       "id": "clearing",
@@ -59,7 +62,8 @@
       "coverBonus": 3,
       "color": "#5a4a30",
       "demolishable": true,
-      "demolishResult": "J"
+      "demolishResult": "J",
+      "losBlock": "full"
     },
     "X": {
       "id": "obstacle",
@@ -69,7 +73,8 @@
       "color": "#333333",
       "impassable": true,
       "demolishable": true,
-      "demolishResult": "C"
+      "demolishResult": "C",
+      "losBlock": "full"
     },
     "F": {
       "id": "ford",

@@ -14,7 +14,8 @@
       "moveCost": 0,
       "coverBonus": 0,
       "color": "#4a4030",
-      "impassable": true
+      "impassable": true,
+      "losBlock": "full"
     },
     "M": {
       "id": "wall_breach",
@@ -24,14 +25,16 @@
       "color": "#5a4830",
       "impassable": true,
       "demolishable": true,
-      "demolishResult": "D"
+      "demolishResult": "D",
+      "losBlock": "full"
     },
     "T": {
       "id": "temple",
       "label": "Palazzo/Tempio",
       "moveCost": 1,
       "coverBonus": 2,
-      "color": "#7a5c28"
+      "color": "#7a5c28",
+      "losBlock": "partial"
     },
     "G": {
       "id": "garden",
@@ -67,14 +70,16 @@
       "label": "Edificio",
       "moveCost": 1,
       "coverBonus": 3,
-      "color": "#3a3030"
+      "color": "#3a3030",
+      "losBlock": "full"
     },
     "D": {
       "id": "debris",
       "label": "Macerie",
       "moveCost": 2,
       "coverBonus": 2,
-      "color": "#6a5040"
+      "color": "#6a5040",
+      "losBlock": "partial"
     },
     "P": {
       "id": "plaza",
