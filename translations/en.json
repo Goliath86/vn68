@@ -81,7 +81,8 @@
       "carry_pilot": "✈ Carrying pilot",
       "in_overwatch": "🔭 IN OVERWATCH",
       "special_used": "Ability used",
-      "special_available": "Spec: {label}"
+      "special_available": "Spec: {label}",
+      "shot_used": "Shot fired (1 shot/turn)"
     }
   },
 

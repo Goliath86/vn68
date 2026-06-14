@@ -81,7 +81,7 @@ La squadra è composta da 4 soldati, uno per classe:
 | Classe | HP | Movimento | ATK | DEF | Gittata | Abilità Speciale |
 |---|---|---|---|---|---|---|
 | **Assalto** | 10 | 4 | 3 | 1 | 2 | Fuoco Soppressivo (riduce AP nemico) |
-| **Cecchino** | 7 | 3 | 4 | 0 | 6 | Overwatch (attacca nemici in movimento) |
+| **Cecchino** | 7 | 3 | 4 | 0 | 6 | Overwatch (attacca nemici in movimento) — **1 sparo per turno** |
 | **Geniere** | 9 | 3 | 2 | 1 | 2 | Demolizione (rimuove bunker e ostacoli) |
 | **Medico** | 8 | 3 | 1 | 1 | 1 | Primo Soccorso (cura un alleato adiacente) |
 
@@ -119,9 +119,28 @@ La partita finisce con una **vittoria** quando l'obiettivo è completato, o con 
 ### Abilità Speciali — Dettagli
 
 - **Fuoco Soppressivo (Assalto):** il bersaglio subisce una riduzione di 1 AP al turno successivo.
-- **Overwatch (Cecchino):** entra in modalità sorveglianza; se un VC si muove nel suo raggio visivo, il cecchino spara automaticamente.
+- **Overwatch (Cecchino):** entra in modalità sorveglianza; se un VC si muove nel suo raggio visivo, il cecchino spara automaticamente. Il cecchino può effettuare **un solo attacco per turno** — scegli con cura il bersaglio.
 - **Demolizione (Geniere):** rimuove un bunker o un ostacolo adiacente, trasformandolo in terreno percorribile.
 - **Primo Soccorso (Medico):** ripristina HP a un alleato adiacente.
+
+---
+
+### Fog of War (opzionale)
+
+Il bottone **👁** nell'header attiva la nebbia di guerra. Quando è ON:
+
+- Le tile fuori dalla visibilità della squadra vengono oscurate
+- I nemici non visibili non vengono mostrati e non possono essere attaccati
+- Ogni classe ha un proprio raggio di visione:
+
+| Classe | Visione |
+|---|---|
+| Assalto | 4 tile |
+| Cecchino | 6 tile |
+| Geniere | 4 tile |
+| Medico | 3 tile |
+
+Tieni la squadra unita per coprire più mappa, oppure usa il cecchino come avanzato per esplorare da lontano.
 
 ---
 

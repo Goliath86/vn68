@@ -81,7 +81,8 @@
       "carry_pilot": "✈ Trasporta pilota",
       "in_overwatch": "🔭 IN OVERWATCH",
       "special_used": "Abilità usata",
-      "special_available": "Spec: {label}"
+      "special_available": "Spec: {label}",
+      "shot_used": "Già sparato (1 sparo/turno)"
     }
   },
 

@@ -776,12 +776,13 @@
   }
   .lang-btn:hover  { border-color: var(--tan); color: var(--tan); }
   .lang-btn.active { border-color: var(--highlight); color: var(--highlight); background: rgba(240,192,48,0.1); }
-  #btn-mute {
+  #btn-mute, #btn-fow {
     background: none; border: 1px solid var(--border); border-radius: 2px;
     cursor: pointer; font-size: 13px; padding: 2px 5px; line-height: 1;
-    transition: border-color 0.15s;
+    color: var(--paper); transition: border-color 0.15s, color 0.15s;
   }
-  #btn-mute:hover { border-color: var(--tan); }
+  #btn-mute:hover, #btn-fow:hover { border-color: var(--tan); }
+  #btn-fow.fow-on { border-color: var(--highlight); color: var(--highlight); }
   @media (max-width: 700px) { #lang-switcher { display: none; } }
 </style>
 </head>
@@ -804,6 +805,7 @@
     <button class="lang-btn active" data-lang="it">IT</button>
     <button class="lang-btn" data-lang="en">EN</button>
     <button id="btn-mute" title="Toggle sound" onclick="audioToggleMute()">🔊</button>
+    <button id="btn-fow" title="Fog of War: OFF" onclick="toggleFOW()">👁</button>
   </div>
 </div>
 
@@ -986,7 +988,7 @@ const UNIT_CLASSES = {
     name: 'Assalto',
     symbol: 'A',
     color: '#c84040',
-    hp: 10, move: 4, attack: 3, defense: 1, range: 2,
+    hp: 10, move: 4, attack: 3, defense: 1, range: 2, vision: 4,
     special: 'suppression',   // soppressione: riduce AP nemico
     specialLabel: 'Fuoco Soppressivo',
     desc: 'Forte in attacco ravvicinato, mediocre copertura'
@@ -995,7 +997,7 @@ const UNIT_CLASSES = {
     name: 'Cecchino',
     symbol: 'S',
     color: '#407840',
-    hp: 7, move: 3, attack: 4, defense: 0, range: 6,
+    hp: 7, move: 3, attack: 4, defense: 0, range: 6, vision: 6,
     special: 'overwatch',     // overwatch: attacca nemici che si muovono
     specialLabel: 'Overwatch',
     desc: 'Gittata massima, fragile a corto raggio'
@@ -1004,7 +1006,7 @@ const UNIT_CLASSES = {
     name: 'Geniere',
     symbol: 'G',
     color: '#a07828',
-    hp: 9, move: 3, attack: 2, defense: 1, range: 2,
+    hp: 9, move: 3, attack: 2, defense: 1, range: 2, vision: 4,
     special: 'demolition',    // demolisce bunker/ostacoli
     specialLabel: 'Demolizione',
     desc: 'Può rimuovere bunker e aprire passaggi'
@@ -1013,7 +1015,7 @@ const UNIT_CLASSES = {
     name: 'Medico',
     symbol: 'M',
     color: '#2860a0',
-    hp: 8, move: 3, attack: 1, defense: 1, range: 1,
+    hp: 8, move: 3, attack: 1, defense: 1, range: 1, vision: 3,
     special: 'heal',          // cura un'unità adiacente
     specialLabel: 'Primo Soccorso',
     desc: 'Cura alleati, debole in combattimento'
@@ -1209,6 +1211,8 @@ const G = {
   hoveredTile: null,
   // effetti grafici attivi
   effects: [],
+  // fog of war
+  fowEnabled: false,
 };
 
 // ── UTILS ──────────────────────────────────────────────────────────────
@@ -1216,6 +1220,21 @@ const rnd   = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const clamp = (v, a, b)  => Math.max(a, Math.min(b, v));
 const dist  = (a, b)     => Math.abs(a.col - b.col) + Math.abs(a.row - b.row);
 const pick  = arr        => arr[Math.floor(Math.random() * arr.length)];
+
+// ── FOG OF WAR ─────────────────────────────────────────────────────────
+function isTileVisible(col, row) {
+  if (!G.fowEnabled) return true;
+  return G.units.some(u => u.alive && dist(u, {col, row}) <= UNIT_CLASSES[u.cls].vision);
+}
+
+function toggleFOW() {
+  G.fowEnabled = !G.fowEnabled;
+  const btn = document.getElementById('btn-fow');
+  btn.classList.toggle('fow-on', G.fowEnabled);
+  btn.title = G.fowEnabled ? 'Fog of War: ON' : 'Fog of War: OFF';
+  if (G.actionMode === 'attack') setActionMode('attack');
+  render();
+}
 
 function rollD6() { return rnd(1, 6); }
 function rollDice(n) { return Array.from({length: n}, rollD6); }
@@ -1841,8 +1860,8 @@ function setActionMode(mode) {
   if (mode === 'attack') {
     const def = UNIT_CLASSES[u.cls];
     const range = def.range;
-    // tutte le celle con nemici vivi in gittata
-    G.attackable = G.enemies.filter(e => e.alive && dist(u,e) <= range);
+    // tutte le celle con nemici vivi in gittata e visibili
+    G.attackable = G.enemies.filter(e => e.alive && dist(u,e) <= range && isTileVisible(e.col, e.row));
   }
   if (mode === 'special') {
     // Medico: adiacenti alleati
@@ -1912,6 +1931,7 @@ function onCanvasClick(e) {
     if (target) {
       G.selectedUnit.ap -= 1;
       G.selectedUnit.specialUsed = false;
+      if (G.selectedUnit.cls === 'sniper') G.selectedUnit.hasShot = true;
       resolveCombat(G.selectedUnit, target, false);
       setActionMode(null);
       updateUI();
@@ -2118,7 +2138,7 @@ async function runEnemyTurn() {
   document.getElementById('vc-remain').textContent = G.enemies.filter(e=>e.alive).length;
 
   // Ripristina AP giocatori
-  G.units.forEach(u=>{ if(u.alive){ u.ap=AP_PER_TURN; u.specialUsed=false; } });
+  G.units.forEach(u=>{ if(u.alive){ u.ap=AP_PER_TURN; u.specialUsed=false; u.hasShot=false; } });
 
   // Check ambush (tentativo casuale)
   if (Math.random() < (G.mapData.ambushChance||0)) {
@@ -2938,9 +2958,23 @@ function renderMap() {
   // Indicatori missione
   renderMissionMarkers(ctx, ts);
 
-  // Unità nemiche
+  // Fog of War — overlay scuro sui tile fuori visibilità
+  if (G.fowEnabled) {
+    ctx.fillStyle = 'rgba(0,0,0,0.72)';
+    for (let r = 0; r < md.rows; r++) {
+      for (let c = 0; c < md.cols; c++) {
+        if (!isTileVisible(c, r)) {
+          const {x,y} = tileToScreen(c, r);
+          ctx.fillRect(x, y, ts, ts);
+        }
+      }
+    }
+  }
+
+  // Unità nemiche (nascoste nella nebbia)
   for (const e of G.enemies) {
     if (!e.alive) continue;
+    if (!isTileVisible(e.col, e.row)) continue;
     const {x,y} = tileToScreen(e.col, e.row);
     ctx.fillStyle='rgba(100,15,15,0.68)';
     ctx.beginPath(); ctx.arc(x+ts*.5,y+ts*.5,ts*.41,0,Math.PI*2); ctx.fill();
@@ -3202,16 +3236,22 @@ function showTooltip(e, col, row) {
   const def = G.mapData.tileTypes[key];
   if (!def) { tt.style.display='none'; return; }
   const unit  = G.units.find(u=>u.alive&&u.col===col&&u.row===row);
-  const enemy = G.enemies.find(en=>en.alive&&en.col===col&&en.row===row);
+  const enemy = isTileVisible(col, row) ? G.enemies.find(en=>en.alive&&en.col===col&&en.row===row) : null;
   const tileLabel2 = mt(`tileLabels.${def.id}`) ?? def.label;
   let txt = t('tooltip.tile', {label: tileLabel2, cost: def.moveCost||'∞', cover: def.coverBonus||0});
   if (unit)  txt += t('tooltip.unit_append',  {name: unit.name,  hp: unit.hp,  maxHp: unit.maxHp,  ap: unit.ap});
   if (enemy) txt += t('tooltip.enemy_append', {name: enemy.name, hp: enemy.hp, maxHp: enemy.maxHp});
   tt.textContent = txt;
-  const rect = G.canvas.getBoundingClientRect();
-  tt.style.left = (e.clientX - rect.left + 12) + 'px';
-  tt.style.top  = (e.clientY - rect.top  - 28) + 'px';
   tt.style.display = 'block';
+  const rect = G.canvas.getBoundingClientRect();
+  const pw = tt.parentElement.clientWidth;
+  const ph = tt.parentElement.clientHeight;
+  let x = e.clientX - rect.left + 12;
+  let y = e.clientY - rect.top  - 28;
+  x = Math.max(4, Math.min(x, pw - tt.offsetWidth  - 4));
+  y = Math.max(4, Math.min(y, ph - tt.offsetHeight - 4));
+  tt.style.left = x + 'px';
+  tt.style.top  = y + 'px';
 }
 
 // ── UI UPDATE ──────────────────────────────────────────────────────────
@@ -3333,6 +3373,7 @@ function selInfoHTML(u) {
         ? `<span style="color:var(--red)">${t('units.status.special_used')}</span>`
         : `<span style="color:var(--highlight)">${t('units.status.special_available', {label: def.specialLabel})}</span>`}
       ${u.overwatch    ? `<br><span style="color:#aaddff">${t('units.status.in_overwatch')}</span>` : ''}
+      ${u.cls==='sniper' && u.hasShot ? `<br><span style="color:var(--red)">${t('units.status.shot_used')}</span>` : ''}
       ${u.carriesPilot ? `<br><span style="color:var(--yellow)">${t('units.status.carry_pilot')}</span>` : ''}
     </div>`;
 }
@@ -3371,7 +3412,7 @@ function updateActionButtons() {
       const el = document.getElementById(id);
       if (!el) return;
       if (id.includes('move'))    { el.disabled = !(isPlayer && hasAP); el.style.borderColor = hasMM?'var(--highlight)':''; }
-      if (id.includes('attack'))  { el.disabled = !(isPlayer && hasAP && hasEnemy); el.style.borderColor = hasAM?'var(--highlight)':''; }
+      if (id.includes('attack'))  { el.disabled = !(isPlayer && hasAP && hasEnemy && !(u?.cls==='sniper' && u?.hasShot)); el.style.borderColor = hasAM?'var(--highlight)':''; }
       if (id.includes('special')) { el.disabled = !(isPlayer && hasAP && !u?.specialUsed); el.style.borderColor = hasSM?'var(--highlight)':''; el.textContent = specLabel; }
       if (id.includes('endturn')) { el.disabled = !isPlayer || !!G.pendingDice; }
       if (id.includes('dice'))    { el.disabled = !isPlayer; }
