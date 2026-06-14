@@ -12,6 +12,27 @@ Il gioco è pensato per una singola sessione: scegli la mappa, scegli il tipo di
 
 ---
 
+## Come avviare
+
+Il gioco richiede un server HTTP locale per caricare i file JSON (mappe, traduzioni, config). **Non funziona aprendo `index.html` direttamente come `file://`.**
+
+Opzioni rapide:
+
+```bash
+# Node.js
+npx serve .
+
+# Python 3
+python -m http.server 8080
+
+# VS Code
+# Estensione "Live Server" → tasto destro su index.html → Open with Live Server
+```
+
+Aprire poi il browser su `http://localhost:3000` (o la porta indicata dal server scelto).
+
+---
+
 ## Regole
 
 ### Struttura del turno
@@ -165,6 +186,36 @@ Esempi pratici:
 - Un cecchino (visione 6) che guarda attraverso 3 tile di giungla ha vision residua 3 oltre la giungla.
 - Un assalto (visione 4) non vede un nemico nascosto dietro un bunker, nemmeno se è adiacente.
 - Demolire un muro trasforma un blocco totale in blocco parziale (macerie), aprendo sia un corridoio fisico che un varco visivo.
+
+---
+
+## Personalizzazione — config.json
+
+Il file `config.json` nella cartella principale permette di personalizzare il gioco senza toccare il codice.
+
+### Immagini unità
+
+Per sostituire gli sprite disegnati con immagini personalizzate, inserire il percorso del file per ogni classe:
+
+```json
+{
+  "unitImages": {
+    "assault":   "assets/assault.webp",
+    "sniper":    "assets/sniper.webp",
+    "engineer":  "assets/engineer.webp",
+    "medic":     "assets/medic.webp",
+    "grunt":     "assets/grunt.webp",
+    "sniper_vc": "assets/sniper_vc.webp",
+    "commander": "assets/commander.webp"
+  }
+}
+```
+
+- Formati supportati: **webp, png, jpg, svg**
+- Lasciare la stringa vuota `""` per usare lo sprite canvas predefinito
+- I percorsi sono relativi alla cartella principale del gioco
+- È possibile sostituire solo alcune classi e lasciare le altre con lo sprite di default
+- Se `config.json` è assente o non valido, il gioco funziona normalmente senza errori
 
 ---
 

@@ -1165,6 +1165,26 @@ async function loadCatalog() {
   }
 }
 
+// ── CONFIG ─────────────────────────────────────────────────────────────
+let CONFIG = {};
+const UNIT_IMG_CACHE = {}; // cls → HTMLImageElement (pre-caricato)
+
+async function loadConfig() {
+  try {
+    const resp = await fetch('config.json');
+    if (!resp.ok) return;
+    CONFIG = await resp.json();
+    for (const [cls, path] of Object.entries(CONFIG.unitImages || {})) {
+      if (!path) continue;
+      const img = new Image();
+      img.src = path;
+      UNIT_IMG_CACHE[cls] = img;
+    }
+  } catch(e) {
+    // config.json assente o non valido — nessun effetto, si usano gli sprite canvas
+  }
+}
+
 function rebuildMapsFromCatalog() {
   MAPS = CATALOG.map(entry => {
     const labels = entry.labels?.[LANG] || entry.labels?.it || {};
@@ -2956,6 +2976,16 @@ function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy) {
   const s  = ts * 0.36;
   ctx.save();
   if (isDone && !isEnemy) ctx.globalAlpha = 0.60;
+
+  // Immagine custom da config.json (se caricata correttamente)
+  const img = UNIT_IMG_CACHE[cls];
+  if (img && img.complete && img.naturalWidth > 0) {
+    const pad = ts * 0.08;
+    ctx.drawImage(img, x + pad, y + pad, ts - pad * 2, ts - pad * 2);
+    ctx.restore();
+    return;
+  }
+
   if (isEnemy) {
     if      (cls==='commander') _sprVCCommander(ctx,cx,cy,s);
     else if (cls==='sniper_vc') _sprVCSniper(ctx,cx,cy,s);
@@ -3739,7 +3769,7 @@ setupCanvas();
 audioInit();
 
 // Carica traduzioni + catalogo mappe in parallelo, poi inizializza
-Promise.all([loadLang('it'), loadCatalog()]).then(() => {
+Promise.all([loadLang('it'), loadCatalog(), loadConfig()]).then(() => {
   rebuildMapsFromCatalog();
   applyTranslationsToData();
   applyTranslationsToDOM();

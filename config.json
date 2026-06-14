@@ -1,0 +1,11 @@
+{
+  "unitImages": {
+    "assault": "assets/assault_us.png",
+    "sniper": "assets/sniper_us.png",
+    "engineer": "",
+    "medic": "assets/medic_us.png",
+    "grunt": "",
+    "sniper_vc": "",
+    "commander": ""
+  }
+}
