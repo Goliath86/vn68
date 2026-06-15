@@ -171,6 +171,7 @@
     "attack_miss": "MISSED",
     "out_of_range": "{name}: out of range ({range}/{max})",
     "overwatch_set": "{name} in OVERWATCH — fires at anyone moving in range",
+    "sniper_range_penalty": "Sniper at distance {range}: ATK {atk} (-{penalty} range penalty)",
     "medic_heal": "{name} heals {target}: +{healed}HP ({current}/{max})",
     "demolition_start": "{name} attempts demolition — ROLL THE DICE",
     "demolition_success": "{label} demolished!",

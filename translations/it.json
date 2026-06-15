@@ -171,6 +171,7 @@
     "attack_miss": "MANCATO",
     "out_of_range": "{name}: fuori gittata ({range}/{max})",
     "overwatch_set": "{name} in OVERWATCH — attacca chiunque si muova nel range",
+    "sniper_range_penalty": "Cecchino a distanza {range}: ATK {atk} (-{penalty} per gittata)",
     "medic_heal": "{name} cura {target}: +{healed}HP ({current}/{max})",
     "demolition_start": "{name} tenta la demolizione — LANCIA IL DADO",
     "demolition_success": "{label} demolito!",
