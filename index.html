@@ -1712,9 +1712,12 @@ function startGame(missionType) {
     if (!isTilePassable(col, row)) continue;
     if (G.enemies.find(e => e.col===col && e.row===row)) continue;
     const vcClass = pick(['grunt','grunt','grunt','sniper_vc','commander']);
+    const vcName  = vcClass === 'sniper_vc' ? VC_NAMES[1]
+                  : vcClass === 'commander'  ? VC_NAMES[3]
+                  : VC_NAMES[0];
     G.enemies.push({
       id: 'e'+spawned,
-      name: pick(VC_NAMES),
+      name: vcName,
       cls: vcClass,
       col, row,
       hp: vcClass==='commander'?8:(vcClass==='sniper_vc'?6:5),
@@ -1747,6 +1750,7 @@ function startGame(missionType) {
   log(t('log.enemy_deployed', {count: spawned}), 'enemy');
   ambientPlay(G.mapData.ambient);
   render();
+  _startTileAnimLoop();
 }
 
 function initMissionState(type) {
@@ -2503,6 +2507,144 @@ function _fxTick(now) {
   else _fxLoopActive = false;
 }
 
+// ── TILE ANIMATION LOOP ────────────────────────────────────────────────
+let _tileAnimLoopActive = false;
+let _tileAnimDt         = 16;
+let _tileAnimLastTime   = 0;
+
+function _getTileAnims() {
+  if (!G.mapData) return [];
+  const global  = G.mapData.tileAnimations || [];
+  const mObj    = G.missionType && G.mapData.objectives && G.mapData.objectives[G.missionType];
+  const mission = (mObj && !Array.isArray(mObj) && mObj.tileAnimations) || [];
+  return [...global, ...mission];
+}
+
+function _startTileAnimLoop() {
+  if (_tileAnimLoopActive) return;
+  if (!_getTileAnims().length) return;
+  _tileAnimLoopActive = true;
+  _tileAnimLastTime   = 0;
+  requestAnimationFrame(_tileAnimTick);
+}
+
+function _tileAnimTick(now) {
+  _tileAnimDt       = _tileAnimLastTime ? Math.min(now - _tileAnimLastTime, 64) : 16;
+  _tileAnimLastTime = now;
+  if (G.phase === 'gameover' || !_getTileAnims().length) {
+    _tileAnimLoopActive = false;
+    _tileAnimLastTime   = 0;
+    return;
+  }
+  renderMap();
+  requestAnimationFrame(_tileAnimTick);
+}
+
+function renderTileAnimations(ctx, ts) {
+  const anims = _getTileAnims();
+  if (!anims.length) return;
+  const now   = performance.now();
+  const seed0 = (anim) => anim.col * 7 + anim.row * 13;
+  // Nessun check isTileVisible: il FOW overlay è disegnato dopo e copre
+  // naturalmente le animazioni sui tile non visibili. Le particelle che
+  // sconfinano in tile visibili adiacenti danno un effetto realistico.
+  for (const anim of anims) {
+    const {x, y} = tileToScreen(anim.col, anim.row);
+    if      (anim.type === 'smoke') _drawTileSmoke(ctx, x, y, ts, _tileAnimDt, anim);
+    else if (anim.type === 'fire')  _drawTileFire (ctx, x, y, ts, now, seed0(anim));
+    else if (anim.type === 'fog')   _drawTileFog  (ctx, x, y, ts, now, seed0(anim));
+  }
+}
+
+// ── SMOKE — particle system con gradiente radiale ────────────────────────
+// Coordinate tile-relative (frazione di ts) — indipendenti da camera e zoom
+function _smokeAddParticle(particles) {
+  particles.push({
+    rx:  (Math.random() - 0.5) * 0.5,        // offset X dal centro tile (in unità ts)
+    ry:  0.28 + Math.random() * 0.14,         // offset Y (parte bassa del tile)
+    vx:  (Math.random() - 0.5) * 0.010,       // velocità X (ts/ms)
+    vy0: -(0.015 + Math.random() * 0.015),    // velocità Y iniziale (ts/ms, negativa = su)
+    age: 0,
+    lifetime: 3000 + Math.random() * 3500,
+    r0:  0.12,                                 // raggio iniziale (multiplo di ts)
+    r1:  0.40 + Math.random() * 0.22,         // raggio finale
+  });
+}
+
+function _drawTileSmoke(ctx, x, y, ts, dt, anim) {
+  if (!anim._particles) {
+    anim._particles = [];
+    // Pre-semina con lifecycle scaglionato: fumo visibile fin dal primo frame
+    for (let i = 0; i < 9; i++) {
+      _smokeAddParticle(anim._particles);
+      const p      = anim._particles[i];
+      const target = p.lifetime * (i / 9) * 0.85;
+      const stepDt = target / 25;
+      for (let s = 0; s < 25; s++) {
+        const frac = p.age / p.lifetime;
+        p.rx  += p.vx  * stepDt;
+        p.ry  += p.vy0 * (1 - Math.sqrt(Math.max(0, frac))) * stepDt;
+        p.age += stepDt;
+      }
+    }
+  }
+
+  if (Math.random() < dt / 320) _smokeAddParticle(anim._particles);
+
+  ctx.save();
+  for (let i = anim._particles.length - 1; i >= 0; i--) {
+    const p = anim._particles[i];
+    p.age  += dt;
+    if (p.age >= p.lifetime) { anim._particles.splice(i, 1); continue; }
+
+    const frac  = p.age / p.lifetime;
+    p.rx       += p.vx  * dt;
+    p.ry       += p.vy0 * (1 - Math.sqrt(frac)) * dt;
+
+    // Converti a schermo solo al draw-time: segue camera e zoom automaticamente
+    const drawX  = x + ts * (0.5 + p.rx);
+    const drawY  = y + ts * (0.5 + p.ry);
+    const radius = (p.r0 + (p.r1 - p.r0) * Math.sqrt(frac)) * ts;
+    const alpha  = (1 - Math.abs(1 - 2 * frac)) * 0.52;
+
+    const grad = ctx.createRadialGradient(drawX, drawY, 0, drawX, drawY, radius);
+    grad.addColorStop(0,    `rgba(218,213,208,${alpha})`);
+    grad.addColorStop(0.45, `rgba(200,196,192,${(alpha * 0.55).toFixed(3)})`);
+    grad.addColorStop(1,    'rgba(185,181,178,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(drawX, drawY, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function _drawTileFire(ctx, x, y, ts, now, seed) {
+  ctx.save();
+  for (let i = 0; i < 9; i++) {
+    const phase = (now / 700 + (i + seed * 0.11) / 9) % 1;
+    const px    = x + ts * (0.15 + ((i * 0.618 + seed * 0.07) % 0.7));
+    const py    = y + ts * (0.88 - phase * 0.72);
+    const alpha = phase < 0.1 ? phase / 0.1 : Math.max(0, 1 - phase);
+    const g     = Math.floor(phase < 0.4 ? 60 + phase * 350 : Math.max(0, 200 - (phase - 0.4) * 400));
+    ctx.globalAlpha = alpha * 0.82;
+    ctx.fillStyle   = `rgb(255,${g},0)`;
+    ctx.beginPath();
+    ctx.arc(px, py, ts * (0.07 * (1 - phase * 0.5)), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function _drawTileFog(ctx, x, y, ts, now, seed) {
+  const pulse = 0.22 + 0.10 * Math.sin(now / 2400 + seed);
+  ctx.save();
+  ctx.globalAlpha = pulse;
+  ctx.fillStyle   = 'rgb(190,205,215)';
+  ctx.fillRect(x, y, ts, ts);
+  ctx.restore();
+}
+
 function renderEffects(ctx, ts) {
   const now = performance.now();
   for (const fx of G.effects) {
@@ -3165,6 +3307,10 @@ function renderMap() {
       }
     }
   }
+
+  // Animazioni tile (smoke, fire, fog) — dopo il FOW: il fumo è visibile
+  // anche nell'oscurità (il fumo del relitto si vede da lontano)
+  renderTileAnimations(ctx, ts);
 
   // Unità nemiche (nascoste nella nebbia)
   for (const e of G.enemies) {

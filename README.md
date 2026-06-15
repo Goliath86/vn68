@@ -198,6 +198,29 @@ Esempi pratici:
 
 ---
 
+## Animazioni tile
+
+Le mappe possono definire animazioni ambientali su tile specifici, configurabili via JSON senza toccare il codice. Le animazioni sono **sempre visibili**, anche attraverso il Fog of War — il fumo di un relitto o le fiamme di un edificio si vedono da lontano, e possono guidare la squadra verso l'obiettivo.
+
+Tipi disponibili:
+
+| Tipo | Descrizione |
+|---|---|
+| `smoke` | Fumo grigio che sale lentamente — ideale per relitti, incendi soppressi |
+| `fire` | Fiamme arancio e rosse — per edifici in fiamme, esplosioni in corso |
+| `fog` | Velo nebuloso pulsante — per zone umide, paludi, aree di copertura |
+
+Per aggiungere animazioni a una mappa, inserire nel JSON della missione:
+
+```json
+"tileAnimations": [
+  {"col": 5, "row": 3, "type": "smoke"},
+  {"col": 2, "row": 7, "type": "fire"}
+]
+```
+
+---
+
 ## Immagine mappa personalizzata
 
 Ogni missione può avere una propria immagine di sfondo che sostituisce il rendering procedurale dei tile. Basta aggiungere il campo `"image"` nel JSON della missione:

@@ -7,6 +7,6 @@
     "medic": "assets/medic_us.png",
     "grunt": "assets/vietcong_vc.png",
     "sniper_vc": "assets/sniper_vc.png",
-    "commander": ""
+    "commander": "assets/commander_vc.png"
   }
 }
