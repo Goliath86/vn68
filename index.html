@@ -3837,7 +3837,20 @@ Promise.all([loadLang('it'), loadCatalog(), loadConfig()]).then(() => {
   applyTranslationsToData();
   applyTranslationsToDOM();
   initModal();
-  if (CONFIG.menuMusic) ambientPlay(CONFIG.menuMusic);
+  if (CONFIG.menuMusic) {
+    const menuUrl = CONFIG.menuMusic;
+    ambientStop();
+    const a = new Audio(menuUrl);
+    a.loop = true;
+    a.volume = AUDIO.musicVol;
+    AUDIO.ambient = a;
+    a.play().catch(() => {
+      // Autoplay blocked (HTTPS autoplay policy) — retry on first user gesture
+      const resume = () => ambientPlay(menuUrl);
+      document.addEventListener('click', resume, { once: true });
+      document.addEventListener('keydown', resume, { once: true });
+    });
+  }
 });
 
 // Language switcher
