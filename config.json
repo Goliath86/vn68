@@ -1,11 +1,12 @@
 {
+  "menuMusic": "assets/fumo_su_saigon.mp3",
   "unitImages": {
     "assault": "assets/assault_us.png",
     "sniper": "assets/sniper_us.png",
-    "engineer": "",
+    "engineer": "assets/engineer_us.png",
     "medic": "assets/medic_us.png",
-    "grunt": "",
-    "sniper_vc": "",
+    "grunt": "assets/vietcong_us.png",
+    "sniper_vc": "assets/sniper_vc.png",
     "commander": ""
   }
 }

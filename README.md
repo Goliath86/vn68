@@ -118,6 +118,15 @@ I VC si muovono e attaccano automaticamente durante la fase nemica. Esistono tre
 | Cecchino VC | Pericoloso a distanza, ATK 3, gittata 4 |
 | Comandante VC | Più resistente e mobile, ATK 3, DEF 1 |
 
+**Comportamento pattuglia:** finché non avvistano un soldato US (raggio 5), i VC pattugliano attivamente in base alla missione in corso:
+
+| Missione | Pattuglia VC |
+|---|---|
+| **Search & Destroy** | Si spostano casualmente nelle vicinanze |
+| **Recupero Pilota** | Convergono verso il pilota abbattuto; se già trovato, si dirigono al punto di estrazione per intercettare la squadra |
+| **Ricognizione** | Esplorano l'intera mappa verso posizioni casuali |
+| **Conquista Obiettivo** | Presidiano l'obiettivo più vicino |
+
 Dal turno configurato nella mappa possono arrivare **rinforzi VC**.
 
 ---
@@ -189,9 +198,44 @@ Esempi pratici:
 
 ---
 
+## Immagine mappa personalizzata
+
+Ogni missione può avere una propria immagine di sfondo che sostituisce il rendering procedurale dei tile. Basta aggiungere il campo `"image"` nel JSON della missione:
+
+```json
+{
+  "name": "Rung Sat",
+  "image": "rung_sat_map.jpg",
+  ...
+}
+```
+
+- Il file immagine va messo nella cartella `missions/` (formati supportati: jpg, png, webp, svg)
+- Quando l'immagine è presente, i colori e le texture dei tile non vengono disegnati — l'immagine li sostituisce completamente
+- Rimane una griglia sottile sovrapposta per facilitare la navigazione
+- Sprite unità, marcatori obiettivo, Fog of War ed effetti continuano a funzionare normalmente
+- Se il file è assente o non caricabile, il gioco torna automaticamente al rendering procedurale
+
+---
+
 ## Personalizzazione — config.json
 
 Il file `config.json` nella cartella principale permette di personalizzare il gioco senza toccare il codice.
+
+### Musica del menu
+
+Per aggiungere musica di sottofondo al menu iniziale, inserire il percorso del file audio nel campo `menuMusic`:
+
+```json
+{
+  "menuMusic": "assets/menu.ogg"
+}
+```
+
+- Formati supportati: **ogg, mp3, wav**
+- La musica parte in loop appena il menu viene mostrato
+- Quando si preme "Inizia Missione", la musica fa un **fade-out di 800 ms** prima che la partita parta
+- Lasciare la stringa vuota `""` o omettere il campo per nessuna musica al menu
 
 ### Immagini unità
 

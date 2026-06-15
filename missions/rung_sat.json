@@ -1,12 +1,12 @@
 {
   "name": "Rung Sat Special Zone",
   "description": "Un'operazione nelle mangrovie del delta del Mekong. Terreno ostile, visibilità ridotta.",
-  "image": "rung_sat.png",
-  "width": 960,
-  "height": 704,
+  "image": "rung_sat.webp",
+  "width": 1024,
+  "height": 768,
   "tileSize": 64,
-  "cols": 15,
-  "rows": 11,
+  "cols": 16,
+  "rows": 12,
 
   "tileTypes": {
     "J": {
@@ -100,17 +100,18 @@
   },
 
   "grid": [
-    ["J", "J", "J", "J", "J", "R", "R", "R", "J", "J", "J", "J", "J", "J", "J"],
-    ["J", "J", "S", "S", "J", "R", "F", "R", "J", "B", "J", "J", "J", "J", "J"],
-    ["J", "S", "S", "J", "J", "F", "J", "J", "X", "J", "J", "V", "V", "J", "J"],
-    ["J", "J", "J", "C", "T", "T", "T", "J", "J", "J", "V", "V", "J", "J", "J"],
-    ["J", "J", "J", "J", "T", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"],
-    ["J", "J", "J", "J", "T", "X", "B", "J", "J", "O", "J", "J", "J", "J", "J"],
-    ["J", "J", "S", "S", "T", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"],
-    ["J", "S", "S", "S", "J", "J", "J", "J", "J", "J", "S", "S", "J", "J", "J"],
-    ["J", "J", "S", "J", "J", "J", "J", "J", "J", "S", "S", "J", "J", "J", "J"],
-    ["J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"],
-    ["J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"]
+    ["J", "J", "J", "J", "J", "R", "R", "R", "J", "J", "J", "J", "J", "J", "J", "J"],
+    ["J", "J", "S", "S", "J", "R", "F", "R", "J", "B", "J", "J", "J", "J", "J", "J"],
+    ["J", "S", "S", "J", "J", "F", "J", "J", "X", "J", "J", "V", "V", "J", "J", "J"],
+    ["J", "J", "J", "C", "T", "T", "T", "J", "J", "J", "V", "V", "J", "J", "J", "J"],
+    ["J", "J", "J", "J", "T", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"],
+    ["J", "J", "J", "J", "T", "X", "B", "J", "J", "O", "J", "J", "J", "J", "J", "J"],
+    ["J", "J", "S", "S", "T", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"],
+    ["J", "S", "S", "S", "J", "J", "J", "J", "J", "J", "S", "S", "J", "J", "J", "J"],
+    ["J", "J", "S", "J", "J", "J", "J", "J", "J", "S", "S", "J", "J", "J", "J", "J"],
+    ["J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"],
+    ["J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"],
+		["J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J", "J"]
   ],
 
   "playerStart": [

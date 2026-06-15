@@ -1523,6 +1523,20 @@ function ambientPlay(url) {
 function ambientStop() {
   if (AUDIO.ambient) { AUDIO.ambient.pause(); AUDIO.ambient.src = ''; AUDIO.ambient = null; }
 }
+function ambientFadeOut(ms = 800) {
+  return new Promise(resolve => {
+    const a = AUDIO.ambient;
+    if (!a) { resolve(); return; }
+    const steps    = 20;
+    const startVol = a.volume;
+    let   step     = 0;
+    const timer = setInterval(() => {
+      step++;
+      a.volume = Math.max(0, startVol * (1 - step / steps));
+      if (step >= steps) { clearInterval(timer); ambientStop(); resolve(); }
+    }, ms / steps);
+  });
+}
 function audioToggleMute() {
   AUDIO.muted = !AUDIO.muted;
   if (AUDIO.master) AUDIO.master.gain.value = AUDIO.muted ? 0 : AUDIO.sfxVol;
@@ -2289,6 +2303,49 @@ async function enemyActivation(enemy) {
       }
     }
   } else {
+    // Pattuglia: comportamento basato sul tipo di missione
+    let patrolDest = null;
+    const pType = G.missionType;
+    const md    = G.mapData;
+
+    if (pType === 'search_destroy') {
+      // Vagabondaggio casuale entro ±4 tile
+      const dc = clamp(enemy.col + rnd(-4, 4), 0, md.cols - 1);
+      const dr = clamp(enemy.row + rnd(-4, 4), 0, md.rows - 1);
+      if (isTilePassable(dc, dr)) patrolDest = {col: dc, row: dr};
+    } else if (pType === 'rescue_pilot') {
+      // Convergono verso il pilota; se già trovato, verso il punto di estrazione
+      const st = G.missionState;
+      patrolDest = st.pilotFound
+        ? {col: st.extractCol, row: st.extractRow}
+        : {col: st.pilotCol,   row: st.pilotRow};
+    } else if (pType === 'recon') {
+      // Esplorano l'intera mappa verso posizioni casuali
+      patrolDest = {col: rnd(0, md.cols - 1), row: rnd(0, md.rows - 1)};
+    } else if (pType === 'capture_objective') {
+      // Convergono sull'obiettivo più vicino
+      const objs = G.missionState.objectives || [];
+      if (objs.length)
+        patrolDest = objs.reduce((b, o) => dist(enemy, o) < dist(enemy, b) ? o : b, objs[0]);
+    }
+
+    if (patrolDest && enemy.ap >= 1 &&
+        !(patrolDest.col === enemy.col && patrolDest.row === enemy.row)) {
+      const path = getPath(enemy.col, enemy.row, patrolDest.col, patrolDest.row);
+      if (path && path.length > 1) {
+        let moved = 0;
+        for (let i = 1; i < path.length && moved < stats.move && enemy.ap > 0; i++) {
+          const step = path[i];
+          const tile = getTileAt(step.col, step.row);
+          if (!tile || tile.impassable) break;
+          if (isOccupied(step.col, step.row, enemy.id)) break;
+          enemy.col = step.col;
+          enemy.row = step.row;
+          moved += tile.moveCost || 1;
+          enemy.ap = Math.max(0, enemy.ap - (tile.moveCost || 1));
+        }
+      }
+    }
     log(t('log.vc_patrol', {name: enemy.name}), 'enemy');
   }
   render();
@@ -3010,34 +3067,38 @@ function renderMap() {
   ctx.fillStyle = '#111a08';
   ctx.fillRect(0, 0, G.canvas.width, G.canvas.height);
 
-  // Se c'è immagine mappa, la disegna scalata sotto la griglia
+  // Se c'è immagine mappa, la disegna a piena risoluzione al posto dei tile
   if (G.tileImg) {
-    ctx.globalAlpha = 0.65;
     ctx.drawImage(G.tileImg,
       G.camX, G.camY,
       md.cols * ts, md.rows * ts
     );
-    ctx.globalAlpha = 1;
-  }
-
-  // Griglia tile colorata (semi-trasparente sopra immagine)
-  for (let r=0; r<md.rows; r++) {
-    for (let c=0; c<md.cols; c++) {
-      const key = md.grid[r][c];
-      const tileDef = md.tileTypes[key];
-      if (!tileDef) continue;
-      const {x,y} = tileToScreen(c, r);
-      // Sfondo tile
-      ctx.globalAlpha = G.tileImg ? 0.35 : 0.85;
-      ctx.fillStyle = tileDef.color || '#2d5a1b';
-      ctx.fillRect(x, y, ts, ts);
-      ctx.globalAlpha = 1;
-      // Bordo griglia sottile
-      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-      ctx.lineWidth = 0.5;
-      ctx.strokeRect(x, y, ts, ts);
-      // Dettagli grafici per tipo terreno
-      drawTileDetails(ctx, tileDef, x, y, ts);
+    // Solo bordi griglia (navigazione), niente fill né texture
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+    ctx.lineWidth = 0.5;
+    for (let r=0; r<md.rows; r++) {
+      for (let c=0; c<md.cols; c++) {
+        const {x,y} = tileToScreen(c, r);
+        ctx.strokeRect(x, y, ts, ts);
+      }
+    }
+  } else {
+    // Griglia tile colorata con texture
+    for (let r=0; r<md.rows; r++) {
+      for (let c=0; c<md.cols; c++) {
+        const key = md.grid[r][c];
+        const tileDef = md.tileTypes[key];
+        if (!tileDef) continue;
+        const {x,y} = tileToScreen(c, r);
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = tileDef.color || '#2d5a1b';
+        ctx.fillRect(x, y, ts, ts);
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(x, y, ts, ts);
+        drawTileDetails(ctx, tileDef, x, y, ts);
+      }
     }
   }
 
@@ -3753,8 +3814,10 @@ async function loadMissionStep(jsonPath) {
       list.appendChild(div);
     });
 
-    document.getElementById('modal-start-btn').onclick = () => {
+    document.getElementById('modal-start-btn').onclick = async () => {
       if (!selected) return;
+      document.getElementById('modal-start-btn').disabled = true;
+      await ambientFadeOut(800);
       document.getElementById('modal-overlay').style.display = 'none';
       startGame(selected);
     };
@@ -3774,6 +3837,7 @@ Promise.all([loadLang('it'), loadCatalog(), loadConfig()]).then(() => {
   applyTranslationsToData();
   applyTranslationsToDOM();
   initModal();
+  if (CONFIG.menuMusic) ambientPlay(CONFIG.menuMusic);
 });
 
 // Language switcher
