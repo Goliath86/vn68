@@ -87,6 +87,7 @@
       "overwatch_tag": "OW",
       "carry_pilot": "✈ Carrying pilot",
       "in_overwatch": "🔭 IN OVERWATCH",
+      "in_suppression": "🔥 SUPPRESSIVE FIRE",
       "special_used": "Ability used",
       "special_available": "Spec: {label}",
       "shot_used": "Shot fired (1 shot/turn)"
@@ -144,6 +145,8 @@
     "enemy_deployed": "Enemy forces: {count} Viet Cong deployed",
     "unit_move": "{name} moves to ({col},{row}) [-{ap}AP]",
     "overwatch_fire": "{name} OVERWATCH: fires at {target}!",
+    "suppression_set": "{name} in SUPPRESSIVE FIRE — pins any VC entering range",
+    "suppression_fire": "{name} SUPPRESSION: {target} is pinned (AP zeroed)!",
     "hit_damage": "Hit! -{dmg}HP",
     "unit_eliminated": "{name} ELIMINATED",
     "pilot_found": "{name} found the PILOT! Bring him to extraction.",
@@ -163,7 +166,7 @@
     "attack_prompt": "{attacker} attacks {defender} — ROLL THE DICE",
     "attack_dice_context": "Attack by {name}",
     "overwatch_dice_context": "Overwatch: {name}",
-    "attack_result": "→ Roll: {dice}={roll} (+{atk} ATK) vs {save} (DEF) → {result}",
+    "attack_result": "→ Roll: {dice}={roll} (+{atk} ATK) vs {defBreakdown} → {result}",
     "attack_hit": "HIT! -{dmg}HP",
     "attack_miss": "MISSED",
     "out_of_range": "{name}: out of range ({range}/{max})",
@@ -182,6 +185,7 @@
     "kia": "KIA",
     "spot": "!",
     "overwatch": "OW!",
+    "suppression": "SUP!"
     "demolition_success": "BLOWN!",
     "demolition_fail": "HELD"
   },

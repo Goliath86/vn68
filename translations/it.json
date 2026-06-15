@@ -87,6 +87,7 @@
       "overwatch_tag": "OW",
       "carry_pilot": "✈ Trasporta pilota",
       "in_overwatch": "🔭 IN OVERWATCH",
+      "in_suppression": "🔥 FUOCO SOPPRESSIVO",
       "special_used": "Abilità usata",
       "special_available": "Spec: {label}",
       "shot_used": "Già sparato (1 sparo/turno)"
@@ -144,6 +145,8 @@
     "enemy_deployed": "Truppe nemiche: {count} Vietcong in campo",
     "unit_move": "{name} si muove in ({col},{row}) [-{ap}AP]",
     "overwatch_fire": "{name} OVERWATCH: fuoco su {target}!",
+    "suppression_set": "{name} in FUOCO SOPPRESSIVO — blocca i VC che entrano nel range",
+    "suppression_fire": "{name} SOPPRESSIONE: {target} è bloccato (AP azzerati)!",
     "hit_damage": "Colpito! -{dmg}HP",
     "unit_eliminated": "{name} ELIMINATO",
     "pilot_found": "{name} ha trovato il PILOTA! Portalo all'estrazione.",
@@ -163,7 +166,7 @@
     "attack_prompt": "{attacker} attacca {defender} — LANCIA IL DADO",
     "attack_dice_context": "Attacco di {name}",
     "overwatch_dice_context": "Overwatch: {name}",
-    "attack_result": "→ Tiro: {dice}={roll} (+{atk} ATK) vs {save} (DEF) → {result}",
+    "attack_result": "→ Tiro: {dice}={roll} (+{atk} ATK) vs {defBreakdown} → {result}",
     "attack_hit": "COLPITO! -{dmg}HP",
     "attack_miss": "MANCATO",
     "out_of_range": "{name}: fuori gittata ({range}/{max})",
@@ -182,6 +185,7 @@
     "kia": "KIA",
     "spot": "!",
     "overwatch": "OW!",
+    "suppression": "SUP!"
     "demolition_success": "DEMOLITO!",
     "demolition_fail": "RESISTENTE"
   },

@@ -148,8 +148,8 @@ La partita finisce con una **vittoria** quando l'obiettivo è completato, o con 
 
 ### Abilità Speciali — Dettagli
 
-- **Fuoco Soppressivo (Assalto):** il bersaglio subisce una riduzione di 1 AP al turno successivo.
-- **Overwatch (Cecchino):** entra in modalità sorveglianza; se un VC si muove nel suo raggio visivo, il cecchino spara automaticamente. Il cecchino può effettuare **un solo attacco per turno** — scegli con cura il bersaglio.
+- **Fuoco Soppressivo (Assalto):** l'assalto entra in modalità di fuoco soppressivo (costo 1 AP). Durante la fase nemica, qualsiasi VC che si trova o si sposta entro gittata 2 viene bloccato: AP azzerati, non può attaccare. La zona di soppressione è visibile sull'overlay con un cerchio arancione tratteggiato.
+- **Overwatch (Cecchino):** entra in modalità sorveglianza (costo 1 AP). Se durante la fase nemica un VC si muove nel suo raggio di gittata (6 tile), il cecchino spara automaticamente con 2d6 + ATK. Il cecchino può effettuare **un solo attacco per turno** — scegli con cura il bersaglio.
 - **Demolizione (Geniere):** rimuove un bunker o un ostacolo adiacente, trasformandolo in terreno percorribile.
 - **Primo Soccorso (Medico):** ripristina HP a un alleato adiacente.
 

@@ -1248,6 +1248,7 @@ const G = {
   reachable:    [],      // celle raggiungibili
   attackable:   [],      // celle attaccabili
   overwatchList:[],      // unità in overwatch
+  suppressList: [],      // unità assault in fuoco soppressivo
   canvas:       null,
   ctx:          null,
   oCanvas:      null,
@@ -1666,6 +1667,7 @@ function _sfxClick(ac, out, t) {
 
 // ── INIT GAME ──────────────────────────────────────────────────────────
 function startGame(missionType) {
+  history.pushState({ game: true }, '');
   G.missionType = missionType;
   G.turn = 1;
   G.phase = 'player';
@@ -1674,6 +1676,7 @@ function startGame(missionType) {
   G.selectedUnit = null;
   G.actionMode = null;
   G.overwatchList = [];
+  G.suppressList  = [];
   G.missionState = {};
 
   const classes = ['assault','sniper','engineer','medic'];
@@ -1694,6 +1697,7 @@ function startGame(missionType) {
       alive: true,
       specialUsed: false,
       overwatch: false,
+      suppression: false,
       suppressed: false,
       carriesPilot: false,
     });
@@ -1872,7 +1876,8 @@ async function resolveCombat(attacker, defender, isEnemy=false) {
   const atkDef = isEnemy ? getEnemyStats(attacker) : UNIT_CLASSES[attacker.cls];
   const atkVal = atkDef.attack;
   const defCover = coverBonus(defender.col, defender.row);
-  const defVal   = (isEnemy ? (UNIT_CLASSES[defender.cls]?.defense ?? 1) : getEnemyStats(defender).defense) + defCover;
+  const defStat  = isEnemy ? (UNIT_CLASSES[defender.cls]?.defense ?? 1) : getEnemyStats(defender).defense;
+  const defVal   = defStat + defCover;
   const range    = dist(attacker, defender);
   const maxRange = atkDef.range;
 
@@ -1890,16 +1895,20 @@ async function resolveCombat(attacker, defender, isEnemy=false) {
     showDiceResult(diceVals, t('log.vc_attack_auto', {name: attacker.name}));
   }
 
-  const roll = diceSum(diceVals);
-  const hit  = roll + atkVal;
-  const save = defVal + rollD6();
-  const dmg  = Math.max(0, hit - save);
+  const roll    = diceSum(diceVals);
+  const hit     = roll + atkVal;
+  const defDice = rollD6();
+  const save    = defVal + defDice;
+  const dmg     = Math.max(0, hit - save);
 
   sfx(isEnemy ? 'shoot_vc' : 'shoot');
   addFX('shot', {fromCol:attacker.col, fromRow:attacker.row, toCol:defender.col, toRow:defender.row}, 600);
 
+  const defBreakdown = defCover > 0
+    ? `${defDice}+${defStat}DEF+${defCover}COV=${save}`
+    : `${defDice}+${defStat}DEF=${save}`;
   const result = dmg > 0 ? t('log.attack_hit', {dmg}) : t('log.attack_miss');
-  log(t('log.attack_result', {dice: diceVals.join('+'), roll, atk: atkVal, save, result}), dmg>0?'combat':'');
+  log(t('log.attack_result', {dice: diceVals.join('+'), roll, atk: atkVal, defBreakdown, result}), dmg>0?'combat':'');
 
   if (dmg > 0) {
     sfx('hit');
@@ -1919,9 +1928,6 @@ async function resolveCombat(attacker, defender, isEnemy=false) {
     sfx('miss');
     addFX('miss', {col:defender.col, row:defender.row}, 600);
   }
-
-  // Overwatch check: se un VC si muove vicino a un cecchino in overwatch
-  checkOverwatch(defender, attacker);
 
   updateUI();
   render();
@@ -2016,6 +2022,18 @@ document.getElementById('btn-attack').addEventListener('click', () => {
 document.getElementById('btn-special').addEventListener('click', () => {
   if (!G.selectedUnit||G.selectedUnit.ap<1||G.selectedUnit.specialUsed) return;
   const u = G.selectedUnit;
+  if (u.cls === 'assault') {
+    // Fuoco Soppressivo immediato
+    u.suppression = true;
+    u.ap -= 1;
+    u.specialUsed = true;
+    if (!G.suppressList.find(s=>s.id===u.id)) G.suppressList.push(u);
+    sfx('overwatch');
+    log(t('log.suppression_set', {name: u.name}), 'system');
+    updateUI();
+    render();
+    return;
+  }
   if (u.cls === 'sniper') {
     // Overwatch immediato
     u.overwatch = true;
@@ -2146,28 +2164,7 @@ function moveUnit(unit, toCol, toRow, apCost) {
 
   log(t('log.unit_move', {name: unit.name, col: toCol, row: toRow, ap: apCost}));
 
-  // Overwatch check
-  for (const ow of G.overwatchList) {
-    if (ow.id === unit.id) continue;
-    if (!ow.alive) continue;
-    const owDef = UNIT_CLASSES[ow.cls];
-    if (dist(ow, unit) <= owDef.range) {
-      log(t('log.overwatch_fire', {name: ow.name, target: unit.name}), 'combat');
-      sfx('shoot');
-      addFX('overwatch', {owCol:ow.col, owRow:ow.row, tCol:unit.col, tRow:unit.row}, 700);
-      const dv = rollDice(2);
-      showDiceResult(dv, t('log.overwatch_dice_context', {name: ow.name}));
-      const roll = diceSum(dv) + owDef.attack;
-      const sv   = rollD6() + coverBonus(unit.col, unit.row);
-      const dmg  = Math.max(0, roll - sv);
-      if (dmg > 0) {
-        unit.hp -= dmg;
-        log(t('log.hit_damage', {dmg}), 'combat');
-        addFX('hit', {col:unit.col, row:unit.row, dmg}, 700);
-        if (unit.hp <= 0) { unit.hp=0; unit.alive=false; log(t('log.unit_eliminated',{name:unit.name}),'combat'); addFX('death', {col:unit.col, row:unit.row}, 1100); }
-      }
-    }
-  }
+  // (Overwatch si applica al movimento VC — vedi checkOverwatch in enemyActivation)
 
   // Missione: pilota
   if (G.missionType==='rescue_pilot') {
@@ -2220,9 +2217,11 @@ function endPlayerTurn() {
     checkVictory();
   }
 
-  // Reset overwatch
+  // Reset overwatch e soppressione
   G.overwatchList = [];
   G.units.forEach(u => { u.overwatch = false; });
+  G.suppressList = [];
+  G.units.forEach(u => { u.suppression = false; });
 
   sfx('turn_end');
   log(t('log.player_turn_end'), 'turn');
@@ -2239,7 +2238,7 @@ async function runEnemyTurn() {
   const liveEnemies = G.enemies.filter(e=>e.alive);
 
   // Reset AP nemici
-  liveEnemies.forEach(e=>{ e.ap=e.maxAp||2; e.alerted=false; });
+  liveEnemies.forEach(e=>{ e.ap=e.maxAp||2; e.alerted=false; e.suppressed=false; });
 
   // Rinforzi?
   const reinTurn = G.mapData.reinforcementTurn||99;
@@ -2303,11 +2302,15 @@ async function enemyActivation(enemy) {
   }
 
   if (enemy.alerted) {
-    // Se in gittata: attacca
+    // Se in gittata: attacca (ma overwatch/soppressione possono intervenire)
     if (d <= stats.range && enemy.ap >= 1) {
-      enemy.ap--;
-      log(t('log.vc_attack', {name: enemy.name, target: target.name}), 'enemy');
-      await resolveCombat(enemy, target, true);
+      checkOverwatch(enemy);
+      checkSuppression(enemy);
+      if (enemy.ap >= 1) {
+        enemy.ap--;
+        log(t('log.vc_attack', {name: enemy.name, target: target.name}), 'enemy');
+        await resolveCombat(enemy, target, true);
+      }
     } else {
       // Muovi verso il target
       if (enemy.ap >= 1) {
@@ -2329,6 +2332,9 @@ async function enemyActivation(enemy) {
             const newDist = dist(enemy, target);
             log(t('log.vc_advance', {name: enemy.name, target: target.name, dist: newDist}), 'enemy');
           }
+          // Overwatch e fuoco soppressivo: controlla dopo il movimento
+          checkOverwatch(enemy);
+          checkSuppression(enemy);
           // Attacca se ora in gittata
           if (dist(enemy,target)<=stats.range && enemy.ap>=1) {
             enemy.ap--;
@@ -2382,6 +2388,9 @@ async function enemyActivation(enemy) {
         }
       }
     }
+    // Overwatch e fuoco soppressivo: controlla dopo il movimento
+    checkOverwatch(enemy);
+    checkSuppression(enemy);
     log(t('log.vc_patrol', {name: enemy.name}), 'enemy');
   }
   render();
@@ -2416,8 +2425,47 @@ function spawnReinforcements(count) {
 function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 
 // ── OVERWATCH ──────────────────────────────────────────────────────────
-function checkOverwatch(movedUnit, attacker) {
-  // Gestito inline in moveUnit per i nemici
+function checkOverwatch(enemy) {
+  for (const ow of G.overwatchList) {
+    if (!ow.alive) continue;
+    const owDef = UNIT_CLASSES[ow.cls];
+    if (dist(ow, enemy) <= owDef.range) {
+      log(t('log.overwatch_fire', {name: ow.name, target: enemy.name}), 'combat');
+      sfx('shoot');
+      addFX('overwatch', {owCol: ow.col, owRow: ow.row, tCol: enemy.col, tRow: enemy.row}, 700);
+      const dv  = rollDice(2);
+      showDiceResult(dv, t('log.overwatch_dice_context', {name: ow.name}));
+      const roll = diceSum(dv) + owDef.attack;
+      const sv   = rollD6() + coverBonus(enemy.col, enemy.row);
+      const dmg  = Math.max(0, roll - sv);
+      if (dmg > 0) {
+        enemy.hp -= dmg;
+        log(t('log.hit_damage', {dmg}), 'combat');
+        addFX('hit', {col: enemy.col, row: enemy.row, dmg}, 700);
+        if (enemy.hp <= 0) {
+          enemy.hp = 0; enemy.alive = false;
+          log(t('log.unit_eliminated', {name: enemy.name}), 'combat');
+          addFX('death', {col: enemy.col, row: enemy.row}, 1100);
+        }
+      }
+    }
+  }
+}
+
+// ── SUPPRESSION ────────────────────────────────────────────────────────
+function checkSuppression(enemy) {
+  if (enemy.suppressed) return;
+  for (const sup of G.suppressList) {
+    if (!sup.alive) continue;
+    if (dist(sup, enemy) <= UNIT_CLASSES[sup.cls].range) {
+      enemy.suppressed = true;
+      enemy.ap = 0;
+      log(t('log.suppression_fire', {name: sup.name, target: enemy.name}), 'combat');
+      addFX('suppression', {supCol: sup.col, supRow: sup.row, tCol: enemy.col, tRow: enemy.row}, 700);
+      sfx('shoot');
+      break;
+    }
+  }
 }
 
 // ── VICTORY / DEFEAT ──────────────────────────────────────────────────
@@ -2482,11 +2530,31 @@ document.getElementById('confirm-no').addEventListener('click', () => {
 });
 document.getElementById('confirm-yes').addEventListener('click', async () => {
   document.getElementById('confirm-overlay').classList.add('hidden');
+  history.replaceState(null, '');
   G.phase = 'gameover'; // blocca il loop nemico in corso
   await ambientFadeOut(800);
   document.getElementById('modal-overlay').style.display = 'flex';
   initModal();
   if (CONFIG.menuMusic) ambientPlay(CONFIG.menuMusic);
+});
+
+// ── BACK BUTTON (Android / browser) ───────────────────────────────────
+window.addEventListener('popstate', () => {
+  const confirmEl = document.getElementById('confirm-overlay');
+  const confirmVisible = !confirmEl.classList.contains('hidden');
+
+  if (confirmVisible) {
+    // Back premuto mentre il confirm è aperto → chiude il confirm (= NO)
+    confirmEl.classList.add('hidden');
+    if (G.mapData && G.phase !== 'gameover') history.pushState({ game: true }, '');
+    return;
+  }
+
+  if (G.mapData && G.phase !== 'gameover') {
+    // Partita attiva → re-push dello stato e mostra confirm
+    history.pushState({ game: true }, '');
+    returnToMenu();
+  }
 });
 
 // ── FX ENGINE ──────────────────────────────────────────────────────────
@@ -2811,6 +2879,32 @@ function _drawEffect(ctx, ts, fx, p) {
         ctx.font=`bold ${Math.round(ts*.24)}px 'Oswald'`;
         ctx.textAlign='center'; ctx.textBaseline='bottom';
         ctx.fillText(t('fx.overwatch'),osx,oy);
+      }
+      break;
+    }
+
+    case 'suppression': {
+      const {supCol, supRow, tCol, tRow} = fx.data;
+      const {x:ox2, y:oy2} = tileToScreen(supCol, supRow);
+      const {x:tx3, y:ty3} = tileToScreen(tCol, tRow);
+      const ssx=ox2+ts*.5, ssy=oy2+ts*.5, stx=tx3+ts*.5, sty=ty3+ts*.5;
+      if (p<.35) {
+        const ft=p/.35;
+        ctx.strokeStyle=`rgba(255,165,50,${.9*(1-ft)})`; ctx.lineWidth=3;
+        ctx.strokeRect(ox2+2,oy2+2,ts-4,ts-4);
+      }
+      ctx.strokeStyle=`rgba(255,165,50,${.85*(1-p)})`; ctx.lineWidth=1.5;
+      ctx.setLineDash([3,2]);
+      const stt=Math.min(1,p/.75);
+      ctx.beginPath();
+      ctx.moveTo(ssx,ssy);
+      ctx.lineTo(ssx+(stx-ssx)*stt,ssy+(sty-ssy)*stt);
+      ctx.stroke(); ctx.setLineDash([]);
+      if (p<.5) {
+        ctx.fillStyle=`rgba(255,165,50,${1-p/.5})`;
+        ctx.font=`bold ${Math.round(ts*.24)}px 'Oswald'`;
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText(t('fx.suppression'),ssx,oy2);
       }
       break;
     }
@@ -3366,6 +3460,11 @@ function renderMap() {
       ctx.strokeStyle='#aaddff'; ctx.lineWidth=1.5;
       ctx.setLineDash([3,2]); ctx.strokeRect(x+2,y+2,ts-4,ts-4); ctx.setLineDash([]);
     }
+    // Fuoco Soppressivo
+    if (u.suppression) {
+      ctx.strokeStyle='#ffaa33'; ctx.lineWidth=1.5;
+      ctx.setLineDash([3,2]); ctx.strokeRect(x+2,y+2,ts-4,ts-4); ctx.setLineDash([]);
+    }
 
     // HP bar
     const hpRatio = u.hp / u.maxHp;
@@ -3459,6 +3558,26 @@ function renderOverlay() {
       ctx.fillRect(x+1,y+1,ts-2,ts-2);
       ctx.strokeRect(x+1,y+1,ts-2,ts-2);
     }
+    // Mirino su ogni nemico attaccabile
+    ctx.save();
+    for (const e of G.attackable) {
+      const {x,y} = tileToScreen(e.col, e.row);
+      const cx = x + ts/2, cy = y + ts/2;
+      const ro = ts * 0.30, ri = ts * 0.09, gap = ts * 0.05;
+      const lw = Math.max(1.5, ts * 0.045);
+      ctx.strokeStyle = 'rgba(255,60,60,0.95)';
+      ctx.lineWidth = lw;
+      ctx.beginPath(); ctx.arc(cx, cy, ro, 0, Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy, ri, 0, Math.PI*2); ctx.stroke();
+      const i2 = ri + gap, o2 = ro - gap;
+      ctx.beginPath();
+      ctx.moveTo(cx,       cy - o2); ctx.lineTo(cx,       cy - i2);
+      ctx.moveTo(cx,       cy + i2); ctx.lineTo(cx,       cy + o2);
+      ctx.moveTo(cx - o2,  cy);      ctx.lineTo(cx - i2,  cy);
+      ctx.moveTo(cx + i2,  cy);      ctx.lineTo(cx + o2,  cy);
+      ctx.stroke();
+    }
+    ctx.restore();
     // Linea di fuoco dall'unità selezionata
     if (G.selectedUnit) {
       const {x:sx,y:sy} = tileToScreen(G.selectedUnit.col, G.selectedUnit.row);
@@ -3504,6 +3623,19 @@ function renderOverlay() {
     ctx.beginPath();
     ctx.arc(x+ts/2, y+ts/2, def.range*ts, 0, Math.PI*2);
     ctx.stroke();
+  }
+
+  // Zone soppressione (assalti in fuoco soppressivo)
+  for (const sup of G.suppressList) {
+    if (!sup.alive) continue;
+    const {x:sx, y:sy} = tileToScreen(sup.col, sup.row);
+    ctx.strokeStyle = 'rgba(255,165,50,0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4,3]);
+    ctx.beginPath();
+    ctx.arc(sx+ts/2, sy+ts/2, UNIT_CLASSES[sup.cls].range*ts, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.setLineDash([]);
   }
 
   // Effetti grafici
@@ -3638,6 +3770,7 @@ function makeUnitCard(u, mobile) {
           ${u.name}
           ${dead?`<span style="font-size:9px;background:#441111;color:#ff6666;padding:1px 4px;border-radius:2px">KIA</span>`:''}
           ${u.overwatch?'<span style="font-size:9px;color:#aaddff">OW</span>':''}
+          ${u.suppression?'<span style="font-size:9px;color:#ffaa33">SUP</span>':''}
           ${u.carriesPilot?'<span style="font-size:11px">✈</span>':''}
         </div>
         <div style="font-size:10px;color:var(--paper-dark);display:flex;gap:8px;margin-top:1px">
@@ -3714,6 +3847,7 @@ function selInfoHTML(u) {
         ? `<span style="color:var(--red)">${t('units.status.special_used')}</span>`
         : `<span style="color:var(--highlight)">${t('units.status.special_available', {label: def.specialLabel})}</span>`}
       ${u.overwatch    ? `<br><span style="color:#aaddff">${t('units.status.in_overwatch')}</span>` : ''}
+      ${u.suppression  ? `<br><span style="color:#ffaa33">${t('units.status.in_suppression')}</span>` : ''}
       ${u.cls==='sniper' && u.hasShot ? `<br><span style="color:var(--red)">${t('units.status.shot_used')}</span>` : ''}
       ${u.carriesPilot ? `<br><span style="color:var(--yellow)">${t('units.status.carry_pilot')}</span>` : ''}
     </div>`;
