@@ -2560,14 +2560,14 @@ function renderTileAnimations(ctx, ts) {
 // Coordinate tile-relative (frazione di ts) — indipendenti da camera e zoom
 function _smokeAddParticle(particles) {
   particles.push({
-    rx:  (Math.random() - 0.5) * 0.5,        // offset X dal centro tile (in unità ts)
-    ry:  0.28 + Math.random() * 0.14,         // offset Y (parte bassa del tile)
-    vx:  (Math.random() - 0.5) * 0.010,       // velocità X (ts/ms)
-    vy0: -(0.015 + Math.random() * 0.015),    // velocità Y iniziale (ts/ms, negativa = su)
+    rx:  (Math.random() - 0.5) * 0.30,        // offset X iniziale (±0.15 ts)
+    ry:  0.22 + Math.random() * 0.12,          // parte bassa del tile
+    vx:  (Math.random() - 0.5) * 0.0001,       // deriva laterale minima (ts/ms)
+    vy0: -(0.0003 + Math.random() * 0.0002),   // salita lenta (ts/ms) — totale ~0.6–0.8 ts
     age: 0,
-    lifetime: 3000 + Math.random() * 3500,
-    r0:  0.12,                                 // raggio iniziale (multiplo di ts)
-    r1:  0.40 + Math.random() * 0.22,         // raggio finale
+    lifetime: 5000 + Math.random() * 4000,     // vita lunga per vederla salire piano
+    r0:  0.10,                                  // raggio iniziale
+    r1:  0.26 + Math.random() * 0.12,          // raggio finale: 26–38% di ts
   });
 }
 
@@ -2589,7 +2589,7 @@ function _drawTileSmoke(ctx, x, y, ts, dt, anim) {
     }
   }
 
-  if (Math.random() < dt / 320) _smokeAddParticle(anim._particles);
+  if (Math.random() < dt / 480) _smokeAddParticle(anim._particles);
 
   ctx.save();
   for (let i = anim._particles.length - 1; i >= 0; i--) {
@@ -2605,12 +2605,12 @@ function _drawTileSmoke(ctx, x, y, ts, dt, anim) {
     const drawX  = x + ts * (0.5 + p.rx);
     const drawY  = y + ts * (0.5 + p.ry);
     const radius = (p.r0 + (p.r1 - p.r0) * Math.sqrt(frac)) * ts;
-    const alpha  = (1 - Math.abs(1 - 2 * frac)) * 0.52;
+    const alpha  = (1 - Math.abs(1 - 2 * frac)) * 0.82;
 
     const grad = ctx.createRadialGradient(drawX, drawY, 0, drawX, drawY, radius);
-    grad.addColorStop(0,    `rgba(218,213,208,${alpha})`);
-    grad.addColorStop(0.45, `rgba(200,196,192,${(alpha * 0.55).toFixed(3)})`);
-    grad.addColorStop(1,    'rgba(185,181,178,0)');
+    grad.addColorStop(0,    `rgba(225,220,215,${alpha})`);
+    grad.addColorStop(0.60, `rgba(208,203,198,${(alpha * 0.40).toFixed(3)})`);
+    grad.addColorStop(1,    'rgba(190,186,182,0)');
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(drawX, drawY, radius, 0, Math.PI * 2);
