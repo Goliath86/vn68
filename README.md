@@ -110,7 +110,7 @@ La squadra è composta da 4 soldati, uno per classe:
 
 ### Nemici Vietcong
 
-I VC si muovono e attaccano automaticamente durante la fase nemica. Esistono tre varianti:
+I VC si muovono e attaccano automaticamente durante la fase nemica. Il loro spostamento è animato con una transizione fluida, rendendo il turno nemico leggibile a colpo d'occhio. Esistono tre varianti:
 
 | Tipo | Comportamento |
 |---|---|
@@ -126,6 +126,10 @@ I VC si muovono e attaccano automaticamente durante la fase nemica. Esistono tre
 | **Recupero Pilota** | Convergono verso il pilota abbattuto; se già trovato, si dirigono al punto di estrazione per intercettare la squadra |
 | **Ricognizione** | Esplorano l'intera mappa verso posizioni casuali |
 | **Conquista Obiettivo** | Presidiano l'obiettivo più vicino |
+
+**Propagazione dell'allerta:** quando un VC avvista la squadra, avvisa automaticamente tutti i compagni entro raggio 4. I VC allertati per propagazione reagiscono nello stesso turno, rendendo ogni contatto potenzialmente un'imboscata di gruppo.
+
+**Uso tattico della copertura:** una volta allertati, i VC non avanzano in linea retta ma scelgono percorsi che privilegiano giungla, bunker e terreni coperti rispetto a radure e strade esposte. Tenersi al riparo non basta — il nemico cercherà attivamente di fare lo stesso.
 
 Dal turno configurato nella mappa possono arrivare **rinforzi VC**.
 
@@ -291,11 +295,28 @@ Per sostituire gli sprite disegnati con immagini personalizzate, inserire il per
 | Azione | Desktop | Mobile |
 |---|---|---|
 | Selezionare unità | Click sull'unità o sulla card nel pannello | Tap sulla card tab SQUADRA |
-| Muovere | Click su "Muovi", poi click sulla cella | Tab AZIONI → Muovi → tap cella |
-| Attaccare | Click su "Attacca", poi click sul nemico | Tab AZIONI → Attacca → tap nemico |
+| Muovere | Click su "Muovi" oppure `M` | Tab AZIONI → Muovi → tap cella |
+| Attaccare | Click su "Attacca" oppure `A` | Tab AZIONI → Attacca → tap nemico |
+| Abilità speciale | Click su "Speciale" oppure `S` | Tab AZIONI → Speciale |
+| Fine turno | Pulsante "Fine Turno" oppure `Invio` | Tab AZIONI → Fine Turno |
+| Annulla azione | `Esc` | — |
 | Panoramica mappa | Click + trascina | 1 dito + trascina |
 | Zoom | Rotella del mouse | Pinch con 2 dita |
 | Lanciare dado | Pulsante "LANCIA DADO" | Tab DADO |
 | Torna al menu | Bottone **⌂** nell'header | Bottone **⌂** nell'header |
 
-Il bottone **⌂** è visibile solo durante una partita attiva. Al click viene richiesta conferma prima di abbandonare la missione; la musica fa un fade-out prima di tornare al menu.
+### Hotkeys desktop
+
+Le scorciatoie da tastiera sono attive solo durante la **fase giocatore** e quando non è in corso un lancio di dado.
+
+| Tasto | Azione |
+|---|---|
+| `M` | Modalità Muovi |
+| `A` | Modalità Attacca |
+| `S` | Modalità Speciale |
+| `Invio` | Fine turno |
+| `Esc` | Annulla la modalità corrente |
+
+### Bottone ⌂ e back button
+
+Il bottone **⌂** è visibile solo durante una partita attiva. Al click — e sul **tasto indietro del browser o del telefono Android** — viene richiesta conferma prima di abbandonare la missione; la musica fa un fade-out prima di tornare al menu.

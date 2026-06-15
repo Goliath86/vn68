@@ -1731,6 +1731,7 @@ function startGame(missionType) {
       alive: true,
       alerted: false,
       suppressed: false,
+      vx: col, vy: row,
     });
     spawned++;
   }
@@ -1834,10 +1835,12 @@ function getReachable(unit, maxAP) {
   return visited;
 }
 
-function getPath(fromCol, fromRow, toCol, toRow) {
-  // A* semplice
+function getPath(fromCol, fromRow, toCol, toRow, coverAware = false) {
+  // A* semplice; con coverAware=true penalizza i tile scoperti
   const key = (c,r) => `${c},${r}`;
   const h   = (c,r) => Math.abs(c-toCol)+Math.abs(r-toRow);
+  const tileCost = tile => (tile.moveCost || 1) +
+    (coverAware ? (3 - Math.min(3, tile.coverBonus || 0)) * 0.5 : 0);
   const open = [{col:fromCol, row:fromRow, g:0, h:h(fromCol,fromRow), prev:null}];
   const closed = {};
   const DIRS = [[0,-1],[0,1],[-1,0],[1,0]];
@@ -1858,7 +1861,7 @@ function getPath(fromCol, fromRow, toCol, toRow) {
       if (closed[key(nc,nr)]) continue;
       const tile = getTileAt(nc,nr);
       if (!tile||tile.impassable) continue;
-      open.push({col:nc, row:nr, g:cur.g+tile.moveCost, h:h(nc,nr), prev:cur});
+      open.push({col:nc, row:nr, g:cur.g+tileCost(tile), h:h(nc,nr), prev:cur});
     }
   }
   return null;
@@ -2049,6 +2052,30 @@ document.getElementById('btn-special').addEventListener('click', () => {
   setActionMode('special');
 });
 document.getElementById('btn-endturn').addEventListener('click', endPlayerTurn);
+
+// ── HOTKEYS DESKTOP ────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (G.phase !== 'player' || G.pendingDice) return;
+  const u = G.selectedUnit;
+  switch (e.key.toLowerCase()) {
+    case 'm':
+      if (u && u.alive && u.ap > 0) document.getElementById('btn-move').click();
+      break;
+    case 'a':
+      if (u && u.alive && u.ap > 0 && !(u.cls === 'sniper' && u.hasShot)) document.getElementById('btn-attack').click();
+      break;
+    case 's':
+      if (u && u.alive && u.ap > 0 && !u.specialUsed) document.getElementById('btn-special').click();
+      break;
+    case 'enter':
+      document.getElementById('btn-endturn').click();
+      break;
+    case 'escape':
+      if (G.actionMode) { setActionMode(null); sfx('click'); }
+      break;
+  }
+});
 
 // ── CANVAS CLICK ───────────────────────────────────────────────────────
 function onCanvasClick(e) {
@@ -2297,6 +2324,7 @@ async function enemyActivation(enemy) {
   if (d <= 5 && !enemy.alerted) {
     enemy.alerted = true;
     addFX('spot', {col:enemy.col, row:enemy.row}, 1200);
+    propagateAlert(enemy);
   } else if (d <= 5) {
     enemy.alerted = true;
   }
@@ -2315,7 +2343,7 @@ async function enemyActivation(enemy) {
       // Muovi verso il target
       if (enemy.ap >= 1) {
         const fromCol = enemy.col, fromRow = enemy.row;
-        const path = getPath(enemy.col, enemy.row, target.col, target.row);
+        const path = getPath(enemy.col, enemy.row, target.col, target.row, true);
         if (path && path.length > 1) {
           let moved = 0;
           for (let i=1; i<path.length && moved<stats.move && enemy.ap>0; i++) {
@@ -2329,6 +2357,7 @@ async function enemyActivation(enemy) {
             enemy.ap = Math.max(0, enemy.ap - (tile.moveCost||1));
           }
           if (enemy.col !== fromCol || enemy.row !== fromRow) {
+            await animateEnemyMove(enemy, fromCol, fromRow, enemy.col, enemy.row);
             const newDist = dist(enemy, target);
             log(t('log.vc_advance', {name: enemy.name, target: target.name, dist: newDist}), 'enemy');
           }
@@ -2375,6 +2404,7 @@ async function enemyActivation(enemy) {
         !(patrolDest.col === enemy.col && patrolDest.row === enemy.row)) {
       const path = getPath(enemy.col, enemy.row, patrolDest.col, patrolDest.row);
       if (path && path.length > 1) {
+        const patFromCol = enemy.col, patFromRow = enemy.row;
         let moved = 0;
         for (let i = 1; i < path.length && moved < stats.move && enemy.ap > 0; i++) {
           const step = path[i];
@@ -2385,6 +2415,9 @@ async function enemyActivation(enemy) {
           enemy.row = step.row;
           moved += tile.moveCost || 1;
           enemy.ap = Math.max(0, enemy.ap - (tile.moveCost || 1));
+        }
+        if (enemy.col !== patFromCol || enemy.row !== patFromRow) {
+          await animateEnemyMove(enemy, patFromCol, patFromRow, enemy.col, enemy.row);
         }
       }
     }
@@ -2415,6 +2448,7 @@ function spawnReinforcements(count) {
       hp:5, maxHp:5,
       ap:2, maxAp:2,
       alive:true, alerted:true,
+      vx: col, vy: row,
     });
     addFX('spawn', {col, row}, 1000);
     spawned++;
@@ -2423,6 +2457,27 @@ function spawnReinforcements(count) {
 }
 
 function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
+  const steps = Math.abs(toCol - fromCol) + Math.abs(toRow - fromRow);
+  if (steps === 0) return Promise.resolve();
+  const duration = Math.min(steps * 160, 480);
+  const t0 = performance.now();
+  enemy.vx = fromCol;
+  enemy.vy = fromRow;
+  return new Promise(resolve => {
+    function frame(now) {
+      const p = Math.min(1, (now - t0) / duration);
+      const ease = p < 0.5 ? 2*p*p : -1+(4-2*p)*p;
+      enemy.vx = fromCol + (toCol - fromCol) * ease;
+      enemy.vy = fromRow + (toRow - fromRow) * ease;
+      render();
+      if (p < 1) requestAnimationFrame(frame);
+      else { enemy.vx = toCol; enemy.vy = toRow; resolve(); }
+    }
+    requestAnimationFrame(frame);
+  });
+}
 
 // ── OVERWATCH ──────────────────────────────────────────────────────────
 function checkOverwatch(enemy) {
@@ -2450,6 +2505,18 @@ function checkOverwatch(enemy) {
       }
     }
   }
+}
+
+// ── ALERT PROPAGATION ──────────────────────────────────────────────────
+function propagateAlert(source) {
+  const RADIUS = 4;
+  G.enemies.forEach(other => {
+    if (!other.alive || other.id === source.id || other.alerted) return;
+    if (dist(source, other) <= RADIUS) {
+      other.alerted = true;
+      addFX('spot', {col: other.col, row: other.row}, 900);
+    }
+  });
 }
 
 // ── SUPPRESSION ────────────────────────────────────────────────────────
@@ -3410,7 +3477,7 @@ function renderMap() {
   for (const e of G.enemies) {
     if (!e.alive) continue;
     if (!isTileVisible(e.col, e.row)) continue;
-    const {x,y} = tileToScreen(e.col, e.row);
+    const {x,y} = tileToScreen(e.vx ?? e.col, e.vy ?? e.row);
     ctx.fillStyle='rgba(100,15,15,0.68)';
     ctx.beginPath(); ctx.arc(x+ts*.5,y+ts*.5,ts*.41,0,Math.PI*2); ctx.fill();
     ctx.strokeStyle='#cc3300'; ctx.lineWidth=1.5;
