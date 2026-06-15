@@ -501,6 +501,27 @@
   #gameover-box h2.lose { color: var(--red); }
   #gameover-box p { font-size: 13px; color: var(--paper-dark); margin-bottom: 20px; line-height: 1.7; }
 
+  /* ── CONFIRM OVERLAY ─────────────────────────────── */
+  #confirm-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 300;
+  }
+  #confirm-overlay.hidden { display: none; }
+  #confirm-box {
+    background: var(--panel-bg);
+    border: 2px solid var(--tan-dark);
+    border-radius: 4px;
+    padding: 28px 36px;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+  }
+  #confirm-box p { font-size: 13px; color: var(--paper-dark); margin-bottom: 20px; line-height: 1.6; }
+  #confirm-box .btn { margin: 0 6px; }
+  #btn-menu { display: none; }
+
   /* ── TOOLTIP ─────────────────────────────────────── */
   #tile-tooltip {
     position: absolute;
@@ -776,12 +797,12 @@
   }
   .lang-btn:hover  { border-color: var(--tan); color: var(--tan); }
   .lang-btn.active { border-color: var(--highlight); color: var(--highlight); background: rgba(240,192,48,0.1); }
-  #btn-mute, #btn-fow {
+  #btn-menu, #btn-mute, #btn-fow {
     background: none; border: 1px solid var(--border); border-radius: 2px;
     cursor: pointer; font-size: 13px; padding: 2px 5px; line-height: 1;
     color: var(--paper); transition: border-color 0.15s, color 0.15s;
   }
-  #btn-mute:hover, #btn-fow:hover { border-color: var(--tan); }
+  #btn-menu:hover, #btn-mute:hover, #btn-fow:hover { border-color: var(--tan); }
   #btn-fow.fow-on { border-color: var(--highlight); color: var(--highlight); }
   @media (max-width: 700px) { #lang-switcher { display: none; } }
 </style>
@@ -804,8 +825,9 @@
   <div id="lang-switcher">
     <button class="lang-btn active" data-lang="it">IT</button>
     <button class="lang-btn" data-lang="en">EN</button>
+    <button id="btn-menu" data-i18n="buttons.menu" title="Torna al menu" onclick="returnToMenu()">⌂</button>
     <button id="btn-mute" title="Toggle sound" onclick="audioToggleMute()">🔊</button>
-    <button id="btn-fow" title="Fog of War: OFF" onclick="toggleFOW()">👁</button>
+    <button id="btn-fow" class="fow-on" title="Fog of War: ON" onclick="toggleFOW()">👁</button>
   </div>
 </div>
 
@@ -960,6 +982,15 @@
       <div class="modal-mission-list" id="mission-list"></div>
       <button class="btn modal-start-btn" id="modal-start-btn" data-i18n="buttons.start_mission" style="font-size:15px;padding:10px 30px" disabled>▶ INIZIA MISSIONE</button>
     </div>
+  </div>
+</div>
+
+<!-- CONFIRM RETURN TO MENU -->
+<div id="confirm-overlay" class="hidden">
+  <div id="confirm-box">
+    <p data-i18n="confirm.abort_mission">Sei sicuro di voler abbandonare la missione e tornare al menu?</p>
+    <button class="btn" id="confirm-yes" data-i18n="confirm.yes">✓ SÌ</button>
+    <button class="btn" id="confirm-no"  data-i18n="confirm.no">✕ NO</button>
   </div>
 </div>
 
@@ -1232,7 +1263,7 @@ const G = {
   // effetti grafici attivi
   effects: [],
   // fog of war
-  fowEnabled:   false,
+  fowEnabled:   true,
   visibleTiles: new Set(), // "col,row" strings — aggiornato da recomputeVisibility()
 };
 
@@ -1710,6 +1741,7 @@ function startGame(missionType) {
     missionName + ' — ' + MISSION_TYPES[missionType].label.toUpperCase();
   document.getElementById('btn-dice').disabled = false;
   document.getElementById('btn-endturn').disabled = false;
+  document.getElementById('btn-menu').style.display = 'inline-block';
   log(t('log.mission_start'), 'system');
   log(t('log.mission_type', {type: MISSION_TYPES[missionType].label}), 'system');
   log(t('log.enemy_deployed', {count: spawned}), 'enemy');
@@ -2435,6 +2467,22 @@ document.getElementById('btn-restart').addEventListener('click', () => {
   document.getElementById('gameover-overlay').classList.add('hidden');
   document.getElementById('modal-overlay').style.display='flex';
   initModal();
+  if (CONFIG.menuMusic) ambientPlay(CONFIG.menuMusic);
+});
+
+function returnToMenu() {
+  document.getElementById('confirm-overlay').classList.remove('hidden');
+}
+document.getElementById('confirm-no').addEventListener('click', () => {
+  document.getElementById('confirm-overlay').classList.add('hidden');
+});
+document.getElementById('confirm-yes').addEventListener('click', async () => {
+  document.getElementById('confirm-overlay').classList.add('hidden');
+  G.phase = 'gameover'; // blocca il loop nemico in corso
+  await ambientFadeOut(800);
+  document.getElementById('modal-overlay').style.display = 'flex';
+  initModal();
+  if (CONFIG.menuMusic) ambientPlay(CONFIG.menuMusic);
 });
 
 // ── FX ENGINE ──────────────────────────────────────────────────────────
@@ -3749,6 +3797,7 @@ function initModal() {
   document.getElementById('modal-step-map').style.display = '';
   document.getElementById('modal-step-mission').style.display = 'none';
   document.getElementById('btn-select-map').disabled = true;
+  document.getElementById('btn-menu').style.display = 'none';
 
   const grid = document.getElementById('map-select-grid');
   grid.innerHTML = '';

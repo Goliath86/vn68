@@ -157,7 +157,7 @@ La partita finisce con una **vittoria** quando l'obiettivo è completato, o con 
 
 ### Fog of War (opzionale)
 
-Il bottone **👁** nell'header attiva la nebbia di guerra. Per impostazione predefinita è disattivata.
+Il bottone **👁** nell'header attiva o disattiva la nebbia di guerra. Per impostazione predefinita è **attivata**.
 
 Quando è **ON**:
 
@@ -273,3 +273,6 @@ Per sostituire gli sprite disegnati con immagini personalizzate, inserire il per
 | Panoramica mappa | Click + trascina | 1 dito + trascina |
 | Zoom | Rotella del mouse | Pinch con 2 dita |
 | Lanciare dado | Pulsante "LANCIA DADO" | Tab DADO |
+| Torna al menu | Bottone **⌂** nell'header | Bottone **⌂** nell'header |
+
+Il bottone **⌂** è visibile solo durante una partita attiva. Al click viene richiesta conferma prima di abbandonare la missione; la musica fa un fade-out prima di tornare al menu.

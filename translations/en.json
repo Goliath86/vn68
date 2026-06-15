@@ -32,7 +32,14 @@
     "new_mission": "↺ NEW MISSION",
     "start_mission": "▶ START MISSION",
     "next": "NEXT ▶",
-    "change_theater": "← Change theater"
+    "change_theater": "← Change theater",
+    "menu": "⌂"
+  },
+
+  "confirm": {
+    "abort_mission": "Are you sure you want to abort the mission and return to the menu?",
+    "yes": "✓ YES",
+    "no": "✕ NO"
   },
 
   "phases": {
