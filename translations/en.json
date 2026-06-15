@@ -31,6 +31,7 @@
     "roll_dice": "⚄ ROLL DICE",
     "new_mission": "↺ NEW MISSION",
     "start_mission": "▶ START MISSION",
+    "resume": "▶ RESUME",
     "next": "NEXT ▶",
     "change_theater": "← Change theater",
     "menu": "⌂"
@@ -88,6 +89,7 @@
       "carry_pilot": "✈ Carrying pilot",
       "in_overwatch": "🔭 IN OVERWATCH",
       "in_suppression": "🔥 SUPPRESSIVE FIRE",
+      "shaken": "⚠ SHAKEN — -1AP, no special ability",
       "special_used": "Ability used",
       "special_available": "Spec: {label}",
       "shot_used": "Shot fired (1 shot/turn)"
@@ -121,7 +123,9 @@
     "select_theater_title": "SELECT THEATER",
     "select_theater_desc": "Choose the operational field for this mission",
     "briefing_title": "MISSION BRIEFING",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "resume_title": "MISSION IN PROGRESS",
+    "resume_turn": "Turn {turn}"
   },
 
   "gameover": {
@@ -156,6 +160,7 @@
     "player_turn_end": "--- End of player turn ---",
     "vc_turn_start": "--- VC Turn ---",
     "reinforcements": "VC REINFORCEMENTS incoming! +{count} guerrillas",
+    "vc_ambush": "AMBUSH! Enemy forces emerge from the flank — +{count} alerted VC",
     "vc_turn_end": "━━━ VC turn end — Turn {turn} complete ━━━",
     "player_turn_start": "══ Turn {turn} — Player Phase ══",
     "ambush": "AMBUSH! {name} attacks {target}!",
@@ -172,6 +177,11 @@
     "out_of_range": "{name}: out of range ({range}/{max})",
     "overwatch_set": "{name} in OVERWATCH — fires at anyone moving in range",
     "sniper_range_penalty": "Sniper at distance {range}: ATK {atk} (-{penalty} range penalty)",
+    "unit_shaken": "{name} is SHAKEN! Panic — -1AP, special ability blocked",
+    "unit_recovered": "{name} recovers — morale restored",
+    "fire_set": "{name} sets {label} on fire — blocks passage for 2 turns",
+    "fire_out": "Fire at ({col},{row}) has burned out",
+    "game_resumed": "=== MISSION RESUMED — Turn {turn} ===",
     "medic_heal": "{name} heals {target}: +{healed}HP ({current}/{max})",
     "demolition_start": "{name} attempts demolition — ROLL THE DICE",
     "demolition_success": "{label} demolished!",

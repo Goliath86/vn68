@@ -41,7 +41,8 @@
       "label": "Giardino",
       "moveCost": 1,
       "coverBonus": 1,
-      "color": "#3a5a20"
+      "color": "#3a5a20",
+      "burnable": true
     },
     "U": {
       "id": "street",
@@ -157,6 +158,12 @@
   "ambushChance": 0.2,
   "reinforcementTurn": 4,
   "reinforcementCount": 2,
+  "vcAmbushTurn": 3,
+  "vcAmbushCount": 2,
+  "vcAmbushZones": [
+    { "colMin": 0, "colMax": 1, "rowMin": 5, "rowMax": 10 },
+    { "colMin": 13, "colMax": 14, "rowMin": 5, "rowMax": 10 }
+  ],
 
   "translations": {
     "it": {

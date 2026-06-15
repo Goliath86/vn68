@@ -15,7 +15,8 @@
       "moveCost": 2,
       "coverBonus": 2,
       "color": "#2d5a1b",
-      "losBlock": "partial"
+      "losBlock": "partial",
+      "burnable": true
     },
     "S": {
       "id": "swamp",
@@ -39,7 +40,8 @@
       "moveCost": 1,
       "coverBonus": 1,
       "color": "#8b6914",
-      "losBlock": "partial"
+      "losBlock": "partial",
+      "burnable": true
     },
     "C": {
       "id": "clearing",
@@ -364,6 +366,12 @@
   "ambushChance": 0.15,
   "reinforcementTurn": 5,
   "reinforcementCount": 2,
+  "vcAmbushTurn": 4,
+  "vcAmbushCount": 3,
+  "vcAmbushZones": [
+    { "colMin": 0, "colMax": 7, "rowMin": 0, "rowMax": 1 },
+    { "colMin": 0, "colMax": 7, "rowMin": 10, "rowMax": 11 }
+  ],
 
   "translations": {
     "it": {

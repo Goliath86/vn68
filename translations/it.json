@@ -31,6 +31,7 @@
     "roll_dice": "⚄ LANCIA DADO",
     "new_mission": "↺ NUOVA MISSIONE",
     "start_mission": "▶ INIZIA MISSIONE",
+    "resume": "▶ RIPRENDI",
     "next": "AVANTI ▶",
     "change_theater": "← Cambia teatro",
     "menu": "⌂"
@@ -88,6 +89,7 @@
       "carry_pilot": "✈ Trasporta pilota",
       "in_overwatch": "🔭 IN OVERWATCH",
       "in_suppression": "🔥 FUOCO SOPPRESSIVO",
+      "shaken": "⚠ SCOSSO — -1AP, nessuna abilità speciale",
       "special_used": "Abilità usata",
       "special_available": "Spec: {label}",
       "shot_used": "Già sparato (1 sparo/turno)"
@@ -121,7 +123,9 @@
     "select_theater_title": "SELEZIONA TEATRO",
     "select_theater_desc": "Scegli il campo operativo per questa missione",
     "briefing_title": "BRIEFING MISSIONE",
-    "loading": "Caricamento in corso..."
+    "loading": "Caricamento in corso...",
+    "resume_title": "PARTITA IN CORSO",
+    "resume_turn": "Turno {turn}"
   },
 
   "gameover": {
@@ -156,6 +160,7 @@
     "player_turn_end": "--- Fine turno giocatore ---",
     "vc_turn_start": "--- Turno VC ---",
     "reinforcements": "RINFORZI VC in arrivo! +{count} guerriglieri",
+    "vc_ambush": "IMBOSCATA! Forze nemiche emergono dal fianco — +{count} VC allertati",
     "vc_turn_end": "━━━ Fine turno VC — Turno {turn} completato ━━━",
     "player_turn_start": "══ Turno {turn} — Fase Giocatore ══",
     "ambush": "IMBOSCATA! {name} attacca {target}!",
@@ -172,6 +177,11 @@
     "out_of_range": "{name}: fuori gittata ({range}/{max})",
     "overwatch_set": "{name} in OVERWATCH — attacca chiunque si muova nel range",
     "sniper_range_penalty": "Cecchino a distanza {range}: ATK {atk} (-{penalty} per gittata)",
+    "unit_shaken": "{name} è SCOSSO! Panico — -1AP, abilità speciale bloccata",
+    "unit_recovered": "{name} si riprende — morale ripristinato",
+    "fire_set": "{name} incendia {label} — il fuoco blocca il passaggio per 2 turni",
+    "fire_out": "L'incendio in ({col},{row}) si è spento",
+    "game_resumed": "=== PARTITA RIPRESA — Turno {turn} ===",
     "medic_heal": "{name} cura {target}: +{healed}HP ({current}/{max})",
     "demolition_start": "{name} tenta la demolizione — LANCIA IL DADO",
     "demolition_success": "{label} demolito!",

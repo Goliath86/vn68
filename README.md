@@ -8,7 +8,7 @@ Un wargame tattico a turni ambientato nella Guerra del Vietnam, giocabile intera
 
 Comandi una squadra di soldati americani in operazioni speciali nel Vietnam del 1968. Ogni missione si svolge su una mappa a griglia con terreni diversi, obiettivi specifici e forze nemiche Vietcong (VC) che reagiscono alle tue mosse.
 
-Il gioco è pensato per una singola sessione: scegli la mappa, scegli il tipo di missione e portala a termine prima che la tua squadra venga eliminata.
+Scegli la mappa, scegli il tipo di missione e portala a termine prima che la tua squadra venga eliminata. Il progresso viene **salvato automaticamente** ad ogni turno: puoi chiudere il browser e riprendere da dove avevi lasciato.
 
 ---
 
@@ -72,6 +72,7 @@ Il costo di movimento dipende dal tipo di terreno attraversato:
 | Guado | 2 | 0 |
 | Bunker VC | 1 | +3 |
 | Fiume / Ostacolo | — | Impassabile |
+| Tile in fiamme | — | Impassabile (2 turni) |
 
 La **copertura** aumenta la difesa dell'unità che occupa la cella, rendendo più difficile colpirla.
 
@@ -113,8 +114,23 @@ La squadra è composta da 4 soldati, uno per classe:
 |---|---|---|---|---|---|---|
 | **Assalto** | 10 | 4 | 3 | 1 | 2 | Fuoco Soppressivo (riduce AP nemico) |
 | **Cecchino** | 7 | 3 | 4 | 0 | 6 | Overwatch (attacca nemici in movimento) — **1 sparo per turno** |
-| **Geniere** | 9 | 3 | 2 | 1 | 2 | Demolizione (rimuove bunker e ostacoli) |
-| **Medico** | 8 | 3 | 1 | 1 | 1 | Primo Soccorso (cura un alleato adiacente) |
+| **Geniere** | 9 | 3 | 2 | 1 | 2 | Demolizione (bunker/ostacoli, dado ≥4) · Incendio (vegetazione, immediato) |
+| **Medico** | 8 | 3 | 1 | 1 | 1 | Primo Soccorso (cura un alleato adiacente) — **ripristina il morale** |
+
+---
+
+### Morale e Panico
+
+Quando un soldato US scende **sotto il 30% degli HP** a causa di un attacco nemico, entra in stato di **panico** (SCOSSO):
+
+- **−1 AP per turno** (da 3 a 2)
+- **Abilità speciale bloccata**
+- Bordo rosso pulsante sull'unità sulla mappa
+- Tag **SCO** rosso nella lista squadra
+
+Il soldato rimane scosso finché il **medico** non lo cura riportandolo sopra la soglia del 30% HP — a quel punto il morale viene ripristinato e le penalità scompaiono.
+
+> Tenere il medico operativo non è solo per sopravvivere: è l'unico modo per riportare in piena efficienza un soldato sotto shock.
 
 ---
 
@@ -141,7 +157,9 @@ I VC si muovono e attaccano automaticamente durante la fase nemica. Il loro spos
 
 **Uso tattico della copertura:** una volta allertati, i VC non avanzano in linea retta ma scelgono percorsi che privilegiano giungla, bunker e terreni coperti rispetto a radure e strade esposte. Tenersi al riparo non basta — il nemico cercherà attivamente di fare lo stesso.
 
-Dal turno configurato nella mappa possono arrivare **rinforzi VC**.
+Dal turno configurato nella mappa possono arrivare **rinforzi VC** periodici — sempre guerriglieri, sempre dallo stesso lato.
+
+In aggiunta, ogni mappa ha un'**imboscata a sorpresa**: a un turno preciso (e una sola volta), un gruppo di VC emerge da una direzione inattesa — fianco o retro rispetto all'obiettivo — con unità di qualità superiore e già in stato di allerta. Il turno esatto non è comunicato al giocatore in anticipo.
 
 ---
 
@@ -164,7 +182,7 @@ La partita finisce con una **vittoria** quando l'obiettivo è completato, o con 
 
 - **Fuoco Soppressivo (Assalto):** l'assalto entra in modalità di fuoco soppressivo (costo 1 AP). Durante la fase nemica, qualsiasi VC che si trova o si sposta entro gittata 2 viene bloccato: AP azzerati, non può attaccare. La zona di soppressione è visibile sull'overlay con un cerchio arancione tratteggiato.
 - **Overwatch (Cecchino):** entra in modalità sorveglianza (costo 1 AP). Se durante la fase nemica un VC si muove nel suo raggio di gittata (6 tile), il cecchino spara automaticamente con 2d6 + ATK. Il cecchino può effettuare **un solo attacco per turno** — scegli con cura il bersaglio. La **penalità gittata** si applica anche in overwatch.
-- **Demolizione (Geniere):** rimuove un bunker o un ostacolo adiacente, trasformandolo in terreno percorribile.
+- **Demolizione / Incendio (Geniere):** su un tile adiacente con bunker o ostacolo, demolisce (dado ≥4). Su un tile con vegetazione (giungla, villaggio, giardino), lo incendia immediatamente. Il fuoco blocca il passaggio per **2 turni** — sia per la squadra che per i VC — e si vede sulla mappa con l'animazione fiamme.
 - **Primo Soccorso (Medico):** ripristina HP a un alleato adiacente.
 
 ---
@@ -209,6 +227,16 @@ Esempi pratici:
 - Un cecchino (visione 6) che guarda attraverso 3 tile di giungla ha vision residua 3 oltre la giungla.
 - Un assalto (visione 4) non vede un nemico nascosto dietro un bunker, nemmeno se è adiacente.
 - Demolire un muro trasforma un blocco totale in blocco parziale (macerie), aprendo sia un corridoio fisico che un varco visivo.
+
+---
+
+## Salvataggio automatico
+
+Il gioco **salva automaticamente** la partita all'inizio di ogni turno giocatore, usando il localStorage del browser. Non è necessaria alcuna azione da parte del giocatore.
+
+Quando si riapre il gioco con una partita in corso, nella schermata di selezione mappa compare un banner verde con le informazioni sull'ultima sessione (mappa, tipo missione, turno, data e ora). Premendo **▶ RIPRENDI** si rientra esattamente dallo stato in cui si era usciti.
+
+Il salvataggio viene cancellato automaticamente al termine della partita (vittoria o sconfitta).
 
 ---
 
