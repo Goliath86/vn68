@@ -124,6 +124,7 @@
     "select_theater_desc": "Scegli il campo operativo per questa missione",
     "briefing_title": "BRIEFING MISSIONE",
     "loading": "Caricamento in corso...",
+    "squad_title": "◈ COMPONI LA SQUADRA — click per cambiare classe",
     "resume_title": "PARTITA IN CORSO",
     "resume_turn": "Turno {turn}"
   },
@@ -223,6 +224,7 @@
   "objective_panel": {
     "no_mission": "Nessuna missione attiva",
     "kills": "Eliminati: {kills}/{needed}",
+    "pilot_unknown": "Pilota: posizione sconosciuta",
     "pilot_missing": "Pilota: da localizzare",
     "pilot_found": "Pilota: trovato — porta all'LZ",
     "pilot_extracted": "Pilota: ESTRATTO ✓",

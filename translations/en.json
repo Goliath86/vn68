@@ -124,6 +124,7 @@
     "select_theater_desc": "Choose the operational field for this mission",
     "briefing_title": "MISSION BRIEFING",
     "loading": "Loading...",
+    "squad_title": "◈ COMPOSE YOUR SQUAD — click to change class",
     "resume_title": "MISSION IN PROGRESS",
     "resume_turn": "Turn {turn}"
   },
@@ -223,6 +224,7 @@
   "objective_panel": {
     "no_mission": "No active mission",
     "kills": "Eliminated: {kills}/{needed}",
+    "pilot_unknown": "Pilot: position unknown",
     "pilot_missing": "Pilot: to locate",
     "pilot_found": "Pilot: found — bring to LZ",
     "pilot_extracted": "Pilot: EXTRACTED ✓",

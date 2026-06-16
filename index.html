@@ -414,6 +414,31 @@
     color: var(--tan);
   }
   .mission-option .mdesc { font-size: 11px; color: var(--paper-dark); margin-top: 2px; }
+  /* ── SQUAD PICKER ───────────────────────────────── */
+  #squad-picker-wrap { margin-bottom: 16px; }
+  #squad-picker-label {
+    font-family: var(--ui-font); font-size: 10px; color: var(--paper-dark);
+    letter-spacing: 0.08em; margin-bottom: 6px; text-align: center;
+  }
+  #squad-picker { display: flex; gap: 6px; }
+  .squad-slot {
+    flex: 1; min-width: 0; background: rgba(0,0,0,0.3);
+    border: 1px solid var(--moss); border-radius: 4px;
+    padding: 8px 4px 6px; cursor: pointer; text-align: center;
+    transition: border-color 0.15s, background 0.15s; user-select: none;
+  }
+  .squad-slot:hover { border-color: var(--tan); background: rgba(74,122,42,0.2); }
+  .squad-slot .slot-badge {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--ui-font); font-size: 13px; font-weight: bold;
+    color: #fff; margin: 0 auto 4px;
+  }
+  .squad-slot .slot-name {
+    font-family: var(--ui-font); font-size: 11px; font-weight: 600;
+    color: var(--tan); line-height: 1.2;
+  }
+  .squad-slot .slot-special { font-size: 9px; color: var(--paper-dark); margin-top: 2px; line-height: 1.2; }
   /* ── MAP SELECTOR ────────────────────────────────── */
   .map-select-grid {
     display: grid;
@@ -984,6 +1009,10 @@
       <h2 data-i18n="modal.briefing_title">BRIEFING MISSIONE</h2>
       <p id="map-description" data-i18n="modal.loading">Caricamento in corso...</p>
       <div class="modal-mission-list" id="mission-list"></div>
+      <div id="squad-picker-wrap">
+        <div id="squad-picker-label"></div>
+        <div id="squad-picker"></div>
+      </div>
       <button class="btn modal-start-btn" id="modal-start-btn" data-i18n="buttons.start_mission" style="font-size:15px;padding:10px 30px" disabled>▶ INIZIA MISSIONE</button>
     </div>
   </div>
@@ -1845,7 +1874,7 @@ function _sfxClick(ac, out, t) {
 }
 
 // ── INIT GAME ──────────────────────────────────────────────────────────
-function startGame(missionType) {
+function startGame(missionType, squadClasses = ['assault','sniper','engineer','medic']) {
   history.pushState({ game: true }, '');
   G.missionType = missionType;
   G.turn = 1;
@@ -1859,10 +1888,9 @@ function startGame(missionType) {
   G.activeFires   = [];
   G.missionState = { vcCarrierCounts: {} };
 
-  const classes = ['assault','sniper','engineer','medic'];
-  const starts  = G.mapData.playerStart;
+  const starts = G.mapData.playerStart;
 
-  classes.forEach((cls, i) => {
+  squadClasses.forEach((cls, i) => {
     const def = UNIT_CLASSES[cls];
     G.units.push({
       id: 'u'+i,
@@ -4058,7 +4086,7 @@ function renderMissionMarkers(ctx, ts) {
     }
   }
   if (type==='rescue_pilot') {
-    if (!st.pilotFound) {
+    if (!st.pilotFound && isTileVisible(st.pilotCol, st.pilotRow)) {
       const {x,y} = tileToScreen(st.pilotCol, st.pilotRow);
       ctx.fillStyle = 'rgba(255,165,0,0.6)';
       ctx.fillRect(x,y,ts,ts);
@@ -4594,10 +4622,18 @@ function objPanelHTML() {
     html += `<div class="obj-item"><div class="obj-dot" style="background:#ff8888"></div>${t('objective_panel.kills',{kills:st.kills||0,needed:st.needed||0})}</div>`;
   }
   if (type==='rescue_pilot') {
-    const pilotStatus = st.pilotFound
-      ? (st.pilotExtracted ? t('objective_panel.pilot_extracted') : t('objective_panel.pilot_found'))
-      : t('objective_panel.pilot_missing');
-    html += `<div class="obj-item"><div class="obj-dot" style="background:${st.pilotFound?'#44aa66':'#ffcc44'}"></div>${pilotStatus}</div>`;
+    let pilotStatus, pilotColor;
+    if (st.pilotFound) {
+      pilotColor = '#44aa66';
+      pilotStatus = st.pilotExtracted ? t('objective_panel.pilot_extracted') : t('objective_panel.pilot_found');
+    } else if (isTileVisible(st.pilotCol, st.pilotRow)) {
+      pilotColor = '#ffcc44';
+      pilotStatus = t('objective_panel.pilot_missing');
+    } else {
+      pilotColor = '#888';
+      pilotStatus = t('objective_panel.pilot_unknown');
+    }
+    html += `<div class="obj-item"><div class="obj-dot" style="background:${pilotColor}"></div>${pilotStatus}</div>`;
   }
   if (type==='capture_objective') {
     (st.objectives||[]).forEach((obj, i) => {
@@ -4840,12 +4876,36 @@ async function loadMissionStep(jsonPath) {
       list.appendChild(div);
     });
 
+    // Squad picker
+    const squadClasses = ['assault', 'sniper', 'engineer', 'medic'];
+    const allClasses = Object.keys(UNIT_CLASSES);
+    document.getElementById('squad-picker-label').textContent = t('modal.squad_title');
+    const pickerEl = document.getElementById('squad-picker');
+    pickerEl.innerHTML = '';
+    const updateSlot = (slot, cls) => {
+      const def = UNIT_CLASSES[cls];
+      slot.innerHTML = `<div class="slot-badge" style="background:${def.color}">${def.symbol}</div>
+        <div class="slot-name">${def.name}</div>
+        <div class="slot-special">${def.specialLabel}</div>`;
+    };
+    for (let i = 0; i < 4; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'squad-slot';
+      updateSlot(slot, squadClasses[i]);
+      slot.addEventListener('click', () => {
+        squadClasses[i] = allClasses[(allClasses.indexOf(squadClasses[i]) + 1) % allClasses.length];
+        updateSlot(slot, squadClasses[i]);
+        sfx('click');
+      });
+      pickerEl.appendChild(slot);
+    }
+
     document.getElementById('modal-start-btn').onclick = async () => {
       if (!selected) return;
       document.getElementById('modal-start-btn').disabled = true;
       await ambientFadeOut(800);
       document.getElementById('modal-overlay').style.display = 'none';
-      startGame(selected);
+      startGame(selected, [...squadClasses]);
     };
   } catch(err) {
     document.getElementById('map-description').textContent =

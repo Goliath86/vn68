@@ -121,9 +121,13 @@ Le armi AoE si risolvono con un singolo tiro di dado automatico applicato a tutt
 
 ---
 
-### Unità della Squadra
+### Composizione della Squadra
 
-La squadra è composta da 4 soldati, uno per classe:
+Prima di avviare la missione puoi scegliere la composizione della squadra. Nella schermata di briefing, sotto la lista dei tipi di missione, appaiono **4 slot** — uno per ogni soldato. Clicca su uno slot per cambiarne la classe: il click cicla tra Assalto, Cecchino, Geniere e Medico.
+
+La composizione di default è una per classe, ma puoi portare due assalti e nessun medico, o due cecchini, a seconda della tattica che preferisci.
+
+### Classi disponibili
 
 | Classe | HP | Movimento | ATK | DEF | Gittata | Abilità Speciale |
 |---|---|---|---|---|---|---|
@@ -190,10 +194,22 @@ Per ogni mappa puoi scegliere tra i tipi di missione disponibili:
 |---|---|
 | **Ricognizione** | Raggiungere con almeno un soldato tutte le zone indicate |
 | **Search & Destroy** | Eliminare il numero richiesto di VC (o tutti) |
-| **Recupero Pilota** | Localizzare il pilota abbattuto e scortarlo al punto di estrazione |
+| **Recupero Pilota** | Esplorare la mappa per localizzare il pilota abbattuto e scortarlo al punto di estrazione |
 | **Conquista Obiettivo** | Occupare e mantenere una posizione per N turni consecutivi |
 
 La partita finisce con una **vittoria** quando l'obiettivo è completato, o con una **sconfitta** se tutta la squadra viene eliminata.
+
+#### Recupero Pilota — posizione nascosta
+
+In questa modalità la posizione del pilota **non è nota all'inizio**. Il marker ✈ sulla mappa appare solo quando un'unità della squadra entra nel cono visivo del tile in cui si trova. Il punto di estrazione (EXTR) è invece sempre visibile.
+
+Il pannello obiettivo riflette lo stato corrente:
+- **Posizione sconosciuta** — il tile non è ancora stato avvistato
+- **Da localizzare** — il tile è nel campo visivo, raggiungi il pilota
+- **Trovato — porta all'LZ** — un soldato lo sta scortando
+- **ESTRATTO** — missione completata
+
+Se la Fog of War è **disattivata**, la posizione del pilota è visibile fin dall'inizio (comportamento identico al classico).
 
 ---
 
