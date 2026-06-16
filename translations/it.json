@@ -188,7 +188,19 @@
     "demolition_fail": "Demolizione fallita — la struttura regge",
     "dice_prompt": "⚄ {context} — lancia {count} dado",
     "dice_result": "{context}: {dice}={sum}",
-    "vc_attack_auto": "Attacco VC: {name}"
+    "vc_attack_auto": "Attacco VC: {name}",
+    "aoe_attack": "{name} — {weapon}: {targets} bersagli nell'area!",
+    "aoe_no_targets": "{name} — {weapon}: nessun bersaglio nell'area",
+    "aoe_dice_context": "{weapon} — {name}",
+    "aoe_target_result": "  ↳ {name}: {defBreakdown} → {result}"
+  },
+
+  "weapons": {
+    "pick_prompt": "Scegli arma:",
+    "ammo_inf": "∞",
+    "ammo_tag": "×{n}",
+    "confirm_aoe": "🎯 Conferma",
+    "cancel_aoe": "✕ Annulla"
   },
 
   "fx": {
@@ -198,7 +210,8 @@
     "overwatch": "OW!",
     "suppression": "SUP!",
     "demolition_success": "DEMOLITO!",
-    "demolition_fail": "RESISTENTE"
+    "demolition_fail": "RESISTENTE",
+    "explosion": "BOOM!"
   },
 
   "tooltip": {

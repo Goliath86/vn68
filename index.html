@@ -224,6 +224,8 @@
   .btn.btn-attack:hover:not(:disabled) { background: rgba(150,30,30,0.8); }
   .btn.btn-end { background: rgba(26,77,122,0.6); border-color: #2a7ac8; color: #88ccff; }
   .btn.btn-end:hover:not(:disabled) { background: rgba(26,77,122,0.9); }
+  .btn.btn-weapon { background: rgba(80,55,5,0.55); border-color: #aa8833; color: #ffdd88; font-size: 11px; padding: 3px 6px; text-align: left; }
+  .btn.btn-weapon:hover:not(:disabled) { background: rgba(130,95,15,0.75); border-color: #ddbb55; }
   .btn.btn-dice {
     background: rgba(80,60,10,0.7);
     border-color: var(--yellow);
@@ -848,6 +850,7 @@
       <button class="btn btn-attack" id="btn-attack"  data-i18n="buttons.attack"  disabled>Attacca (1AP)</button>
       <button class="btn" id="btn-special" data-i18n="buttons.special" disabled>Abilità spec.</button>
       <button class="btn btn-end" id="btn-endturn" data-i18n="buttons.end_turn">Fine turno</button>
+      <div id="weapon-picker" style="display:none;flex-direction:column;gap:4px;margin-top:6px"></div>
     </div>
 
     <div class="panel-title" data-i18n="panels.dice">◈ TIRO DADI</div>
@@ -917,6 +920,7 @@
         <button class="btn btn-attack" id="mob-btn-attack"  disabled>Attacca (1AP)</button>
         <button class="btn" id="mob-btn-special"  disabled>Abilità spec.</button>
         <button class="btn btn-end" id="mob-btn-endturn">Fine turno</button>
+        <div id="mob-weapon-picker" style="display:none;flex-direction:column;gap:4px;margin-top:6px"></div>
       </div>
     </div>
 
@@ -1080,6 +1084,8 @@ async function resumeGame(save) {
   G.activeFires   = save.activeFires || [];
   G.selectedUnit  = null;
   G.actionMode    = null;
+  G.currentWeapon = null;
+  G.pendingAoe    = null;
   G.diceQueue     = null;
   G.pendingDice   = false;
   G.reachable     = [];
@@ -1297,22 +1303,52 @@ async function loadCatalog() {
 
 // ── CONFIG ─────────────────────────────────────────────────────────────
 let CONFIG = {};
+let WEAPONS_CONFIG = {}; // cls → [{id, label, atk, range, ammo?, aoe?, maxCarriers?}]
 const UNIT_IMG_CACHE = {}; // cls → HTMLImageElement (pre-caricato)
+const WEAPON_SND_CACHE = {}; // soundPath → HTMLAudioElement (pre-caricato dal campo sound delle armi)
 
 async function loadConfig() {
   try {
     const resp = await fetch('config.json');
     if (!resp.ok) return;
     CONFIG = await resp.json();
+    WEAPONS_CONFIG = CONFIG.weapons || {};
     for (const [cls, path] of Object.entries(CONFIG.unitImages || {})) {
       if (!path) continue;
       const img = new Image();
       img.src = path;
       UNIT_IMG_CACHE[cls] = img;
     }
+    const _seenSnd = new Set();
+    for (const weapons of Object.values(WEAPONS_CONFIG)) {
+      for (const w of weapons) {
+        if (!w.sound || _seenSnd.has(w.sound)) continue;
+        _seenSnd.add(w.sound);
+        const a = new Audio(w.sound);
+        a.onerror = () => { delete WEAPON_SND_CACHE[w.sound]; };
+        WEAPON_SND_CACHE[w.sound] = a;
+      }
+    }
   } catch(e) {
     // config.json assente o non valido — nessun effetto, si usano gli sprite canvas
   }
+}
+
+// Crea l'array di armi per un'unità rispettando il limite maxCarriers per missione
+function buildWeapons(cls, carrierCounts) {
+  return (WEAPONS_CONFIG[cls] || []).reduce((acc, w) => {
+    if (w.maxCarriers != null) {
+      const key = cls + ':' + w.id;
+      if ((carrierCounts[key] || 0) >= w.maxCarriers) return acc;
+      carrierCounts[key] = (carrierCounts[key] || 0) + 1;
+    }
+    acc.push({ ...w, ammo: w.ammo ?? null });
+    return acc;
+  }, []);
+}
+// Restituisce l'arma attualmente selezionata (o null se nessuna configurata)
+function unitWeapon(unit) {
+  return (unit.weapons && unit.weapons.length > 0) ? unit.weapons[unit.weaponIdx ?? 0] : null;
 }
 
 function rebuildMapsFromCatalog() {
@@ -1343,9 +1379,11 @@ const G = {
   missionState: {},      // stato specifico missione
   diceQueue:    null,    // { resolve, context } per i lanci manuali
   pendingDice:  null,
-  actionMode:   null,    // 'move' | 'attack' | 'special'
+  actionMode:   null,    // 'move' | 'attack' | 'weapon_select' | 'aoe_confirm' | 'special'
+  currentWeapon: null,  // arma attiva durante l'azione corrente
+  pendingAoe:   null,   // { col, row, weapon } — AoE in attesa di conferma
   reachable:    [],      // celle raggiungibili
-  attackable:   [],      // celle attaccabili
+  attackable:   [],      // celle attaccabili / tile AoE in range
   overwatchList:[],      // unità in overwatch
   suppressList: [],      // unità assault in fuoco soppressivo
   activeFires:  [],      // incendi attivi {col, row, turnsLeft}
@@ -1675,6 +1713,19 @@ function audioToggleMute() {
   if (AUDIO.ambient) AUDIO.ambient.volume   = AUDIO.muted ? 0 : AUDIO.musicVol;
   document.getElementById('btn-mute').textContent = AUDIO.muted ? '🔇' : '🔊';
 }
+const _VC_CLS = new Set(['grunt', 'sniper_vc', 'commander']);
+function sfxShoot(cls, weapon = null) {
+  if (AUDIO.muted) return;
+  const path = weapon?.sound;
+  const a = path ? WEAPON_SND_CACHE[path] : null;
+  if (a) {
+    const clone = a.cloneNode();
+    clone.volume = AUDIO.sfxVol;
+    clone.play().catch(() => sfx(_VC_CLS.has(cls) ? 'shoot_vc' : 'shoot'));
+    return;
+  }
+  sfx(_VC_CLS.has(cls) ? 'shoot_vc' : 'shoot');
+}
 
 // ── Noise buffer helper
 function _nb(ac, dur) {
@@ -1778,7 +1829,7 @@ function startGame(missionType) {
   G.overwatchList = [];
   G.suppressList  = [];
   G.activeFires   = [];
-  G.missionState = {};
+  G.missionState = { vcCarrierCounts: {} };
 
   const classes = ['assault','sniper','engineer','medic'];
   const starts  = G.mapData.playerStart;
@@ -1802,6 +1853,8 @@ function startGame(missionType) {
       suppressed: false,
       shaken: false,
       carriesPilot: false,
+      weapons: buildWeapons(cls, {}),
+      weaponIdx: 0,
     });
   });
 
@@ -1834,6 +1887,8 @@ function startGame(missionType) {
       alerted: false,
       suppressed: false,
       vx: col, vy: row,
+      weapons: buildWeapons(vcClass, G.missionState.vcCarrierCounts),
+      weaponIdx: 0,
     });
     spawned++;
   }
@@ -1862,7 +1917,8 @@ function startGame(missionType) {
 
 function initMissionState(type) {
   const md = G.mapData;
-  const st = {};
+  const st = G.missionState; // preserva vcCarrierCounts già popolato dallo spawn iniziale
+  st.vcCarrierCounts = st.vcCarrierCounts || {};
 
   if (type === 'recon') {
     st.points = (md.objectives.recon||[]).map(p=>({...p, scouted:false}));
@@ -1981,10 +2037,10 @@ function isOccupied(col, row, exceptId=null) {
 
 // ── COMBAT ────────────────────────────────────────────────────────────
 // Risolve un attacco con lancio di dado manuale (Promise)
-async function resolveCombat(attacker, defender, isEnemy=false) {
+async function resolveCombat(attacker, defender, isEnemy=false, weapon=null) {
   const atkDef   = isEnemy ? getEnemyStats(attacker) : UNIT_CLASSES[attacker.cls];
   const range    = dist(attacker, defender);
-  const maxRange = atkDef.range;
+  const maxRange = weapon?.range ?? atkDef.range;
 
   if (range > maxRange) {
     log(t('log.out_of_range', {name: attacker.name, range, max: maxRange}), 'combat');
@@ -1994,7 +2050,7 @@ async function resolveCombat(attacker, defender, isEnemy=false) {
   // Penalità gittata cecchino: -1 ATK ogni 2 tile di distanza
   const rangePenalty = (!isEnemy && attacker.cls === 'sniper')
     ? Math.floor((range - 1) / 2) : 0;
-  const atkVal   = Math.max(1, atkDef.attack - rangePenalty);
+  const atkVal   = Math.max(1, (weapon?.atk ?? atkDef.attack) - rangePenalty);
   const defCover = coverBonus(defender.col, defender.row);
   const defStat  = isEnemy ? (UNIT_CLASSES[defender.cls]?.defense ?? 1) : getEnemyStats(defender).defense;
   const defVal   = defStat + defCover;
@@ -2016,7 +2072,7 @@ async function resolveCombat(attacker, defender, isEnemy=false) {
   const save    = defVal + defDice;
   const dmg     = Math.max(0, hit - save);
 
-  sfx(isEnemy ? 'shoot_vc' : 'shoot');
+  sfxShoot(attacker.cls, weapon);
   addFX('shot', {fromCol:attacker.col, fromRow:attacker.row, toCol:defender.col, toRow:defender.row}, 600);
 
   const defBreakdown = defCover > 0
@@ -2062,6 +2118,73 @@ function getEnemyStats(enemy) {
   return {attack:2, range:2, defense:0, move:3};
 }
 
+// Risolve un attacco AoE (granata/RPG): dado attacco auto, ogni bersaglio tira difesa singolarmente
+async function resolveAoeCombat(attacker, weapon, tc, tr, isEnemyAttacking) {
+  const diceVals = rollDice(2);
+  const roll     = diceSum(diceVals);
+  const hit      = roll + weapon.atk;
+
+  const defenders = isEnemyAttacking
+    ? G.units.filter(u => u.alive && dist(u, {col:tc, row:tr}) <= weapon.aoe)
+    : G.enemies.filter(e => e.alive && dist(e, {col:tc, row:tr}) <= weapon.aoe && isTileVisible(e.col, e.row));
+
+  sfxShoot(attacker.cls, weapon);
+  addFX('explosion', {col: tc, row: tr}, 1300);
+  showDiceResult(diceVals, t('log.aoe_dice_context', {weapon: weapon.label, name: attacker.name}));
+
+  if (!defenders.length) {
+    log(t('log.aoe_no_targets', {name: attacker.name, weapon: weapon.label}), 'combat');
+    updateUI(); render();
+    return;
+  }
+  log(t('log.aoe_attack', {name: attacker.name, weapon: weapon.label, targets: defenders.length}), 'combat');
+
+  let anyKill = false;
+  for (const def of defenders) {
+    const defCover = coverBonus(def.col, def.row);
+    const defStat  = isEnemyAttacking
+      ? (UNIT_CLASSES[def.cls]?.defense ?? 1)
+      : getEnemyStats(def).defense;
+    const defDice  = rollD6();
+    const save     = defStat + defCover + defDice;
+    const dmg      = Math.max(0, hit - save);
+
+    const defBreakdown = defCover > 0
+      ? `${defDice}+${defStat}DEF+${defCover}COV=${save}`
+      : `${defDice}+${defStat}DEF=${save}`;
+    log(t('log.aoe_target_result', {
+      name: def.name,
+      defBreakdown,
+      result: dmg > 0 ? t('log.attack_hit', {dmg}) : t('log.attack_miss')
+    }), dmg > 0 ? 'combat' : '');
+
+    if (dmg > 0) {
+      sfx('hit');
+      addFX('hit', {col: def.col, row: def.row, dmg}, 800);
+      def.hp -= dmg;
+      if (def.hp <= 0) {
+        def.hp = 0; def.alive = false;
+        sfx('death');
+        log(t('log.unit_eliminated', {name: def.name}), 'combat');
+        if (!isEnemyAttacking && G.missionType === 'search_destroy')
+          G.missionState.kills = (G.missionState.kills || 0) + 1;
+        addFX('death', {col: def.col, row: def.row}, 1100);
+        anyKill = true;
+      } else if (isEnemyAttacking && !def.shaken) {
+        const maxHp = UNIT_CLASSES[def.cls]?.hp ?? def.maxHp;
+        if (def.hp / maxHp < 0.3) { def.shaken = true; log(t('log.unit_shaken', {name: def.name}), 'combat'); }
+      }
+    } else {
+      sfx('miss');
+      addFX('miss', {col: def.col, row: def.row}, 600);
+    }
+  }
+
+  updateUI(); render();
+  if (anyKill) await sleep(500);
+  if (!isEnemyAttacking) checkVictory();
+}
+
 // ── DADO MANUALE ───────────────────────────────────────────────────────
 function waitForDice(count, context) {
   return new Promise(resolve => {
@@ -2095,15 +2218,17 @@ document.getElementById('btn-dice').addEventListener('click', () => {
 // showDiceResult — definita più in basso come showDiceResultMobile wrapper
 
 // ── ACTION MODE ────────────────────────────────────────────────────────
-function setActionMode(mode) {
-  G.actionMode = mode;
-  G.reachable  = [];
-  G.attackable = [];
+function setActionMode(mode, weapon = null) {
+  G.actionMode    = mode;
+  G.currentWeapon = weapon;
+  G.pendingAoe    = null;
+  G.reachable     = [];
+  G.attackable    = [];
   const u = G.selectedUnit;
   if (!u || !u.alive) { render(); return; }
 
   if (mode === 'move') {
-    const apLeft = u.ap; // 1 AP = 1 passo (il costo è nella mappa)
+    const apLeft = u.ap;
     const reach = getReachable(u, apLeft);
     G.reachable = Object.keys(reach).map(k => {
       const [c,r] = k.split(',').map(Number);
@@ -2111,10 +2236,19 @@ function setActionMode(mode) {
     });
   }
   if (mode === 'attack') {
-    const def = UNIT_CLASSES[u.cls];
-    const range = def.range;
-    // tutte le celle con nemici vivi in gittata e visibili
-    G.attackable = G.enemies.filter(e => e.alive && dist(u,e) <= range && isTileVisible(e.col, e.row));
+    const def   = UNIT_CLASSES[u.cls];
+    const range = weapon?.range ?? def.range;
+    if (weapon?.aoe) {
+      // AoE: evidenzia tutte le tile raggiungibili (click → aoe_confirm)
+      for (let c = 0; c < G.mapData.cols; c++) {
+        for (let r = 0; r < G.mapData.rows; r++) {
+          if (dist(u, {col:c, row:r}) <= range) G.attackable.push({col:c, row:r});
+        }
+      }
+    } else {
+      // Singolo bersaglio: solo nemici vivi in gittata e visibili
+      G.attackable = G.enemies.filter(e => e.alive && dist(u,e) <= range && isTileVisible(e.col, e.row));
+    }
   }
   if (mode === 'special') {
     // Medico: adiacenti alleati
@@ -2133,6 +2267,7 @@ function setActionMode(mode) {
     }
   }
   render();
+  updateUI();
 }
 
 // ── PLAYER ACTION HANDLERS ─────────────────────────────────────────────
@@ -2141,8 +2276,15 @@ document.getElementById('btn-move').addEventListener('click', () => {
   sfx('click'); setActionMode('move');
 });
 document.getElementById('btn-attack').addEventListener('click', () => {
-  if (!G.selectedUnit||G.selectedUnit.ap<1) return;
-  sfx('click'); setActionMode('attack');
+  const u = G.selectedUnit;
+  if (!u || u.ap < 1) return;
+  sfx('click');
+  const usable = (u.weapons || []).filter(w => w.ammo === null || w.ammo > 0);
+  if (usable.length > 1) {
+    setActionMode('weapon_select');
+  } else {
+    setActionMode('attack', usable[0] ?? null);
+  }
 });
 document.getElementById('btn-special').addEventListener('click', () => {
   if (!G.selectedUnit||G.selectedUnit.ap<1||G.selectedUnit.specialUsed||G.selectedUnit.shaken) return;
@@ -2217,14 +2359,37 @@ function onCanvasClick(e) {
     return;
   }
 
+  // In modalità attesa conferma AoE: click su canvas annulla
+  if (G.actionMode === 'aoe_confirm') {
+    setActionMode(null);
+    updateUI();
+    return;
+  }
+
   // In modalità attacco
   if (G.actionMode === 'attack') {
+    const w = G.currentWeapon;
+    if (w?.aoe) {
+      // AoE: click tile → mostra anteprima e chiedi conferma
+      const tile = G.attackable.find(t => t.col===col && t.row===row);
+      if (tile) {
+        G.pendingAoe = { col, row, weapon: w };
+        G.actionMode = 'aoe_confirm';
+        render();
+        updateUI();
+      } else {
+        setActionMode(null);
+        updateUI();
+      }
+      return;
+    }
+    // Singolo bersaglio
     const target = G.attackable.find(e => e.col===col && e.row===row);
     if (target) {
       G.selectedUnit.ap -= 1;
-      G.selectedUnit.specialUsed = false;
+      if (w?.ammo !== null && w?.ammo != null) w.ammo--;
       if (G.selectedUnit.cls === 'sniper') G.selectedUnit.hasShot = true;
-      resolveCombat(G.selectedUnit, target, false);
+      resolveCombat(G.selectedUnit, target, false, w);
       setActionMode(null);
       updateUI();
       return;
@@ -2253,6 +2418,18 @@ function onCanvasClick(e) {
   G.selectedUnit = null;
   updateUI();
   render();
+}
+
+function confirmAoeAttack() {
+  if (!G.pendingAoe || !G.selectedUnit) return;
+  const u = G.selectedUnit;
+  const { col: tc, row: tr, weapon: w } = G.pendingAoe;
+  u.ap -= 1;
+  if (w.ammo !== null) w.ammo--;
+  if (u.cls === 'sniper') u.hasShot = true;
+  resolveAoeCombat(u, w, tc, tr, false);
+  setActionMode(null);
+  updateUI();
 }
 
 async function handleSpecialAction(col, row) {
@@ -2368,7 +2545,10 @@ function moveUnit(unit, toCol, toRow, apCost) {
 // ── FINE TURNO GIOCATORE ───────────────────────────────────────────────
 function endPlayerTurn() {
   if (G.phase !== 'player') return;
-  if (G.pendingDice) return; // aspetta dado
+  if (G.pendingDice) return;
+  // Cancella qualsiasi modalità azione in corso (incluso weapon_select e aoe_confirm)
+  G.actionMode = null; G.currentWeapon = null; G.pendingAoe = null;
+  G.reachable = []; G.attackable = [];
 
   // Capture objective: conta chi è sopra
   if (G.missionType==='capture_objective') {
@@ -2385,12 +2565,6 @@ function endPlayerTurn() {
     }
     checkVictory();
   }
-
-  // Reset overwatch e soppressione
-  G.overwatchList = [];
-  G.units.forEach(u => { u.overwatch = false; });
-  G.suppressList = [];
-  G.units.forEach(u => { u.suppression = false; });
 
   sfx('turn_end');
   log(t('log.player_turn_end'), 'turn');
@@ -2446,6 +2620,11 @@ async function runEnemyTurn() {
   log(t('log.player_turn_start', {turn: G.turn}), 'turn');
   document.getElementById('vc-remain').textContent = G.enemies.filter(e=>e.alive).length;
 
+  // Reset overwatch e soppressione (scadono a fine turno nemico)
+  G.overwatchList = [];
+  G.suppressList  = [];
+  G.units.forEach(u => { u.overwatch = false; u.suppression = false; u.overwatchFired = false; });
+
   // Ripristina AP giocatori
   G.units.forEach(u=>{ if(u.alive){ u.ap = u.shaken ? AP_PER_TURN - 1 : AP_PER_TURN; u.specialUsed=false; u.hasShot=false; } });
   saveGame();
@@ -2469,6 +2648,26 @@ async function runEnemyTurn() {
   render();
 }
 
+// Sceglie l'arma ottimale per un VC: usa l'arma speciale quando ha senso tattico
+function vcChooseWeapon(enemy, target) {
+  const weapons = enemy.weapons || [];
+  if (weapons.length <= 1) return weapons[0] ?? null;
+  const primary  = weapons[0];
+  const specials = weapons.slice(1).filter(w => w.ammo === null || w.ammo > 0);
+  if (!specials.length) return primary;
+  const d = dist(enemy, target);
+  for (const spec of specials) {
+    // Usa se la primaria non raggiunge ma la speciale sì
+    if (d > primary.range && d <= spec.range) return spec;
+    // Usa AoE se 2+ unità US sono raggruppate nel raggio di esplosione
+    if (spec.aoe && d <= spec.range) {
+      const cluster = G.units.filter(u => u.alive && dist(u, target) <= spec.aoe).length;
+      if (cluster >= 2) return spec;
+    }
+  }
+  return primary;
+}
+
 async function enemyActivation(enemy) {
   if (!enemy.alive) return;
   const liveUnits = G.units.filter(u=>u.alive);
@@ -2489,14 +2688,24 @@ async function enemyActivation(enemy) {
   }
 
   if (enemy.alerted) {
-    // Se in gittata: attacca (ma overwatch/soppressione possono intervenire)
-    if (d <= stats.range && enemy.ap >= 1) {
+    // Gittata effettiva: considera tutte le armi disponibili
+    const effRange = (enemy.weapons || [])
+      .filter(w => w.ammo === null || w.ammo > 0)
+      .reduce((mx, w) => Math.max(mx, w.range), stats.range);
+    // Se in gittata (con qualsiasi arma): attacca
+    if (d <= effRange && enemy.ap >= 1) {
       checkOverwatch(enemy);
       checkSuppression(enemy);
       if (enemy.ap >= 1) {
+        const w = vcChooseWeapon(enemy, target);
+        if (w && w.ammo !== null) w.ammo--;
         enemy.ap--;
         log(t('log.vc_attack', {name: enemy.name, target: target.name}), 'enemy');
-        await resolveCombat(enemy, target, true);
+        if (w?.aoe) {
+          await resolveAoeCombat(enemy, w, target.col, target.row, true);
+        } else {
+          await resolveCombat(enemy, target, true, w);
+        }
       }
     } else {
       // Muovi verso il target
@@ -2523,11 +2732,20 @@ async function enemyActivation(enemy) {
           // Overwatch e fuoco soppressivo: controlla dopo il movimento
           checkOverwatch(enemy);
           checkSuppression(enemy);
-          // Attacca se ora in gittata
-          if (dist(enemy,target)<=stats.range && enemy.ap>=1) {
+          // Attacca se ora in gittata (con qualsiasi arma)
+          const newEffRange = (enemy.weapons || [])
+            .filter(w => w.ammo === null || w.ammo > 0)
+            .reduce((mx, w) => Math.max(mx, w.range), stats.range);
+          if (dist(enemy, target) <= newEffRange && enemy.ap >= 1) {
+            const w = vcChooseWeapon(enemy, target);
+            if (w && w.ammo !== null) w.ammo--;
             enemy.ap--;
             log(t('log.vc_fire', {name: enemy.name, target: target.name}), 'enemy');
-            await resolveCombat(enemy, target, true);
+            if (w?.aoe) {
+              await resolveAoeCombat(enemy, w, target.col, target.row, true);
+            } else {
+              await resolveCombat(enemy, target, true, w);
+            }
           }
         }
       }
@@ -2608,6 +2826,8 @@ function spawnReinforcements(count) {
       ap:2, maxAp:2,
       alive:true, alerted:true,
       vx: col, vy: row,
+      weapons: buildWeapons('grunt', G.missionState.vcCarrierCounts),
+      weaponIdx: 0,
     });
     addFX('spawn', {col, row}, 1000);
     spawned++;
@@ -2640,6 +2860,8 @@ function spawnAmbush(count, zones) {
       alive: true, alerted: true,
       suppressed: false,
       vx: col, vy: row,
+      weapons: buildWeapons(cls, G.missionState.vcCarrierCounts),
+      weaponIdx: 0,
     });
     addFX('spawn', {col, row}, 1400);
     spawned++;
@@ -2674,11 +2896,13 @@ function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
 // ── OVERWATCH ──────────────────────────────────────────────────────────
 function checkOverwatch(enemy) {
   for (const ow of G.overwatchList) {
-    if (!ow.alive) continue;
+    if (!ow.alive || ow.overwatchFired) continue;
+    if (!isTileVisibleFromUnit(ow, enemy.col, enemy.row)) continue;
     const owDef = UNIT_CLASSES[ow.cls];
     if (dist(ow, enemy) <= owDef.range) {
+      ow.overwatchFired = true;
       log(t('log.overwatch_fire', {name: ow.name, target: enemy.name}), 'combat');
-      sfx('shoot');
+      sfxShoot(ow.cls, unitWeapon(ow));
       addFX('overwatch', {owCol: ow.col, owRow: ow.row, tCol: enemy.col, tRow: enemy.row}, 700);
       const owRange   = dist(ow, enemy);
       const owPenalty = Math.floor((owRange - 1) / 2);
@@ -2726,7 +2950,7 @@ function checkSuppression(enemy) {
       enemy.ap = 0;
       log(t('log.suppression_fire', {name: sup.name, target: enemy.name}), 'combat');
       addFX('suppression', {supCol: sup.col, supRow: sup.row, tCol: enemy.col, tRow: enemy.row}, 700);
-      sfx('shoot');
+      sfxShoot(sup.cls, unitWeapon(sup));
       break;
     }
   }
@@ -3202,6 +3426,44 @@ function _drawEffect(ctx, ts, fx, p) {
         ctx.font=`bold ${Math.round(ts*.26)}px 'Special Elite'`;
         ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText(success ? t('fx.demolition_success') : t('fx.demolition_fail'),cx,fy3);
+      }
+      break;
+    }
+
+    case 'explosion': {
+      const {col, row} = fx.data;
+      const {x, y} = tileToScreen(col, row);
+      const cx=x+ts*.5, cy=y+ts*.5;
+      // Flash centrale
+      if (p<.25) {
+        const ft=p/.25;
+        ctx.fillStyle=`rgba(255,240,150,${(1-ft)*.95})`;
+        ctx.beginPath(); ctx.arc(cx,cy,ts*.65*(1-ft*.5),0,Math.PI*2); ctx.fill();
+      }
+      // Anello espansivo
+      const ringR=ts*1.3*ease;
+      const ringA=p<.5?(1-p*2)*.8:0;
+      if (ringA>0) {
+        ctx.strokeStyle=`rgba(255,200,50,${ringA})`;
+        ctx.lineWidth=Math.max(2,ts*.07);
+        ctx.beginPath(); ctx.arc(cx,cy,ringR,0,Math.PI*2); ctx.stroke();
+      }
+      // Detriti radiali
+      for (let i=0;i<8;i++) {
+        const angle=(i/8)*Math.PI*2;
+        const r=ts*.8*ease;
+        const px2=cx+Math.cos(angle)*r, py2=cy+Math.sin(angle)*r;
+        const pa=p<.6?.9:.9*(1-(p-.6)/.4);
+        ctx.fillStyle=`rgba(255,${100+i*18},30,${pa})`;
+        ctx.beginPath(); ctx.arc(px2,py2,Math.max(2,ts*.04),0,Math.PI*2); ctx.fill();
+      }
+      // Testo BOOM
+      if (p>.1&&p<.72) {
+        const ta=p<.4?1:1-(p-.4)/.32;
+        ctx.fillStyle=`rgba(255,240,80,${ta})`;
+        ctx.font=`bold ${Math.round(ts*.33)}px 'Oswald'`;
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(t('fx.explosion'),cx,cy-ts*.3*p);
       }
       break;
     }
@@ -3822,49 +4084,97 @@ function renderOverlay() {
 
   // Celle attaccabili
   if (G.actionMode === 'attack') {
-    ctx.fillStyle = 'rgba(200,40,40,0.35)';
-    ctx.strokeStyle = 'rgba(255,80,80,0.8)';
-    ctx.lineWidth = 2;
-    for (const e of G.attackable) {
-      const {x,y} = tileToScreen(e.col, e.row);
-      ctx.fillRect(x+1,y+1,ts-2,ts-2);
-      ctx.strokeRect(x+1,y+1,ts-2,ts-2);
-    }
-    // Mirino su ogni nemico attaccabile
-    ctx.save();
-    for (const e of G.attackable) {
-      const {x,y} = tileToScreen(e.col, e.row);
-      const cx = x + ts/2, cy = y + ts/2;
-      const ro = ts * 0.30, ri = ts * 0.09, gap = ts * 0.05;
-      const lw = Math.max(1.5, ts * 0.045);
-      ctx.strokeStyle = 'rgba(255,60,60,0.95)';
-      ctx.lineWidth = lw;
-      ctx.beginPath(); ctx.arc(cx, cy, ro, 0, Math.PI*2); ctx.stroke();
-      ctx.beginPath(); ctx.arc(cx, cy, ri, 0, Math.PI*2); ctx.stroke();
-      const i2 = ri + gap, o2 = ro - gap;
-      ctx.beginPath();
-      ctx.moveTo(cx,       cy - o2); ctx.lineTo(cx,       cy - i2);
-      ctx.moveTo(cx,       cy + i2); ctx.lineTo(cx,       cy + o2);
-      ctx.moveTo(cx - o2,  cy);      ctx.lineTo(cx - i2,  cy);
-      ctx.moveTo(cx + i2,  cy);      ctx.lineTo(cx + o2,  cy);
-      ctx.stroke();
-    }
-    ctx.restore();
-    // Linea di fuoco dall'unità selezionata
-    if (G.selectedUnit) {
-      const {x:sx,y:sy} = tileToScreen(G.selectedUnit.col, G.selectedUnit.row);
-      ctx.strokeStyle = 'rgba(255,200,50,0.5)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4,3]);
+    const isAoe = !!G.currentWeapon?.aoe;
+    if (isAoe) {
+      // AoE weapon: colora l'area di tiro in arancione
+      ctx.fillStyle   = 'rgba(255,140,0,0.18)';
+      ctx.strokeStyle = 'rgba(255,180,0,0.5)';
+      ctx.lineWidth   = 1;
+      for (const t of G.attackable) {
+        const {x,y} = tileToScreen(t.col, t.row);
+        ctx.fillRect(x+1,y+1,ts-2,ts-2);
+        ctx.strokeRect(x+1,y+1,ts-2,ts-2);
+      }
+      // Evidenzia le tile che hanno nemici nel range di tiro
+      ctx.fillStyle = 'rgba(255,100,0,0.3)';
+      for (const t of G.attackable) {
+        if (G.enemies.some(e => e.alive && e.col===t.col && e.row===t.row && isTileVisible(e.col, e.row))) {
+          const {x,y} = tileToScreen(t.col, t.row);
+          ctx.fillRect(x+1,y+1,ts-2,ts-2);
+        }
+      }
+    } else {
+      ctx.fillStyle   = 'rgba(200,40,40,0.35)';
+      ctx.strokeStyle = 'rgba(255,80,80,0.8)';
+      ctx.lineWidth   = 2;
       for (const e of G.attackable) {
-        const {x:ex,y:ey} = tileToScreen(e.col, e.row);
+        const {x,y} = tileToScreen(e.col, e.row);
+        ctx.fillRect(x+1,y+1,ts-2,ts-2);
+        ctx.strokeRect(x+1,y+1,ts-2,ts-2);
+      }
+      // Mirino su ogni nemico attaccabile
+      ctx.save();
+      for (const e of G.attackable) {
+        const {x,y} = tileToScreen(e.col, e.row);
+        const cx = x + ts/2, cy = y + ts/2;
+        const ro = ts * 0.30, ri = ts * 0.09, gap = ts * 0.05;
+        const lw = Math.max(1.5, ts * 0.045);
+        ctx.strokeStyle = 'rgba(255,60,60,0.95)';
+        ctx.lineWidth = lw;
+        ctx.beginPath(); ctx.arc(cx, cy, ro, 0, Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx, cy, ri, 0, Math.PI*2); ctx.stroke();
+        const i2 = ri + gap, o2 = ro - gap;
         ctx.beginPath();
-        ctx.moveTo(sx+ts/2, sy+ts/2);
-        ctx.lineTo(ex+ts/2, ey+ts/2);
+        ctx.moveTo(cx,       cy - o2); ctx.lineTo(cx,       cy - i2);
+        ctx.moveTo(cx,       cy + i2); ctx.lineTo(cx,       cy + o2);
+        ctx.moveTo(cx - o2,  cy);      ctx.lineTo(cx - i2,  cy);
+        ctx.moveTo(cx + i2,  cy);      ctx.lineTo(cx + o2,  cy);
         ctx.stroke();
       }
-      ctx.setLineDash([]);
+      ctx.restore();
+      // Linea di fuoco dall'unità selezionata
+      if (G.selectedUnit) {
+        const {x:sx,y:sy} = tileToScreen(G.selectedUnit.col, G.selectedUnit.row);
+        ctx.strokeStyle = 'rgba(255,200,50,0.5)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4,3]);
+        for (const e of G.attackable) {
+          const {x:ex,y:ey} = tileToScreen(e.col, e.row);
+          ctx.beginPath();
+          ctx.moveTo(sx+ts/2, sy+ts/2);
+          ctx.lineTo(ex+ts/2, ey+ts/2);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      }
     }
+  }
+
+  // Anteprima AoE in attesa di conferma
+  if (G.actionMode === 'aoe_confirm' && G.pendingAoe) {
+    const { col: tc, row: tr, weapon: w } = G.pendingAoe;
+    // Raggio AoE attorno al tile bersaglio
+    ctx.fillStyle   = 'rgba(255,90,0,0.28)';
+    ctx.strokeStyle = 'rgba(255,160,0,0.75)';
+    ctx.lineWidth   = 1.5;
+    for (let c = 0; c < G.mapData.cols; c++) {
+      for (let r = 0; r < G.mapData.rows; r++) {
+        if (dist({col:c, row:r}, {col:tc, row:tr}) <= w.aoe) {
+          const {x,y} = tileToScreen(c, r);
+          ctx.fillRect(x+1,y+1,ts-2,ts-2);
+          ctx.strokeRect(x+1,y+1,ts-2,ts-2);
+        }
+      }
+    }
+    // Tile bersaglio: bordo più marcato
+    const {x:bx,y:by} = tileToScreen(tc, tr);
+    ctx.strokeStyle = 'rgba(255,220,0,0.95)';
+    ctx.lineWidth   = 3;
+    ctx.strokeRect(bx+2,by+2,ts-4,ts-4);
+    // Icona esplosione al centro
+    ctx.font = `${Math.round(ts*0.45)}px serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('💥', bx+ts/2, by+ts/2);
   }
 
   // Speciale: celle target
@@ -4125,6 +4435,12 @@ function selInfoHTML(u) {
       ${u.cls==='sniper' && u.hasShot ? `<br><span style="color:var(--red)">${t('units.status.shot_used')}</span>` : ''}
       ${u.shaken       ? `<br><span style="color:#ff5028;font-weight:700">${t('units.status.shaken')}</span>` : ''}
       ${u.carriesPilot ? `<br><span style="color:var(--yellow)">${t('units.status.carry_pilot')}</span>` : ''}
+      ${(u.weapons && u.weapons.length > 0) ? '<br>' + u.weapons.map(w => {
+        const depleted = w.ammo !== null && w.ammo <= 0;
+        const ammoStr  = w.ammo === null ? t('weapons.ammo_inf') : t('weapons.ammo_tag', {n: w.ammo});
+        const aoeStr   = w.aoe ? ` AoE${w.aoe}` : '';
+        return `<span style="color:${depleted?'var(--red)':'var(--paper-dark)'}">${w.label}${aoeStr} ${ammoStr}</span>`;
+      }).join(' · ') : ''}
     </div>`;
 }
 
@@ -4162,9 +4478,14 @@ function updateActionButtons() {
       const el = document.getElementById(id);
       if (!el) return;
       if (id.includes('move'))    { el.disabled = !(isPlayer && hasAP); el.style.borderColor = hasMM?'var(--highlight)':''; }
-      if (id.includes('attack'))  { el.disabled = !(isPlayer && hasAP && hasEnemy && !(u?.cls==='sniper' && u?.hasShot)); el.style.borderColor = hasAM?'var(--highlight)':''; }
+      if (id.includes('attack'))  {
+        const hasAmmo = !u?.weapons?.length || u.weapons.some(w => w.ammo === null || w.ammo > 0);
+        const inPick  = G.actionMode === 'weapon_select' || G.actionMode === 'aoe_confirm';
+        el.disabled = !(isPlayer && hasAP && hasEnemy && !(u?.cls==='sniper' && u?.hasShot) && hasAmmo) || inPick;
+        el.style.borderColor = (hasAM || G.actionMode === 'weapon_select') ? 'var(--highlight)' : '';
+      }
       if (id.includes('special')) { el.disabled = !(isPlayer && hasAP && !u?.specialUsed && !u?.shaken); el.style.borderColor = hasSM?'var(--highlight)':''; el.textContent = specLabel; }
-      if (id.includes('endturn')) { el.disabled = !isPlayer || !!G.pendingDice; }
+      if (id.includes('endturn')) { el.disabled = !isPlayer || !!G.pendingDice || G.actionMode === 'aoe_confirm'; }
       if (id.includes('dice'))    { el.disabled = !isPlayer; }
     });
   });
@@ -4174,6 +4495,51 @@ function updateActionButtons() {
     const s=document.getElementById(src), d=document.getElementById(dst);
     if(s&&d) d.disabled=s.disabled;
   });
+
+  // Weapon picker e AoE confirm
+  const pickerEl    = document.getElementById('weapon-picker');
+  const mobPickerEl = document.getElementById('mob-weapon-picker');
+  if (!pickerEl) return;
+
+  if (G.actionMode === 'weapon_select' && hasUnit) {
+    const ws = u.weapons || [];
+    let html = `<div style="font-size:10px;color:var(--paper-dark);margin-bottom:3px">${t('weapons.pick_prompt')}</div>`;
+    ws.forEach((w, i) => {
+      const hasAmmo  = w.ammo === null || w.ammo > 0;
+      const ammoStr  = w.ammo === null ? t('weapons.ammo_inf') : t('weapons.ammo_tag', {n: w.ammo});
+      const aoeStr   = w.aoe ? ` · AoE${w.aoe}` : '';
+      html += `<button class="btn btn-weapon" ${!hasAmmo?'disabled':''} data-widx="${i}">${w.label} ${ammoStr} · ATK${w.atk} · RNG${w.range}${aoeStr}</button>`;
+    });
+    [pickerEl, mobPickerEl].forEach(el => {
+      if (!el) return;
+      el.innerHTML = html;
+      el.style.display = 'flex';
+      el.querySelectorAll('[data-widx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.disabled) return;
+          const w = G.selectedUnit?.weapons?.[+btn.dataset.widx];
+          if (w) { sfx('click'); setActionMode('attack', w); updateUI(); }
+        });
+      });
+    });
+  } else if (G.actionMode === 'aoe_confirm' && G.pendingAoe) {
+    const w = G.pendingAoe.weapon;
+    const html = `<div style="font-size:10px;color:#ffaa33;margin-bottom:3px">${w.label} · AoE ${w.aoe}</div>
+      <button class="btn btn-attack" data-aoe="confirm">${t('weapons.confirm_aoe')}</button>
+      <button class="btn" data-aoe="cancel">${t('weapons.cancel_aoe')}</button>`;
+    [pickerEl, mobPickerEl].forEach(el => {
+      if (!el) return;
+      el.innerHTML = html;
+      el.style.display = 'flex';
+      el.querySelector('[data-aoe="confirm"]')?.addEventListener('click', () => { sfx('click'); confirmAoeAttack(); });
+      el.querySelector('[data-aoe="cancel"]')?.addEventListener('click',  () => { sfx('click'); setActionMode(null); updateUI(); });
+    });
+  } else {
+    [pickerEl, mobPickerEl].forEach(el => {
+      if (!el) return;
+      el.innerHTML = ''; el.style.display = 'none';
+    });
+  }
 
   // Badge "dado richiesto" sul tab
   const tabDice = document.getElementById('tab-btn-dice');

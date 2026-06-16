@@ -8,5 +8,98 @@
     "grunt": "assets/vietcong_vc.png",
     "sniper_vc": "assets/sniper_vc.png",
     "commander": "assets/commander_vc.png"
+  },
+  "weapons": {
+    "assault": [
+      {
+        "id": "rifle",
+        "label": "M16",
+        "labelEn": "M16",
+        "atk": 3,
+        "range": 2,
+        "sound": "assets/m16.mp3"
+      },
+      {
+        "id": "grenade",
+        "label": "Granata",
+        "labelEn": "Grenade",
+        "atk": 5,
+        "range": 3,
+        "ammo": 2,
+        "aoe": 1,
+        "sound": "assets/grenade.mp3"
+      }
+    ],
+    "sniper": [
+      {
+        "id": "rifle",
+        "label": "M14",
+        "labelEn": "M14",
+        "atk": 4,
+        "range": 6,
+        "sound": "assets/sniper_us.mp3"
+      }
+    ],
+    "engineer": [
+      {
+        "id": "rifle",
+        "label": "M16",
+        "labelEn": "M16",
+        "atk": 2,
+        "range": 2,
+        "sound": "assets/m16.mp3"
+      }
+    ],
+    "medic": [
+      {
+        "id": "pistol",
+        "label": "M1911",
+        "labelEn": "M1911",
+        "atk": 1,
+        "range": 1,
+        "sound": "assets/pistol.mp3"
+      }
+    ],
+    "grunt": [
+      {
+        "id": "ak47",
+        "label": "AK-47",
+        "labelEn": "AK-47",
+        "atk": 2,
+        "range": 2,
+        "sound": "assets/ak47.mp3"
+      },
+      {
+        "id": "rpg",
+        "label": "RPG-7",
+        "labelEn": "RPG-7",
+        "atk": 4,
+        "range": 4,
+        "ammo": 1,
+        "aoe": 1,
+        "maxCarriers": 1,
+        "sound": "assets/rocket.mp3"
+      }
+    ],
+    "sniper_vc": [
+      {
+        "id": "rifle",
+        "label": "Mosin",
+        "labelEn": "Mosin",
+        "atk": 3,
+        "range": 4,
+        "sound": "assets/mosin.mp3"
+      }
+    ],
+    "commander": [
+      {
+        "id": "pistol",
+        "label": "TT-33",
+        "labelEn": "TT-33",
+        "atk": 3,
+        "range": 2,
+        "sound": "assets/pistol.mp3"
+      }
+    ]
   }
 }

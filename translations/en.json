@@ -188,7 +188,19 @@
     "demolition_fail": "Demolition failed — the structure holds",
     "dice_prompt": "⚄ {context} — roll {count} die",
     "dice_result": "{context}: {dice}={sum}",
-    "vc_attack_auto": "VC Attack: {name}"
+    "vc_attack_auto": "VC Attack: {name}",
+    "aoe_attack": "{name} — {weapon}: {targets} targets in blast area!",
+    "aoe_no_targets": "{name} — {weapon}: no targets in blast area",
+    "aoe_dice_context": "{weapon} — {name}",
+    "aoe_target_result": "  ↳ {name}: {defBreakdown} → {result}"
+  },
+
+  "weapons": {
+    "pick_prompt": "Choose weapon:",
+    "ammo_inf": "∞",
+    "ammo_tag": "×{n}",
+    "confirm_aoe": "🎯 Confirm",
+    "cancel_aoe": "✕ Cancel"
   },
 
   "fx": {
@@ -198,7 +210,8 @@
     "overwatch": "OW!",
     "suppression": "SUP!",
     "demolition_success": "BLOWN!",
-    "demolition_fail": "HELD"
+    "demolition_fail": "HELD",
+    "explosion": "BOOM!"
   },
 
   "tooltip": {

@@ -82,7 +82,7 @@ La **copertura** aumenta la difesa dell'unità che occupa la cella, rendendo pi�
 
 Quando attacchi, il gioco ti chiede di **lanciare fisicamente il dado** premendo il pulsante dado. Il nemico invece lancia automaticamente.
 
-**Formula di risoluzione:**
+**Formula di risoluzione (attacco singolo):**
 
 ```
 Tiro attacco  = 2d6 + valore ATK dell'attaccante
@@ -104,6 +104,21 @@ Il **cecchino** subisce una penalità crescente all'ATK in base alla distanza da
 
 Il valore ATK minimo è sempre 1, anche con la penalità massima. La penalità compare nel log di combattimento solo quando applicata.
 
+### Selezione arma e attacchi AoE
+
+Alcune unità dispongono di **più armi**. Premendo "Attacca" compare un selettore con le armi disponibili e le munizioni rimanenti.
+
+**Armi ad area (AoE):** granate, RPG e simili colpiscono tutti i bersagli in un raggio attorno al punto d'impatto. Il flusso è diverso:
+
+1. Scegli l'arma AoE dal selettore
+2. Tutti i tile entro la gittata si illuminano in arancione
+3. Click sul tile bersaglio → anteprima del raggio d'effetto
+4. **Conferma** o **Annulla** l'esplosione
+
+Le armi AoE si risolvono con un singolo tiro di dado automatico applicato a tutti i bersagli nell'area — non è richiesto il dado manuale. L'esplosione colpisce sia VC che soldati US che si trovano nel raggio.
+
+**Munizioni:** le armi con munizioni limitate mostrano il numero rimanente (es. `×2`). Quando le munizioni si esauriscono, l'arma non appare più nel selettore.
+
 ---
 
 ### Unità della Squadra
@@ -112,10 +127,12 @@ La squadra è composta da 4 soldati, uno per classe:
 
 | Classe | HP | Movimento | ATK | DEF | Gittata | Abilità Speciale |
 |---|---|---|---|---|---|---|
-| **Assalto** | 10 | 4 | 3 | 1 | 2 | Fuoco Soppressivo (riduce AP nemico) |
+| **Assalto** | 10 | 4 | 3 | 1 | 2 | Fuoco Soppressivo · **Granate ×2** (AoE, ATK5, gittata 3) |
 | **Cecchino** | 7 | 3 | 4 | 0 | 6 | Overwatch (attacca nemici in movimento) — **1 sparo per turno** |
 | **Geniere** | 9 | 3 | 2 | 1 | 2 | Demolizione (bunker/ostacoli, dado ≥4) · Incendio (vegetazione, immediato) |
 | **Medico** | 8 | 3 | 1 | 1 | 1 | Primo Soccorso (cura un alleato adiacente) — **ripristina il morale** |
+
+> L'assalto ha sempre il fucile M16 come arma primaria (illimitata) più 2 granate. Premendo "Attacca" appare il selettore arma.
 
 ---
 
@@ -140,9 +157,11 @@ I VC si muovono e attaccano automaticamente durante la fase nemica. Il loro spos
 
 | Tipo | Comportamento |
 |---|---|
-| Guerrigliero | Unità base, ATK 2, gittata 2 |
-| Cecchino VC | Pericoloso a distanza, ATK 3, gittata 4 |
-| Comandante VC | Più resistente e mobile, ATK 3, DEF 1 |
+| Guerrigliero | Unità base, ATK 2 (AK-47), gittata 2 — uno per missione porta anche RPG-7 (ATK 4, gittata 4, AoE, 1 colpo) |
+| Cecchino VC | Pericoloso a distanza, ATK 3 (Mosin), gittata 4 |
+| Comandante VC | Più resistente e mobile, ATK 3 (TT-33), DEF 1 |
+
+**Armi speciali VC:** un solo guerrigliero per missione può essere equipaggiato con un RPG-7 (1 colpo). Una volta a tiro, lo usa quando la squadra è raggruppata o quando il bersaglio è fuori gittata dell'AK-47.
 
 **Comportamento pattuglia:** finché non avvistano un soldato US (raggio 5), i VC pattugliano attivamente in base alla missione in corso:
 
@@ -181,7 +200,7 @@ La partita finisce con una **vittoria** quando l'obiettivo è completato, o con 
 ### Abilità Speciali — Dettagli
 
 - **Fuoco Soppressivo (Assalto):** l'assalto entra in modalità di fuoco soppressivo (costo 1 AP). Durante la fase nemica, qualsiasi VC che si trova o si sposta entro gittata 2 viene bloccato: AP azzerati, non può attaccare. La zona di soppressione è visibile sull'overlay con un cerchio arancione tratteggiato.
-- **Overwatch (Cecchino):** entra in modalità sorveglianza (costo 1 AP). Se durante la fase nemica un VC si muove nel suo raggio di gittata (6 tile), il cecchino spara automaticamente con 2d6 + ATK. Il cecchino può effettuare **un solo attacco per turno** — scegli con cura il bersaglio. La **penalità gittata** si applica anche in overwatch.
+- **Overwatch (Cecchino):** entra in modalità sorveglianza (costo 1 AP). Se durante la fase nemica un VC entra nel raggio di gittata (6 tile) **e** nel cono visivo del cecchino, questi spara automaticamente con 2d6 + ATK. Il cecchino può effettuare **un solo attacco per turno nemico** — colpisce il primo nemico valido in ordine di attivazione. La **penalità gittata** si applica anche in overwatch. Nemici dietro muri, bunker o giungla fitta non vengono intercettati anche se a distanza.
 - **Demolizione / Incendio (Geniere):** su un tile adiacente con bunker o ostacolo, demolisce (dado ≥4). Su un tile con vegetazione (giungla, villaggio, giardino), lo incendia immediatamente. Il fuoco blocca il passaggio per **2 turni** — sia per la squadra che per i VC — e si vede sulla mappa con l'animazione fiamme.
 - **Primo Soccorso (Medico):** ripristina HP a un alleato adiacente.
 
@@ -325,6 +344,85 @@ Per sostituire gli sprite disegnati con immagini personalizzate, inserire il per
 - I percorsi sono relativi alla cartella principale del gioco
 - È possibile sostituire solo alcune classi e lasciare le altre con lo sprite di default
 - Se `config.json` è assente o non valido, il gioco funziona normalmente senza errori
+
+### Suoni arma personalizzati
+
+Ogni arma può avere un proprio suono di sparo, definito con il campo `sound` direttamente nell'oggetto arma in `config.json`:
+
+```json
+{
+  "weapons": {
+    "assault": [
+      { "id": "rifle", "label": "M16", "atk": 3, "range": 2, "sound": "assets/m16.mp3" },
+      { "id": "grenade", "label": "Granata", "atk": 5, "range": 3, "ammo": 2, "aoe": 1 }
+    ],
+    "grunt": [
+      { "id": "ak47", "label": "AK-47", "atk": 2, "range": 2, "sound": "assets/ak47.mp3" }
+    ]
+  }
+}
+```
+
+- Formati supportati: **ogg, mp3, wav**
+- Il campo `sound` è opzionale: se assente o se il file non è caricabile, viene usato il suono sintetizzato di default
+- File audio identici su più armi vengono precaricati una sola volta (cache per path)
+- Il suono viene usato in tutti i contesti: attacco diretto, overwatch, fuoco soppressivo
+
+### Armi e loadout
+
+Ogni classe può avere un arsenale di armi definito in `config.json` sotto la chiave `weapons`. Se la sezione è assente, ogni unità usa i valori ATK/range di default dalla sua classe.
+
+```json
+{
+  "weapons": {
+    "assault": [
+      { "id": "rifle",   "label": "M16",     "labelEn": "M16",     "atk": 3, "range": 2 },
+      { "id": "grenade", "label": "Granata",  "labelEn": "Grenade", "atk": 5, "range": 3, "ammo": 2, "aoe": 1 }
+    ],
+    "sniper":    [{ "id": "rifle",  "label": "M14",   "labelEn": "M14",   "atk": 4, "range": 6 }],
+    "engineer":  [{ "id": "rifle",  "label": "M16",   "labelEn": "M16",   "atk": 2, "range": 2 }],
+    "medic":     [{ "id": "pistol", "label": "M1911", "labelEn": "M1911", "atk": 1, "range": 1 }],
+    "grunt": [
+      { "id": "ak47", "label": "AK-47", "labelEn": "AK-47", "atk": 2, "range": 2 },
+      { "id": "rpg",  "label": "RPG-7", "labelEn": "RPG-7", "atk": 4, "range": 4, "ammo": 1, "aoe": 1, "maxCarriers": 1 }
+    ],
+    "sniper_vc": [{ "id": "rifle",  "label": "Mosin", "labelEn": "Mosin", "atk": 3, "range": 4 }],
+    "commander": [{ "id": "pistol", "label": "TT-33", "labelEn": "TT-33", "atk": 3, "range": 2 }]
+  }
+}
+```
+
+**Campi per arma:**
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `id` | string | Identificatore interno |
+| `label` / `labelEn` | string | Nome visualizzato in italiano / inglese |
+| `atk` | number | Valore ATK dell'arma (sovrascrive quello della classe) |
+| `range` | number | Gittata massima in tile |
+| `ammo` | number o null | Munizioni disponibili; `null` = illimitate |
+| `aoe` | number | (opzionale) Raggio area d'effetto in distanza Manhattan |
+| `maxCarriers` | number | (opzionale, solo VC) Max unità per missione che possono portare quest'arma |
+
+**Comportamento:**
+
+- Se un'unità ha **una sola arma** (o una sola usabile), attacca direttamente senza picker
+- Se ha **più armi usabili**, appare un selettore nell'area azioni prima dell'attacco
+- Le **armi AoE** (`aoe > 0`) mostrano prima un overlay arancione con il raggio di gittata, poi al click sul tile mostrano l'anteprima del raggio d'effetto con conferma/annulla; il combattimento avviene automaticamente senza dado manuale
+- Le munizioni vengono scalate sull'oggetto unità e salvate con `saveGame()` — persistono tra turni e resume
+- `maxCarriers` limita a livello di missione quante unità VC possono ricevere quell'arma (spawn iniziale + rinforzi + imboscata condividono il contatore in `G.missionState.vcCarrierCounts`)
+
+**Loadout predefinito (config.json corrente):**
+
+| Classe | Arma primaria | Arma secondaria |
+|---|---|---|
+| Assalto | M16 (ATK3, RNG2, ∞) | Granata (ATK5, RNG3, AoE1, ×2) |
+| Cecchino | M14 (ATK4, RNG6, ∞) | — |
+| Geniere | M16 (ATK2, RNG2, ∞) | — |
+| Medico | M1911 (ATK1, RNG1, ∞) | — |
+| Guerrigliero VC | AK-47 (ATK2, RNG2, ∞) | RPG-7 (ATK4, RNG4, AoE1, ×1, max 1 portatore) |
+| Cecchino VC | Mosin (ATK3, RNG4, ∞) | — |
+| Comandante VC | TT-33 (ATK3, RNG2, ∞) | — |
 
 ---
 
