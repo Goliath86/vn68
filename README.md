@@ -522,3 +522,172 @@ Le scorciatoie da tastiera sono attive solo durante la **fase giocatore** e quan
 ### Bottone ⌂ e back button
 
 Il bottone **⌂** è visibile solo durante una partita attiva. Al click — e sul **tasto indietro del browser o del telefono Android** — viene richiesta conferma prima di abbandonare la missione; la musica fa un fade-out prima di tornare al menu.
+
+---
+
+## Creare una nuova missione
+
+Aggiungere una mappa richiede solo due file. Zero modifiche al codice JS.
+
+### 1. Registrare la mappa in `missions/catalog.json`
+
+```json
+{
+  "file": "mia_mappa.json",
+  "icon": "🗺️",
+  "color": "#334455",
+  "theaterColor": "#334455",
+  "labels": {
+    "it": { "label": "Nome Mappa", "subtitle": "Luogo · Anno", "theater": "TEATRO" },
+    "en": { "label": "Map Name",   "subtitle": "Place · Year",  "theater": "THEATER" }
+  }
+}
+```
+
+### 2. Creare `missions/mia_mappa.json`
+
+Struttura completa con tutti i campi:
+
+```json
+{
+  "name": "Nome interno",
+  "description": "Descrizione breve",
+  "cols": 15,
+  "rows": 12,
+  "image": "mia_mappa.jpg",
+  "ambient": "missions/mia_mappa_ambient.ogg",
+  "sounds": {
+    "move": "missions/mia_mappa_footstep.mp3"
+  },
+
+  "tileTypes": {
+    "C": { "id": "clearing", "label": "Radura",  "moveCost": 1, "coverBonus": 0, "color": "#8aaa55" },
+    "J": { "id": "jungle",   "label": "Giungla", "moveCost": 2, "coverBonus": 2, "color": "#2d5a1b",
+           "losBlock": "partial", "burnable": true },
+    "R": { "id": "river",    "label": "Fiume",   "moveCost": 1, "coverBonus": 0, "color": "#336699",
+           "impassable": true },
+    "B": { "id": "bunker",   "label": "Bunker",  "moveCost": 1, "coverBonus": 3, "color": "#5a5040",
+           "losBlock": "full", "demolishable": true, "demolishResult": "J" },
+    "O": { "id": "objective","label": "Obiettivo","moveCost": 1, "coverBonus": 0, "color": "#cc9900" }
+  },
+
+  "grid": [
+    ["J","J","C","C","C","J","J","C","C","C","J","J","C","C","C"],
+    ["C","C","C","J","C","C","C","J","C","C","C","J","C","C","C"]
+  ],
+
+  "playerStart": [
+    {"col": 0, "row": 6},
+    {"col": 1, "row": 6},
+    {"col": 0, "row": 7},
+    {"col": 1, "row": 7}
+  ],
+
+  "vcSpawnZones":  [{"colMin": 10, "colMax": 14, "rowMin": 0, "rowMax": 11}],
+  "vcCount": 6,
+
+  "reinforcementTurn": 5,
+  "reinforcementCount": 2,
+
+  "vcAmbushTurn": 4,
+  "vcAmbushCount": 2,
+  "vcAmbushZones": [{"colMin": 0, "colMax": 3, "rowMin": 0, "rowMax": 3}],
+
+  "supportedMissions": ["recon", "search_destroy", "rescue_pilot", "capture_objective"],
+
+  "objectives": {
+    "recon": [
+      {"col": 7, "row": 3, "label": "Zona A"},
+      {"col": 12, "row": 9, "label": "Zona B"}
+    ],
+    "search_destroy": {"eliminateAll": false, "minKills": 4},
+    "rescue_pilot": {
+      "pilotCol": 11, "pilotRow": 3,
+      "extractCol": 0, "extractRow": 11,
+      "tileAnimations": [{"col": 11, "row": 3, "type": "smoke"}]
+    },
+    "capture_objective": [
+      {"col": 10, "row": 5, "label": "Posizione Alpha", "holdTurns": 3}
+    ]
+  },
+
+  "tileAnimations": [
+    {"col": 5, "row": 3, "type": "fog"}
+  ],
+
+  "translations": {
+    "it": {
+      "name": "Nome IT",
+      "description": "Descrizione IT",
+      "tileLabels": {
+        "clearing": "Radura", "jungle": "Giungla", "river": "Fiume",
+        "bunker": "Bunker VC", "objective": "Obiettivo"
+      },
+      "objectives": {
+        "recon": [{"label": "Zona A"}, {"label": "Zona B"}],
+        "capture_objective": [{"label": "Posizione Alpha"}]
+      }
+    },
+    "en": {
+      "name": "Map Name EN",
+      "description": "Description EN",
+      "tileLabels": {
+        "clearing": "Clearing", "jungle": "Jungle", "river": "River",
+        "bunker": "VC Bunker", "objective": "Objective"
+      },
+      "objectives": {
+        "recon": [{"label": "Zone A"}, {"label": "Zone B"}],
+        "capture_objective": [{"label": "Alpha Position"}]
+      }
+    }
+  }
+}
+```
+
+### Campi del tile type
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `id` | string | Identificatore interno (usato in `tileLabels`) |
+| `label` | string | Nome di default (usato se traduzione assente) |
+| `moveCost` | number | AP per attraversare il tile (0 = gratis, 3 = palude) |
+| `coverBonus` | number | Bonus difesa per chi occupa il tile |
+| `color` | string | Colore hex per il rendering procedurale |
+| `impassable` | bool | Se `true`, blocca il movimento (muri, fiumi) |
+| `losBlock` | string | `"full"` = blocca la visione, `"partial"` = −1 al raggio per ogni tile attraversato |
+| `burnable` | bool | Il geniere può incendiarlo (fuoco per 2 turni) |
+| `demolishable` | bool | Il geniere può demolirlo con dado ≥ 4 |
+| `demolishResult` | string | Chiave del tile che sostituisce quello demolito |
+
+### Tipi di obiettivo
+
+| Tipo | Struttura in `objectives` |
+|---|---|
+| `recon` | Array di `{"col", "row", "label"}` — zone da raggiungere |
+| `search_destroy` | `{"eliminateAll": bool, "minKills": N}` |
+| `rescue_pilot` | `{"pilotCol", "pilotRow", "extractCol", "extractRow"}` — la posizione del pilota è nascosta nella FOW |
+| `capture_objective` | Array di `{"col", "row", "label", "holdTurns"}` — occupare per N turni consecutivi |
+
+Puoi includere solo i tipi che vuoi supportare e dichiararli in `supportedMissions`.
+
+### File opzionali
+
+| File | Descrizione |
+|---|---|
+| `missions/mia_mappa.jpg` | Immagine di sfondo (sostituisce i tile colorati); dichiarata con `"image": "mia_mappa.jpg"` |
+| `missions/mia_mappa_ambient.ogg` | Musica ambientale in loop durante la partita |
+| `"sounds": { "move": "..." }` | SFX specifici per questa mappa (sovrascrivono `config.json`) |
+
+### Animazioni tile
+
+Aggiungi animazioni ambientali senza toccare il codice:
+
+```json
+"tileAnimations": [
+  {"col": 5, "row": 3, "type": "smoke"},
+  {"col": 2, "row": 7, "type": "fire"},
+  {"col": 9, "row": 1, "type": "fog"}
+]
+```
+
+Le animazioni globali (`tileAnimations` alla radice) sono sempre visibili. Quelle dentro `objectives.<tipo>.tileAnimations` appaiono solo nella modalità corrispondente. Il fumo è visibile anche attraverso la Fog of War — utile come indicatore visivo per la posizione del pilota in `rescue_pilot`.
