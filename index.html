@@ -2930,11 +2930,12 @@ function checkOverwatch(enemy) {
 
 // ── ALERT PROPAGATION ──────────────────────────────────────────────────
 function propagateAlert(source) {
-  const RADIUS = 4;
+  const RADIUS = 3;
   G.enemies.forEach(other => {
     if (!other.alive || other.id === source.id || other.alerted) return;
     if (dist(source, other) <= RADIUS) {
       other.alerted = true;
+      other.ap = 0; // reagisce all'allerta ma non agisce nello stesso turno
       addFX('spot', {col: other.col, row: other.row}, 900);
     }
   });

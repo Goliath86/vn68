@@ -172,7 +172,7 @@ I VC si muovono e attaccano automaticamente durante la fase nemica. Il loro spos
 | **Ricognizione** | Esplorano l'intera mappa verso posizioni casuali |
 | **Conquista Obiettivo** | Presidiano l'obiettivo più vicino |
 
-**Propagazione dell'allerta:** quando un VC avvista la squadra, avvisa automaticamente tutti i compagni entro raggio 4. I VC allertati per propagazione reagiscono nello stesso turno, rendendo ogni contatto potenzialmente un'imboscata di gruppo.
+**Propagazione dell'allerta:** quando un VC avvista la squadra, avvisa automaticamente tutti i compagni entro raggio 3. I VC allertati per propagazione si svegliano ma **non agiscono nel turno in cui vengono allertati** — il giocatore ha un turno per riposizionarsi o cercare copertura prima che la risposta nemica diventi piena. Solo il VC che ha avvistato direttamente la squadra attacca immediatamente.
 
 **Uso tattico della copertura:** una volta allertati, i VC non avanzano in linea retta ma scelgono percorsi che privilegiano giungla, bunker e terreni coperti rispetto a radure e strade esposte. Tenersi al riparo non basta — il nemico cercherà attivamente di fare lo stesso.
 
