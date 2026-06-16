@@ -8,6 +8,10 @@
   "cols": 16,
   "rows": 12,
 
+  "sounds": {
+    "move": "assets/footsteps_jungle.mp3"
+  },
+
   "tileTypes": {
     "J": {
       "id": "jungle",

@@ -9,6 +9,21 @@
     "sniper_vc": "assets/sniper_vc.png",
     "commander": "assets/commander_vc.png"
   },
+  "sounds": {
+    "move": "",
+    "hit": "",
+    "death": "",
+    "miss": "assets/bullet_ricochet.mp3",
+    "ambush": "",
+    "demolition": "",
+    "heal": "",
+    "overwatch": "",
+    "spawn": "",
+    "turn_end": "",
+    "victory": "",
+    "defeat": "",
+    "click": ""
+  },
   "weapons": {
     "assault": [
       {

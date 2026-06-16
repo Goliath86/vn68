@@ -1062,6 +1062,7 @@ async function resumeGame(save) {
 
   // Ripristina mapData (include griglia modificata da demolizioni)
   G.mapData = save.mapData;
+  loadMissionSounds(G.mapData);
 
   // Carica immagine mappa se presente
   if (G.mapData.image) {
@@ -1306,6 +1307,8 @@ let CONFIG = {};
 let WEAPONS_CONFIG = {}; // cls → [{id, label, atk, range, ammo?, aoe?, maxCarriers?}]
 const UNIT_IMG_CACHE = {}; // cls → HTMLImageElement (pre-caricato)
 const WEAPON_SND_CACHE = {}; // soundPath → HTMLAudioElement (pre-caricato dal campo sound delle armi)
+const SFX_CACHE = {};        // sfxKey → HTMLAudioElement (pre-caricato da config.sounds)
+const MISSION_SFX_CACHE = {}; // sfxKey → HTMLAudioElement (override per missione corrente)
 
 async function loadConfig() {
   try {
@@ -1319,6 +1322,12 @@ async function loadConfig() {
       img.src = path;
       UNIT_IMG_CACHE[cls] = img;
     }
+    for (const [key, path] of Object.entries(CONFIG.sounds || {})) {
+      if (!path) continue;
+      const a = new Audio(path);
+      a.onerror = () => { delete SFX_CACHE[key]; };
+      SFX_CACHE[key] = a;
+    }
     const _seenSnd = new Set();
     for (const weapons of Object.values(WEAPONS_CONFIG)) {
       for (const w of weapons) {
@@ -1331,6 +1340,16 @@ async function loadConfig() {
     }
   } catch(e) {
     // config.json assente o non valido — nessun effetto, si usano gli sprite canvas
+  }
+}
+
+function loadMissionSounds(mapData) {
+  for (const k of Object.keys(MISSION_SFX_CACHE)) delete MISSION_SFX_CACHE[k];
+  for (const [key, path] of Object.entries(mapData.sounds || {})) {
+    if (!path) continue;
+    const a = new Audio(path);
+    a.onerror = () => { delete MISSION_SFX_CACHE[key]; };
+    MISSION_SFX_CACHE[key] = a;
   }
 }
 
@@ -1626,6 +1645,7 @@ function resizeCanvas() {
 async function loadMission(jsonPath) {
   const resp = await fetch(jsonPath);
   G.mapData = await resp.json();
+  loadMissionSounds(G.mapData);
 
   // Imposta scala iniziale per far stare la mappa nello schermo
   const c = document.getElementById('center');
@@ -1660,7 +1680,15 @@ function _audioResume() {
   if (AUDIO.ctx && AUDIO.ctx.state === 'suspended') AUDIO.ctx.resume();
 }
 function sfx(type) {
-  if (AUDIO.muted || !AUDIO.ctx) return;
+  if (AUDIO.muted) return;
+  const cached = MISSION_SFX_CACHE[type] || SFX_CACHE[type];
+  if (cached) {
+    const clone = cached.cloneNode();
+    clone.volume = AUDIO.sfxVol;
+    clone.play().catch(() => {});
+    return;
+  }
+  if (!AUDIO.ctx) return;
   _audioResume();
   const ac = AUDIO.ctx, out = AUDIO.master, t0 = ac.currentTime;
   switch (type) {

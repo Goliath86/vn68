@@ -368,6 +368,56 @@ Ogni arma può avere un proprio suono di sparo, definito con il campo `sound` di
 - File audio identici su più armi vengono precaricati una sola volta (cache per path)
 - Il suono viene usato in tutti i contesti: attacco diretto, overwatch, fuoco soppressivo
 
+### Effetti sonori personalizzati
+
+Anche i suoni di gioco (vittoria, morte, movimento, ecc.) possono essere sostituiti con file audio custom tramite la chiave `sounds` in `config.json`:
+
+```json
+{
+  "sounds": {
+    "move":       "assets/footstep.mp3",
+    "hit":        "assets/hit.mp3",
+    "death":      "assets/death.mp3",
+    "miss":       "",
+    "ambush":     "assets/ambush.mp3",
+    "demolition": "assets/explosion.mp3",
+    "heal":       "",
+    "overwatch":  "",
+    "spawn":      "",
+    "turn_end":   "",
+    "victory":    "assets/victory.mp3",
+    "defeat":     "assets/defeat.mp3",
+    "click":      ""
+  }
+}
+```
+
+- Lasciare il valore vuoto `""` per mantenere il suono sintetizzato
+- I suoni di sparo (`shoot`, `shoot_vc`) **non vanno qui** — si definiscono nel campo `sound` di ogni arma
+- Se il file non è caricabile, il gioco torna automaticamente al sintetizzato
+
+### Effetti sonori specifici per missione
+
+Ogni missione può sovrascrivere uno o più SFX di `config.json` aggiungendo la stessa chiave `sounds` direttamente nel JSON della missione:
+
+```json
+{
+  "name": "Hue City",
+  "sounds": {
+    "move": "missions/hue_city_footstep.mp3"
+  }
+}
+```
+
+Questo permette, ad esempio, di avere passi su asfalto in città e passi su fogliame in giungla, mantenendo i suoni generici come fallback.
+
+**Priorità di risoluzione per ogni SFX:**
+1. Suono definito nel JSON della missione corrente
+2. Suono definito in `config.json → sounds`
+3. Suono sintetizzato via Web Audio API (default)
+
+La cache dei suoni missione viene svuotata e ricaricata automaticamente ad ogni cambio missione (incluso il resume da salvataggio). Le stesse chiavi valide di `config.json → sounds` sono utilizzabili anche qui (esclusi `shoot`/`shoot_vc`, che si configurano per singola arma).
+
 ### Armi e loadout
 
 Ogni classe può avere un arsenale di armi definito in `config.json` sotto la chiave `weapons`. Se la sezione è assente, ogni unità usa i valori ATK/range di default dalla sua classe.
