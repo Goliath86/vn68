@@ -34,7 +34,11 @@
     "resume": "▶ RIPRENDI",
     "next": "AVANTI ▶",
     "change_theater": "← Cambia teatro",
-    "menu": "⌂"
+    "menu": "⌂",
+    "move_mobile": "Muovi",
+    "attack_mobile": "Attacca",
+    "special_mobile": "Spec.",
+    "end_turn_mobile": "Fine"
   },
 
   "confirm": {
@@ -78,10 +82,21 @@
       }
     },
     "soldier_names": [
-      "Cpl. Hayes", "Sgt. Kovacs", "Pvt. Morales", "Cpt. Briggs",
-      "Pvt. Tucker", "Sgt. Webb", "Cpl. Diaz", "Lt. Burns"
+      "Cpl. Hayes",
+      "Sgt. Kovacs",
+      "Pvt. Morales",
+      "Cpt. Briggs",
+      "Pvt. Tucker",
+      "Sgt. Webb",
+      "Cpl. Diaz",
+      "Lt. Burns"
     ],
-    "vc_names": ["Guerrigliero", "Cecchino VC", "Pattuglia VC", "Comandante VC"],
+    "vc_names": [
+      "Guerrigliero",
+      "Cecchino VC",
+      "Pattuglia VC",
+      "Comandante VC"
+    ],
     "vc_reinforcement_name": "Rinforzo VC",
     "status": {
       "kia": "KIA",
@@ -239,7 +254,8 @@
   },
 
   "ui": {
-    "no_dice": "Nessun dado"
+    "no_dice": "Nessun dado",
+    "free_dice": "Dado libero"
   },
 
   "errors": {

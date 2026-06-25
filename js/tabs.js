@@ -2,6 +2,7 @@ function switchTab(name) {
   document
     .querySelectorAll(".tab-btn")
     .forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+
   document
     .querySelectorAll(".tab-pane")
     .forEach((p) => p.classList.toggle("active", p.id === "tab-" + name));
@@ -23,7 +24,9 @@ function expandSheet() {
 document
   .getElementById("btn-collapse-sheet")
   .addEventListener("click", collapseSheet);
+
 document.getElementById("qb-expand").addEventListener("click", expandSheet);
+
 document
   .getElementById("sheet-handle")
   .addEventListener("click", collapseSheet);
@@ -47,8 +50,11 @@ function updateActionButtons() {
         label: UNIT_CLASSES[u.cls].specialLabel,
       })
     : t("buttons.special");
+
   const hasMM = G.actionMode === "move";
+
   const hasAM = G.actionMode === "attack";
+
   const hasSM = G.actionMode === "special";
 
   // Aggiorna sia i controlli desktop che mobile in un colpo
@@ -59,6 +65,7 @@ function updateActionButtons() {
     ["btn-endturn", "mob-btn-endturn"],
     ["btn-dice", "mob-btn-dice"],
   ];
+
   pairs.forEach(([did, mid]) => {
     [did, mid].forEach((id) => {
       const el = document.getElementById(id);

@@ -4,7 +4,9 @@ function setActionMode(mode, weapon = null) {
   G.pendingAoe = null;
   G.reachable = [];
   G.attackable = [];
+
   const u = G.selectedUnit;
+
   if (!u || !u.alive) {
     render();
     return;
@@ -18,6 +20,7 @@ function setActionMode(mode, weapon = null) {
       return { col: c, row: r, cost: reach[k] };
     });
   }
+
   if (mode === "attack") {
     const def = UNIT_CLASSES[u.cls];
     const range = weapon?.range ?? def.range;
@@ -36,6 +39,7 @@ function setActionMode(mode, weapon = null) {
       );
     }
   }
+
   if (mode === "special") {
     // Medico: adiacenti alleati
     if (u.cls === "medic") {
@@ -43,7 +47,9 @@ function setActionMode(mode, weapon = null) {
         (t) => t.alive && t.id !== u.id && dist(u, t) <= 1,
       );
     }
+
     // Cecchino: overwatch
+    //
     // Geniere: demolisce tile demolishable OPPURE incendia tile burnable adiacenti
     if (u.cls === "engineer") {
       const DIRS = [
@@ -52,6 +58,7 @@ function setActionMode(mode, weapon = null) {
         [-1, 0],
         [1, 0],
       ];
+
       G.reachable = DIRS.map(([dc, dr]) => ({
         col: u.col + dc,
         row: u.row + dr,
@@ -61,6 +68,8 @@ function setActionMode(mode, weapon = null) {
       });
     }
   }
+
   render();
+
   updateUI();
 }

@@ -14,6 +14,7 @@
                 <div id="header" style="display: contents">
                     <h1 id="title-text">NAM '68</h1>
                 </div>
+
                 <div class="subtitle" id="mission-subtitle">
                     CARICA UNA MISSIONE
                 </div>
@@ -272,22 +273,41 @@
                             gap: 6px;
                         "
                     >
-                        <button class="btn" id="mob-btn-move" disabled>
+                        <button
+                            class="btn"
+                            id="mob-btn-move"
+                            data-i18n="buttons.move"
+                            disabled
+                        >
                             Muovi (2AP)
                         </button>
+
                         <button
                             class="btn btn-attack"
                             id="mob-btn-attack"
+                            data-i18n="buttons.attack"
                             disabled
                         >
                             Attacca (1AP)
                         </button>
-                        <button class="btn" id="mob-btn-special" disabled>
+
+                        <button
+                            class="btn"
+                            id="mob-btn-special"
+                            data-i18n="buttons.special"
+                            disabled
+                        >
                             Abilità spec.
                         </button>
-                        <button class="btn btn-end" id="mob-btn-endturn">
+
+                        <button
+                            class="btn btn-end"
+                            id="mob-btn-endturn"
+                            data-i18n="buttons.end_turn"
+                        >
                             Fine turno
                         </button>
+
                         <div
                             id="mob-weapon-picker"
                             style="
@@ -327,9 +347,11 @@
                                     color: var(--paper-dark);
                                 "
                                 data-i18n="ui.no_dice"
-                                >Nessun dado</span
                             >
+                                Nessun dado
+                            </span>
                         </div>
+
                         <div
                             id="mob-dice-result"
                             style="
@@ -341,9 +363,11 @@
                         >
                             —
                         </div>
+
                         <button
                             class="btn btn-dice"
                             id="mob-btn-dice"
+                            data-i18n="buttons.roll_dice"
                             disabled
                             style="width: 100%"
                         >
@@ -382,21 +406,33 @@
             <!-- Quick action bar: visibile quando la sheet è collassata (mobile only) -->
             <div id="quick-bar">
                 <button class="btn qb-btn" id="qb-move">
-                    <span class="qb-icon">↗</span
-                    ><span class="qb-label">Muovi</span>
+                    <span class="qb-icon">↗</span>
+                    <span class="qb-label" data-i18n="buttons.move_mobile">
+                        Muovi
+                    </span>
                 </button>
+
                 <button class="btn btn-attack qb-btn" id="qb-attack">
-                    <span class="qb-icon">🎯</span
-                    ><span class="qb-label">Attacca</span>
+                    <span class="qb-icon">🎯</span>
+                    <span class="qb-label" data-i18n="buttons.attack_mobile">
+                        Attacca
+                    </span>
                 </button>
+
                 <button class="btn qb-btn" id="qb-special">
-                    <span class="qb-icon">⚡</span
-                    ><span class="qb-label">Spec.</span>
+                    <span class="qb-icon">⚡</span>
+                    <span class="qb-label" data-i18n="buttons.special_mobile">
+                        Spec.
+                    </span>
                 </button>
+
                 <button class="btn btn-end qb-btn" id="qb-endturn">
-                    <span class="qb-icon">⏎</span
-                    ><span class="qb-label">Fine</span>
+                    <span class="qb-icon">⏎</span>
+                    <span class="qb-label" data-i18n="buttons.end_turn_mobile">
+                        Fine
+                    </span>
                 </button>
+
                 <button id="qb-expand">▲</button>
             </div>
         </div>

@@ -1,13 +1,26 @@
 function rollD6() {
   return rnd(1, 6);
 }
+
 function rollDice(n) {
   return Array.from({ length: n }, rollD6);
 }
+
 function diceSum(arr) {
   return arr.reduce((a, b) => a + b, 0);
 }
+
 function waitForDice(count, context) {
+  if (isMobile()) {
+    if (document.body.classList.contains("sheet-collapsed")) expandSheet();
+
+    switchTab("dice");
+
+    // Pulsing badge
+    const tabDice = document.getElementById("tab-btn-dice");
+    if (tabDice) tabDice.classList.add("needs-dice");
+  }
+
   return new Promise((resolve) => {
     G.pendingDice = { count, context, resolve };
     updateDiceBtn(true);
@@ -24,7 +37,7 @@ function updateDiceBtn(active) {
   btn.style.boxShadow = active ? "0 0 8px var(--yellow)" : "";
 }
 
-const origWaitForDice = waitForDice;
+/*const origWaitForDice = waitForDice;
 waitForDice = function (count, context) {
   if (isMobile()) {
     if (document.body.classList.contains("sheet-collapsed")) expandSheet();
@@ -34,7 +47,7 @@ waitForDice = function (count, context) {
     if (tabDice) tabDice.classList.add("needs-dice");
   }
   return origWaitForDice(count, context);
-};
+  };*/
 
 // Dopo che il dado viene lanciato, rimuovi badge
 const origBtnDice = document.getElementById("btn-dice");
@@ -74,9 +87,10 @@ document.getElementById("btn-dice").addEventListener("click", () => {
   if (!G.pendingDice) {
     // Dado libero: lancia 1d6 per info
     const val = rollDice(1);
-    showDiceResult(val, "Dado libero");
+    showDiceResult(val, t("ui.free_dice"));
     return;
   }
+
   const { count, context, resolve } = G.pendingDice;
   G.pendingDice = null;
   const vals = rollDice(count);

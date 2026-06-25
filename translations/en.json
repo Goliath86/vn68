@@ -34,7 +34,11 @@
     "resume": "▶ RESUME",
     "next": "NEXT ▶",
     "change_theater": "← Change theater",
-    "menu": "⌂"
+    "menu": "⌂",
+    "move_mobile": "Move",
+    "attack_mobile": "Attack",
+    "special_mobile": "Spec.",
+    "end_turn_mobile": "End"
   },
 
   "confirm": {
@@ -78,8 +82,14 @@
       }
     },
     "soldier_names": [
-      "Cpl. Hayes", "Sgt. Kovacs", "Pvt. Morales", "Cpt. Briggs",
-      "Pvt. Tucker", "Sgt. Webb", "Cpl. Diaz", "Lt. Burns"
+      "Cpl. Hayes",
+      "Sgt. Kovacs",
+      "Pvt. Morales",
+      "Cpt. Briggs",
+      "Pvt. Tucker",
+      "Sgt. Webb",
+      "Cpl. Diaz",
+      "Lt. Burns"
     ],
     "vc_names": ["Guerrilla", "VC Sniper", "VC Patrol", "VC Commander"],
     "vc_reinforcement_name": "VC Reinforcement",
@@ -239,7 +249,8 @@
   },
 
   "ui": {
-    "no_dice": "No dice"
+    "no_dice": "No dice",
+    "free_dice": "Free dice"
   },
 
   "errors": {
