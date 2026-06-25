@@ -1,6 +1,12 @@
 {
-  "name": "Hue City — Distretto della Cittadella",
-  "description": "Febbraio 1968. Le forze NVA si sono barricato nella Cittadella imperiale. Attraversate il Fiume dei Profumi e riprendete il cuore della città.",
+  "name": {
+    "en": "Hue City — Citadel District",
+    "it": "Hue City — Distretto della Cittadella"
+  },
+  "description": {
+    "en": "February 1968. NVA forces have barricaded themselves inside the Imperial Citadel. Cross the Perfume River and retake the heart of the city.",
+    "it": "Febbraio 1968. Le forze NVA si sono barricato nella Cittadella imperiale. Attraversate il Fiume dei Profumi e riprendete il cuore della città."
+  },
   "width": 960,
   "height": 768,
   "tileSize": 64,

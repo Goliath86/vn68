@@ -1,6 +1,12 @@
 {
-  "name": "Rung Sat Special Zone",
-  "description": "Un'operazione nelle mangrovie del delta del Mekong. Terreno ostile, visibilità ridotta.",
+  "name": {
+    "en": "Rung Sat Special Zone",
+    "it": "Rung Sat Special Zone"
+  },
+  "description": {
+    "en": "An operation in the Mekong Delta mangroves. Hostile terrain, reduced visibility.",
+    "it": "Un'operazione nelle mangrovie del delta del Mekong. Terreno ostile, visibilità ridotta."
+  },
   "image": "rung_sat_ext.webp",
   "width": 1024,
   "height": 768,

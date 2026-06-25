@@ -43,12 +43,14 @@ function applyTranslationsToData() {
       UNIT_CLASSES[k].specialLabel = d.special_label;
     }
   }
+
   for (const [k, d] of Object.entries(T.missions || {})) {
     if (MISSION_TYPES[k]) {
       MISSION_TYPES[k].label = d.label;
       MISSION_TYPES[k].desc = d.desc;
     }
   }
+
   const sn = T.units?.soldier_names;
   if (sn) SOLDIER_NAMES.splice(0, SOLDIER_NAMES.length, ...sn);
   const vn = T.units?.vc_names;

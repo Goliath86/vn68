@@ -36,6 +36,7 @@ function startGame(
   squadClasses = ["assault", "sniper", "engineer", "medic"],
 ) {
   history.pushState({ game: true }, "");
+
   G.missionType = missionType;
   G.turn = 1;
   G.phase = "player";
@@ -52,6 +53,7 @@ function startGame(
 
   squadClasses.forEach((cls, i) => {
     const def = UNIT_CLASSES[cls];
+
     G.units.push({
       id: "u" + i,
       name: SOLDIER_NAMES[i],
@@ -79,13 +81,17 @@ function startGame(
   const count = G.mapData.vcCount || 6;
   let spawned = 0;
   let attempts = 0;
+
   while (spawned < count && attempts < 500) {
     attempts++;
     const zone = pick(zones);
     const col = rnd(zone.colMin, zone.colMax);
     const row = rnd(zone.rowMin, zone.rowMax);
+
     if (!isTilePassable(col, row)) continue;
+
     if (G.enemies.find((e) => e.col === col && e.row === row)) continue;
+
     const vcClass = pick(["grunt", "grunt", "grunt", "sniper_vc", "commander"]);
     const vcName =
       vcClass === "sniper_vc"
@@ -93,6 +99,7 @@ function startGame(
         : vcClass === "commander"
           ? VC_NAMES[3]
           : VC_NAMES[0];
+
     G.enemies.push({
       id: "e" + spawned,
       name: vcName,
@@ -111,6 +118,7 @@ function startGame(
       weapons: buildWeapons(vcClass, G.missionState.vcCarrierCounts),
       weaponIdx: 0,
     });
+
     spawned++;
   }
 
@@ -118,28 +126,43 @@ function startGame(
   initMissionState(missionType);
 
   updateUI();
+
   renderUnitsOnMap();
+
   document.getElementById("turn-num").textContent = G.turn;
+
   document.getElementById("phase-label").textContent = t("phases.player");
+
   document.getElementById("vc-remain").textContent = G.enemies.filter(
     (e) => e.alive,
   ).length;
+
   const missionName = (mt("name") ?? G.mapData.name ?? "?").toUpperCase();
+
   document.getElementById("mission-subtitle").textContent =
     missionName + " — " + MISSION_TYPES[missionType].label.toUpperCase();
+
   document.getElementById("btn-dice").disabled = false;
+
   document.getElementById("btn-endturn").disabled = false;
+
   document.getElementById("btn-menu").style.display = "inline-block";
+
   log(t("log.mission_start"), "system");
+
   log(
     t("log.mission_type", {
       type: MISSION_TYPES[missionType].label,
     }),
     "system",
   );
+
   log(t("log.enemy_deployed", { count: spawned }), "enemy");
+
   ambientPlay(G.mapData.ambient);
+
   render();
+
   _startTileAnimLoop();
 }
 
@@ -154,12 +177,14 @@ function initMissionState(type) {
       scouted: false,
     }));
   }
+
   if (type === "search_destroy") {
     const sd = md.objectives.search_destroy || {};
     st.kills = 0;
     st.needed = sd.eliminateAll ? G.enemies.length : sd.minKills || 4;
     st.eliminateAll = !!sd.eliminateAll;
   }
+
   if (type === "rescue_pilot") {
     const rp = md.objectives.rescue_pilot || {};
     st.pilotCol = rp.pilotCol || 0;
