@@ -163,3 +163,84 @@ function setupCanvas() {
     });
   })();
 }
+
+function onCanvasClick(e) {
+  if (G.phase !== "player") return;
+  const { col, row } = screenToTile(e.clientX, e.clientY);
+  if (col < 0 || row < 0 || col >= G.mapData.cols || row >= G.mapData.rows)
+    return;
+
+  // Se siamo in modalità mossa
+  if (G.actionMode === "move") {
+    const reach = G.reachable.find((r) => r.col === col && r.row === row);
+    if (reach) {
+      moveUnit(G.selectedUnit, col, row, reach.cost);
+      setActionMode(null);
+      return;
+    }
+    setActionMode(null);
+    return;
+  }
+
+  // In modalità attesa conferma AoE: click su canvas annulla
+  if (G.actionMode === "aoe_confirm") {
+    setActionMode(null);
+    updateUI();
+    return;
+  }
+
+  // In modalità attacco
+  if (G.actionMode === "attack") {
+    const w = G.currentWeapon;
+    if (w?.aoe) {
+      // AoE: click tile → mostra anteprima e chiedi conferma
+      const tile = G.attackable.find((t) => t.col === col && t.row === row);
+      if (tile) {
+        G.pendingAoe = { col, row, weapon: w };
+        G.actionMode = "aoe_confirm";
+        render();
+        updateUI();
+      } else {
+        setActionMode(null);
+        updateUI();
+      }
+      return;
+    }
+    // Singolo bersaglio
+    const target = G.attackable.find((e) => e.col === col && e.row === row);
+    if (target) {
+      G.selectedUnit.ap -= 1;
+      if (w?.ammo !== null && w?.ammo != null) w.ammo--;
+      if (G.selectedUnit.cls === "sniper") G.selectedUnit.hasShot = true;
+      resolveCombat(G.selectedUnit, target, false, w);
+      setActionMode(null);
+      updateUI();
+      return;
+    }
+    setActionMode(null);
+    return;
+  }
+
+  // In modalità speciale
+  if (G.actionMode === "special") {
+    handleSpecialAction(col, row);
+    setActionMode(null);
+    return;
+  }
+
+  // Selezione unità
+  const clickedUnit = G.units.find(
+    (u) => u.alive && u.col === col && u.row === row,
+  );
+  if (clickedUnit) {
+    G.selectedUnit = clickedUnit;
+    updateUI();
+    render();
+    return;
+  }
+
+  // Deseleziona
+  G.selectedUnit = null;
+  updateUI();
+  render();
+}
