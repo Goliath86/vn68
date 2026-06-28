@@ -1,0 +1,6 @@
+Sniper: if already shoot disable the Overwatch button (he can shoot only 1 time per turn) -> DONE
+Sniper: if overwatch used but then click Attack button, disable the overwatch ability (Sniper can shoot or overwatch but not both on the same turn)
+Sniper: disposable ammo for the sniper rifle
+
+New Feature:
+Engineer: if a unit is near the engineer can retake limited ammo every turn

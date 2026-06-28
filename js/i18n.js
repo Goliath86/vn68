@@ -51,8 +51,11 @@ function applyTranslationsToData() {
     }
   }
 
+  // US soldiers names
   const sn = T.units?.soldier_names;
   if (sn) SOLDIER_NAMES.splice(0, SOLDIER_NAMES.length, ...sn);
+
+  // VC soldiers names
   const vn = T.units?.vc_names;
   if (vn) VC_NAMES.splice(0, VC_NAMES.length, ...vn);
 }
@@ -63,6 +66,7 @@ function applyTranslationsToDOM() {
     const val = t(key);
     if (val !== key) el.textContent = val;
   });
+
   // Placeholder dinamici quando il gioco non è ancora avviato
   if (!G.missionType) {
     const noUnit = t("units.no_unit_selected");
@@ -87,6 +91,7 @@ function setLang(lang) {
   document
     .querySelectorAll(".lang-btn")
     .forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
+
   loadLang(lang).then(() => {
     rebuildMapsFromCatalog();
     applyTranslationsToData();

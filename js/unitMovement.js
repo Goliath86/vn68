@@ -1,7 +1,15 @@
+/**
+ * Moves a unit to a specified column and row, consuming AP if necessary.
+ * @param {object} unit The unit to move
+ * @param {number} toCol Column to move to
+ * @param {number} toRow Row to move to
+ * @param {number} apCost AP cost of the move
+ */
 function moveUnit(unit, toCol, toRow, apCost) {
-  const from = { col: unit.col, row: unit.row };
   sfx("move");
+
   addFX("move", { fromCol: unit.col, fromRow: unit.row, toCol, toRow }, 500);
+
   unit.col = toCol;
   unit.row = toRow;
   unit.ap = Math.max(0, unit.ap - apCost);
@@ -15,11 +23,9 @@ function moveUnit(unit, toCol, toRow, apCost) {
     }),
   );
 
-  // (Overwatch si applica al movimento VC — vedi checkOverwatch in enemyActivation)
-
-  // Missione: pilota
   if (G.missionType === "rescue_pilot") {
     const st = G.missionState;
+
     if (
       !st.pilotFound &&
       unit.col === st.pilotCol &&
@@ -29,6 +35,7 @@ function moveUnit(unit, toCol, toRow, apCost) {
       unit.carriesPilot = true;
       log(t("log.pilot_found", { name: unit.name }), "success");
     }
+
     if (
       st.pilotFound &&
       unit.carriesPilot &&
@@ -40,7 +47,7 @@ function moveUnit(unit, toCol, toRow, apCost) {
       checkVictory();
     }
   }
-  // Missione: ricognizione
+
   if (G.missionType === "recon") {
     for (const pt of G.missionState.points || []) {
       if (!pt.scouted && dist(unit, pt) <= 1) {
@@ -55,5 +62,6 @@ function moveUnit(unit, toCol, toRow, apCost) {
   }
 
   updateUI();
+
   render();
 }

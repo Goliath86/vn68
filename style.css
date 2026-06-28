@@ -98,7 +98,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0;
-    overflow: hidden;
+    overflow: auto;
 }
 .panel-title {
     font-family: var(--ui-font);

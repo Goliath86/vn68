@@ -16,6 +16,7 @@ function collapseSheet() {
   document.body.classList.add("sheet-collapsed");
   resizeCanvas();
 }
+
 function expandSheet() {
   document.body.classList.remove("sheet-collapsed");
   resizeCanvas();
@@ -70,10 +71,12 @@ function updateActionButtons() {
     [did, mid].forEach((id) => {
       const el = document.getElementById(id);
       if (!el) return;
+
       if (id.includes("move")) {
         el.disabled = !(isPlayer && hasAP);
         el.style.borderColor = hasMM ? "var(--highlight)" : "";
       }
+
       if (id.includes("attack")) {
         const hasAmmo =
           !u?.weapons?.length ||
@@ -91,15 +94,24 @@ function updateActionButtons() {
         el.style.borderColor =
           hasAM || G.actionMode === "weapon_select" ? "var(--highlight)" : "";
       }
+
       if (id.includes("special")) {
-        el.disabled = !(isPlayer && hasAP && !u?.specialUsed && !u?.shaken);
+        el.disabled = !(
+          isPlayer &&
+          hasAP &&
+          !u?.specialUsed &&
+          !u?.shaken &&
+          !(u?.cls === "sniper" && u?.hasShot)
+        );
         el.style.borderColor = hasSM ? "var(--highlight)" : "";
         el.textContent = specLabel;
       }
+
       if (id.includes("endturn")) {
         el.disabled =
           !isPlayer || !!G.pendingDice || G.actionMode === "aoe_confirm";
       }
+
       if (id.includes("dice")) {
         el.disabled = !isPlayer;
       }

@@ -23,6 +23,7 @@ async function resolveCombat(
   // Penalità gittata cecchino: -1 ATK ogni 2 tile di distanza
   const rangePenalty =
     !isEnemy && attacker.cls === "sniper" ? Math.floor((range - 1) / 2) : 0;
+
   const atkVal = Math.max(1, (weapon?.atk ?? atkDef.attack) - rangePenalty);
   const defCover = coverBonus(defender.col, defender.row);
   const defStat = isEnemy

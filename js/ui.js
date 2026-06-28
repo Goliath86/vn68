@@ -7,21 +7,25 @@ document.getElementById("mob-btn-dice").addEventListener("click", () => {
 document
   .getElementById("mob-btn-move")
   .addEventListener("click", () => document.getElementById("btn-move").click());
+
 document
   .getElementById("mob-btn-attack")
   .addEventListener("click", () =>
     document.getElementById("btn-attack").click(),
   );
+
 document
   .getElementById("mob-btn-special")
   .addEventListener("click", () =>
     document.getElementById("btn-special").click(),
   );
+
 document
   .getElementById("mob-btn-endturn")
   .addEventListener("click", () =>
     document.getElementById("btn-endturn").click(),
   );
+
 function objPanelHTML() {
   const type = G.missionType;
   const st = G.missionState;

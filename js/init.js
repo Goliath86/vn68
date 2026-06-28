@@ -9,6 +9,7 @@ Promise.all([loadLang("it"), loadCatalog(), loadConfig()]).then(() => {
   applyTranslationsToData();
   applyTranslationsToDOM();
   initModal();
+
   if (CONFIG.menuMusic) {
     const menuUrl = CONFIG.menuMusic;
     ambientStop();
@@ -34,10 +35,11 @@ document.querySelectorAll(".lang-btn").forEach((btn) => {
   btn.addEventListener("click", () => setLang(btn.dataset.lang));
 });
 
-// Previeni context menu su canvas
+// Prevent context menu on canvas and overlay
 document
   .getElementById("map-canvas")
   .addEventListener("contextmenu", (e) => e.preventDefault());
+
 document
   .getElementById("overlay-canvas")
   .addEventListener("contextmenu", (e) => e.preventDefault());

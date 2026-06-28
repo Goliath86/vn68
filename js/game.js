@@ -28,8 +28,6 @@ async function loadMission(jsonPath) {
   return G.mapData;
 }
 
-// ── AUDIO SYSTEM ───────────────────────────────────────────────────────
-
 // ── INIT GAME ──────────────────────────────────────────────────────────
 function startGame(
   missionType,
@@ -204,6 +202,10 @@ function initMissionState(type) {
   }
   G.missionState = st;
 }
+
+/**
+ * Function to check the victory conditions for every type of mission
+ */
 function checkVictory() {
   const type = G.missionType;
   const st = G.missionState;
@@ -212,29 +214,38 @@ function checkVictory() {
   if (type === "recon") {
     won = (st.points || []).every((p) => p.scouted);
   }
+
   if (type === "search_destroy") {
     won = st.eliminateAll
       ? G.enemies.every((e) => !e.alive)
       : st.kills >= st.needed;
   }
+
   if (type === "rescue_pilot") {
     won = !!st.pilotExtracted;
   }
+
   if (type === "capture_objective") {
     won = (st.objectives || []).every((o) => o.heldTurns >= (o.holdTurns || 2));
   }
+
   if (won) showGameOver(true);
 }
 
 function checkGameOver() {
   const liveUnits = G.units.filter((u) => u.alive).length;
+
   if (liveUnits === 0) {
     showGameOver(false);
     return;
   }
+
   checkVictory();
 }
 
+/**
+ * Function to display a game over overlay to the player in case of victory or defeat
+ */
 function showGameOver(win) {
   G.phase = "gameover";
   clearSave();
