@@ -89,6 +89,7 @@ function updateActionButtons() {
             hasAP &&
             hasEnemy &&
             !(u?.cls === "sniper" && u?.hasShot) &&
+            !(u?.cls === "sniper" && u?.needReload) &&
             hasAmmo
           ) || inPick;
         el.style.borderColor =
@@ -101,7 +102,8 @@ function updateActionButtons() {
           hasAP &&
           !u?.specialUsed &&
           !u?.shaken &&
-          !(u?.cls === "sniper" && u?.hasShot)
+          !(u?.cls === "sniper" && u?.hasShot) &&
+          !(u?.cls === "sniper" && u?.needReload)
         );
         el.style.borderColor = hasSM ? "var(--highlight)" : "";
         el.textContent = specLabel;

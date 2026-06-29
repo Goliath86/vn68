@@ -97,6 +97,7 @@ document.getElementById("btn-move").addEventListener("click", () => {
   sfx("click");
   setActionMode("move");
 });
+
 document.getElementById("btn-attack").addEventListener("click", () => {
   const u = G.selectedUnit;
   if (!u || u.ap < 1) return;
@@ -108,6 +109,7 @@ document.getElementById("btn-attack").addEventListener("click", () => {
     setActionMode("attack", usable[0] ?? null);
   }
 });
+
 document.getElementById("btn-special").addEventListener("click", () => {
   if (
     !G.selectedUnit ||
@@ -116,6 +118,7 @@ document.getElementById("btn-special").addEventListener("click", () => {
     G.selectedUnit.shaken
   )
     return;
+
   const u = G.selectedUnit;
   if (u.cls === "assault") {
     // Fuoco Soppressivo immediato
@@ -129,6 +132,7 @@ document.getElementById("btn-special").addEventListener("click", () => {
     render();
     return;
   }
+
   if (u.cls === "sniper") {
     // Overwatch immediato
     u.overwatch = true;
@@ -155,7 +159,13 @@ document.addEventListener("keydown", (e) => {
       if (u && u.alive && u.ap > 0) document.getElementById("btn-move").click();
       break;
     case "a":
-      if (u && u.alive && u.ap > 0 && !(u.cls === "sniper" && u.hasShot))
+      if (
+        u &&
+        u.alive &&
+        u.ap > 0 &&
+        !(u.cls === "sniper" && u.hasShot) &&
+        !(u.cls === "sniper" && u.needReload)
+      )
         document.getElementById("btn-attack").click();
       break;
     case "s":

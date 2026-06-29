@@ -56,16 +56,19 @@ async function runEnemyTurn() {
   G.overwatchList = [];
   G.suppressList = [];
   G.units.forEach((u) => {
+    if (u.overwatch) u.hasShot = true;
     u.overwatch = false;
     u.suppression = false;
     u.overwatchFired = false;
   });
 
-  // Ripristina AP giocatori
+  // Reset players'units state
   G.units.forEach((u) => {
     if (u.alive) {
       u.ap = u.shaken ? AP_PER_TURN - 1 : AP_PER_TURN;
       u.specialUsed = false;
+      if (u.needReload) u.needReload = false;
+      if (u.hasShot) u.needReload = true;
       u.hasShot = false;
     }
   });
@@ -147,6 +150,7 @@ async function enemyActivation(enemy) {
     const effRange = (enemy.weapons || [])
       .filter((w) => w.ammo === null || w.ammo > 0)
       .reduce((mx, w) => Math.max(mx, w.range), stats.range);
+
     // Se in gittata (con qualsiasi arma): attacca
     if (d <= effRange && enemy.ap >= 1) {
       checkOverwatch(enemy);

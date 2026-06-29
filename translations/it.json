@@ -107,7 +107,8 @@
       "shaken": "⚠ SCOSSO — -1AP, nessuna abilità speciale",
       "special_used": "Abilità usata",
       "special_available": "Spec: {label}",
-      "shot_used": "Già sparato (1 sparo/turno)"
+      "shot_used": "Già sparato (1 sparo/turno)",
+      "need_reload": "Necessita di ricaricare"
     }
   },
 

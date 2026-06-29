@@ -166,11 +166,11 @@ function setupCanvas() {
 
 function onCanvasClick(e) {
   if (G.phase !== "player") return;
+
   const { col, row } = screenToTile(e.clientX, e.clientY);
   if (col < 0 || row < 0 || col >= G.mapData.cols || row >= G.mapData.rows)
     return;
 
-  // Se siamo in modalità mossa
   if (G.actionMode === "move") {
     const reach = G.reachable.find((r) => r.col === col && r.row === row);
     if (reach) {
@@ -189,9 +189,9 @@ function onCanvasClick(e) {
     return;
   }
 
-  // In modalità attacco
   if (G.actionMode === "attack") {
     const w = G.currentWeapon;
+
     if (w?.aoe) {
       // AoE: click tile → mostra anteprima e chiedi conferma
       const tile = G.attackable.find((t) => t.col === col && t.row === row);
@@ -206,6 +206,7 @@ function onCanvasClick(e) {
       }
       return;
     }
+
     // Singolo bersaglio
     const target = G.attackable.find((e) => e.col === col && e.row === row);
     if (target) {
@@ -217,6 +218,7 @@ function onCanvasClick(e) {
       updateUI();
       return;
     }
+
     setActionMode(null);
     return;
   }

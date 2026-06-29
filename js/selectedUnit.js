@@ -20,6 +20,7 @@ function selInfoHTML(u) {
       ${u.overwatch ? `<br><span style="color:#aaddff">${t("units.status.in_overwatch")}</span>` : ""}
       ${u.suppression ? `<br><span style="color:#ffaa33">${t("units.status.in_suppression")}</span>` : ""}
       ${u.cls === "sniper" && u.hasShot ? `<br><span style="color:var(--red)">${t("units.status.shot_used")}</span>` : ""}
+      ${u.cls === "sniper" && u.needReload ? `<br><span style="color:var(--red)">${t("units.status.need_reload")}</span>` : ""}
       ${u.shaken ? `<br><span style="color:#ff5028;font-weight:700">${t("units.status.shaken")}</span>` : ""}
       ${u.carriesPilot ? `<br><span style="color:var(--yellow)">${t("units.status.carry_pilot")}</span>` : ""}
       ${
