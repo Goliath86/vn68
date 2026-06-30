@@ -97,7 +97,7 @@ async function loadMissionStep(jsonPath) {
   try {
     const data = await loadMission(jsonPath);
     document.getElementById("map-description").textContent =
-      `${data.name[LANG]} — ${data.description[LANG] || ""}`;
+      `${mt("name") ?? data.name ?? "?"} — ${mt("description") ?? data.description ?? ""}`;
 
     const list = document.getElementById("mission-list");
     list.innerHTML = "";

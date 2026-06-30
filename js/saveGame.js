@@ -1,10 +1,11 @@
 function saveGame() {
   if (!G.mapData || G.phase === "gameover") return;
+
   try {
     const state = {
       version: 1,
       savedAt: Date.now(),
-      mapName: G.mapData.name || "",
+      mapName: (mt("name") ?? G.mapData.name ?? "?").toUpperCase(),
       missionType: G.missionType,
       turn: G.turn,
       fowEnabled: G.fowEnabled,
@@ -16,25 +17,30 @@ function saveGame() {
       activeFires: G.activeFires,
       missionState: G.missionState,
     };
+
     localStorage.setItem(SAVE_KEY, JSON.stringify(state));
   } catch (e) {
     console.warn("[save] failed:", e);
   }
 }
+
 function clearSave() {
   try {
     localStorage.removeItem(SAVE_KEY);
   } catch (e) {}
 }
+
 function loadSave() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
+
     const s = JSON.parse(raw);
     if (s?.version !== 1) {
       clearSave();
       return null;
     }
+
     return s;
   } catch (e) {
     clearSave();
@@ -86,6 +92,7 @@ async function resumeGame(save) {
   G.overwatchList = (save.overwatchIds || [])
     .map((id) => G.units.find((u) => u.id === id))
     .filter(Boolean);
+
   G.suppressList = (save.suppressIds || [])
     .map((id) => G.units.find((u) => u.id === id))
     .filter(Boolean);
@@ -96,6 +103,9 @@ async function resumeGame(save) {
   document.getElementById("vc-remain").textContent = G.enemies.filter(
     (e) => e.alive,
   ).length;
+  document.getElementById("mission-subtitle").textContent =
+    save.mapName + " — " + MISSION_TYPES[G.missionType].label.toUpperCase();
+
   document.getElementById("btn-endturn").disabled = false;
   document.getElementById("btn-menu").style.display = "inline-block";
 

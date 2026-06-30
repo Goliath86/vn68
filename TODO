@@ -2,5 +2,5 @@ Sniper: if already shoot disable the Overwatch button (he can shoot only 1 time 
 Sniper: if overwatch used but then click Attack button, disable the overwatch ability (Sniper can shoot or overwatch but not both on the same turn)
 Sniper: if sniper shoot on one turn, the next turn he can use overwatch or move but not attack to simulate rifle reload -> DONE
 
-Bug: on "Resume" card [object Object] text
-Bug: on "Resume" game does not appear the name and type fo the mission
+Bug: on "Resume" card [object Object] text -> DONE
+Bug: on "Resume" game does not appear the name and type of the mission -> DONE
