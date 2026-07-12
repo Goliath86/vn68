@@ -160,7 +160,7 @@ function updateActionButtons() {
           if (w) {
             sfx("click");
             setActionMode("attack", w);
-            updateUI();
+            //updateUI();
           }
         });
       });

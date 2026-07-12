@@ -44,6 +44,7 @@ function onTouchStart(e) {
     y: e.touches[0].clientY,
   };
 }
+
 function onTouchMove(e) {
   e.preventDefault();
   if (!lastTouch) return;
@@ -58,6 +59,7 @@ function onTouchMove(e) {
   clampCamera();
   render();
 }
+
 function onTouchEnd() {
   lastTouch = null;
 }

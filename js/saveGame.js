@@ -51,7 +51,7 @@ function loadSave() {
 async function resumeGame(save) {
   // Nascondi modal, prepara canvas
   document.getElementById("modal-overlay").style.display = "none";
-  setupCanvas();
+  //setupCanvas();
 
   // Ripristina mapData (include griglia modificata da demolizioni)
   G.mapData = save.mapData;

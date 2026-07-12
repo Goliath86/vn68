@@ -8,6 +8,8 @@ function resizeCanvas() {
 }
 
 function setupCanvas() {
+  //let touched = false;
+
   G.canvas = document.getElementById("map-canvas");
   G.ctx = G.canvas.getContext("2d");
   G.oCanvas = document.getElementById("overlay-canvas");
@@ -25,14 +27,18 @@ function setupCanvas() {
     document.getElementById("tile-tooltip").style.display = "none";
   });
   G.canvas.addEventListener("wheel", onWheel, { passive: true });
+
   // touch
   G.canvas.addEventListener("touchstart", onTouchStart, {
     passive: true,
   });
+
   G.canvas.addEventListener("touchmove", onTouchMove, {
     passive: false,
   });
+
   G.canvas.addEventListener("touchend", onTouchEnd);
+
   // ── TOUCH mobile: pan 1 dito, pinch zoom, tap ────────────────────────────
   // ── TOUCH: pan con UN dito (anche senza tasto destro su mobile) ────────
   // Distanza minima per considerare un gesto "pan" vs "tap"
@@ -108,15 +114,17 @@ function setupCanvas() {
   G.canvas.addEventListener(
     "touchend",
     (e) => {
-      if (!touchMoved && touchPanActive && touchPanStart) {
+      //if (!touchMoved && touchPanActive && touchPanStart) {
         // È un tap: simula click
-        const rect = G.canvas.getBoundingClientRect();
-        const fakeEvt = {
-          clientX: touchPanStart.x,
-          clientY: touchPanStart.y,
-        };
-        onCanvasClick(fakeEvt);
-      }
+        // const rect = G.canvas.getBoundingClientRect();
+        //const fakeEvt = {
+          //clientX: touchPanStart.x,
+          //clientY: touchPanStart.y,
+          //};
+        //touched = true; // Workaround: on Chrome, the 'click' is executed after touchend
+        //onCanvasClick(fakeEvt);
+        //setTimeout(() => touched = false, 500);
+        //}
       touchPanActive = false;
       touchPanStart = null;
       touchMoved = false;
