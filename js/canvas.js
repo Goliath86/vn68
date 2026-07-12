@@ -8,10 +8,11 @@ function resizeCanvas() {
 }
 
 function setupCanvas() {
-  //let touched = false;
-
+  // Main canvas
   G.canvas = document.getElementById("map-canvas");
   G.ctx = G.canvas.getContext("2d");
+
+  // Overlay canvas
   G.oCanvas = document.getElementById("overlay-canvas");
   G.oCtx = G.oCanvas.getContext("2d");
 
@@ -28,7 +29,7 @@ function setupCanvas() {
   });
   G.canvas.addEventListener("wheel", onWheel, { passive: true });
 
-  // touch
+  // Touch
   G.canvas.addEventListener("touchstart", onTouchStart, {
     passive: true,
   });
@@ -41,11 +42,9 @@ function setupCanvas() {
 
   // ── TOUCH mobile: pan 1 dito, pinch zoom, tap ────────────────────────────
   // ── TOUCH: pan con UN dito (anche senza tasto destro su mobile) ────────
-  // Distanza minima per considerare un gesto "pan" vs "tap"
   let touchPanActive = false;
   let touchPanStart = null;
-  let touchMoved = false;
-  const TAP_THRESHOLD = 8; // pixel
+  const TAP_THRESHOLD = 8; // pixel -> Minimum distance for considering a "pan" vs "tap" gesture
 
   G.canvas.addEventListener(
     "touchstart",

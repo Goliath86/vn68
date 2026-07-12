@@ -20,11 +20,19 @@ Promise.all([loadLang("it"), loadCatalog(), loadConfig()]).then(() => {
     a.play().catch(() => {
       // Autoplay blocked (HTTPS autoplay policy) — retry on first user gesture
       const resume = () => ambientPlay(menuUrl);
-      document.addEventListener("click", resume, {
-        once: true,
+      const removeListener = () => {
+        document.removeEventListener("click", resume);
+        document.removeEventListener("keydown", resume);
+      };
+
+      document.addEventListener("click", () => {
+        resume();
+        removeListener();
       });
-      document.addEventListener("keydown", resume, {
-        once: true,
+
+      document.addEventListener("keydown", () => {
+        resume();
+        removeListener();
       });
     });
   }
@@ -44,5 +52,5 @@ document
   .getElementById("overlay-canvas")
   .addEventListener("contextmenu", (e) => e.preventDefault());
 
-// Click su overlay-canvas: pointer-events off, passa al canvas sotto
+// Click on overlay-canvas: pointer-events off, let the click pass through
 document.getElementById("overlay-canvas").style.pointerEvents = "none";
