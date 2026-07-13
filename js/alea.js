@@ -50,17 +50,18 @@ waitForDice = function (count, context) {
   };*/
 
 // Dopo che il dado viene lanciato, rimuovi badge
-const origBtnDice = document.getElementById("btn-dice");
+/*const origBtnDice = document.getElementById("btn-dice");
 origBtnDice.addEventListener("click", () => {
   const tabDice = document.getElementById("tab-btn-dice");
   if (tabDice) tabDice.classList.remove("needs-dice");
-});
+});*/
 
 function showDiceResult(vals, context) {
   showDiceResultMobile(vals, context);
 }
 
 function showDiceResultMobile(vals, context) {
+  /*
   ["dice-display", "mob-dice-display"].forEach((id) => {
     const el = document.getElementById(id);
     el.innerHTML = "";
@@ -74,16 +75,17 @@ function showDiceResultMobile(vals, context) {
       el.appendChild(d);
     });
   });
-  ["dice-result", "mob-dice-result"].forEach((id) => {
+  */
+  /*["dice-result", "mob-dice-result"].forEach((id) => {
     document.getElementById(id).textContent = t("log.dice_result", {
       context,
       dice: vals.join("+"),
       sum: diceSum(vals),
     });
-  });
+  });*/
 }
 
-document.getElementById("btn-dice").addEventListener("click", () => {
+/*document.getElementById("btn-dice").addEventListener("click", () => {
   if (!G.pendingDice) {
     // Dado libero: lancia 1d6 per info
     const val = rollDice(1);
@@ -97,4 +99,4 @@ document.getElementById("btn-dice").addEventListener("click", () => {
   showDiceResult(vals, context);
   updateDiceBtn(false);
   resolve(vals);
-});
+});*/

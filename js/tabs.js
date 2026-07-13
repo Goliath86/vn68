@@ -64,7 +64,7 @@ function updateActionButtons() {
     ["btn-attack", "mob-btn-attack"],
     ["btn-special", "mob-btn-special"],
     ["btn-endturn", "mob-btn-endturn"],
-    ["btn-dice", "mob-btn-dice"],
+    //["btn-dice", "mob-btn-dice"],
   ];
 
   pairs.forEach(([did, mid]) => {
@@ -196,8 +196,8 @@ function updateActionButtons() {
   }
 
   // Badge "dado richiesto" sul tab
-  const tabDice = document.getElementById("tab-btn-dice");
-  if (tabDice) {
-    tabDice.classList.toggle("needs-dice", !!G.pendingDice);
-  }
+  //const tabDice = document.getElementById("tab-btn-dice");
+  //if (tabDice) {
+  //  tabDice.classList.toggle("needs-dice", !!G.pendingDice);
+  //}
 }

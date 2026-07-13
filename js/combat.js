@@ -49,10 +49,12 @@ async function resolveCombat(
       }),
       "combat",
     );
-    diceVals = await waitForDice(
+    diceVals = rollDice(2);
+    showDiceResult(diceVals, t("log.attack_dice_context", { name: attacker.name }));
+    /*await waitForDice(
       2,
       t("log.attack_dice_context", { name: attacker.name }),
-    );
+    );*/
   } else {
     diceVals = rollDice(2);
     showDiceResult(diceVals, t("log.vc_attack_auto", { name: attacker.name }));

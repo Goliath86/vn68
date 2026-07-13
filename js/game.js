@@ -140,7 +140,7 @@ function startGame(
   document.getElementById("mission-subtitle").textContent =
     missionName + " — " + MISSION_TYPES[missionType].label.toUpperCase();
 
-  document.getElementById("btn-dice").disabled = false;
+  //document.getElementById("btn-dice").disabled = false;
 
   document.getElementById("btn-endturn").disabled = false;
 

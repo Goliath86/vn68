@@ -79,11 +79,11 @@ function applyTranslationsToDOM() {
     const mobOp = document.getElementById("mob-obj-panel");
     if (mobOp)
       mobOp.innerHTML = `<div style="font-size:11px;color:var(--paper-dark)">${noMission}</div>`;
-    ["dice-display", "mob-dice-display"].forEach((id) => {
+    /*["dice-display", "mob-dice-display"].forEach((id) => {
       const el = document.getElementById(id);
       if (el)
         el.innerHTML = `<span style="font-size:11px;color:var(--paper-dark)">${noDice}</span>`;
-    });
+        });*/
   }
 }
 

@@ -270,7 +270,7 @@ body {
     background: rgba(130, 95, 15, 0.75);
     border-color: #ddbb55;
 }
-.btn.btn-dice {
+/*.btn.btn-dice {
     background: rgba(80, 60, 10, 0.7);
     border-color: var(--yellow);
     color: var(--yellow);
@@ -279,7 +279,7 @@ body {
 }
 .btn.btn-dice:hover:not(:disabled) {
     background: rgba(120, 90, 15, 0.9);
-}
+}*/
 
 /* Dice display */
 #dice-area {
@@ -1103,10 +1103,10 @@ body {
         font-size: 13px;
         min-height: 44px;
     }
-    .btn.btn-dice {
+    /*.btn.btn-dice {
         font-size: 18px;
         min-height: 48px;
-    }
+    }*/
 }
 
 /* ── LANGUAGE SWITCHER ───────────────────────────────── */
