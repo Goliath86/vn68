@@ -194,10 +194,4 @@ function updateActionButtons() {
       el.style.display = "none";
     });
   }
-
-  // Badge "dado richiesto" sul tab
-  //const tabDice = document.getElementById("tab-btn-dice");
-  //if (tabDice) {
-  //  tabDice.classList.toggle("needs-dice", !!G.pendingDice);
-  //}
 }

@@ -5,13 +5,16 @@
  * @param {number} toRow Row to move to
  * @param {number} apCost AP cost of the move
  */
-function moveUnit(unit, toCol, toRow, apCost) {
+async function moveUnit(unit, toCol, toRow, apCost) {
   sfx("move");
 
-  addFX("move", { fromCol: unit.col, fromRow: unit.row, toCol, toRow }, 500);
-
+  const fromCol = unit.col, fromRow = unit.row;
   unit.col = toCol;
   unit.row = toRow;
+
+  //addFX("move", { fromCol: unit.col, fromRow: unit.row, toCol, toRow }, 500);
+  await animateEnemyMove(unit, fromCol, fromRow, toCol, toRow);
+
   unit.ap = Math.max(0, unit.ap - apCost);
 
   log(

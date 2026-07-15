@@ -33,88 +33,87 @@ async function handleSpecialAction(col, row) {
 
   if (u.cls === "engineer") {
     const target = G.reachable.find((r) => r.col === col && r.row === row);
-    if (target) {
-      const tileType = getTileAt(target.col, target.row);
+    if (!target) return;
 
-      // Incendio su tile burnable (non demolishable)
-      if (tileType.burnable && !tileType.demolishable) {
-        G.activeFires.push({
+    const tileType = getTileAt(target.col, target.row);
+
+    // Burn tile burnable (non demolishable)
+    if (tileType.burnable && !tileType.demolishable) {
+      G.activeFires.push({
+        col: target.col,
+        row: target.row,
+        turnsLeft: 2,
+      });
+      u.ap -= 1;
+      u.specialUsed = true;
+      sfx("demolition");
+      addFX(
+        "demolition",
+        {
           col: target.col,
           row: target.row,
-          turnsLeft: 2,
-        });
-        u.ap -= 1;
-        u.specialUsed = true;
-        sfx("demolition");
-        addFX(
-          "demolition",
-          {
-            col: target.col,
-            row: target.row,
-            success: true,
-          },
-          1000,
-        );
-        log(
-          t("log.fire_set", {
-            name: u.name,
-            label: tileType.label,
-          }),
-          "success",
-        );
-        _startTileAnimLoop();
-        updateUI();
-        render();
-        return;
-      }
-
-      // Demolizione su tile demolishable
-      log(t("log.demolition_start", { name: u.name }), "system");
-      const dice = await waitForDice(1, "Demolizione");
-      if (diceSum(dice) >= 4) {
-        G.mapData.grid[target.row][target.col] = tileType.demolishResult || "J";
-        u.ap -= 1;
-        u.specialUsed = true;
-        sfx("demolition");
-        addFX(
-          "demolition",
-          {
-            col: target.col,
-            row: target.row,
-            success: true,
-          },
-          1200,
-        );
-        log(
-          t("log.demolition_success", {
-            label: tileType.label,
-          }),
-          "success",
-        );
-      } else {
-        sfx("demolition");
-        addFX(
-          "demolition",
-          {
-            col: target.col,
-            row: target.row,
-            success: false,
-          },
-          1000,
-        );
-        log(
-          t("log.demolition_fail", {
-            label: tileType.label,
-          }),
-          "combat",
-        );
-        u.ap -= 1;
-        u.specialUsed = true;
-      }
+          success: true,
+        },
+        1000,
+      );
+      log(
+        t("log.fire_set", {
+          name: u.name,
+          label: tileType.label,
+        }),
+        "success",
+      );
+      _startTileAnimLoop();
       updateUI();
       render();
+      return;
     }
-    return;
+
+    // Demolition on a demolishable tile
+    log(t("log.demolition_start", { name: u.name }), "system");
+    const dice = rollDice(1);//await waitForDice(1, "Demolizione");
+    if (diceSum(dice) >= 4) {
+      G.mapData.grid[target.row][target.col] = tileType.demolishResult || "J";
+      u.ap -= 1;
+      u.specialUsed = true;
+      sfx("demolition");
+      addFX(
+        "demolition",
+        {
+          col: target.col,
+          row: target.row,
+          success: true,
+        },
+        1200,
+      );
+      log(
+        t("log.demolition_success", {
+          label: tileType.label,
+        }),
+        "success",
+      );
+    } else {
+      sfx("demolition");
+      addFX(
+        "demolition",
+        {
+          col: target.col,
+          row: target.row,
+          success: false,
+        },
+        1000,
+      );
+      log(
+        t("log.demolition_fail", {
+          label: tileType.label,
+        }),
+        "combat",
+      );
+      u.ap -= 1;
+      u.specialUsed = true;
+    }
+    updateUI();
+    render();
   }
 }
 

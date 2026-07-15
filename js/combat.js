@@ -31,7 +31,6 @@ async function resolveCombat(
     : getEnemyStats(defender).defense;
   const defVal = defStat + defCover;
 
-  let diceVals;
   if (!isEnemy) {
     if (rangePenalty > 0)
       log(
@@ -42,6 +41,7 @@ async function resolveCombat(
         }),
         "combat",
       );
+
     log(
       t("log.attack_prompt", {
         attacker: attacker.name,
@@ -49,17 +49,9 @@ async function resolveCombat(
       }),
       "combat",
     );
-    diceVals = rollDice(2);
-    showDiceResult(diceVals, t("log.attack_dice_context", { name: attacker.name }));
-    /*await waitForDice(
-      2,
-      t("log.attack_dice_context", { name: attacker.name }),
-    );*/
-  } else {
-    diceVals = rollDice(2);
-    showDiceResult(diceVals, t("log.vc_attack_auto", { name: attacker.name }));
   }
 
+  const diceVals = rollDice(2);
   const roll = diceSum(diceVals);
   const hit = roll + atkVal;
   const defDice = rollD6();
@@ -82,7 +74,9 @@ async function resolveCombat(
     defCover > 0
       ? `${defDice}+${defStat}DEF+${defCover}COV=${save}`
       : `${defDice}+${defStat}DEF=${save}`;
+
   const result = dmg > 0 ? t("log.attack_hit", { dmg }) : t("log.attack_miss");
+
   log(
     t("log.attack_result", {
       dice: diceVals.join("+"),
@@ -152,13 +146,6 @@ async function resolveAoeCombat(attacker, weapon, tc, tr, isEnemyAttacking) {
 
   sfxShoot(attacker.cls, weapon);
   addFX("explosion", { col: tc, row: tr }, 1300);
-  showDiceResult(
-    diceVals,
-    t("log.aoe_dice_context", {
-      weapon: weapon.label,
-      name: attacker.name,
-    }),
-  );
 
   if (!defenders.length) {
     log(
@@ -172,6 +159,7 @@ async function resolveAoeCombat(attacker, weapon, tc, tr, isEnemyAttacking) {
     render();
     return;
   }
+
   log(
     t("log.aoe_attack", {
       name: attacker.name,
@@ -195,6 +183,7 @@ async function resolveAoeCombat(attacker, weapon, tc, tr, isEnemyAttacking) {
       defCover > 0
         ? `${defDice}+${defStat}DEF+${defCover}COV=${save}`
         : `${defDice}+${defStat}DEF=${save}`;
+
     log(
       t("log.aoe_target_result", {
         name: def.name,
@@ -232,6 +221,7 @@ async function resolveAoeCombat(attacker, weapon, tc, tr, isEnemyAttacking) {
 
   updateUI();
   render();
+
   if (anyKill) await sleep(500);
   if (!isEnemyAttacking) checkVictory();
 }

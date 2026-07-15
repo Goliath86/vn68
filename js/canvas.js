@@ -113,17 +113,6 @@ function setupCanvas() {
   G.canvas.addEventListener(
     "touchend",
     (e) => {
-      //if (!touchMoved && touchPanActive && touchPanStart) {
-        // È un tap: simula click
-        // const rect = G.canvas.getBoundingClientRect();
-        //const fakeEvt = {
-          //clientX: touchPanStart.x,
-          //clientY: touchPanStart.y,
-          //};
-        //touched = true; // Workaround: on Chrome, the 'click' is executed after touchend
-        //onCanvasClick(fakeEvt);
-        //setTimeout(() => touched = false, 500);
-        //}
       touchPanActive = false;
       touchPanStart = null;
       touchMoved = false;
@@ -182,8 +171,6 @@ function onCanvasClick(e) {
     const reach = G.reachable.find((r) => r.col === col && r.row === row);
     if (reach) {
       moveUnit(G.selectedUnit, col, row, reach.cost);
-      setActionMode(null);
-      return;
     }
     setActionMode(null);
     return;

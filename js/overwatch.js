@@ -43,7 +43,7 @@ function checkOverwatch(enemy) {
         );
 
       const dv = rollDice(2);
-      showDiceResult(dv, t("log.overwatch_dice_context", { name: ow.name }));
+      //showDiceResult(dv, t("log.overwatch_dice_context", { name: ow.name }));
 
       const roll = diceSum(dv) + owAtk;
       const sv = rollD6() + coverBonus(enemy.col, enemy.row);

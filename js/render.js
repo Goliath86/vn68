@@ -9,6 +9,7 @@ function tileToScreen(col, row) {
   const y = G.camY + row * TILE * G.scale;
   return { x, y };
 }
+
 function screenToTile(sx, sy) {
   const rect = G.canvas.getBoundingClientRect();
   const mx = sx - rect.left;
@@ -106,7 +107,8 @@ function renderMap() {
   // Unità alleate
   for (const u of G.units) {
     if (!u.alive) continue;
-    const { x, y } = tileToScreen(u.col, u.row);
+    //const { x, y } = tileToScreen(u.col, u.row);
+    const { x, y } = tileToScreen(u.vx ?? u.col, u.vy ?? u.row);
     const isSelected = G.selectedUnit && G.selectedUnit.id === u.id;
     const isDone = u.ap <= 0;
 
@@ -147,6 +149,7 @@ function renderMap() {
       ctx.strokeRect(x + 2, y + 2, ts - 4, ts - 4);
       ctx.setLineDash([]);
     }
+
     // Fuoco Soppressivo
     if (u.suppression) {
       ctx.strokeStyle = "#ffaa33";
@@ -155,6 +158,7 @@ function renderMap() {
       ctx.strokeRect(x + 2, y + 2, ts - 4, ts - 4);
       ctx.setLineDash([]);
     }
+
     // Morale scosso — bordo rosso pulsante
     if (u.shaken) {
       const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 280);
@@ -294,6 +298,7 @@ function renderOverlay() {
         ctx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
         ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
       }
+
       // Mirino su ogni nemico attaccabile
       ctx.save();
       for (const e of G.attackable) {
@@ -326,6 +331,7 @@ function renderOverlay() {
         ctx.stroke();
       }
       ctx.restore();
+
       // Linea di fuoco dall'unità selezionata
       if (G.selectedUnit) {
         const { x: sx, y: sy } = tileToScreen(
@@ -390,12 +396,13 @@ function renderOverlay() {
   // Selezione unità corrente
   if (G.selectedUnit && G.selectedUnit.alive && G.actionMode === null) {
     const u = G.selectedUnit;
-    const { x, y } = tileToScreen(u.col, u.row);
+    const { x, y } = tileToScreen(u.vx ?? u.col, u.vy ?? u.row);
     ctx.strokeStyle = "#f0c030";
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 3]);
     ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
     ctx.setLineDash([]);
+
     // Cerchio raggio attacco
     const def = UNIT_CLASSES[u.cls];
     ctx.strokeStyle = "rgba(240,192,48,0.18)";
@@ -427,6 +434,7 @@ function renderOverlay() {
   // Effetti grafici
   renderEffects(ctx, ts);
 }
+
 function renderUnitsOnMap() {
   render();
 }

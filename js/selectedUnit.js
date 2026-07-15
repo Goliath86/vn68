@@ -1,11 +1,13 @@
 function selInfoHTML(u) {
   if (!u || !u.alive)
     return `<div style="font-size:11px;color:var(--paper-dark)">${t("units.no_unit_selected_long")}</div>`;
+
   const def = UNIT_CLASSES[u.cls];
   const tileLabel =
     mt(`tileLabels.${getTileAt(u.col, u.row)?.id}`) ??
     getTileAt(u.col, u.row)?.label ??
     "?";
+
   return `
     <div class="si-name" style="font-family:var(--ui-font);font-size:15px;font-weight:600;color:var(--highlight)">${u.name}</div>
     <div class="si-stats" style="font-size:10px;color:var(--paper-dark);line-height:1.7;margin-top:3px">

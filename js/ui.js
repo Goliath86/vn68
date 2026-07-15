@@ -1,8 +1,3 @@
-// Bottone dado mobile
-//document.getElementById("mob-btn-dice").addEventListener("click", () => {
-//  document.getElementById("btn-dice").click(); // delega al handler desktop
-//});
-
 // Bottoni azione mobile — delegano al corrispondente desktop
 document
   .getElementById("mob-btn-move")

@@ -72,6 +72,7 @@ async function runEnemyTurn() {
       u.hasShot = false;
     }
   });
+
   saveGame();
 
   // Check ambush (tentativo casuale)
@@ -184,6 +185,7 @@ async function enemyActivation(enemy) {
           target.row,
           true,
         );
+
         if (path && path.length > 1) {
           let moved = 0;
           for (
@@ -218,17 +220,23 @@ async function enemyActivation(enemy) {
               "enemy",
             );
           }
+
           // Overwatch e fuoco soppressivo: controlla dopo il movimento
           checkOverwatch(enemy);
           checkSuppression(enemy);
+
           // Attacca se ora in gittata (con qualsiasi arma)
           const newEffRange = (enemy.weapons || [])
             .filter((w) => w.ammo === null || w.ammo > 0)
             .reduce((mx, w) => Math.max(mx, w.range), stats.range);
+
           if (dist(enemy, target) <= newEffRange && enemy.ap >= 1) {
             const w = vcChooseWeapon(enemy, target);
+
             if (w && w.ammo !== null) w.ammo--;
+
             enemy.ap--;
+
             log(
               t("log.vc_fire", {
                 name: enemy.name,
@@ -236,6 +244,7 @@ async function enemyActivation(enemy) {
               }),
               "enemy",
             );
+
             if (w?.aoe) {
               await resolveAoeCombat(enemy, w, target.col, target.row, true);
             } else {
@@ -430,6 +439,7 @@ function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
     requestAnimationFrame(frame);
   });
 }
+
 function propagateAlert(source) {
   const RADIUS = 3;
   G.enemies.forEach((other) => {
