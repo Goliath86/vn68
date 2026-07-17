@@ -56,7 +56,7 @@ async function runEnemyTurn() {
   G.overwatchList = [];
   G.suppressList = [];
   G.units.forEach((u) => {
-    if (u.overwatch) u.hasShot = true;
+    // if (u.overwatch) u.hasShot = true;
     u.overwatch = false;
     u.suppression = false;
     u.overwatchFired = false;
@@ -113,6 +113,7 @@ function vcChooseWeapon(enemy, target) {
   for (const spec of specials) {
     // Usa se la primaria non raggiunge ma la speciale sì
     if (d > primary.range && d <= spec.range) return spec;
+    // TODO: probabilmente il codice sotto al return spec non viene mai raggiunto se spec in range
     // Usa AoE se 2+ unità US sono raggruppate nel raggio di esplosione
     if (spec.aoe && d <= spec.range) {
       const cluster = G.units.filter(
@@ -126,6 +127,7 @@ function vcChooseWeapon(enemy, target) {
 
 async function enemyActivation(enemy) {
   if (!enemy.alive) return;
+
   const liveUnits = G.units.filter((u) => u.alive);
   if (!liveUnits.length) return;
 
@@ -138,6 +140,7 @@ async function enemyActivation(enemy) {
   const stats = getEnemyStats(enemy);
 
   // Allerta se a distanza visiva
+  // TODO: check LOS between enemy and target
   if (d <= 5 && !enemy.alerted) {
     enemy.alerted = true;
     addFX("spot", { col: enemy.col, row: enemy.row }, 1200);
@@ -176,8 +179,7 @@ async function enemyActivation(enemy) {
     } else {
       // Muovi verso il target
       if (enemy.ap >= 1) {
-        const fromCol = enemy.col,
-          fromRow = enemy.row;
+        const fromCol = enemy.col, fromRow = enemy.row;
         const path = getPath(
           enemy.col,
           enemy.row,

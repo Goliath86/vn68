@@ -28,6 +28,8 @@ function checkOverwatch(enemy) {
         700,
       );
 
+      ow.hasShot = true;
+
       const owRange = dist(ow, enemy);
       const owPenalty = Math.floor((owRange - 1) / 2);
       const owAtk = Math.max(1, owDef.attack - owPenalty);
@@ -43,7 +45,6 @@ function checkOverwatch(enemy) {
         );
 
       const dv = rollDice(2);
-      //showDiceResult(dv, t("log.overwatch_dice_context", { name: ow.name }));
 
       const roll = diceSum(dv) + owAtk;
       const sv = rollD6() + coverBonus(enemy.col, enemy.row);
