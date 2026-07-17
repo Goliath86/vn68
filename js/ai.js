@@ -5,7 +5,7 @@ async function runEnemyTurn() {
   // Reset AP nemici
   liveEnemies.forEach((e) => {
     e.ap = e.maxAp || 2;
-    e.alerted = false;
+    //e.alerted = false;
     e.suppressed = false;
   });
 
@@ -145,8 +145,6 @@ async function enemyActivation(enemy) {
     enemy.alerted = true;
     addFX("spot", { col: enemy.col, row: enemy.row }, 1200);
     propagateAlert(enemy);
-  } else if (d <= 5) {
-    enemy.alerted = true;
   }
 
   if (enemy.alerted) {
