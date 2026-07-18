@@ -1,4 +1,4 @@
-// ── INIT ───────────────────────────────────────────────────────────────
+
 setupCanvas();
 
 audioInit();
@@ -20,20 +20,10 @@ Promise.all([loadLang("it"), loadCatalog(), loadConfig()]).then(() => {
     a.play().catch(() => {
       // Autoplay blocked (HTTPS autoplay policy) — retry on first user gesture
       const resume = () => ambientPlay(menuUrl);
-      const removeListener = () => {
-        document.removeEventListener("click", resume);
-        document.removeEventListener("keydown", resume);
-      };
 
-      document.addEventListener("click", () => {
-        resume();
-        removeListener();
-      });
+      document.addEventListener("click", resume, { once: true });
 
-      document.addEventListener("keydown", () => {
-        resume();
-        removeListener();
-      });
+      //document.addEventListener("keydown", resume, { once: true });
     });
   }
 });

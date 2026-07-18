@@ -29,7 +29,7 @@ python -m http.server 8080
 # "Live Server" extension → right-click index.html → Open with Live Server
 ```
 
-Then open your browser at `http://localhost:3000` (or the port shown by your server).
+Then open your browser at `http://localhost:8080` (or the port shown by your server).
 
 ---
 
@@ -80,7 +80,7 @@ Movement cost depends on the terrain type:
 
 ### Combat
 
-When you attack, the game asks you to **manually roll the dice** by pressing the dice button. The enemy always rolls automatically.
+When you select an enemy in a range of a weapon, the game calculate the attack roll automatically. The enemy always rolls automatically.
 
 **Resolution formula (single attack):**
 
@@ -115,7 +115,7 @@ Some units carry **multiple weapons**. Pressing "Attack" opens a picker showing 
 3. Click the target tile → preview of the blast radius
 4. **Confirm** or **Cancel** the attack
 
-AoE weapons resolve with a single automatic dice roll applied to all targets in the area — no manual roll required. The explosion hits both VC and US soldiers within its radius.
+AoE weapons resolve with a single automatic dice roll applied to all targets in the area. The explosion hits both VC and US soldiers within its radius.
 
 **Ammo:** weapons with limited ammo show the remaining count (e.g. `×2`). When ammo is depleted, the weapon no longer appears in the picker.
 
@@ -137,6 +137,7 @@ The default composition is one of each class, but you can bring two Assaults and
 | **Medic** | 8 | 3 | 1 | 1 | 1 | First Aid (heals an adjacent ally) — **restores morale** |
 
 > The Assault always carries the M16 as primary weapon (unlimited) plus 2 grenades. Pressing "Attack" shows the weapon picker.
+> The medic can't heal himself.
 
 ---
 
@@ -216,9 +217,9 @@ If Fog of War is **disabled**, the pilot's position is visible from the start (c
 ### Special Abilities — Details
 
 - **Suppressive Fire (Assault):** the Assault enters suppressive fire mode (costs 1 AP). During the enemy phase, any VC that is in or moves into range 2 is pinned: AP zeroed, cannot attack. The suppression zone is visible on the overlay as a dashed orange circle.
-- **Overwatch (Sniper):** enters surveillance mode (costs 1 AP). If during the enemy phase a VC enters the sniper's range (6 tiles) **and** line of sight, the sniper fires automatically with 2d6 + ATK. The sniper can make **one attack per enemy turn** — hitting the first valid target in activation order. The **range penalty** applies in overwatch too. Enemies behind walls, bunkers, or dense jungle are not intercepted even if in range.
+- **Overwatch (Sniper):** enters surveillance mode (costs 1 AP). If during the enemy phase a VC enters the sniper's range (6 tiles) **and** line of sight, the sniper fires automatically with 2d6 + ATK. The sniper can make **one attack per enemy turn** — hitting the first valid target in activation order. The **range penalty** applies in overwatch too. Enemies behind walls, bunkers, or dense jungle are not intercepted even if in range. After firing, the sniper need to wait for the next enemy turn to fire again.
 - **Demolition / Fire (Engineer):** on an adjacent tile with a bunker or obstacle, demolishes it (roll ≥4). On a tile with vegetation (jungle, village, garden), sets it on fire immediately. Fire blocks movement for **2 turns** — for both the squad and VC — and shows the flame animation on the map.
-- **First Aid (Medic):** restores HP to an adjacent ally.
+- **First Aid (Medic):** restores HP to an adjacent ally but not to the medic itself.
 
 ---
 
