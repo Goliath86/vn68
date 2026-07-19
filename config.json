@@ -11,8 +11,8 @@
   },
   "sounds": {
     "move": "",
-    "hit": "",
-    "death": "",
+    "hit": "assets/hit.mp3",
+    "death": "assets/death.mp3",
     "miss": "assets/bullet_ricochet.mp3",
     "ambush": "",
     "demolition": "",
