@@ -22,8 +22,6 @@ Promise.all([loadLang("it"), loadCatalog(), loadConfig()]).then(() => {
       const resume = () => ambientPlay(menuUrl);
 
       document.addEventListener("click", resume, { once: true });
-
-      //document.addEventListener("keydown", resume, { once: true });
     });
   }
 });
