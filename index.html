@@ -320,7 +320,7 @@
                         <div
                             id="mob-weapon-picker"
                             style="
-                                display: none;
+                                display: flex;
                                 flex-direction: column;
                                 gap: 4px;
                                 margin-top: 6px;
@@ -416,6 +416,15 @@
             <!-- /bottom-sheet -->
 
             <!-- Quick action bar: visibile quando la sheet è collassata (mobile only) -->
+            <div id="quick-weapons-bar">
+                <button class="btn qb-btn" id="qb-wp1">
+                    <span class="qb-icon"></span>
+                    <span class="qb-label" data-i18n="buttons.move_mobile">
+                        Muovi
+                    </span>
+                </button>
+            </div>
+
             <div id="quick-bar">
                 <button class="btn qb-btn" id="qb-move">
                     <span class="qb-icon">↗</span>
