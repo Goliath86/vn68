@@ -31,7 +31,13 @@ function isTileVisibleFromUnit(unit, toCol, toRow) {
   if (uc === toCol && ur === toRow) return true;
   const vision = UNIT_CLASSES[unit.cls].vision;
   if (dist(unit, { col: toCol, row: toRow }) > vision) return false;
-  const line = getLineTiles(uc, ur, toCol, toRow);
+  const penalty = losRangePenalty(uc, ur, toCol, toRow);
+  return dist(unit, { col: toCol, row: toRow }) + penalty <= vision;
+}
+
+// Penalità LOS tra due tile: +1 per ogni tile intermedio "partial", Infinity se un tile "full" blocca
+function losRangePenalty(fromCol, fromRow, toCol, toRow) {
+  const line = getLineTiles(fromCol, fromRow, toCol, toRow);
   let penalty = 0;
   // Controlla solo i tile intermedi (non il tile bersaglio)
   for (let i = 0; i < line.length - 1; i++) {
@@ -39,10 +45,10 @@ function isTileVisibleFromUnit(unit, toCol, toRow) {
     const key = G.mapData.grid[row]?.[col];
     const td = key ? G.mapData.tileTypes[key] : null;
     if (!td) continue;
-    if (td.losBlock === "full") return false;
+    if (td.losBlock === "full") return Infinity;
     if (td.losBlock === "partial") penalty++;
   }
-  return dist(unit, { col: toCol, row: toRow }) + penalty <= vision;
+  return penalty;
 }
 
 // Precalcola l'insieme di tile visibili — chiamato all'inizio di ogni renderMap

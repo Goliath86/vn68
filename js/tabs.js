@@ -39,6 +39,61 @@ document
   });
 });
 
+// Quick weapons bar (mobile, sheet collassata): scelta arma dopo "Attacca" e conferma AoE.
+// La visibilità effettiva è gestita da CSS (body.sheet-collapsed + .active + media query)
+function updateQuickWeaponsBar(u) {
+  const bar = document.getElementById("quick-weapons-bar");
+  if (!bar) return;
+
+  const cancelBtn = `<button class="btn qwb-btn qwb-cancel" data-qwb="cancel">✕</button>`;
+  let html = "";
+
+  if (G.actionMode === "weapon_select" && u) {
+    (u.weapons || []).forEach((w, i) => {
+      const hasAmmo = w.ammo === null || w.ammo > 0;
+      const ammoStr =
+        w.ammo === null
+          ? t("weapons.ammo_inf")
+          : t("weapons.ammo_tag", { n: w.ammo });
+      const aoeStr = w.aoe ? ` · AoE${w.aoe}` : "";
+      html += `<button class="btn qwb-btn" ${!hasAmmo ? "disabled" : ""} data-widx="${i}">
+<span class="qwb-name">${w.label} ${ammoStr}</span>
+<span class="qwb-stats">ATK${w.atk} · RNG${w.range}${aoeStr}</span>
+</button>`;
+    });
+    html += cancelBtn;
+  } else if (G.actionMode === "aoe_confirm" && G.pendingAoe) {
+    const w = G.pendingAoe.weapon;
+    html = `<button class="btn btn-attack qwb-btn" data-qwb="confirm">
+<span class="qwb-name">${t("weapons.confirm_aoe")}</span>
+<span class="qwb-stats">${w.label} · AoE ${w.aoe}</span>
+</button>${cancelBtn}`;
+  }
+
+  bar.innerHTML = html;
+  bar.classList.toggle("active", html !== "");
+  if (!html) return;
+
+  bar.querySelectorAll("[data-widx]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const w = G.selectedUnit?.weapons?.[+btn.dataset.widx];
+      if (w) {
+        sfx("click");
+        setActionMode("attack", w);
+      }
+    });
+  });
+  bar.querySelector('[data-qwb="confirm"]')?.addEventListener("click", () => {
+    sfx("click");
+    confirmAoeAttack();
+  });
+  bar.querySelector('[data-qwb="cancel"]')?.addEventListener("click", () => {
+    sfx("click");
+    setActionMode(null);
+    updateUI();
+  });
+}
+
 function updateActionButtons() {
   const u = G.selectedUnit;
   const isPlayer = G.phase === "player";
@@ -131,6 +186,8 @@ function updateActionButtons() {
       d = document.getElementById(dst);
     if (s && d) d.disabled = s.disabled;
   });
+
+  updateQuickWeaponsBar(hasUnit ? u : null);
 
   // Weapon picker e AoE confirm
   const pickerEl = document.getElementById("weapon-picker");

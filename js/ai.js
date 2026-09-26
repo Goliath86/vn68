@@ -77,21 +77,28 @@ async function runEnemyTurn() {
 
   // Check ambush (tentativo casuale)
   if (Math.random() < (G.mapData.ambushChance || 0)) {
-    const liveUnits = G.units.filter((u) => u.alive);
-    if (liveUnits.length && liveEnemies.length) {
-      const ambusher = pick(liveEnemies.filter((e) => e.alive));
-      const target = pick(liveUnits);
-      if (ambusher && target) {
-        sfx("ambush");
-        log(
-          t("log.ambush", {
-            name: ambusher.name,
-            target: target.name,
-          }),
-          "enemy",
-        );
-        await resolveCombat(ambusher, target, true);
+    // Solo coppie VC/soldato con bersaglio in gittata e in linea di vista
+    // (ogni tile a LOS parziale lungo la linea riduce la gittata di 1)
+    const pairs = [];
+    for (const e of liveEnemies.filter((e) => e.alive)) {
+      const range = getEnemyStats(e).range;
+      for (const u of G.units.filter((u) => u.alive)) {
+        const penalty = losRangePenalty(e.col, e.row, u.col, u.row);
+        if (dist(e, u) + penalty <= range)
+          pairs.push({ ambusher: e, target: u });
       }
+    }
+    if (pairs.length) {
+      const { ambusher, target } = pick(pairs);
+      sfx("ambush");
+      log(
+        t("log.ambush", {
+          name: ambusher.name,
+          target: target.name,
+        }),
+        "enemy",
+      );
+      await resolveCombat(ambusher, target, true);
     }
   }
 
