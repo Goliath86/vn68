@@ -8,3 +8,14 @@ function unitWeapon(unit) {
     ? unit.weapons[unit.weaponIdx ?? 0]
     : null;
 }
+
+/**
+ * Gittata minima di un'arma: per le armi AoE, se non specificata, è aoe + 1
+ * così chi lancia non può mai trovarsi nel raggio dell'esplosione
+ * @param {object|null} weapon
+ * @returns {number}
+ */
+function weaponMinRange(weapon) {
+  if (weapon?.minRange != null) return weapon.minRange;
+  return weapon?.aoe ? weapon.aoe + 1 : 0;
+}

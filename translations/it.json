@@ -185,6 +185,8 @@
     "vc_attack": "{name} attacca {target}",
     "vc_advance": "{name} avanza verso {target} (distanza: {dist})",
     "vc_fire": "{name} apre il fuoco su {target}",
+    "vc_sniper_reload": "{name} ricarica il fucile",
+    "vc_sniper_reposition": "{name} si riposiziona (distanza da {target}: {dist})",
     "attack_prompt": "{attacker} attacca {defender} — LANCIA IL DADO",
     "attack_dice_context": "Attacco di {name}",
     "overwatch_dice_context": "Overwatch: {name}",
@@ -234,7 +236,8 @@
   "tooltip": {
     "tile": "{label} | Costo:{cost} Copertura:{cover}",
     "unit_append": " | {name} HP:{hp}/{maxHp} AP:{ap}",
-    "enemy_append": " | {name} HP:{hp}/{maxHp}"
+    "enemy_append": " | {name} HP:{hp}/{maxHp}",
+    "enemy_reloading": " (in ricarica)"
   },
 
   "objective_panel": {

@@ -162,7 +162,7 @@ I VC si muovono e attaccano automaticamente durante la fase nemica. Il loro spos
 | Tipo | Comportamento |
 |---|---|
 | Guerrigliero | Unità base, ATK 2 (AK-47), gittata 2 — uno per missione porta anche RPG-7 (ATK 4, gittata 4, AoE, 1 colpo) |
-| Cecchino VC | Pericoloso a distanza, ATK 3 (Mosin), gittata 4 |
+| Cecchino VC | Pericoloso a distanza, ATK 3 (Mosin), gittata 4. Dopo ogni colpo salta un turno per ricaricare; una volta allertato non si avvicina oltre 3 caselle, resta al limite della gittata cercando copertura |
 | Comandante VC | Più resistente e mobile, ATK 3 (TT-33), DEF 1 |
 
 **Armi speciali VC:** un solo guerrigliero per missione può essere equipaggiato con un RPG-7 (1 colpo). Una volta a tiro, lo usa quando la squadra è raggruppata o quando il bersaglio è fuori gittata dell'AK-47.
@@ -369,7 +369,7 @@ Ogni arma può avere un proprio suono di sparo, definito con il campo `sound` di
 {
   "weapons": {
     "assault": [
-      { "id": "rifle", "label": "M16", "atk": 3, "range": 2, "sound": "assets/m16.mp3" },
+      { "id": "rifle", "label": "M16", "atk": 3, "range": 3, "sound": "assets/m16.mp3" },
       { "id": "grenade", "label": "Granata", "atk": 5, "range": 3, "ammo": 2, "aoe": 1 }
     ],
     "grunt": [
@@ -442,11 +442,11 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 {
   "weapons": {
     "assault": [
-      { "id": "rifle",   "label": "M16",     "labelEn": "M16",     "atk": 3, "range": 2 },
+      { "id": "rifle",   "label": "M16",     "labelEn": "M16",     "atk": 3, "range": 3 },
       { "id": "grenade", "label": "Granata",  "labelEn": "Grenade", "atk": 5, "range": 3, "ammo": 2, "aoe": 1 }
     ],
     "sniper":    [{ "id": "rifle",  "label": "M14",   "labelEn": "M14",   "atk": 4, "range": 6 }],
-    "engineer":  [{ "id": "rifle",  "label": "M16",   "labelEn": "M16",   "atk": 2, "range": 2 }],
+    "engineer":  [{ "id": "rifle",  "label": "M16",   "labelEn": "M16",   "atk": 2, "range": 3 }],
     "medic":     [{ "id": "pistol", "label": "M1911", "labelEn": "M1911", "atk": 1, "range": 1 }],
     "grunt": [
       { "id": "ak47", "label": "AK-47", "labelEn": "AK-47", "atk": 2, "range": 2 },
@@ -468,13 +468,14 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | `range` | number | Gittata massima in tile |
 | `ammo` | number o null | Munizioni disponibili; `null` = illimitate |
 | `aoe` | number | (opzionale) Raggio area d'effetto in distanza Manhattan |
+| `minRange` | number | (opzionale, solo armi AoE) Gittata minima in tile; default `aoe + 1`, così chi lancia non è mai nel raggio dell'esplosione |
 | `maxCarriers` | number | (opzionale, solo VC) Max unità per missione che possono portare quest'arma |
 
 **Comportamento:**
 
 - Se un'unità ha **una sola arma** (o una sola usabile), attacca direttamente senza picker
 - Se ha **più armi usabili**, appare un selettore nell'area azioni prima dell'attacco
-- Le **armi AoE** (`aoe > 0`) mostrano prima un overlay arancione con il raggio di gittata, poi al click sul tile mostrano l'anteprima del raggio d'effetto con conferma/annulla; il combattimento avviene automaticamente senza dado manuale
+- Le **armi AoE** (`aoe > 0`) mostrano prima un overlay arancione con le tile bersagliabili (tra gittata minima e massima: non si può lanciare troppo vicino a sé), poi al click sul tile mostrano l'anteprima del raggio d'effetto con conferma/annulla; il combattimento avviene automaticamente senza dado manuale
 - Le munizioni vengono scalate sull'oggetto unità e salvate con `saveGame()` — persistono tra turni e resume
 - `maxCarriers` limita a livello di missione quante unità VC possono ricevere quell'arma (spawn iniziale + rinforzi + imboscata condividono il contatore in `G.missionState.vcCarrierCounts`)
 
@@ -482,9 +483,9 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 
 | Classe | Arma primaria | Arma secondaria |
 |---|---|---|
-| Assalto | M16 (ATK3, RNG2, ∞) | Granata (ATK5, RNG3, AoE1, ×2) |
+| Assalto | M16 (ATK3, RNG3, ∞) | Granata (ATK5, RNG3, AoE1, ×2) |
 | Cecchino | M14 (ATK4, RNG6, ∞) | — |
-| Geniere | M16 (ATK2, RNG2, ∞) | — |
+| Geniere | M16 (ATK2, RNG3, ∞) | — |
 | Medico | M1911 (ATK1, RNG1, ∞) | — |
 | Guerrigliero VC | AK-47 (ATK2, RNG2, ∞) | RPG-7 (ATK4, RNG4, AoE1, ×1, max 1 portatore) |
 | Cecchino VC | Mosin (ATK3, RNG4, ∞) | — |

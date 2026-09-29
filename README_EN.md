@@ -163,7 +163,7 @@ VC move and attack automatically during the enemy phase. Their movement is anima
 | Type | Profile |
 |---|---|
 | Guerrilla | Base unit, ATK 2 (AK-47), range 2 — one per mission also carries RPG-7 (ATK 4, range 4, AoE, 1 shot) |
-| VC Sniper | Dangerous at range, ATK 3 (Mosin), range 4 |
+| VC Sniper | Dangerous at range, ATK 3 (Mosin), range 4. Skips a turn to reload after every shot; once alerted it won't come closer than 3 tiles, holding near max range and seeking cover |
 | VC Commander | More durable and mobile, ATK 3 (TT-33), DEF 1 |
 
 **VC special weapons:** only one guerrilla per mission can carry an RPG-7 (1 shot). Once in range, they use it when the squad is clustered or when the target is beyond the AK-47's reach.
@@ -370,7 +370,7 @@ Each weapon can have its own firing sound, defined with the `sound` field direct
 {
   "weapons": {
     "assault": [
-      { "id": "rifle", "label": "M16", "atk": 3, "range": 2, "sound": "assets/m16.mp3" },
+      { "id": "rifle", "label": "M16", "atk": 3, "range": 3, "sound": "assets/m16.mp3" },
       { "id": "grenade", "label": "Grenade", "atk": 5, "range": 3, "ammo": 2, "aoe": 1 }
     ],
     "grunt": [
@@ -443,11 +443,11 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 {
   "weapons": {
     "assault": [
-      { "id": "rifle",   "label": "M16",     "labelEn": "M16",     "atk": 3, "range": 2 },
+      { "id": "rifle",   "label": "M16",     "labelEn": "M16",     "atk": 3, "range": 3 },
       { "id": "grenade", "label": "Granata",  "labelEn": "Grenade", "atk": 5, "range": 3, "ammo": 2, "aoe": 1 }
     ],
     "sniper":    [{ "id": "rifle",  "label": "M14",   "labelEn": "M14",   "atk": 4, "range": 6 }],
-    "engineer":  [{ "id": "rifle",  "label": "M16",   "labelEn": "M16",   "atk": 2, "range": 2 }],
+    "engineer":  [{ "id": "rifle",  "label": "M16",   "labelEn": "M16",   "atk": 2, "range": 3 }],
     "medic":     [{ "id": "pistol", "label": "M1911", "labelEn": "M1911", "atk": 1, "range": 1 }],
     "grunt": [
       { "id": "ak47", "label": "AK-47", "labelEn": "AK-47", "atk": 2, "range": 2 },
@@ -469,13 +469,14 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | `range` | number | Maximum range in tiles |
 | `ammo` | number or null | Available ammo; `null` = unlimited |
 | `aoe` | number | (optional) Area-of-effect radius in Manhattan distance |
+| `minRange` | number | (optional, AoE weapons only) Minimum range in tiles; defaults to `aoe + 1` so the thrower is never inside the blast |
 | `maxCarriers` | number | (optional, VC only) Max units per mission that can carry this weapon |
 
 **Behavior:**
 
 - If a unit has **one weapon** (or only one usable), it attacks directly without a picker
 - If it has **multiple usable weapons**, a picker appears in the action area before the attack
-- **AoE weapons** (`aoe > 0`) first show an orange overlay with the range, then on tile click show a blast radius preview with confirm/cancel; combat resolves automatically without a manual roll
+- **AoE weapons** (`aoe > 0`) first show an orange overlay with the targetable tiles (between minimum and maximum range: you cannot throw too close to yourself), then on tile click show a blast radius preview with confirm/cancel; combat resolves automatically without a manual roll
 - Ammo is tracked on the unit object and saved with `saveGame()` — it persists across turns and resumes
 - `maxCarriers` limits how many VC units per mission can receive that weapon (initial spawn + reinforcements + ambush all share the counter in `G.missionState.vcCarrierCounts`)
 
@@ -483,9 +484,9 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 
 | Class | Primary weapon | Secondary weapon |
 |---|---|---|
-| Assault | M16 (ATK3, RNG2, ∞) | Grenade (ATK5, RNG3, AoE1, ×2) |
+| Assault | M16 (ATK3, RNG3, ∞) | Grenade (ATK5, RNG3, AoE1, ×2) |
 | Sniper | M14 (ATK4, RNG6, ∞) | — |
-| Engineer | M16 (ATK2, RNG2, ∞) | — |
+| Engineer | M16 (ATK2, RNG3, ∞) | — |
 | Medic | M1911 (ATK1, RNG1, ∞) | — |
 | VC Guerrilla | AK-47 (ATK2, RNG2, ∞) | RPG-7 (ATK4, RNG4, AoE1, ×1, max 1 carrier) |
 | VC Sniper | Mosin (ATK3, RNG4, ∞) | — |

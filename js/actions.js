@@ -25,10 +25,12 @@ function setActionMode(mode, weapon = null) {
     const def = UNIT_CLASSES[u.cls];
     const range = weapon?.range ?? def.range;
     if (weapon?.aoe) {
-      // AoE: evidenzia tutte le tile raggiungibili (click → aoe_confirm)
+      // AoE: evidenzia le tile tra gittata minima e massima (click → aoe_confirm)
+      const minRange = weaponMinRange(weapon);
       for (let c = 0; c < G.mapData.cols; c++) {
         for (let r = 0; r < G.mapData.rows; r++) {
-          if (dist(u, { col: c, row: r }) <= range)
+          const d = dist(u, { col: c, row: r });
+          if (d >= minRange && d <= range)
             G.attackable.push({ col: c, row: r });
         }
       }

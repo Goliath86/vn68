@@ -31,7 +31,7 @@
         "label": "M16",
         "labelEn": "M16",
         "atk": 3,
-        "range": 2,
+        "range": 3,
         "sound": "assets/m16.mp3"
       },
       {
@@ -61,7 +61,7 @@
         "label": "M16",
         "labelEn": "M16",
         "atk": 2,
-        "range": 2,
+        "range": 3,
         "sound": "assets/m16.mp3"
       }
     ],

@@ -7,6 +7,9 @@ async function runEnemyTurn() {
     e.ap = e.maxAp || 2;
     //e.alerted = false;
     e.suppressed = false;
+    // Cecchino VC: se ha sparato nel turno precedente, in questo turno ricarica
+    e.needReload = !!e.hasShot;
+    e.hasShot = false;
   });
 
   // Rinforzi periodici
@@ -80,7 +83,7 @@ async function runEnemyTurn() {
     // Solo coppie VC/soldato con bersaglio in gittata e in linea di vista
     // (ogni tile a LOS parziale lungo la linea riduce la gittata di 1)
     const pairs = [];
-    for (const e of liveEnemies.filter((e) => e.alive)) {
+    for (const e of liveEnemies.filter((e) => e.alive && vcCanShoot(e))) {
       const range = getEnemyStats(e).range;
       for (const u of G.units.filter((u) => u.alive)) {
         const penalty = losRangePenalty(e.col, e.row, u.col, u.row);
@@ -98,6 +101,7 @@ async function runEnemyTurn() {
         }),
         "enemy",
       );
+      ambusher.hasShot = true;
       await resolveCombat(ambusher, target, true);
     }
   }
@@ -132,6 +136,154 @@ function vcChooseWeapon(enemy, target) {
   return primary;
 }
 
+// Gittata effettiva di un VC: considera tutte le armi con munizioni disponibili
+function vcEffRange(enemy, stats) {
+  return (enemy.weapons || [])
+    .filter((w) => w.ammo === null || w.ammo > 0)
+    .reduce((mx, w) => Math.max(mx, w.range), stats.range);
+}
+
+// Il cecchino VC dopo aver sparato salta un turno di fuoco (ricarica)
+function vcCanShoot(enemy) {
+  return !(enemy.cls === "sniper_vc" && (enemy.hasShot || enemy.needReload));
+}
+
+// Esegue un attacco VC contro il bersaglio (sceglie l'arma, consuma AP e munizioni)
+async function vcShoot(enemy, target, logKey) {
+  const w = vcChooseWeapon(enemy, target);
+  if (w && w.ammo !== null) w.ammo--;
+  enemy.ap--;
+  enemy.hasShot = true;
+  log(t(logKey, { name: enemy.name, target: target.name }), "enemy");
+  if (w?.aoe) {
+    await resolveAoeCombat(enemy, w, target.col, target.row, true);
+  } else {
+    await resolveCombat(enemy, target, true, w);
+  }
+}
+
+function nearestLiveUnit(pos) {
+  const liveUnits = G.units.filter((u) => u.alive);
+  if (!liveUnits.length) return null;
+  return liveUnits.reduce(
+    (best, u) => (dist(pos, u) < dist(pos, best) ? u : best),
+    liveUnits[0],
+  );
+}
+
+// Distanza minima che il cecchino VC cerca di mantenere dalle unità US
+const SNIPER_VC_MIN_DIST = 3;
+
+// Tile raggiungibili dal VC entro il budget di movimento (Dijkstra su costo terreno)
+function vcReachableTiles(enemy, budget) {
+  const key = (c, r) => `${c},${r}`;
+  const best = { [key(enemy.col, enemy.row)]: 0 };
+  const open = [{ col: enemy.col, row: enemy.row, cost: 0 }];
+  const out = [];
+  const DIRS = [
+    [0, -1],
+    [0, 1],
+    [-1, 0],
+    [1, 0],
+  ];
+  while (open.length) {
+    open.sort((a, b) => a.cost - b.cost);
+    const cur = open.shift();
+    if (cur.cost > best[key(cur.col, cur.row)]) continue;
+    out.push(cur);
+    for (const [dc, dr] of DIRS) {
+      const c = cur.col + dc,
+        r = cur.row + dr;
+      if (!isTilePassable(c, r) || isOccupied(c, r, enemy.id)) continue;
+      const cost = cur.cost + moveCost(c, r);
+      if (cost > budget || cost >= (best[key(c, r)] ?? Infinity)) continue;
+      best[key(c, r)] = cost;
+      open.push({ col: c, row: r, cost });
+    }
+  }
+  return out;
+}
+
+// Valuta un tile per il cecchino: resta nella fascia [MIN_DIST, gittata]
+// dalle unità US, preferendo copertura e distanza, e la possibilità di sparare
+function sniperTileScore(tile, enemy, range, canShoot) {
+  const target = nearestLiveUnit(tile);
+  const d = target ? dist(tile, target) : Infinity;
+  let score;
+  if (d < SNIPER_VC_MIN_DIST) score = -(SNIPER_VC_MIN_DIST - d) * 20;
+  else if (d > range) score = -(d - range) * 10;
+  else score = 50 + d;
+  if (canShoot && d <= range && enemy.ap - tile.cost >= 1) score += 30;
+  score += coverBonus(tile.col, tile.row) * 3;
+  score -= tile.cost * 0.5; // a parità preferisce non muoversi
+  return score;
+}
+
+// Il cecchino si sposta sul tile migliore raggiungibile con gli AP residui
+async function sniperReposition(enemy, stats, range) {
+  const budget = Math.min(enemy.ap, stats.move);
+  const canShoot = vcCanShoot(enemy);
+  const tiles = vcReachableTiles(enemy, budget);
+  const dest = tiles.reduce((b, tl) =>
+    sniperTileScore(tl, enemy, range, canShoot) >
+    sniperTileScore(b, enemy, range, canShoot)
+      ? tl
+      : b,
+  );
+  if (dest.cost === 0) return;
+
+  const fromCol = enemy.col,
+    fromRow = enemy.row;
+  enemy.col = dest.col;
+  enemy.row = dest.row;
+  enemy.ap = Math.max(0, enemy.ap - dest.cost);
+  await animateEnemyMove(enemy, fromCol, fromRow, enemy.col, enemy.row);
+  const target = nearestLiveUnit(enemy);
+  if (target) {
+    log(
+      t("log.vc_sniper_reposition", {
+        name: enemy.name,
+        target: target.name,
+        dist: dist(enemy, target),
+      }),
+      "enemy",
+    );
+  }
+  checkOverwatch(enemy);
+  checkSuppression(enemy);
+}
+
+// IA del cecchino VC allertato: spara se può, poi si mantiene a distanza di tiro
+// senza avvicinarsi troppo; dopo ogni colpo salta un turno per ricaricare
+async function sniperActivation(enemy, stats) {
+  const range = vcEffRange(enemy, stats);
+  let target = nearestLiveUnit(enemy);
+
+  if (vcCanShoot(enemy) && enemy.ap >= 1 && dist(enemy, target) <= range) {
+    checkOverwatch(enemy);
+    checkSuppression(enemy);
+    if (enemy.alive && enemy.ap >= 1) {
+      await vcShoot(enemy, target, "log.vc_attack");
+    }
+  } else if (enemy.needReload) {
+    log(t("log.vc_sniper_reload", { name: enemy.name }), "enemy");
+  }
+
+  if (!enemy.alive || enemy.ap < 1) return;
+  await sniperReposition(enemy, stats, range);
+
+  target = nearestLiveUnit(enemy);
+  if (
+    enemy.alive &&
+    target &&
+    vcCanShoot(enemy) &&
+    enemy.ap >= 1 &&
+    dist(enemy, target) <= range
+  ) {
+    await vcShoot(enemy, target, "log.vc_fire");
+  }
+}
+
 async function enemyActivation(enemy) {
   if (!enemy.alive) return;
 
@@ -154,32 +306,18 @@ async function enemyActivation(enemy) {
     propagateAlert(enemy);
   }
 
-  if (enemy.alerted) {
+  if (enemy.alerted && enemy.cls === "sniper_vc") {
+    await sniperActivation(enemy, stats);
+  } else if (enemy.alerted) {
     // Gittata effettiva: considera tutte le armi disponibili
-    const effRange = (enemy.weapons || [])
-      .filter((w) => w.ammo === null || w.ammo > 0)
-      .reduce((mx, w) => Math.max(mx, w.range), stats.range);
+    const effRange = vcEffRange(enemy, stats);
 
     // Se in gittata (con qualsiasi arma): attacca
     if (d <= effRange && enemy.ap >= 1) {
       checkOverwatch(enemy);
       checkSuppression(enemy);
       if (enemy.ap >= 1) {
-        const w = vcChooseWeapon(enemy, target);
-        if (w && w.ammo !== null) w.ammo--;
-        enemy.ap--;
-        log(
-          t("log.vc_attack", {
-            name: enemy.name,
-            target: target.name,
-          }),
-          "enemy",
-        );
-        if (w?.aoe) {
-          await resolveAoeCombat(enemy, w, target.col, target.row, true);
-        } else {
-          await resolveCombat(enemy, target, true, w);
-        }
+        await vcShoot(enemy, target, "log.vc_attack");
       }
     } else {
       // Muovi verso il target
@@ -233,30 +371,10 @@ async function enemyActivation(enemy) {
           checkSuppression(enemy);
 
           // Attacca se ora in gittata (con qualsiasi arma)
-          const newEffRange = (enemy.weapons || [])
-            .filter((w) => w.ammo === null || w.ammo > 0)
-            .reduce((mx, w) => Math.max(mx, w.range), stats.range);
+          const newEffRange = vcEffRange(enemy, stats);
 
           if (dist(enemy, target) <= newEffRange && enemy.ap >= 1) {
-            const w = vcChooseWeapon(enemy, target);
-
-            if (w && w.ammo !== null) w.ammo--;
-
-            enemy.ap--;
-
-            log(
-              t("log.vc_fire", {
-                name: enemy.name,
-                target: target.name,
-              }),
-              "enemy",
-            );
-
-            if (w?.aoe) {
-              await resolveAoeCombat(enemy, w, target.col, target.row, true);
-            } else {
-              await resolveCombat(enemy, target, true, w);
-            }
+            await vcShoot(enemy, target, "log.vc_fire");
           }
         }
       }

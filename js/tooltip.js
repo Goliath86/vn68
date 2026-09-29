@@ -29,6 +29,13 @@ function showTooltip(e, col, row) {
       hp: enemy.hp,
       maxHp: enemy.maxHp,
     });
+  // Cecchino VC che ha sparato: salterà il prossimo turno di fuoco
+  // (needReload vale solo durante la fase nemica, poi viene azzerato)
+  if (
+    enemy?.cls === "sniper_vc" &&
+    (enemy.hasShot || (G.phase !== "player" && enemy.needReload))
+  )
+    txt += t("tooltip.enemy_reloading");
   tt.textContent = txt;
   tt.style.display = "block";
   const rect = G.canvas.getBoundingClientRect();

@@ -3,6 +3,10 @@ function selInfoHTML(u) {
     return `<div style="font-size:11px;color:var(--paper-dark)">${t("units.no_unit_selected_long")}</div>`;
 
   const def = UNIT_CLASSES[u.cls];
+  // ATK/RNG mostrati: valori dell'arma equipaggiata (come in combattimento), fallback sulla classe
+  const weapon = unitWeapon(u);
+  const atk = weapon?.atk ?? def.attack;
+  const rng = weapon?.range ?? def.range;
   const tileLabel =
     mt(`tileLabels.${getTileAt(u.col, u.row)?.id}`) ??
     getTileAt(u.col, u.row)?.label ??
@@ -11,7 +15,7 @@ function selInfoHTML(u) {
   return `
     <div class="si-name" style="font-family:var(--ui-font);font-size:15px;font-weight:600;color:var(--highlight)">${u.name}</div>
     <div class="si-stats" style="font-size:10px;color:var(--paper-dark);line-height:1.7;margin-top:3px">
-      ${t("unit_panel.stats", { class: def.name, atk: def.attack, def: def.defense, rng: def.range })}<br>
+      ${t("unit_panel.stats", { class: def.name, atk, def: def.defense, rng })}<br>
       ${t("unit_panel.status", { hp: u.hp, maxHp: u.maxHp, ap: u.ap, maxAp: AP_PER_TURN, col: u.col, row: u.row })}<br>
       ${t("unit_panel.tile", { label: tileLabel })}<br>
       ${

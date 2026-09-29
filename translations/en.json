@@ -180,6 +180,8 @@
     "vc_attack": "{name} attacks {target}",
     "vc_advance": "{name} advances toward {target} (distance: {dist})",
     "vc_fire": "{name} opens fire on {target}",
+    "vc_sniper_reload": "{name} reloads the rifle",
+    "vc_sniper_reposition": "{name} repositions (distance from {target}: {dist})",
     "attack_prompt": "{attacker} attacks {defender} — ROLL THE DICE",
     "attack_dice_context": "Attack by {name}",
     "overwatch_dice_context": "Overwatch: {name}",
@@ -229,7 +231,8 @@
   "tooltip": {
     "tile": "{label} | Cost:{cost} Cover:{cover}",
     "unit_append": " | {name} HP:{hp}/{maxHp} AP:{ap}",
-    "enemy_append": " | {name} HP:{hp}/{maxHp}"
+    "enemy_append": " | {name} HP:{hp}/{maxHp}",
+    "enemy_reloading": " (reloading)"
   },
 
   "objective_panel": {
