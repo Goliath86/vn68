@@ -21,6 +21,10 @@ document
     document.getElementById("btn-endturn").click(),
   );
 
+document
+  .getElementById("mob-btn-undo")
+  .addEventListener("click", () => document.getElementById("btn-undo").click());
+
 function objPanelHTML() {
   const type = G.missionType;
   const st = G.missionState;
@@ -117,6 +121,7 @@ document.getElementById("btn-special").addEventListener("click", () => {
   const u = G.selectedUnit;
   if (u.cls === "assault") {
     // Fuoco Soppressivo immediato
+    clearLastMove();
     u.suppression = true;
     u.ap -= 1;
     u.specialUsed = true;
@@ -130,6 +135,7 @@ document.getElementById("btn-special").addEventListener("click", () => {
 
   if (u.cls === "sniper") {
     // Overwatch immediato
+    clearLastMove();
     u.overwatch = true;
     u.ap -= 1;
     u.specialUsed = true;
@@ -142,14 +148,83 @@ document.getElementById("btn-special").addEventListener("click", () => {
   }
   setActionMode("special");
 });
-document.getElementById("btn-endturn").addEventListener("click", endPlayerTurn);
+document.getElementById("btn-undo").addEventListener("click", () => {
+  if (!canUndoMove()) return;
+  sfx("click");
+  undoLastMove();
+});
+
+// ── FINE TURNO (con conferma se restano AP) ────────────────────────────
+const endTurnOverlay = document.getElementById("endturn-overlay");
+
+function requestEndTurn() {
+  if (G.phase !== "player" || G.pendingDice) return;
+  const withAp = G.units.filter((u) => u.alive && u.ap > 0).length;
+  if (withAp > 0) {
+    document.getElementById("endturn-msg").textContent = t(
+      "confirm.end_turn_ap",
+      { n: withAp },
+    );
+    endTurnOverlay.classList.remove("hidden");
+    return;
+  }
+  endPlayerTurn();
+}
+
+function closeEndTurnConfirm(confirmed) {
+  endTurnOverlay.classList.add("hidden");
+  if (confirmed) endPlayerTurn();
+}
+
+document.getElementById("btn-endturn").addEventListener("click", requestEndTurn);
+document
+  .getElementById("endturn-yes")
+  .addEventListener("click", () => closeEndTurnConfirm(true));
+document
+  .getElementById("endturn-no")
+  .addEventListener("click", () => closeEndTurnConfirm(false));
+
+// Seleziona la prossima unità viva con AP (dir = 1 avanti, -1 indietro)
+function selectNextUnit(dir) {
+  const list = G.units.filter((u) => u.alive && u.ap > 0);
+  if (!list.length) return;
+  const cur = list.indexOf(G.selectedUnit);
+  const next =
+    cur === -1
+      ? list[dir > 0 ? 0 : list.length - 1]
+      : list[(cur + dir + list.length) % list.length];
+  G.selectedUnit = next;
+  setActionMode(null);
+  updateUI();
+}
 
 // ── HOTKEYS DESKTOP ────────────────────────────────────────────────────
 document.addEventListener("keydown", (e) => {
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-  if (G.phase !== "player" || G.pendingDice) return;
+  // Conferma fine turno aperta: Invio = sì, Esc = no, altri tasti ignorati
+  if (!endTurnOverlay.classList.contains("hidden")) {
+    if (e.key === "Enter" || e.key === "Escape") {
+      e.preventDefault();
+      closeEndTurnConfirm(e.key === "Enter");
+    }
+    return;
+  }
+  if (!G.mapData || G.phase !== "player" || G.pendingDice) return;
   const u = G.selectedUnit;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    selectNextUnit(e.shiftKey ? -1 : 1);
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+    e.preventDefault();
+    document.getElementById("btn-undo").click();
+    return;
+  }
   switch (e.key.toLowerCase()) {
+    case "u":
+      document.getElementById("btn-undo").click();
+      break;
     case "m":
       if (u && u.alive && u.ap > 0) document.getElementById("btn-move").click();
       break;
@@ -168,6 +243,8 @@ document.addEventListener("keydown", (e) => {
         document.getElementById("btn-special").click();
       break;
     case "enter":
+      // preventDefault: evita il doppio click nativo se un bottone ha il focus
+      e.preventDefault();
       document.getElementById("btn-endturn").click();
       break;
     case "escape":

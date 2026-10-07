@@ -120,6 +120,29 @@ async function resolveCombat(
   return dmg > 0;
 }
 
+// Anteprima attacco del giocatore: probabilità di colpire e danno medio, calcolati
+// esattamente sulla stessa formula di resolveCombat (2d6+ATK vs DEF+COV+1d6)
+function attackOdds(attacker, defender, weapon) {
+  const def = UNIT_CLASSES[attacker.cls];
+  const range = dist(attacker, defender);
+  const atkVal = Math.max(
+    1,
+    (weapon?.atk ?? def.attack) - weaponRangePenalty(attacker, weapon, range),
+  );
+  const defVal =
+    getEnemyStats(defender).defense + coverBonus(defender.col, defender.row);
+  let hits = 0,
+    dmgSum = 0;
+  for (let a = 1; a <= 6; a++)
+    for (let b = 1; b <= 6; b++)
+      for (let d = 1; d <= 6; d++) {
+        const dmg = Math.max(0, a + b + atkVal - (defVal + d));
+        if (dmg > 0) hits++;
+        dmgSum += dmg;
+      }
+  return { pHit: hits / 216, expDmg: dmgSum / 216 };
+}
+
 function getEnemyStats(enemy) {
   if (enemy.cls === "sniper_vc")
     return { attack: 3, range: 4, defense: 0, move: 2 };

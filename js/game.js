@@ -268,6 +268,7 @@ function showGameOver(win) {
 function endPlayerTurn() {
   if (G.phase !== "player") return;
   if (G.pendingDice) return;
+  clearLastMove();
   // Cancella qualsiasi modalità azione in corso (incluso weapon_select e aoe_confirm)
   G.actionMode = null;
   G.currentWeapon = null;

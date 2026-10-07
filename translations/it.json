@@ -38,11 +38,13 @@
     "move_mobile": "Muovi",
     "attack_mobile": "Attacca",
     "special_mobile": "Spec.",
-    "end_turn_mobile": "Fine"
+    "end_turn_mobile": "Fine",
+    "undo_move": "↶ Annulla movimento"
   },
 
   "confirm": {
     "abort_mission": "Sei sicuro di voler abbandonare la missione e tornare al menu?",
+    "end_turn_ap": "{n} unità hanno ancora AP disponibili. Terminare comunque il turno?",
     "yes": "✓ SÌ",
     "no": "✕ NO"
   },
@@ -165,6 +167,7 @@
     "mission_type": "Tipo: {type}",
     "enemy_deployed": "Truppe nemiche: {count} Vietcong in campo",
     "unit_move": "{name} si muove in ({col},{row}) [-{ap}AP]",
+    "unit_move_undone": "{name}: movimento annullato",
     "overwatch_fire": "{name} OVERWATCH: fuoco su {target}!",
     "suppression_set": "{name} in FUOCO SOPPRESSIVO — blocca i VC che entrano nel range",
     "suppression_fire": "{name} SOPPRESSIONE: {target} è bloccato (AP azzerati)!",
@@ -237,7 +240,8 @@
     "tile": "{label} | Costo:{cost} Copertura:{cover}",
     "unit_append": " | {name} HP:{hp}/{maxHp} AP:{ap}",
     "enemy_append": " | {name} HP:{hp}/{maxHp}",
-    "enemy_reloading": " (in ricarica)"
+    "enemy_reloading": " (in ricarica)",
+    "hit_odds": " | Colpo: {pct}% · danno medio {dmg}"
   },
 
   "objective_panel": {

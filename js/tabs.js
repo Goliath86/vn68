@@ -175,6 +175,15 @@ function updateActionButtons() {
     });
   });
 
+  ["btn-undo", "mob-btn-undo"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el)
+      el.disabled =
+        !canUndoMove() ||
+        G.actionMode === "weapon_select" ||
+        G.actionMode === "aoe_confirm";
+  });
+
   // Sync disabled state ai bottoni della quick bar
   [
     ["btn-move", "qb-move"],

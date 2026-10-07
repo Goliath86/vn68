@@ -19,6 +19,7 @@ const G = {
   actionMode: null, // 'move' | 'attack' | 'weapon_select' | 'aoe_confirm' | 'special'
   currentWeapon: null, // arma attiva durante l'azione corrente
   pendingAoe: null, // { col, row, weapon } — AoE in attesa di conferma
+  lastMove: null, // { unit, fromCol, fromRow, prevAp } — ultimo movimento annullabile
   reachable: [], // celle raggiungibili
   attackable: [], // celle attaccabili / tile AoE in range
   overwatchList: [], // unità in overwatch

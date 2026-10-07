@@ -36,6 +36,20 @@ function showTooltip(e, col, row) {
     (enemy.hasShot || (G.phase !== "player" && enemy.needReload))
   )
     txt += t("tooltip.enemy_reloading");
+  // In modalità attacco (bersaglio singolo): anteprima probabilità di colpire
+  if (
+    enemy &&
+    G.actionMode === "attack" &&
+    !G.currentWeapon?.aoe &&
+    G.selectedUnit &&
+    G.attackable.includes(enemy)
+  ) {
+    const { pHit, expDmg } = attackOdds(G.selectedUnit, enemy, G.currentWeapon);
+    txt += t("tooltip.hit_odds", {
+      pct: Math.round(pHit * 100),
+      dmg: expDmg.toFixed(1),
+    });
+  }
   tt.textContent = txt;
   tt.style.display = "block";
   const rect = G.canvas.getBoundingClientRect();

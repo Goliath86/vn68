@@ -504,8 +504,10 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | Move | Click "Move" or press `M` | ACTIONS tab → Move → tap cell |
 | Attack | Click "Attack" or press `A` | ACTIONS tab → Attack → tap enemy |
 | Special ability | Click "Special" or press `S` | ACTIONS tab → Special |
-| End turn | "End Turn" button or `Enter` | ACTIONS tab → End Turn |
+| End turn | "End Turn" button or `Enter` (asks for confirmation if some unit still has AP) | ACTIONS tab → End Turn |
 | Cancel action | `Esc` | — |
+| Undo last move | "↶ Undo move" button or `U` / `Ctrl+Z` | ACTIONS tab → Undo move |
+| Next unit with AP | `Tab` (`Shift+Tab` for previous) | — |
 | Pan map | Click + drag | 1 finger + drag |
 | Zoom | Mouse wheel | 2-finger pinch |
 | Roll dice | "ROLL DICE" button | DICE tab |
@@ -520,8 +522,14 @@ Keyboard shortcuts are active only during the **player phase** and when no dice 
 | `M` | Move mode |
 | `A` | Attack mode |
 | `S` | Special ability mode |
-| `Enter` | End turn |
-| `Esc` | Cancel current mode |
+| `Enter` | End turn (in the confirmation dialog: confirm) |
+| `Esc` | Cancel current mode (in the confirmation dialog: cancel) |
+| `U` / `Ctrl+Z` | Undo last move |
+| `Tab` / `Shift+Tab` | Select next / previous unit with AP |
+
+**Undo move:** only the last move can be undone, and only if it revealed no new enemies and did not change the mission state (pilot picked up, zone scouted). Any other action (attack, special ability, end turn) makes it final.
+
+**Hit chance:** in attack mode, the hit percentage is shown above each target (same formula as combat: 2d6+ATK vs DEF+cover+1d6, range penalty included). On desktop the target tooltip also shows the average damage.
 
 ### ⌂ Button and Back Button
 

@@ -129,6 +129,15 @@
                     </button>
 
                     <button
+                        class="btn"
+                        id="btn-undo"
+                        data-i18n="buttons.undo_move"
+                        disabled
+                    >
+                        ↶ Annulla movimento
+                    </button>
+
+                    <button
                         class="btn btn-end"
                         id="btn-endturn"
                         data-i18n="buttons.end_turn"
@@ -307,6 +316,15 @@
                             disabled
                         >
                             Abilità spec.
+                        </button>
+
+                        <button
+                            class="btn"
+                            id="mob-btn-undo"
+                            data-i18n="buttons.undo_move"
+                            disabled
+                        >
+                            ↶ Annulla movimento
                         </button>
 
                         <button
@@ -525,6 +543,19 @@
                     ✓ SÌ
                 </button>
                 <button class="btn" id="confirm-no" data-i18n="confirm.no">
+                    ✕ NO
+                </button>
+            </div>
+        </div>
+
+        <!-- CONFIRM END TURN (unità con AP residui) -->
+        <div id="endturn-overlay" class="hidden">
+            <div id="endturn-box">
+                <p id="endturn-msg"></p>
+                <button class="btn" id="endturn-yes" data-i18n="confirm.yes">
+                    ✓ SÌ
+                </button>
+                <button class="btn" id="endturn-no" data-i18n="confirm.no">
                     ✕ NO
                 </button>
             </div>

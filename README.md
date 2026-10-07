@@ -503,8 +503,10 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | Muovere | Click su "Muovi" oppure `M` | Tab AZIONI → Muovi → tap cella |
 | Attaccare | Click su "Attacca" oppure `A` | Tab AZIONI → Attacca → tap nemico |
 | Abilità speciale | Click su "Speciale" oppure `S` | Tab AZIONI → Speciale |
-| Fine turno | Pulsante "Fine Turno" oppure `Invio` | Tab AZIONI → Fine Turno |
+| Fine turno | Pulsante "Fine Turno" oppure `Invio` (conferma se qualche unità ha ancora AP) | Tab AZIONI → Fine Turno |
 | Annulla azione | `Esc` | — |
+| Annulla ultimo movimento | Pulsante "↶ Annulla movimento" oppure `U` / `Ctrl+Z` | Tab AZIONI → Annulla movimento |
+| Unità successiva con AP | `Tab` (`Shift+Tab` per la precedente) | — |
 | Panoramica mappa | Click + trascina | 1 dito + trascina |
 | Zoom | Rotella del mouse | Pinch con 2 dita |
 | Lanciare dado | Pulsante "LANCIA DADO" | Tab DADO |
@@ -519,8 +521,14 @@ Le scorciatoie da tastiera sono attive solo durante la **fase giocatore** e quan
 | `M` | Modalità Muovi |
 | `A` | Modalità Attacca |
 | `S` | Modalità Speciale |
-| `Invio` | Fine turno |
-| `Esc` | Annulla la modalità corrente |
+| `Invio` | Fine turno (nel dialogo di conferma: conferma) |
+| `Esc` | Annulla la modalità corrente (nel dialogo di conferma: annulla) |
+| `U` / `Ctrl+Z` | Annulla l'ultimo movimento |
+| `Tab` / `Shift+Tab` | Seleziona l'unità successiva / precedente con AP |
+
+**Annulla movimento:** si può annullare solo l'ultimo movimento, e solo se non ha rivelato nuovi nemici né cambiato lo stato della missione (pilota raccolto, zona ricognita). Qualsiasi altra azione (attacco, abilità speciale, fine turno) lo rende definitivo.
+
+**Probabilità di colpire:** in modalità attacco, sopra ogni bersaglio compare la percentuale di colpire (stessa formula del combattimento: 2d6+ATK contro DEF+copertura+1d6, penalità gittata inclusa). Su desktop il tooltip del bersaglio mostra anche il danno medio.
 
 ### Bottone ⌂ e back button
 

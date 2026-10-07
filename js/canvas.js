@@ -204,6 +204,7 @@ function onCanvasClick(e) {
     // Singolo bersaglio
     const target = G.attackable.find((e) => e.col === col && e.row === row);
     if (target) {
+      clearLastMove();
       G.selectedUnit.ap -= 1;
       if (w?.ammo !== null && w?.ammo != null) w.ammo--;
       if (G.selectedUnit.cls === "sniper") G.selectedUnit.hasShot = true;
@@ -219,6 +220,9 @@ function onCanvasClick(e) {
 
   // In modalità speciale
   if (G.actionMode === "special") {
+    // Solo un bersaglio valido esegue l'abilità (un click a vuoto annulla e basta)
+    if (G.reachable.some((r) => r.col === col && r.row === row))
+      clearLastMove();
     handleSpecialAction(col, row);
     setActionMode(null);
     return;

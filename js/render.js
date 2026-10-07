@@ -330,6 +330,22 @@ function renderOverlay() {
         ctx.lineTo(cx + o2, cy);
         ctx.stroke();
       }
+      // Probabilità di colpire sopra ogni bersaglio (visibile anche su mobile, senza hover)
+      if (G.selectedUnit) {
+        ctx.font = `bold ${Math.max(9, Math.round(ts * 0.22))}px 'Oswald'`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(0,0,0,0.85)";
+        ctx.fillStyle = "#ffe080";
+        for (const e of G.attackable) {
+          const { x, y } = tileToScreen(e.col, e.row);
+          const { pHit } = attackOdds(G.selectedUnit, e, G.currentWeapon);
+          const label = `${Math.round(pHit * 100)}%`;
+          ctx.strokeText(label, x + ts / 2, y - 1);
+          ctx.fillText(label, x + ts / 2, y - 1);
+        }
+      }
       ctx.restore();
 
       // Linea di fuoco dall'unità selezionata

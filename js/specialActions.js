@@ -121,6 +121,7 @@ function confirmAoeAttack() {
   if (!G.pendingAoe || !G.selectedUnit) return;
   const u = G.selectedUnit;
   const { col: tc, row: tr, weapon: w } = G.pendingAoe;
+  clearLastMove();
   u.ap -= 1;
   if (w.ammo !== null) w.ammo--;
   if (u.cls === "sniper") u.hasShot = true;

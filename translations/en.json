@@ -38,11 +38,13 @@
     "move_mobile": "Move",
     "attack_mobile": "Attack",
     "special_mobile": "Spec.",
-    "end_turn_mobile": "End"
+    "end_turn_mobile": "End",
+    "undo_move": "↶ Undo move"
   },
 
   "confirm": {
     "abort_mission": "Are you sure you want to abort the mission and return to the menu?",
+    "end_turn_ap": "{n} unit(s) still have AP left. End the turn anyway?",
     "yes": "✓ YES",
     "no": "✕ NO"
   },
@@ -160,6 +162,7 @@
     "mission_type": "Type: {type}",
     "enemy_deployed": "Enemy forces: {count} Viet Cong deployed",
     "unit_move": "{name} moves to ({col},{row}) [-{ap}AP]",
+    "unit_move_undone": "{name}: move undone",
     "overwatch_fire": "{name} OVERWATCH: fires at {target}!",
     "suppression_set": "{name} in SUPPRESSIVE FIRE — pins any VC entering range",
     "suppression_fire": "{name} SUPPRESSION: {target} is pinned (AP zeroed)!",
@@ -232,7 +235,8 @@
     "tile": "{label} | Cost:{cost} Cover:{cover}",
     "unit_append": " | {name} HP:{hp}/{maxHp} AP:{ap}",
     "enemy_append": " | {name} HP:{hp}/{maxHp}",
-    "enemy_reloading": " (reloading)"
+    "enemy_reloading": " (reloading)",
+    "hit_odds": " | Hit: {pct}% · avg dmg {dmg}"
   },
 
   "objective_panel": {

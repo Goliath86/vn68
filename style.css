@@ -687,7 +687,8 @@ body {
 }
 
 /* ── CONFIRM OVERLAY ─────────────────────────────── */
-#confirm-overlay {
+#confirm-overlay,
+#endturn-overlay {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.75);
@@ -696,10 +697,12 @@ body {
     justify-content: center;
     z-index: 300;
 }
-#confirm-overlay.hidden {
+#confirm-overlay.hidden,
+#endturn-overlay.hidden {
     display: none;
 }
-#confirm-box {
+#confirm-box,
+#endturn-box {
     background: var(--panel-bg);
     border: 2px solid var(--tan-dark);
     border-radius: 4px;
@@ -708,13 +711,15 @@ body {
     width: 90%;
     text-align: center;
 }
-#confirm-box p {
+#confirm-box p,
+#endturn-box p {
     font-size: 13px;
     color: var(--paper-dark);
     margin-bottom: 20px;
     line-height: 1.6;
 }
-#confirm-box .btn {
+#confirm-box .btn,
+#endturn-box .btn {
     margin: 0 6px;
 }
 #btn-menu {
