@@ -71,7 +71,10 @@ function setActionMode(mode, weapon = null) {
         row: u.row + dr,
       })).filter(({ col, row }) => {
         const t = getTileAt(col, row);
-        return t && (t.demolishable || (t.burnable && !isOnFire(col, row)));
+        return (
+          isKnownTrap(col, row) ||
+          (t && (t.demolishable || (t.burnable && !isOnFire(col, row))))
+        );
       });
     }
   }

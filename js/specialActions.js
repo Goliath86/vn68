@@ -35,6 +35,13 @@ async function handleSpecialAction(col, row) {
     const target = G.reachable.find((r) => r.col === col && r.row === row);
     if (!target) return;
 
+    // Trappola individuata: disinnesco (ha la precedenza su demolizione/incendio)
+    const trap = trapAt(target.col, target.row);
+    if (trap?.revealed) {
+      disarmTrap(u, trap);
+      return;
+    }
+
     const tileType = getTileAt(target.col, target.row);
 
     // Burn tile burnable (non demolishable)

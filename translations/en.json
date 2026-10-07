@@ -139,7 +139,13 @@
     "loading": "Loading...",
     "squad_title": "◈ COMPOSE YOUR SQUAD — click to change class",
     "resume_title": "MISSION IN PROGRESS",
-    "resume_turn": "Turn {turn}"
+    "resume_turn": "Turn {turn}",
+    "night_mission": "🌙 Night mission (reduced visibility)"
+  },
+
+  "traps": {
+    "punji": "punji",
+    "mine": "mine"
   },
 
   "gameover": {
@@ -209,7 +215,18 @@
     "aoe_attack": "{name} — {weapon}: {targets} targets in blast area!",
     "aoe_no_targets": "{name} — {weapon}: no targets in blast area",
     "aoe_dice_context": "{weapon} — {name}",
-    "aoe_target_result": "  ↳ {name}: {defBreakdown} → {result}"
+    "aoe_target_result": "  ↳ {name}: {defBreakdown} → {result}",
+    "flanked": "{name} is FLANKED — cover halved",
+    "night_mission": "Night mission: reduced visibility for both sides",
+    "trap_triggered": "{name} triggers a trap ({trap})! -{dmg}HP",
+    "trap_revealed": "{name} spots a trap ({trap}) at ({col},{row})",
+    "trap_disarmed": "{name} disarms the trap ({trap})",
+    "smoke_deployed": "{name} throws {weapon}: smoke screen for {turns} turns",
+    "artillery_called": "{name} calls in artillery on ({col},{row}) — impact next turn",
+    "artillery_impact": "ARTILLERY incoming on ({col},{row})!",
+    "vc_routed": "{name} is demoralized and falls back!",
+    "vc_commander_down": "The commander is down: {count} VC fall back!",
+    "vc_retreat": "{name} retreats (distance: {dist})"
   },
 
   "weapons": {
@@ -236,7 +253,11 @@
     "unit_append": " | {name} HP:{hp}/{maxHp} AP:{ap}",
     "enemy_append": " | {name} HP:{hp}/{maxHp}",
     "enemy_reloading": " (reloading)",
-    "hit_odds": " | Hit: {pct}% · avg dmg {dmg}"
+    "hit_odds": " | Hit: {pct}% · avg dmg {dmg}",
+    "flanked": " · flanked",
+    "enemy_routed": " (routed)",
+    "trap": " | ⚠ Trap: {trap}",
+    "smoke": " | Smoke ({turns}T)"
   },
 
   "objective_panel": {

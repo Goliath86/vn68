@@ -38,7 +38,7 @@ Tutti i file in `js/` sono script classici concatenati via `<script>` tag in `in
 config.js → constants.js → canvas.js → sounds.js → fowLos.js → utils.js →
 maps.js → i18n.js → alea.js → weapons.js → actions.js → specialActions.js →
 plchldSprites.js → overwatch.js → render.js → saveGame.js → combat.js →
-initModal.js → tabs.js → backModal.js → pathfind.js → camera.js →
+mechanics.js → initModal.js → tabs.js → backModal.js → pathfind.js → camera.js →
 animations.js → ai.js → game.js → suppression.js → log.js → tooltip.js →
 ui.js → selectedUnit.js → init.js → unitList.js → unitMovement.js
 ```
@@ -70,6 +70,7 @@ Altre costanti in `constants.js`: `TILE=64`, `AP_PER_TURN=3`, `SAVE_KEY`, `UNIT_
 | `render.js` | rendering principale: `render()`, `renderMap()`, `renderOverlay()` (evidenziazioni move/attack/AoE), `renderUnitsOnMap()`, `renderMissionMarkers()` |
 | `saveGame.js` | `saveGame()`/`loadSave()`/`clearSave()` — persistenza `localStorage`, chiave `SAVE_KEY` |
 | `combat.js` | `resolveCombat()` (attacco singolo, formula 2d6+ATK vs DEF+copertura+1d6), `resolveAoeCombat()` (granate/RPG, dado automatico) |
+| `mechanics.js` | meccaniche tattiche: fiancheggiamento (`isFlanked`/`effectiveCover`), notte (`unitVision`, `vcAlertDistance`), fumogeni (`isSmoked`, `smokeBlocks`), artiglieria (`scheduleArtillery`/`resolveArtillery`), trappole VC (`initTraps`, `hiddenTrapOnPath`, `triggerTrap`), morale VC (`checkVcMorale`, `routedActivation`). Stato runtime in `G.missionState` (`traps`, `smokes`, `artillery`, `night`) |
 | `initModal.js` | modale iniziale: scelta mappa, tipo missione, composizione squadra (4 slot classe) |
 | `tabs.js` | UI mobile a tab (bottom sheet): `switchTab`, `collapseSheet`/`expandSheet`, `updateActionButtons` |
 | `backModal.js` | conferma "torna al menu" (bottone ⌂ / tasto indietro Android) |

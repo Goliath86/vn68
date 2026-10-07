@@ -18,6 +18,7 @@ function getReachable(unit, maxAP) {
       const tile = getTileAt(nc, nr);
       if (!tile || tile.impassable || isOnFire(nc, nr)) continue;
       if (isOccupied(nc, nr, unit.id)) continue;
+      if (isKnownTrap(nc, nr)) continue; // trappole individuate: da aggirare
       const cost = cur.cost + tile.moveCost;
       if (cost > maxAP) continue;
       if (key in visited && visited[key] <= cost) continue;

@@ -519,6 +519,25 @@
                         <div id="squad-picker"></div>
                     </div>
 
+                    <label
+                        id="night-toggle-wrap"
+                        style="
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 8px;
+                            margin: 10px 0;
+                            font-size: 12px;
+                            color: var(--paper-dark);
+                            cursor: pointer;
+                        "
+                    >
+                        <input type="checkbox" id="night-toggle" />
+                        <span data-i18n="modal.night_mission">
+                            🌙 Missione notturna (visibilità ridotta)
+                        </span>
+                    </label>
+
                     <button
                         class="btn modal-start-btn"
                         id="modal-start-btn"
@@ -611,6 +630,8 @@
         <script src="js/saveGame.js"></script>
 
         <script src="js/combat.js"></script>
+
+        <script src="js/mechanics.js"></script>
 
         <script src="js/initModal.js"></script>
 

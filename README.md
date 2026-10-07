@@ -133,7 +133,7 @@ La composizione di default è una per classe, ma puoi portare due assalti e ness
 |---|---|---|---|---|---|---|
 | **Assalto** | 10 | 4 | 3 | 1 | 3 | Fuoco Soppressivo · **Granate ×2** (AoE, ATK5, gittata 3) |
 | **Cecchino** | 7 | 3 | 4 | 0 | 6 | Overwatch (attacca nemici in movimento) — **1 sparo per turno** |
-| **Geniere** | 9 | 3 | 2 | 1 | 3 | Demolizione (bunker/ostacoli, dado ≥4) · Incendio (vegetazione, immediato) |
+| **Geniere** | 9 | 3 | 2 | 1 | 3 | Demolizione (bunker/ostacoli, dado ≥4) · Incendio (vegetazione, immediato) · Disinnesco trappole |
 | **Medico** | 8 | 3 | 1 | 1 | 1 | Primo Soccorso (cura un alleato adiacente) — **ripristina il morale** |
 
 > ATK e Gittata sono quelli dell'arma principale definita in `config.json` (M16, M14, M1911); se `config.json` non definisce armi per la classe si usano i valori base della classe.
@@ -263,6 +263,15 @@ Esempi pratici:
 - Un cecchino (visione 6) che guarda attraverso 3 tile di giungla ha vision residua 3 oltre la giungla.
 - Un assalto (visione 4) non vede un nemico nascosto dietro un bunker, nemmeno se è adiacente.
 - Demolire un muro trasforma un blocco totale in blocco parziale (macerie), aprendo sia un corridoio fisico che un varco visivo.
+
+### Meccaniche tattiche
+
+- **Fiancheggiamento:** se un altro soldato US ha il bersaglio in gittata e in linea di vista da un lato diverso (angolo ≥ 90° rispetto a chi spara), la copertura del bersaglio è **dimezzata** (arrotondata per difetto). Vale per gli attacchi diretti della squadra; il tooltip e il log segnalano quando il bersaglio è fiancheggiato, e la percentuale di colpire ne tiene conto.
+- **Trappole VC (punji e mine):** nascoste sulla mappa. Un soldato che ci passa sopra si ferma lì e subisce danno (punji 2 HP, mina 4 HP). Il **geniere** individua automaticamente le trappole a distanza 1; una trappola individuata è segnata sulla mappa, il movimento la aggira e il geniere può **disinnescarla** con l'abilità speciale (1 AP). I VC ne sono immuni.
+- **Fumogeni:** l'Assalto ha un fumogeno (×1) che crea una cortina di raggio 1 per 2 turni. Il fumo blocca la linea di vista: chi è dentro vede ed è visto solo da distanza 1. Vale anche per i VC, che non possono sparare attraverso il fumo.
+- **Supporto d'artiglieria:** il geniere porta la radio (una sola per squadra, 1 uso). Il colpo si richiede come un'arma ad area (gittata 10) ma **cade all'inizio del turno successivo**, dopo la mossa dei VC, su chiunque si trovi nell'area — soldati US compresi, e anche i VC nascosti nella nebbia. L'area d'impatto in arrivo è segnata in rosso sulla mappa.
+- **Missioni notturne:** attivabili dal briefing (o imposte dalla mappa con `"night": true`). Il raggio visivo di ogni soldato cala di 2 (minimo 1) e i VC si accorgono della squadra da 3 caselle invece di 5. Poiché per sparare serve la linea di vista, di notte anche il cecchino colpisce solo entro la propria visione ridotta.
+- **Morale VC:** un VC sotto il 30% degli HP (una volta per unità) e tutti i VC entro 4 caselle da un comandante caduto vanno **in rotta** per 2 attivazioni: ripiegano lontano dalla squadra cercando copertura e non attaccano (bandiera bianca ⚐ sulla mappa).
 
 ---
 
@@ -470,8 +479,10 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | `ammo` | number o null | Munizioni disponibili; `null` = illimitate |
 | `aoe` | number | (opzionale) Raggio area d'effetto in distanza Manhattan |
 | `minRange` | number | (opzionale, solo armi AoE) Gittata minima in tile; default `aoe + 1`, così chi lancia non è mai nel raggio dell'esplosione |
-| `maxCarriers` | number | (opzionale, solo VC) Max unità per missione che possono portare quest'arma |
+| `maxCarriers` | number | (opzionale) Max unità per missione che possono portare quest'arma (contatori separati per squadra US e VC) |
 | `rangePenalty` | boolean | (opzionale, solo US) Applica la penalità gittata (−1 ATK ogni 2 tile), anche in overwatch; se assente vale `true` solo per il cecchino |
+| `smoke` | number | (opzionale, solo armi AoE) Fumogeno: nessun danno, crea fumo nel raggio `aoe` per N turni |
+| `artillery` | boolean | (opzionale, solo armi AoE) Richiesta d'artiglieria: il colpo cade all'inizio del turno successivo e colpisce anche i VC nascosti |
 
 **Comportamento:**
 
@@ -485,9 +496,9 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 
 | Classe | Arma primaria | Arma secondaria |
 |---|---|---|
-| Assalto | M16 (ATK3, RNG3, ∞) | Granata (ATK5, RNG3, AoE1, ×2) |
+| Assalto | M16 (ATK3, RNG3, ∞) | Granata (ATK5, RNG3, AoE1, ×2) · Fumogeno (RNG3, AoE1, ×1, 2 turni) |
 | Cecchino | M14 (ATK4, RNG6, ∞) | — |
-| Geniere | M16 (ATK2, RNG3, ∞) | — |
+| Geniere | M16 (ATK2, RNG3, ∞) | Radio: artiglieria (ATK6, RNG10, AoE1, ×1, max 1 per squadra) |
 | Medico | M1911 (ATK1, RNG1, ∞) | — |
 | Guerrigliero VC | AK-47 (ATK2, RNG2, ∞) | RPG-7 (ATK4, RNG4, AoE1, ×1, max 1 portatore) |
 | Cecchino VC | Mosin (ATK3, RNG4, ∞) | — |
@@ -604,6 +615,12 @@ Struttura completa con tutti i campi:
   "vcAmbushCount": 2,
   "vcAmbushZones": [{"colMin": 0, "colMax": 3, "rowMin": 0, "rowMax": 3}],
 
+  "trapCount": 3,
+  "trapZones": [{"colMin": 4, "colMax": 12, "rowMin": 0, "rowMax": 11}],
+  "traps": [{"col": 6, "row": 5, "type": "mine"}],
+  "night": false,
+  "nightVisionPenalty": 2,
+
   "supportedMissions": ["recon", "search_destroy", "rescue_pilot", "capture_objective"],
 
   "objectives": {
@@ -654,6 +671,16 @@ Struttura completa con tutti i campi:
   }
 }
 ```
+
+### Campi opzionali: trappole e notte
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `trapCount` | number | Trappole casuali (punji o mina) piazzate a inizio missione; default 0 |
+| `trapZones` | array | Zone `{colMin, colMax, rowMin, rowMax}` per le trappole casuali; se assenti, ovunque ad almeno 4 caselle dalla partenza |
+| `traps` | array | Trappole fisse `{col, row, type, dmg?}`; `type` = `"punji"` (2 HP) o `"mine"` (4 HP) |
+| `night` | boolean | Missione sempre notturna (l'opzione nel briefing viene bloccata) |
+| `nightVisionPenalty` | number | Riduzione del raggio visivo di notte; default 2 |
 
 ### Campi del tile type
 

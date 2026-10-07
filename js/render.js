@@ -65,6 +65,28 @@ function renderMap() {
   // Indicatori missione
   renderMissionMarkers(ctx, ts);
 
+  // Trappole individuate dal geniere
+  for (const trap of G.missionState?.traps || []) {
+    if (!trap.revealed) continue;
+    const { x, y } = tileToScreen(trap.col, trap.row);
+    ctx.strokeStyle = "#ff4422";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([3, 3]);
+    ctx.strokeRect(x + 3, y + 3, ts - 6, ts - 6);
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#ff6644";
+    ctx.font = `bold ${Math.max(10, Math.round(ts * 0.38))}px serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(trap.type === "mine" ? "✸" : "▲", x + ts * 0.5, y + ts * 0.5);
+  }
+
+  // Notte: velo scuro su tutta la mappa (prima del FOW)
+  if (isNight()) {
+    ctx.fillStyle = "rgba(8,12,40,0.38)";
+    ctx.fillRect(G.camX, G.camY, md.cols * ts, md.rows * ts);
+  }
+
   // Fog of War — overlay scuro sui tile fuori visibilità
   if (G.fowEnabled) {
     ctx.fillStyle = "rgba(0,0,0,0.72)";
@@ -102,6 +124,14 @@ function renderMap() {
     ctx.fillRect(x + 2, y + ts - 5, ts - 4, 3);
     ctx.fillStyle = hpRatio > 0.5 ? "#aa4422" : "#882200";
     ctx.fillRect(x + 2, y + ts - 5, (ts - 4) * hpRatio, 3);
+    // VC in rotta: bandiera bianca
+    if (e.routed > 0) {
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `${Math.max(8, Math.round(ts * 0.24))}px serif`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "top";
+      ctx.fillText("⚐", x + ts - 2, y + 2);
+    }
   }
 
   // Unità alleate
@@ -434,6 +464,28 @@ function renderOverlay() {
     ctx.setLineDash([4, 3]);
     strokeRangeOutline(ctx, sx, sy, ts, unitFireRange(sup));
     ctx.setLineDash([]);
+  }
+
+  // Artiglieria richiesta: area d'impatto del colpo in arrivo
+  for (const s of G.missionState?.artillery || []) {
+    ctx.strokeStyle = "rgba(255,60,40,0.85)";
+    ctx.fillStyle = "rgba(255,60,40,0.12)";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    for (let c = 0; c < G.mapData.cols; c++) {
+      for (let r = 0; r < G.mapData.rows; r++) {
+        if (dist({ col: c, row: r }, s) > s.aoe) continue;
+        const { x, y } = tileToScreen(c, r);
+        ctx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
+        ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
+      }
+    }
+    ctx.setLineDash([]);
+    const { x: ax, y: ay } = tileToScreen(s.col, s.row);
+    ctx.font = `${Math.round(ts * 0.42)}px serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("🎯", ax + ts / 2, ay + ts / 2);
   }
 
   // Effetti grafici

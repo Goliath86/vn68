@@ -131,6 +131,7 @@
     { "colMin": 1, "colMax": 12, "rowMin": 7, "rowMax": 10 }
   ],
   "vcCount": 8,
+  "trapCount": 3,
 
   "objectives": {
     "recon": [

@@ -26,7 +26,12 @@ async function resolveCombat(
     : 0;
 
   const atkVal = Math.max(1, (weapon?.atk ?? atkDef.attack) - rangePenalty);
-  const defCover = coverBonus(defender.col, defender.row);
+  // Attacco US: copertura dimezzata se il bersaglio è fiancheggiato
+  const defCover = isEnemy
+    ? coverBonus(defender.col, defender.row)
+    : effectiveCover(attacker, defender);
+  if (!isEnemy && defCover < coverBonus(defender.col, defender.row))
+    log(t("log.flanked", { name: defender.name }), "combat");
   const defStat = isEnemy
     ? (UNIT_CLASSES[defender.cls]?.defense ?? 1)
     : getEnemyStats(defender).defense;
@@ -130,7 +135,7 @@ function attackOdds(attacker, defender, weapon) {
     (weapon?.atk ?? def.attack) - weaponRangePenalty(attacker, weapon, range),
   );
   const defVal =
-    getEnemyStats(defender).defense + coverBonus(defender.col, defender.row);
+    getEnemyStats(defender).defense + effectiveCover(attacker, defender);
   let hits = 0,
     dmgSum = 0;
   for (let a = 1; a <= 6; a++)
@@ -151,8 +156,20 @@ function getEnemyStats(enemy) {
   return { attack: 2, range: 2, defense: 0, move: 3 };
 }
 
-// Risolve un attacco AoE (granata/RPG): dado attacco auto, ogni bersaglio tira difesa singolarmente
-async function resolveAoeCombat(attacker, weapon, tc, tr, isEnemyAttacking) {
+// Risolve un attacco AoE (granata/RPG): dado attacco auto, ogni bersaglio tira difesa singolarmente.
+// hitHidden: colpisce anche i VC nascosti nel FOW (artiglieria)
+async function resolveAoeCombat(
+  attacker,
+  weapon,
+  tc,
+  tr,
+  isEnemyAttacking,
+  hitHidden = false,
+) {
+  // Armi speciali: fumogeno (nessun danno) e richiesta d'artiglieria (colpo ritardato)
+  if (weapon.smoke) return deploySmoke(attacker, weapon, tc, tr);
+  if (weapon.artillery) return scheduleArtillery(attacker, weapon, tc, tr);
+
   const diceVals = rollDice(2);
   const roll = diceSum(diceVals);
   const hit = roll + weapon.atk;
@@ -163,7 +180,9 @@ async function resolveAoeCombat(attacker, weapon, tc, tr, isEnemyAttacking) {
   const defenders = [
     ...G.units.filter(inBlast),
     ...G.enemies.filter(
-      (e) => inBlast(e) && (isEnemyAttacking || isTileVisible(e.col, e.row)),
+      (e) =>
+        inBlast(e) &&
+        (isEnemyAttacking || hitHidden || isTileVisible(e.col, e.row)),
     ),
   ];
 

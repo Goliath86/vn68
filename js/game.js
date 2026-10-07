@@ -32,6 +32,7 @@ async function loadMission(jsonPath) {
 function startGame(
   missionType,
   squadClasses = ["assault", "sniper", "engineer", "medic"],
+  options = {},
 ) {
   history.pushState({ game: true }, "");
 
@@ -45,9 +46,17 @@ function startGame(
   G.overwatchList = [];
   G.suppressList = [];
   G.activeFires = [];
-  G.missionState = { vcCarrierCounts: {} };
+  G.missionState = {
+    vcCarrierCounts: {},
+    night: !!(options.night || G.mapData.night),
+    smokes: [],
+    artillery: [],
+  };
+  G.lastMove = null;
 
   const starts = G.mapData.playerStart;
+  // maxCarriers vale anche per la squadra US (es. una sola radio)
+  const usCarrierCounts = {};
 
   squadClasses.forEach((cls, i) => {
     const def = UNIT_CLASSES[cls];
@@ -69,7 +78,7 @@ function startGame(
       suppressed: false,
       shaken: false,
       carriesPilot: false,
-      weapons: buildWeapons(cls, {}),
+      weapons: buildWeapons(cls, usCarrierCounts),
       weaponIdx: 0,
     });
   });
@@ -122,6 +131,8 @@ function startGame(
 
   // Init missione
   initMissionState(missionType);
+  initTraps();
+  revealTrapsAroundEngineers();
 
   updateUI();
 
@@ -156,6 +167,8 @@ function startGame(
   );
 
   log(t("log.enemy_deployed", { count: spawned }), "enemy");
+
+  if (isNight()) log(t("log.night_mission"), "system");
 
   ambientPlay(G.mapData.ambient);
 

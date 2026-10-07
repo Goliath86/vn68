@@ -36,6 +36,13 @@ function showTooltip(e, col, row) {
     (enemy.hasShot || (G.phase !== "player" && enemy.needReload))
   )
     txt += t("tooltip.enemy_reloading");
+  if (enemy?.routed > 0) txt += t("tooltip.enemy_routed");
+  const trap = trapAt(col, row);
+  if (trap?.revealed) txt += t("tooltip.trap", { trap: trapLabel(trap) });
+  const smoke = (G.missionState?.smokes || []).find(
+    (s) => s.col === col && s.row === row,
+  );
+  if (smoke) txt += t("tooltip.smoke", { turns: smoke.turnsLeft });
   // In modalità attacco (bersaglio singolo): anteprima probabilità di colpire
   if (
     enemy &&
@@ -49,6 +56,7 @@ function showTooltip(e, col, row) {
       pct: Math.round(pHit * 100),
       dmg: expDmg.toFixed(1),
     });
+    if (isFlanked(G.selectedUnit, enemy)) txt += t("tooltip.flanked");
   }
   tt.textContent = txt;
   tt.style.display = "block";

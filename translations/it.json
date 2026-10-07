@@ -144,7 +144,13 @@
     "loading": "Caricamento in corso...",
     "squad_title": "◈ COMPONI LA SQUADRA — click per cambiare classe",
     "resume_title": "PARTITA IN CORSO",
-    "resume_turn": "Turno {turn}"
+    "resume_turn": "Turno {turn}",
+    "night_mission": "🌙 Missione notturna (visibilità ridotta)"
+  },
+
+  "traps": {
+    "punji": "punji",
+    "mine": "mina"
   },
 
   "gameover": {
@@ -214,7 +220,18 @@
     "aoe_attack": "{name} — {weapon}: {targets} bersagli nell'area!",
     "aoe_no_targets": "{name} — {weapon}: nessun bersaglio nell'area",
     "aoe_dice_context": "{weapon} — {name}",
-    "aoe_target_result": "  ↳ {name}: {defBreakdown} → {result}"
+    "aoe_target_result": "  ↳ {name}: {defBreakdown} → {result}",
+    "flanked": "{name} è FIANCHEGGIATO — copertura dimezzata",
+    "night_mission": "Missione notturna: visibilità ridotta per entrambe le parti",
+    "trap_triggered": "{name} finisce in una trappola ({trap})! -{dmg}HP",
+    "trap_revealed": "{name} individua una trappola ({trap}) in ({col},{row})",
+    "trap_disarmed": "{name} disinnesca la trappola ({trap})",
+    "smoke_deployed": "{name} lancia {weapon}: cortina fumogena per {turns} turni",
+    "artillery_called": "{name} chiama l'artiglieria su ({col},{row}) — impatto al prossimo turno",
+    "artillery_impact": "ARTIGLIERIA in arrivo su ({col},{row})!",
+    "vc_routed": "{name} è demoralizzato e ripiega!",
+    "vc_commander_down": "Il comandante è caduto: {count} VC ripiegano!",
+    "vc_retreat": "{name} ripiega (distanza: {dist})"
   },
 
   "weapons": {
@@ -241,7 +258,11 @@
     "unit_append": " | {name} HP:{hp}/{maxHp} AP:{ap}",
     "enemy_append": " | {name} HP:{hp}/{maxHp}",
     "enemy_reloading": " (in ricarica)",
-    "hit_odds": " | Colpo: {pct}% · danno medio {dmg}"
+    "hit_odds": " | Colpo: {pct}% · danno medio {dmg}",
+    "flanked": " · fiancheggiato",
+    "enemy_routed": " (in rotta)",
+    "trap": " | ⚠ Trappola: {trap}",
+    "smoke": " | Fumo ({turns}T)"
   },
 
   "objective_panel": {

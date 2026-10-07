@@ -14,6 +14,15 @@ async function moveUnit(unit, toCol, toRow, apCost) {
   const seenBefore = visibleEnemyIds();
   const missionBefore = JSON.stringify(G.missionState);
   G.lastMove = null;
+
+  // Trappola nascosta lungo il percorso: il movimento si ferma lì
+  const trapHit = hiddenTrapOnPath(unit, toCol, toRow);
+  if (trapHit) {
+    toCol = trapHit.col;
+    toRow = trapHit.row;
+    apCost = Math.min(apCost, trapHit.cost);
+  }
+
   unit.col = toCol;
   unit.row = toRow;
 
@@ -30,6 +39,16 @@ async function moveUnit(unit, toCol, toRow, apCost) {
       ap: apCost,
     }),
   );
+
+  if (trapHit) {
+    triggerTrap(unit, trapHit.trap);
+    if (!unit.alive || G.phase === "gameover") {
+      updateUI();
+      render();
+      return;
+    }
+  }
+  revealTrapsAroundEngineers();
 
   if (G.missionType === "rescue_pilot") {
     const st = G.missionState;

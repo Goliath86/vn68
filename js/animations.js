@@ -31,7 +31,12 @@ function _getTileAnims() {
     row: f.row,
     type: "fire",
   }));
-  return [...global, ...mission, ...fires];
+  const smokes = (G.missionState?.smokes || []).map((s) => ({
+    col: s.col,
+    row: s.row,
+    type: "smokeCloud",
+  }));
+  return [...global, ...mission, ...fires, ...smokes];
 }
 
 function _startTileAnimLoop() {
@@ -68,7 +73,25 @@ function renderTileAnimations(ctx, ts) {
     else if (anim.type === "fire")
       _drawTileFire(ctx, x, y, ts, now, seed0(anim));
     else if (anim.type === "fog") _drawTileFog(ctx, x, y, ts, now, seed0(anim));
+    else if (anim.type === "smokeCloud")
+      _drawSmokeCloud(ctx, x, y, ts, now, seed0(anim));
   }
+}
+
+// ── SMOKE CLOUD — cortina fumogena (fumogeni): velo grigio denso e pulsante
+function _drawSmokeCloud(ctx, x, y, ts, now, seed) {
+  ctx.save();
+  ctx.globalAlpha = 0.62 + 0.08 * Math.sin(now / 900 + seed);
+  ctx.fillStyle = "rgb(170,170,165)";
+  ctx.fillRect(x, y, ts, ts);
+  ctx.globalAlpha = 0.35;
+  ctx.fillStyle = "rgb(215,215,210)";
+  const off = Math.sin(now / 1300 + seed) * ts * 0.08;
+  ctx.beginPath();
+  ctx.arc(x + ts * 0.35 + off, y + ts * 0.4, ts * 0.3, 0, Math.PI * 2);
+  ctx.arc(x + ts * 0.65 - off, y + ts * 0.6, ts * 0.28, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 // ── SMOKE — particle system con gradiente radiale ────────────────────────

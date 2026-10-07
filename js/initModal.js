@@ -153,12 +153,17 @@ async function loadMissionStep(jsonPath) {
       pickerEl.appendChild(slot);
     }
 
+    // Missione notturna: scelta libera, oppure imposta dalla mappa ("night": true)
+    const nightToggle = document.getElementById("night-toggle");
+    nightToggle.checked = !!data.night;
+    nightToggle.disabled = !!data.night;
+
     document.getElementById("modal-start-btn").onclick = async () => {
       if (!selected) return;
       document.getElementById("modal-start-btn").disabled = true;
       await ambientFadeOut(800);
       document.getElementById("modal-overlay").style.display = "none";
-      startGame(selected, [...squadClasses]);
+      startGame(selected, [...squadClasses], { night: nightToggle.checked });
     };
   } catch (err) {
     document.getElementById("map-description").textContent = t(

@@ -29,8 +29,11 @@ function isTileVisibleFromUnit(unit, toCol, toRow) {
   const uc = unit.col,
     ur = unit.row;
   if (uc === toCol && ur === toRow) return true;
-  const vision = UNIT_CLASSES[unit.cls].vision;
-  if (dist(unit, { col: toCol, row: toRow }) > vision) return false;
+  const vision = unitVision(unit);
+  const d = dist(unit, { col: toCol, row: toRow });
+  if (d > vision) return false;
+  // Fumo: chi è dentro vede ed è visto solo da distanza 1
+  if (d > 1 && (isSmoked(uc, ur) || isSmoked(toCol, toRow))) return false;
   const penalty = losRangePenalty(uc, ur, toCol, toRow);
   return dist(unit, { col: toCol, row: toRow }) + penalty <= vision;
 }
@@ -42,6 +45,7 @@ function losRangePenalty(fromCol, fromRow, toCol, toRow) {
   // Controlla solo i tile intermedi (non il tile bersaglio)
   for (let i = 0; i < line.length - 1; i++) {
     const { col, row } = line[i];
+    if (isSmoked(col, row)) return Infinity;
     const key = G.mapData.grid[row]?.[col];
     const td = key ? G.mapData.tileTypes[key] : null;
     if (!td) continue;
@@ -57,7 +61,7 @@ function recomputeVisibility() {
   if (!G.mapData) return;
   for (const u of G.units) {
     if (!u.alive) continue;
-    const vision = UNIT_CLASSES[u.cls].vision;
+    const vision = unitVision(u);
     const rMin = Math.max(0, u.row - vision),
       rMax = Math.min(G.mapData.rows - 1, u.row + vision);
     const cMin = Math.max(0, u.col - vision),

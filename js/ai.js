@@ -12,6 +12,9 @@ async function runEnemyTurn() {
     e.hasShot = false;
   });
 
+  // Morale: VC feriti gravemente o vicini a un comandante caduto vanno in rotta
+  checkVcMorale();
+
   // Rinforzi periodici
   const reinTurn = G.mapData.reinforcementTurn || 99;
   if (G.turn % reinTurn === 0) {
@@ -42,6 +45,7 @@ async function runEnemyTurn() {
     log(t("log.fire_out", { col: f.col, row: f.row }), "system"),
   );
   G.activeFires = G.activeFires.filter((f) => f.turnsLeft > 0);
+  tickSmokes();
 
   // Fine turno nemico → inizia nuovo turno
   log(t("log.vc_turn_end", { turn: G.turn }), "turn");
@@ -75,6 +79,10 @@ async function runEnemyTurn() {
       u.hasShot = false;
     }
   });
+
+  // Colpi d'artiglieria richiesti nel turno precedente: cadono ora
+  await resolveArtillery();
+  if (G.phase === "gameover") return;
 
   saveGame();
 
@@ -259,7 +267,12 @@ async function sniperActivation(enemy, stats) {
   const range = vcEffRange(enemy, stats);
   let target = nearestLiveUnit(enemy);
 
-  if (vcCanShoot(enemy) && enemy.ap >= 1 && dist(enemy, target) <= range) {
+  if (
+    vcCanShoot(enemy) &&
+    enemy.ap >= 1 &&
+    dist(enemy, target) <= range &&
+    !smokeBlocks(enemy, target)
+  ) {
     checkOverwatch(enemy);
     checkSuppression(enemy);
     if (enemy.alive && enemy.ap >= 1) {
@@ -278,7 +291,8 @@ async function sniperActivation(enemy, stats) {
     target &&
     vcCanShoot(enemy) &&
     enemy.ap >= 1 &&
-    dist(enemy, target) <= range
+    dist(enemy, target) <= range &&
+    !smokeBlocks(enemy, target)
   ) {
     await vcShoot(enemy, target, "log.vc_fire");
   }
@@ -298,22 +312,25 @@ async function enemyActivation(enemy) {
   const d = dist(enemy, target);
   const stats = getEnemyStats(enemy);
 
-  // Allerta se a distanza visiva
+  // Allerta se a distanza visiva (ridotta di notte)
   // TODO: check LOS between enemy and target
-  if (d <= 5 && !enemy.alerted) {
+  if (d <= vcAlertDistance() && !enemy.alerted) {
     enemy.alerted = true;
     addFX("spot", { col: enemy.col, row: enemy.row }, 1200);
     propagateAlert(enemy);
   }
 
-  if (enemy.alerted && enemy.cls === "sniper_vc") {
+  if (enemy.routed > 0) {
+    // Morale a pezzi: ripiega senza attaccare
+    await routedActivation(enemy, stats);
+  } else if (enemy.alerted && enemy.cls === "sniper_vc") {
     await sniperActivation(enemy, stats);
   } else if (enemy.alerted) {
     // Gittata effettiva: considera tutte le armi disponibili
     const effRange = vcEffRange(enemy, stats);
 
-    // Se in gittata (con qualsiasi arma): attacca
-    if (d <= effRange && enemy.ap >= 1) {
+    // Se in gittata (con qualsiasi arma) e senza fumo in mezzo: attacca
+    if (d <= effRange && enemy.ap >= 1 && !smokeBlocks(enemy, target)) {
       checkOverwatch(enemy);
       checkSuppression(enemy);
       if (enemy.ap >= 1) {
@@ -373,7 +390,11 @@ async function enemyActivation(enemy) {
           // Attacca se ora in gittata (con qualsiasi arma)
           const newEffRange = vcEffRange(enemy, stats);
 
-          if (dist(enemy, target) <= newEffRange && enemy.ap >= 1) {
+          if (
+            dist(enemy, target) <= newEffRange &&
+            enemy.ap >= 1 &&
+            !smokeBlocks(enemy, target)
+          ) {
             await vcShoot(enemy, target, "log.vc_fire");
           }
         }

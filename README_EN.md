@@ -133,7 +133,7 @@ The default composition is one of each class, but you can bring two Assaults and
 |---|---|---|---|---|---|---|
 | **Assault** | 10 | 4 | 3 | 1 | 3 | Suppressive Fire · **Grenades ×2** (AoE, ATK5, range 3) |
 | **Sniper** | 7 | 3 | 4 | 0 | 6 | Overwatch (fires at moving enemies) — **1 shot per turn** |
-| **Engineer** | 9 | 3 | 2 | 1 | 3 | Demolition (bunkers/obstacles, roll ≥4) · Fire (vegetation, immediate) |
+| **Engineer** | 9 | 3 | 2 | 1 | 3 | Demolition (bunkers/obstacles, roll ≥4) · Fire (vegetation, immediate) · Trap disarming |
 | **Medic** | 8 | 3 | 1 | 1 | 1 | First Aid (heals an adjacent ally) — **restores morale** |
 
 > ATK and Range are those of the primary weapon defined in `config.json` (M16, M14, M1911); if `config.json` defines no weapons for the class, the class base values are used.
@@ -264,6 +264,15 @@ Practical examples:
 - A Sniper (vision 6) looking through 3 jungle tiles has 3 remaining vision beyond the jungle.
 - An Assault (vision 4) cannot see an enemy hiding behind a bunker, even if adjacent.
 - Demolishing a wall turns a full block into a partial one (rubble), opening both a physical corridor and a visual gap.
+
+### Tactical Mechanics
+
+- **Flanking:** if another US soldier has the target in range and line of sight from a different side (angle ≥ 90° from the shooter), the target's cover is **halved** (rounded down). It applies to the squad's direct attacks; the tooltip and the log flag a flanked target, and the hit chance accounts for it.
+- **VC traps (punji and mines):** hidden on the map. A soldier walking over one stops there and takes damage (punji 2 HP, mine 4 HP). The **Engineer** automatically spots traps at distance 1; a spotted trap is marked on the map, movement routes around it and the Engineer can **disarm** it with the special ability (1 AP). VC are immune.
+- **Smoke grenades:** the Assault carries one smoke grenade (×1) creating a radius-1 screen for 2 turns. Smoke blocks line of sight: anyone inside sees and is seen only from distance 1. This applies to VC as well, who cannot fire through smoke.
+- **Artillery support:** the Engineer carries the radio (one per squad, 1 use). The strike is called like an area weapon (range 10) but **lands at the start of the next turn**, after the VC move, on anyone in the area — US soldiers included, and VC hidden in the fog too. The incoming impact area is marked in red on the map.
+- **Night missions:** enabled from the briefing (or forced by the map with `"night": true`). Each soldier's vision drops by 2 (minimum 1) and VC notice the squad from 3 tiles instead of 5. Since firing requires line of sight, at night even the Sniper can only hit within its reduced vision.
+- **VC morale:** a VC below 30% HP (once per unit) and every VC within 4 tiles of a fallen commander become **routed** for 2 activations: they fall back away from the squad looking for cover and do not attack (white flag ⚐ on the map).
 
 ---
 
@@ -471,8 +480,10 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | `ammo` | number or null | Available ammo; `null` = unlimited |
 | `aoe` | number | (optional) Area-of-effect radius in Manhattan distance |
 | `minRange` | number | (optional, AoE weapons only) Minimum range in tiles; defaults to `aoe + 1` so the thrower is never inside the blast |
-| `maxCarriers` | number | (optional, VC only) Max units per mission that can carry this weapon |
+| `maxCarriers` | number | (optional) Max units per mission that can carry this weapon (separate counters for the US squad and the VC) |
 | `rangePenalty` | boolean | (optional, US only) Applies the range penalty (−1 ATK every 2 tiles), overwatch included; when absent it is `true` only for the sniper |
+| `smoke` | number | (optional, AoE weapons only) Smoke grenade: no damage, creates smoke within `aoe` for N turns |
+| `artillery` | boolean | (optional, AoE weapons only) Artillery call: the strike lands at the start of the next turn and also hits hidden VC |
 
 **Behavior:**
 
@@ -486,9 +497,9 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 
 | Class | Primary weapon | Secondary weapon |
 |---|---|---|
-| Assault | M16 (ATK3, RNG3, ∞) | Grenade (ATK5, RNG3, AoE1, ×2) |
+| Assault | M16 (ATK3, RNG3, ∞) | Grenade (ATK5, RNG3, AoE1, ×2) · Smoke (RNG3, AoE1, ×1, 2 turns) |
 | Sniper | M14 (ATK4, RNG6, ∞) | — |
-| Engineer | M16 (ATK2, RNG3, ∞) | — |
+| Engineer | M16 (ATK2, RNG3, ∞) | Radio: artillery (ATK6, RNG10, AoE1, ×1, max 1 per squad) |
 | Medic | M1911 (ATK1, RNG1, ∞) | — |
 | VC Guerrilla | AK-47 (ATK2, RNG2, ∞) | RPG-7 (ATK4, RNG4, AoE1, ×1, max 1 carrier) |
 | VC Sniper | Mosin (ATK3, RNG4, ∞) | — |
@@ -605,6 +616,12 @@ Full structure with all fields:
   "vcAmbushCount": 2,
   "vcAmbushZones": [{"colMin": 0, "colMax": 3, "rowMin": 0, "rowMax": 3}],
 
+  "trapCount": 3,
+  "trapZones": [{"colMin": 4, "colMax": 12, "rowMin": 0, "rowMax": 11}],
+  "traps": [{"col": 6, "row": 5, "type": "mine"}],
+  "night": false,
+  "nightVisionPenalty": 2,
+
   "supportedMissions": ["recon", "search_destroy", "rescue_pilot", "capture_objective"],
 
   "objectives": {
@@ -655,6 +672,16 @@ Full structure with all fields:
   }
 }
 ```
+
+### Optional fields: traps and night
+
+| Field | Type | Description |
+|---|---|---|
+| `trapCount` | number | Random traps (punji or mine) placed at mission start; default 0 |
+| `trapZones` | array | Zones `{colMin, colMax, rowMin, rowMax}` for random traps; if absent, anywhere at least 4 tiles from the start |
+| `traps` | array | Fixed traps `{col, row, type, dmg?}`; `type` = `"punji"` (2 HP) or `"mine"` (4 HP) |
+| `night` | boolean | Mission is always at night (the briefing option is locked) |
+| `nightVisionPenalty` | number | Vision reduction at night; default 2 |
 
 ### Tile Type Fields
 

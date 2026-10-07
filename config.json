@@ -43,6 +43,16 @@
         "ammo": 2,
         "aoe": 1,
         "sound": "assets/grenade.mp3"
+      },
+      {
+        "id": "smoke",
+        "label": "Fumogeno",
+        "labelEn": "Smoke",
+        "atk": 0,
+        "range": 3,
+        "ammo": 1,
+        "aoe": 1,
+        "smoke": 2
       }
     ],
     "sniper": [
@@ -64,6 +74,19 @@
         "atk": 2,
         "range": 3,
         "sound": "assets/m16.mp3"
+      },
+      {
+        "id": "radio",
+        "label": "Radio: artiglieria",
+        "labelEn": "Radio: artillery",
+        "atk": 6,
+        "range": 10,
+        "ammo": 1,
+        "aoe": 1,
+        "minRange": 2,
+        "artillery": true,
+        "maxCarriers": 1,
+        "sound": "assets/grenade.mp3"
       }
     ],
     "medic": [
