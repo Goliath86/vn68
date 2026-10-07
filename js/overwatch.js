@@ -30,12 +30,10 @@ function checkOverwatch(enemy) {
 
       ow.hasShot = true;
 
+      const owWeapon = unitFireWeapon(ow);
       const owRange = dist(ow, enemy);
-      const owPenalty = Math.floor((owRange - 1) / 2);
-      const owAtk = Math.max(
-        1,
-        (unitFireWeapon(ow)?.atk ?? owDef.attack) - owPenalty,
-      );
+      const owPenalty = weaponRangePenalty(ow, owWeapon, owRange);
+      const owAtk = Math.max(1, (owWeapon?.atk ?? owDef.attack) - owPenalty);
 
       if (owPenalty > 0)
         log(
@@ -50,7 +48,11 @@ function checkOverwatch(enemy) {
       const dv = rollDice(2);
 
       const roll = diceSum(dv) + owAtk;
-      const sv = rollD6() + coverBonus(enemy.col, enemy.row);
+      // Stessa formula di resolveCombat: DEF + copertura + 1d6
+      const sv =
+        rollD6() +
+        getEnemyStats(enemy).defense +
+        coverBonus(enemy.col, enemy.row);
 
       const dmg = Math.max(0, roll - sv);
       if (dmg > 0) {
@@ -66,6 +68,8 @@ function checkOverwatch(enemy) {
             }),
             "combat",
           );
+          if (G.missionType === "search_destroy")
+            G.missionState.kills = (G.missionState.kills || 0) + 1;
           addFX("death", { col: enemy.col, row: enemy.row }, 1100);
         }
       }

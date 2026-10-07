@@ -20,9 +20,10 @@ async function resolveCombat(
     return false;
   }
 
-  // Penalità gittata cecchino: -1 ATK ogni 2 tile di distanza
-  const rangePenalty =
-    !isEnemy && attacker.cls === "sniper" ? Math.floor((range - 1) / 2) : 0;
+  // Penalità gittata (armi con rangePenalty, default cecchino): -1 ATK ogni 2 tile
+  const rangePenalty = !isEnemy
+    ? weaponRangePenalty(attacker, weapon, range)
+    : 0;
 
   const atkVal = Math.max(1, (weapon?.atk ?? atkDef.attack) - rangePenalty);
   const defCover = coverBonus(defender.col, defender.row);
@@ -133,16 +134,15 @@ async function resolveAoeCombat(attacker, weapon, tc, tr, isEnemyAttacking) {
   const roll = diceSum(diceVals);
   const hit = roll + weapon.atk;
 
-  const defenders = isEnemyAttacking
-    ? G.units.filter(
-        (u) => u.alive && dist(u, { col: tc, row: tr }) <= weapon.aoe,
-      )
-    : G.enemies.filter(
-        (e) =>
-          e.alive &&
-          dist(e, { col: tc, row: tr }) <= weapon.aoe &&
-          isTileVisible(e.col, e.row),
-      );
+  // L'esplosione colpisce chiunque nel raggio, US e VC (fuoco amico incluso).
+  // Sui lanci del giocatore i VC nascosti nel FOW restano esclusi per non rivelarli.
+  const inBlast = (x) => x.alive && dist(x, { col: tc, row: tr }) <= weapon.aoe;
+  const defenders = [
+    ...G.units.filter(inBlast),
+    ...G.enemies.filter(
+      (e) => inBlast(e) && (isEnemyAttacking || isTileVisible(e.col, e.row)),
+    ),
+  ];
 
   sfxShoot(attacker.cls, weapon);
   addFX("explosion", { col: tc, row: tr }, 1300);
@@ -171,8 +171,9 @@ async function resolveAoeCombat(attacker, weapon, tc, tr, isEnemyAttacking) {
 
   let anyKill = false;
   for (const def of defenders) {
+    const isUS = G.units.includes(def);
     const defCover = coverBonus(def.col, def.row);
-    const defStat = isEnemyAttacking
+    const defStat = isUS
       ? (UNIT_CLASSES[def.cls]?.defense ?? 1)
       : getEnemyStats(def).defense;
     const defDice = rollD6();
@@ -202,11 +203,11 @@ async function resolveAoeCombat(attacker, weapon, tc, tr, isEnemyAttacking) {
         def.alive = false;
         sfx("death");
         log(t("log.unit_eliminated", { name: def.name }), "combat");
-        if (!isEnemyAttacking && G.missionType === "search_destroy")
+        if (!isUS && !isEnemyAttacking && G.missionType === "search_destroy")
           G.missionState.kills = (G.missionState.kills || 0) + 1;
         addFX("death", { col: def.col, row: def.row }, 1100);
         anyKill = true;
-      } else if (isEnemyAttacking && !def.shaken) {
+      } else if (isUS && !def.shaken) {
         const maxHp = UNIT_CLASSES[def.cls]?.hp ?? def.maxHp;
         if (def.hp / maxHp < 0.3) {
           def.shaken = true;
@@ -223,5 +224,6 @@ async function resolveAoeCombat(attacker, weapon, tc, tr, isEnemyAttacking) {
   render();
 
   if (anyKill) await sleep(500);
-  if (!isEnemyAttacking) checkVictory();
+  // Lancio del giocatore: anche sconfitta possibile (fuoco amico sull'ultima unità)
+  if (!isEnemyAttacking) checkGameOver();
 }

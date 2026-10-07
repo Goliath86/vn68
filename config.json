@@ -52,6 +52,7 @@
         "labelEn": "M14",
         "atk": 4,
         "range": 6,
+        "rangePenalty": true,
         "sound": "assets/sniper_us.mp3"
       }
     ],

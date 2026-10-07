@@ -92,7 +92,7 @@ Danno         = max(0, tiro attacco − tiro difesa)
 
 Il danno viene sottratto agli HP del difensore. Se gli HP scendono a 0, l'unità viene eliminata.
 
-L'attacco è possibile solo entro la **gittata** dell'unità. Se il nemico è fuori gittata, l'attacco fallisce.
+L'attacco è possibile solo entro la **gittata** dell'unità e se l'unità stessa ha il bersaglio in **linea di vista** (non basta che lo veda un compagno). Se il nemico è fuori gittata, l'attacco fallisce.
 
 Il **cecchino** subisce una penalità crescente all'ATK in base alla distanza dal bersaglio:
 
@@ -471,6 +471,7 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | `aoe` | number | (opzionale) Raggio area d'effetto in distanza Manhattan |
 | `minRange` | number | (opzionale, solo armi AoE) Gittata minima in tile; default `aoe + 1`, così chi lancia non è mai nel raggio dell'esplosione |
 | `maxCarriers` | number | (opzionale, solo VC) Max unità per missione che possono portare quest'arma |
+| `rangePenalty` | boolean | (opzionale, solo US) Applica la penalità gittata (−1 ATK ogni 2 tile), anche in overwatch; se assente vale `true` solo per il cecchino |
 
 **Comportamento:**
 

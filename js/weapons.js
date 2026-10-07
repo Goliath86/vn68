@@ -29,6 +29,19 @@ function unitFireRange(unit) {
 }
 
 /**
+ * Penalità gittata (-1 ATK ogni 2 tile): campo `rangePenalty` dell'arma,
+ * fallback sulla classe cecchino se l'arma non lo specifica
+ * @param {object} unit
+ * @param {object|null} weapon
+ * @param {number} range distanza dal bersaglio
+ * @returns {number}
+ */
+function weaponRangePenalty(unit, weapon, range) {
+  const applies = weapon?.rangePenalty ?? unit.cls === "sniper";
+  return applies ? Math.floor((range - 1) / 2) : 0;
+}
+
+/**
  * Gittata minima di un'arma: per le armi AoE, se non specificata, è aoe + 1
  * così chi lancia non può mai trovarsi nel raggio dell'esplosione
  * @param {object|null} weapon

@@ -92,7 +92,7 @@ Damage       = max(0, attack roll − defense roll)
 
 Damage is subtracted from the defender's HP. If HP reaches 0, the unit is eliminated.
 
-Attacks are only possible within the unit's **range**. Enemies out of range cannot be targeted.
+Attacks are only possible within the unit's **range** and when the unit itself has **line of sight** to the target (a teammate spotting it is not enough). Enemies out of range cannot be targeted.
 
 The **Sniper** suffers a growing ATK penalty based on distance to the target:
 
@@ -472,6 +472,7 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | `aoe` | number | (optional) Area-of-effect radius in Manhattan distance |
 | `minRange` | number | (optional, AoE weapons only) Minimum range in tiles; defaults to `aoe + 1` so the thrower is never inside the blast |
 | `maxCarriers` | number | (optional, VC only) Max units per mission that can carry this weapon |
+| `rangePenalty` | boolean | (optional, US only) Applies the range penalty (−1 ATK every 2 tiles), overwatch included; when absent it is `true` only for the sniper |
 
 **Behavior:**
 
