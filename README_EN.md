@@ -131,11 +131,12 @@ The default composition is one of each class, but you can bring two Assaults and
 
 | Class | HP | Move | ATK | DEF | Range | Special Ability |
 |---|---|---|---|---|---|---|
-| **Assault** | 10 | 4 | 3 | 1 | 2 | Suppressive Fire · **Grenades ×2** (AoE, ATK5, range 3) |
+| **Assault** | 10 | 4 | 3 | 1 | 3 | Suppressive Fire · **Grenades ×2** (AoE, ATK5, range 3) |
 | **Sniper** | 7 | 3 | 4 | 0 | 6 | Overwatch (fires at moving enemies) — **1 shot per turn** |
-| **Engineer** | 9 | 3 | 2 | 1 | 2 | Demolition (bunkers/obstacles, roll ≥4) · Fire (vegetation, immediate) |
+| **Engineer** | 9 | 3 | 2 | 1 | 3 | Demolition (bunkers/obstacles, roll ≥4) · Fire (vegetation, immediate) |
 | **Medic** | 8 | 3 | 1 | 1 | 1 | First Aid (heals an adjacent ally) — **restores morale** |
 
+> ATK and Range are those of the primary weapon defined in `config.json` (M16, M14, M1911); if `config.json` defines no weapons for the class, the class base values are used.
 > The Assault always carries the M16 as primary weapon (unlimited) plus 2 grenades. Pressing "Attack" shows the weapon picker.
 > The medic can't heal himself.
 
@@ -216,8 +217,8 @@ If Fog of War is **disabled**, the pilot's position is visible from the start (c
 
 ### Special Abilities — Details
 
-- **Suppressive Fire (Assault):** the Assault enters suppressive fire mode (costs 1 AP). During the enemy phase, any VC that is in or moves into range 2 is pinned: AP zeroed, cannot attack. The suppression zone is visible on the overlay as a dashed orange circle.
-- **Overwatch (Sniper):** enters surveillance mode (costs 1 AP). If during the enemy phase a VC enters the sniper's range (6 tiles) **and** line of sight, the sniper fires automatically with 2d6 + ATK. The sniper can make **one attack per enemy turn** — hitting the first valid target in activation order. The **range penalty** applies in overwatch too. Enemies behind walls, bunkers, or dense jungle are not intercepted even if in range. After firing, the sniper need to wait for the next enemy turn to fire again.
+- **Suppressive Fire (Assault):** the Assault enters suppressive fire mode (costs 1 AP). During the enemy phase, any VC that is in or moves into the range of the primary weapon (3 tiles with the M16) is pinned: AP zeroed, cannot attack. The suppression zone is visible on the overlay as a dashed orange outline.
+- **Overwatch (Sniper):** enters surveillance mode (costs 1 AP). If during the enemy phase a VC enters the range of the sniper's primary weapon (6 tiles with the M14) **and** line of sight, the sniper fires automatically with 2d6 + ATK. The sniper can make **one attack per enemy turn** — hitting the first valid target in activation order. The **range penalty** applies in overwatch too. Enemies behind walls, bunkers, or dense jungle are not intercepted even if in range. After firing, the sniper need to wait for the next enemy turn to fire again.
 - **Demolition / Fire (Engineer):** on an adjacent tile with a bunker or obstacle, demolishes it (roll ≥4). On a tile with vegetation (jungle, village, garden), sets it on fire immediately. Fire blocks movement for **2 turns** — for both the squad and VC — and shows the flame animation on the map.
 - **First Aid (Medic):** restores HP to an adjacent ally but not to the medic itself.
 

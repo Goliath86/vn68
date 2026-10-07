@@ -6,7 +6,7 @@ function checkOverwatch(enemy) {
     if (!isTileVisibleFromUnit(ow, enemy.col, enemy.row)) continue;
     const owDef = UNIT_CLASSES[ow.cls];
 
-    if (dist(ow, enemy) <= owDef.range) {
+    if (dist(ow, enemy) <= unitFireRange(ow)) {
       ow.overwatchFired = true;
       log(
         t("log.overwatch_fire", {
@@ -32,7 +32,10 @@ function checkOverwatch(enemy) {
 
       const owRange = dist(ow, enemy);
       const owPenalty = Math.floor((owRange - 1) / 2);
-      const owAtk = Math.max(1, owDef.attack - owPenalty);
+      const owAtk = Math.max(
+        1,
+        (unitFireWeapon(ow)?.atk ?? owDef.attack) - owPenalty,
+      );
 
       if (owPenalty > 0)
         log(

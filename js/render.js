@@ -403,13 +403,10 @@ function renderOverlay() {
     ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
     ctx.setLineDash([]);
 
-    // Cerchio raggio attacco
-    const def = UNIT_CLASSES[u.cls];
-    ctx.strokeStyle = "rgba(240,192,48,0.18)";
+    // Contorno raggio attacco: gittata dell'arma (come in combattimento)
+    ctx.strokeStyle = "rgba(240,192,48,0.35)";
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(x + ts / 2, y + ts / 2, def.range * ts, 0, Math.PI * 2);
-    ctx.stroke();
+    strokeRangeOutline(ctx, x, y, ts, unitFireRange(u));
   }
 
   // Zone soppressione (assalti in fuoco soppressivo)
@@ -419,20 +416,43 @@ function renderOverlay() {
     ctx.strokeStyle = "rgba(255,165,50,0.55)";
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 3]);
-    ctx.beginPath();
-    ctx.arc(
-      sx + ts / 2,
-      sy + ts / 2,
-      UNIT_CLASSES[sup.cls].range * ts,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
+    strokeRangeOutline(ctx, sx, sy, ts, unitFireRange(sup));
     ctx.setLineDash([]);
   }
 
   // Effetti grafici
   renderEffects(ctx, ts);
+}
+
+// Traccia il bordo esterno dei tile entro `range` (distanza Manhattan, coerente con dist())
+// attorno al tile con angolo schermo (x, y). Stile/dash vanno impostati dal chiamante.
+function strokeRangeOutline(ctx, x, y, ts, range) {
+  const inRange = (dc, dr) => Math.abs(dc) + Math.abs(dr) <= range;
+  ctx.beginPath();
+  for (let dc = -range; dc <= range; dc++) {
+    for (let dr = -range; dr <= range; dr++) {
+      if (!inRange(dc, dr)) continue;
+      const tx = x + dc * ts,
+        ty = y + dr * ts;
+      if (!inRange(dc, dr - 1)) {
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(tx + ts, ty);
+      }
+      if (!inRange(dc, dr + 1)) {
+        ctx.moveTo(tx, ty + ts);
+        ctx.lineTo(tx + ts, ty + ts);
+      }
+      if (!inRange(dc - 1, dr)) {
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(tx, ty + ts);
+      }
+      if (!inRange(dc + 1, dr)) {
+        ctx.moveTo(tx + ts, ty);
+        ctx.lineTo(tx + ts, ty + ts);
+      }
+    }
+  }
+  ctx.stroke();
 }
 
 function renderUnitsOnMap() {

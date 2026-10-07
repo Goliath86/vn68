@@ -4,7 +4,7 @@ function checkSuppression(enemy) {
   for (const sup of G.suppressList) {
     if (!sup.alive) continue;
 
-    if (dist(sup, enemy) <= UNIT_CLASSES[sup.cls].range) {
+    if (dist(sup, enemy) <= unitFireRange(sup)) {
       enemy.suppressed = true;
       enemy.ap = 0;
 

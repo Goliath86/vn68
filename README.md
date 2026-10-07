@@ -131,11 +131,12 @@ La composizione di default è una per classe, ma puoi portare due assalti e ness
 
 | Classe | HP | Movimento | ATK | DEF | Gittata | Abilità Speciale |
 |---|---|---|---|---|---|---|
-| **Assalto** | 10 | 4 | 3 | 1 | 2 | Fuoco Soppressivo · **Granate ×2** (AoE, ATK5, gittata 3) |
+| **Assalto** | 10 | 4 | 3 | 1 | 3 | Fuoco Soppressivo · **Granate ×2** (AoE, ATK5, gittata 3) |
 | **Cecchino** | 7 | 3 | 4 | 0 | 6 | Overwatch (attacca nemici in movimento) — **1 sparo per turno** |
-| **Geniere** | 9 | 3 | 2 | 1 | 2 | Demolizione (bunker/ostacoli, dado ≥4) · Incendio (vegetazione, immediato) |
+| **Geniere** | 9 | 3 | 2 | 1 | 3 | Demolizione (bunker/ostacoli, dado ≥4) · Incendio (vegetazione, immediato) |
 | **Medico** | 8 | 3 | 1 | 1 | 1 | Primo Soccorso (cura un alleato adiacente) — **ripristina il morale** |
 
+> ATK e Gittata sono quelli dell'arma principale definita in `config.json` (M16, M14, M1911); se `config.json` non definisce armi per la classe si usano i valori base della classe.
 > L'assalto ha sempre il fucile M16 come arma primaria (illimitata) più 2 granate. Premendo "Attacca" appare il selettore arma.
 
 ---
@@ -215,8 +216,8 @@ Se la Fog of War è **disattivata**, la posizione del pilota è visibile fin dal
 
 ### Abilità Speciali — Dettagli
 
-- **Fuoco Soppressivo (Assalto):** l'assalto entra in modalità di fuoco soppressivo (costo 1 AP). Durante la fase nemica, qualsiasi VC che si trova o si sposta entro gittata 2 viene bloccato: AP azzerati, non può attaccare. La zona di soppressione è visibile sull'overlay con un cerchio arancione tratteggiato.
-- **Overwatch (Cecchino):** entra in modalità sorveglianza (costo 1 AP). Se durante la fase nemica un VC entra nel raggio di gittata (6 tile) **e** nel cono visivo del cecchino, questi spara automaticamente con 2d6 + ATK. Il cecchino può effettuare **un solo attacco per turno nemico** — colpisce il primo nemico valido in ordine di attivazione. La **penalità gittata** si applica anche in overwatch. Nemici dietro muri, bunker o giungla fitta non vengono intercettati anche se a distanza.
+- **Fuoco Soppressivo (Assalto):** l'assalto entra in modalità di fuoco soppressivo (costo 1 AP). Durante la fase nemica, qualsiasi VC che si trova o si sposta entro la gittata dell'arma principale (3 tile con l'M16) viene bloccato: AP azzerati, non può attaccare. La zona di soppressione è visibile sull'overlay con un contorno arancione tratteggiato.
+- **Overwatch (Cecchino):** entra in modalità sorveglianza (costo 1 AP). Se durante la fase nemica un VC entra nella gittata dell'arma principale (6 tile con l'M14) **e** nel cono visivo del cecchino, questi spara automaticamente con 2d6 + ATK. Il cecchino può effettuare **un solo attacco per turno nemico** — colpisce il primo nemico valido in ordine di attivazione. La **penalità gittata** si applica anche in overwatch. Nemici dietro muri, bunker o giungla fitta non vengono intercettati anche se a distanza.
 - **Demolizione / Incendio (Geniere):** su un tile adiacente con bunker o ostacolo, demolisce (dado ≥4). Su un tile con vegetazione (giungla, villaggio, giardino), lo incendia immediatamente. Il fuoco blocca il passaggio per **2 turni** — sia per la squadra che per i VC — e si vede sulla mappa con l'animazione fiamme.
 - **Primo Soccorso (Medico):** ripristina HP a un alleato adiacente.
 
