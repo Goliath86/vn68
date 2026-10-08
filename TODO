@@ -4,3 +4,7 @@ Sniper: if sniper shoot on one turn, the next turn he can use overwatch or move 
 
 Bug: on "Resume" card [object Object] text -> DONE
 Bug: on "Resume" game does not appear the name and type of the mission -> DONE
+
+UX: migliorare tile di default per disegno mappa
+
+Gameplay: generazione missione procedurale con supporto al salvataggio
