@@ -678,51 +678,121 @@ function _drawEffect(ctx, ts, fx, p) {
     }
 
     case "explosion": {
-      const { col, row } = fx.data;
-      const { x, y } = tileToScreen(col, row);
-      const cx = x + ts * 0.5,
-        cy = y + ts * 0.5;
-      // Flash centrale
-      if (p < 0.25) {
-        const ft = p / 0.25;
-        ctx.fillStyle = `rgba(255,240,150,${(1 - ft) * 0.95})`;
-        ctx.beginPath();
-        ctx.arc(cx, cy, ts * 0.65 * (1 - ft * 0.5), 0, Math.PI * 2);
-        ctx.fill();
-      }
-      // Anello espansivo
-      const ringR = ts * 1.3 * ease;
-      const ringA = p < 0.5 ? (1 - p * 2) * 0.8 : 0;
-      if (ringA > 0) {
-        ctx.strokeStyle = `rgba(255,200,50,${ringA})`;
-        ctx.lineWidth = Math.max(2, ts * 0.07);
-        ctx.beginPath();
-        ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      // Detriti radiali
-      for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2;
-        const r = ts * 0.8 * ease;
-        const px2 = cx + Math.cos(angle) * r,
-          py2 = cy + Math.sin(angle) * r;
-        const pa = p < 0.6 ? 0.9 : 0.9 * (1 - (p - 0.6) / 0.4);
-        ctx.fillStyle = `rgba(255,${100 + i * 18},30,${pa})`;
-        ctx.beginPath();
-        ctx.arc(px2, py2, Math.max(2, ts * 0.04), 0, Math.PI * 2);
-        ctx.fill();
-      }
-      // Testo BOOM
-      if (p > 0.1 && p < 0.72) {
-        const ta = p < 0.4 ? 1 : 1 - (p - 0.4) / 0.32;
-        ctx.fillStyle = `rgba(255,240,80,${ta})`;
-        ctx.font = `bold ${Math.round(ts * 0.33)}px 'Oswald'`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(t("fx.explosion"), cx, cy - ts * 0.3 * p);
-      }
+      _drawExplosion(ctx, ts, fx.data, p);
       break;
     }
   }
   ctx.restore();
+}
+
+// ── EXPLOSION — granate, RPG, artiglieria, mine ─────────────────────────
+// Fasi: lampo → onda d'urto → palla di fuoco che si raffredda in fumo, con
+// scie di scintille, detriti e bruciatura sul terreno. La dimensione segue il
+// raggio AoE dell'arma (data.aoe, default 1 per le mine).
+const EXPLOSION_PUFFS = 9;
+const EXPLOSION_SPARKS = 12;
+const EXPLOSION_DEBRIS = 10;
+
+function _drawExplosion(ctx, ts, data, p) {
+  const { col, row } = data;
+  const { x, y } = tileToScreen(col, row);
+  const cx = x + ts * 0.5,
+    cy = y + ts * 0.5;
+  const R = ts * (0.55 + 0.4 * (data.aoe || 1)); // raggio palla di fuoco
+  const seed = col * 31 + row * 57;
+  const out = 1 - (1 - p) ** 3; // espansione rapida che rallenta
+  const fadeIn = (a, b) => Math.min(1, Math.max(0, (p - a) / (b - a)));
+
+  // 1) Bruciatura sul terreno: compare subito, sparisce sul finale
+  _smokePuff(ctx, cx, cy, R * 0.75, "20,14,8", 0.55 * fadeIn(0, 0.08) * (1 - fadeIn(0.7, 1)));
+
+  // 2) Fumo: la palla di fuoco si raffredda in sbuffi scuri che salgono
+  const smokeA = fadeIn(0.15, 0.4) * (1 - fadeIn(0.55, 1)) * 0.6;
+  for (let i = 0; i < EXPLOSION_PUFFS; i++) {
+    const h = seed + i * 11;
+    const ang = (i / EXPLOSION_PUFFS) * Math.PI * 2 + _hash01(h) * 0.6;
+    const d = R * (0.25 + _hash01(h + 1) * 0.35) * out;
+    const r = R * (0.35 + _hash01(h + 2) * 0.2) * (0.6 + 0.6 * out);
+    _smokePuff(
+      ctx,
+      cx + Math.cos(ang) * d,
+      cy + Math.sin(ang) * d - R * 0.35 * p,
+      r,
+      i % 2 ? "58,54,50" : "82,78,72",
+      smokeA,
+    );
+  }
+
+  // 3) Detriti scuri lanciati verso l'esterno, rallentano e si posano
+  for (let i = 0; i < EXPLOSION_DEBRIS; i++) {
+    const h = seed + i * 23;
+    const ang = _hash01(h) * Math.PI * 2;
+    const d = R * (0.6 + _hash01(h + 1) * 0.9) * (1 - (1 - Math.min(1, p / 0.6)) ** 2);
+    const s = Math.max(1.5, ts * (0.025 + _hash01(h + 2) * 0.025));
+    ctx.fillStyle = `rgba(35,28,20,${(0.9 * (1 - fadeIn(0.6, 1))).toFixed(3)})`;
+    ctx.fillRect(cx + Math.cos(ang) * d - s / 2, cy + Math.sin(ang) * d - s / 2, s, s);
+  }
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+
+  // 4) Lampo iniziale accecante
+  if (p < 0.15) {
+    _smokePuff(ctx, cx, cy, R * (0.9 + p * 2), "255,245,210", 0.95 * (1 - p / 0.15));
+  }
+
+  // 5) Onda d'urto: anello sottile che corre verso l'esterno
+  if (p < 0.4) {
+    const rp = p / 0.4;
+    ctx.strokeStyle = `rgba(255,235,190,${(0.7 * (1 - rp)).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1.5, ts * 0.04 * (1 - rp));
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 1.7 * (1 - (1 - rp) ** 2), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // 6) Palla di fuoco: sbuffi che passano da bianco-giallo a rosso scuro
+  if (p < 0.5) {
+    const heat = 1 - p / 0.5;
+    const g = Math.floor(90 + 150 * heat),
+      b = Math.floor(20 + 140 * heat ** 3);
+    for (let i = 0; i < EXPLOSION_PUFFS; i++) {
+      const h = seed + i * 11;
+      const ang = (i / EXPLOSION_PUFFS) * Math.PI * 2 + _hash01(h) * 0.6;
+      const d = R * (0.2 + _hash01(h + 1) * 0.3) * out;
+      const r = R * (0.3 + _hash01(h + 2) * 0.18) * (0.5 + 0.7 * out);
+      _smokePuff(ctx, cx + Math.cos(ang) * d, cy + Math.sin(ang) * d, r, `255,${g},${b}`, 0.55 * heat);
+    }
+    _smokePuff(ctx, cx, cy, R * 0.55 * (0.6 + 0.5 * out), "255,250,220", 0.7 * heat ** 2);
+  }
+
+  // 7) Scintille: scie luminose radiali
+  if (p < 0.55) {
+    const sp = p / 0.55;
+    ctx.lineCap = "round";
+    for (let i = 0; i < EXPLOSION_SPARKS; i++) {
+      const h = seed + i * 7;
+      const ang = _hash01(h) * Math.PI * 2;
+      const reach = R * (1 + _hash01(h + 1) * 0.9);
+      const head = reach * (1 - (1 - sp) ** 2);
+      const tail = reach * (1 - (1 - Math.max(0, sp - 0.15)) ** 2);
+      ctx.strokeStyle = `rgba(255,${Math.floor(220 - sp * 120)},80,${(0.9 * (1 - sp)).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1, ts * 0.02);
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(ang) * tail, cy + Math.sin(ang) * tail);
+      ctx.lineTo(cx + Math.cos(ang) * head, cy + Math.sin(ang) * head);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+
+  // 8) Testo BOOM
+  if (p > 0.1 && p < 0.72) {
+    const ta = p < 0.4 ? 1 : 1 - (p - 0.4) / 0.32;
+    ctx.fillStyle = `rgba(255,240,80,${ta})`;
+    ctx.font = `bold ${Math.round(ts * 0.33)}px 'Oswald'`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(t("fx.explosion"), cx, cy - ts * 0.3 * p - R * 0.5);
+  }
 }

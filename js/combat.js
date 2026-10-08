@@ -187,7 +187,7 @@ async function resolveAoeCombat(
   ];
 
   sfxShoot(attacker.cls, weapon);
-  addFX("explosion", { col: tc, row: tr }, 1300);
+  addFX("explosion", { col: tc, row: tr, aoe: weapon.aoe }, 1300);
 
   if (!defenders.length) {
     log(
