@@ -388,46 +388,7 @@ function _drawEffect(ctx, ts, fx, p) {
     }
 
     case "hit": {
-      const { col, row, dmg } = fx.data;
-      const { x, y } = tileToScreen(col, row);
-      const cx = x + ts * 0.5,
-        cy = y + ts * 0.5;
-      if (p < 0.4) {
-        const bt = p / 0.4;
-        ctx.strokeStyle = `rgba(255,80,30,${(1 - bt) * 0.9})`;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(cx, cy, ts * 0.5 * bt, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.fillStyle = `rgba(255,150,50,${0.9 - bt * 0.9})`;
-        [
-          [1, 0],
-          [-1, 0],
-          [0, 1],
-          [0, -1],
-          [0.7, 0.7],
-          [-0.7, 0.7],
-          [0.7, -0.7],
-          [-0.7, -0.7],
-        ].forEach(([dx, dy]) => {
-          ctx.beginPath();
-          ctx.arc(
-            cx + dx * ts * 0.38 * bt,
-            cy + dy * ts * 0.38 * bt,
-            2.5,
-            0,
-            Math.PI * 2,
-          );
-          ctx.fill();
-        });
-      }
-      const fy = cy - ts * 0.5 * p,
-        a2 = p < 0.7 ? 1 : 1 - (p - 0.7) / 0.3;
-      ctx.fillStyle = `rgba(255,80,30,${a2})`;
-      ctx.font = `bold ${Math.round(ts * 0.35)}px 'Oswald'`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(`-${dmg}`, cx, fy);
+      _drawHit(ctx, ts, fx, p);
       break;
     }
 
@@ -855,6 +816,91 @@ function _drawHeal(ctx, ts, data, p) {
   ctx.strokeText(`+${amount}HP`, cx, fy);
   ctx.fillStyle = `rgba(130,255,140,${ta.toFixed(3)})`;
   ctx.fillText(`+${amount}HP`, cx, fy);
+}
+
+// ── HIT — unità colpita ─────────────────────────────────────────────────
+// Lampo d'impatto, mirino a X ("hit marker"), schizzi rossi che volano via
+// dal lato opposto a chi ha sparato (data.fromCol/fromRow; per le esplosioni
+// il centro del blast) e numero del danno con rimbalzo e contorno.
+const HIT_DROPS = 8;
+
+function _drawHit(ctx, ts, fx, p) {
+  const { col, row, dmg, fromCol, fromRow } = fx.data;
+  const { x, y } = tileToScreen(col, row);
+  const cx = x + ts * 0.5,
+    cy = y + ts * 0.5;
+  const seed = Math.floor(fx.t0) % 997;
+  // Direzione degli schizzi: via da chi ha sparato, altrimenti tutt'intorno
+  const hasDir = fromCol != null && (fromCol !== col || fromRow !== row);
+  const baseAng = hasDir ? Math.atan2(row - fromRow, col - fromCol) : 0;
+  const cone = hasDir ? 1.6 : Math.PI * 2;
+
+  // 1) Schizzi rossi: volano via, rallentano e si posano
+  const sp = Math.min(1, p / 0.45);
+  const sa = 0.85 * (1 - Math.max(0, (p - 0.45) / 0.55));
+  if (sa > 0) {
+    ctx.fillStyle = `rgba(140,10,10,${sa.toFixed(3)})`;
+    for (let i = 0; i < HIT_DROPS; i++) {
+      const h = seed + i * 11;
+      const ang = baseAng + (_hash01(h) - 0.5) * cone;
+      const d = ts * (0.18 + _hash01(h + 1) * 0.32) * (1 - (1 - sp) ** 2);
+      const r = Math.max(1, ts * (0.018 + _hash01(h + 2) * 0.022) * (1 - sp * 0.3));
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(ang) * d, cy + Math.sin(ang) * d, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  // 2) Lampo d'impatto sull'unità
+  if (p < 0.2) {
+    _smokePuff(ctx, cx, cy, ts * 0.42, "255,70,40", 0.75 * (1 - p / 0.2));
+    _smokePuff(ctx, cx, cy, ts * 0.16, "255,230,200", 0.9 * (1 - p / 0.2));
+  }
+  // 3) Anello sottile che si allarga
+  if (p < 0.35) {
+    const rp = p / 0.35;
+    ctx.strokeStyle = `rgba(255,120,80,${(0.8 * (1 - rp)).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1.5, ts * 0.03 * (1 - rp));
+    ctx.beginPath();
+    ctx.arc(cx, cy, ts * (0.2 + 0.35 * (1 - (1 - rp) ** 2)), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 4) Mirino a X: quattro tacche diagonali che si stringono e svaniscono
+  if (p < 0.45) {
+    const mp = p / 0.45;
+    const r0 = ts * (0.3 - 0.08 * mp),
+      r1 = r0 + ts * 0.14;
+    ctx.strokeStyle = `rgba(255,245,235,${(0.95 * (1 - mp)).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1.5, ts * 0.035);
+    ctx.lineCap = "round";
+    for (let k = 0; k < 4; k++) {
+      const a = Math.PI / 4 + (k * Math.PI) / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0);
+      ctx.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+      ctx.stroke();
+    }
+  }
+
+  // 5) Danno: compare con un rimbalzo, sale e svanisce; più grande se forte
+  const pop = Math.min(1, p / 0.15);
+  const scale = pop < 1 ? 1 + 2.2 * (pop - 1) ** 3 + 1.2 * (pop - 1) ** 2 : 1;
+  const ta = p < 0.7 ? 1 : 1 - (p - 0.7) / 0.3;
+  const size = ts * (0.32 + 0.04 * Math.min(dmg, 4)) * Math.max(0.01, scale);
+  const fy = cy - ts * 0.25 - ts * 0.35 * p;
+  ctx.font = `bold ${Math.round(size)}px 'Oswald'`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(2, size * 0.18);
+  ctx.strokeStyle = `rgba(50,0,0,${(0.85 * ta).toFixed(3)})`;
+  ctx.strokeText(`-${dmg}`, cx, fy);
+  ctx.fillStyle = `rgba(255,85,55,${ta.toFixed(3)})`;
+  ctx.fillText(`-${dmg}`, cx, fy);
 }
 
 // ── DEATH — unità eliminata ─────────────────────────────────────────────

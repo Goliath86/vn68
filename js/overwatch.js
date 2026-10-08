@@ -58,7 +58,17 @@ function checkOverwatch(enemy) {
       if (dmg > 0) {
         enemy.hp -= dmg;
         log(t("log.hit_damage", { dmg }), "combat");
-        addFX("hit", { col: enemy.col, row: enemy.row, dmg }, 700);
+        addFX(
+          "hit",
+          {
+            col: enemy.col,
+            row: enemy.row,
+            dmg,
+            fromCol: ow.col,
+            fromRow: ow.row,
+          },
+          700,
+        );
         if (enemy.hp <= 0) {
           enemy.hp = 0;
           enemy.alive = false;

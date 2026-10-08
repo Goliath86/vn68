@@ -100,7 +100,17 @@ async function resolveCombat(
 
   if (dmg > 0) {
     sfx("hit");
-    addFX("hit", { col: defender.col, row: defender.row, dmg }, 800);
+    addFX(
+      "hit",
+      {
+        col: defender.col,
+        row: defender.row,
+        dmg,
+        fromCol: attacker.col,
+        fromRow: attacker.row,
+      },
+      800,
+    );
     defender.hp -= dmg;
     if (defender.hp <= 0) {
       defender.hp = 0;
@@ -251,7 +261,11 @@ async function resolveAoeCombat(
 
     if (dmg > 0) {
       sfx("hit");
-      addFX("hit", { col: def.col, row: def.row, dmg }, 800);
+      addFX(
+        "hit",
+        { col: def.col, row: def.row, dmg, fromCol: tc, fromRow: tr },
+        800,
+      );
       def.hp -= dmg;
       if (def.hp <= 0) {
         def.hp = 0;
