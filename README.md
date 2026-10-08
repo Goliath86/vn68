@@ -481,6 +481,7 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | `minRange` | number | (opzionale, solo armi AoE) Gittata minima in tile; default `aoe + 1`, così chi lancia non è mai nel raggio dell'esplosione |
 | `maxCarriers` | number | (opzionale) Max unità per missione che possono portare quest'arma (contatori separati per squadra US e VC) |
 | `rangePenalty` | boolean | (opzionale, solo US) Applica la penalità gittata (−1 ATK ogni 2 tile), anche in overwatch; se assente vale `true` solo per il cecchino |
+| `rounds` | number | (opzionale, solo grafica) Traccianti mostrati per attacco (1–5); se assente 1 per i cecchini, 3 per le altre armi |
 | `smoke` | number | (opzionale, solo armi AoE) Fumogeno: nessun danno, crea fumo nel raggio `aoe` per N turni |
 | `artillery` | boolean | (opzionale, solo armi AoE) Richiesta d'artiglieria: il colpo cade all'inizio del turno successivo e colpisce anche i VC nascosti |
 

@@ -72,8 +72,12 @@ async function resolveCombat(
       fromRow: attacker.row,
       toCol: defender.col,
       toRow: defender.row,
+      enemy: isEnemy,
+      hit: dmg > 0,
+      sniper: attacker.cls?.startsWith("sniper"),
+      rounds: weapon?.rounds,
     },
-    600,
+    700,
   );
 
   const defBreakdown =

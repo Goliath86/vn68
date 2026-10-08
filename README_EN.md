@@ -482,6 +482,7 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | `minRange` | number | (optional, AoE weapons only) Minimum range in tiles; defaults to `aoe + 1` so the thrower is never inside the blast |
 | `maxCarriers` | number | (optional) Max units per mission that can carry this weapon (separate counters for the US squad and the VC) |
 | `rangePenalty` | boolean | (optional, US only) Applies the range penalty (−1 ATK every 2 tiles), overwatch included; when absent it is `true` only for the sniper |
+| `rounds` | number | (optional, visual only) Tracers shown per attack (1–5); when absent 1 for snipers, 3 for other weapons |
 | `smoke` | number | (optional, AoE weapons only) Smoke grenade: no damage, creates smoke within `aoe` for N turns |
 | `artillery` | boolean | (optional, AoE weapons only) Artillery call: the strike lands at the start of the next turn and also hits hidden VC |
 

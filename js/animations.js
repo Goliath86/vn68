@@ -384,34 +384,7 @@ function _drawEffect(ctx, ts, fx, p) {
     }
 
     case "shot": {
-      const { fromCol, fromRow, toCol, toRow } = fx.data;
-      const { x: fx0, y: fy0 } = tileToScreen(fromCol, fromRow);
-      const { x: tx0, y: ty0 } = tileToScreen(toCol, toRow);
-      const sx = fx0 + ts * 0.5,
-        sy = fy0 + ts * 0.5,
-        ex = tx0 + ts * 0.5,
-        ey = ty0 + ts * 0.5;
-      if (p < 0.3) {
-        const ft = p / 0.3;
-        ctx.fillStyle = `rgba(255,220,50,${0.9 * (1 - ft)})`;
-        ctx.beginPath();
-        ctx.arc(sx, sy, ts * 0.22 * (1 - ft), 0, Math.PI * 2);
-        ctx.fill();
-      }
-      const tt = Math.min(1, p / 0.8);
-      const bx = sx + (ex - sx) * tt,
-        by = sy + (ey - sy) * tt;
-      const tlX = sx + (ex - sx) * Math.max(0, tt - 0.25),
-        tlY = sy + (ey - sy) * Math.max(0, tt - 0.25);
-      const grad = ctx.createLinearGradient(tlX, tlY, bx, by);
-      grad.addColorStop(0, "rgba(255,200,0,0)");
-      grad.addColorStop(1, "rgba(255,240,80,.9)");
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(tlX, tlY);
-      ctx.lineTo(bx, by);
-      ctx.stroke();
+      _drawShot(ctx, ts, fx, p);
       break;
     }
 
@@ -680,6 +653,132 @@ function _drawEffect(ctx, ts, fx, p) {
     case "explosion": {
       _drawExplosion(ctx, ts, fx.data, p);
       break;
+    }
+  }
+  ctx.restore();
+}
+
+// ── SHOT — colpo singolo: vampata, traccianti, impatto ──────────────────
+// Traccianti rossi per gli US e verdi per i VC (munizioni sovietiche).
+// Colpi per attacco dal campo `rounds` dell'arma; se assente raffica di 3,
+// cecchino 1 colpo (più veloce). Se il colpo va a vuoto i traccianti deviano
+// e finiscono a terra oltre il bersaglio.
+const SHOT_TRACER_RGB = { us: "255,95,60", vc: "130,255,110" };
+
+function _drawShot(ctx, ts, fx, p) {
+  const { fromCol, fromRow, toCol, toRow, enemy, hit, sniper } = fx.data;
+  const { x: fx0, y: fy0 } = tileToScreen(fromCol, fromRow);
+  const { x: tx0, y: ty0 } = tileToScreen(toCol, toRow);
+  const sx = fx0 + ts * 0.5,
+    sy = fy0 + ts * 0.5,
+    ex = tx0 + ts * 0.5,
+    ey = ty0 + ts * 0.5;
+  const len = Math.hypot(ex - sx, ey - sy) || 1;
+  const ux = (ex - sx) / len,
+    uy = (ey - sy) / len;
+  const nx = -uy,
+    ny = ux;
+  const mx = sx + ux * ts * 0.32, // bocca dell'arma
+    my = sy + uy * ts * 0.32;
+  const rgb = enemy ? SHOT_TRACER_RGB.vc : SHOT_TRACER_RGB.us;
+  const rounds = clamp(Math.round(fx.data.rounds ?? (sniper ? 1 : 3)), 1, 5);
+  const stagger = 0.12,
+    travel = sniper ? 0.2 : 0.32;
+  const seed = Math.floor(fx.t0) % 997;
+
+  // Filo di fumo dalla bocca dell'arma
+  if (p > 0.05) {
+    const sp = (p - 0.05) / 0.95;
+    _smokePuff(
+      ctx,
+      mx + ux * ts * 0.12 * sp,
+      my + uy * ts * 0.12 * sp - ts * 0.1 * sp,
+      ts * (0.08 + 0.14 * sp),
+      "190,188,182",
+      0.35 * (1 - sp),
+    );
+  }
+
+  ctx.save();
+  ctx.lineCap = "round";
+  for (let i = 0; i < rounds; i++) {
+    const t0 = i * stagger;
+    const local = p - t0;
+    if (local < 0) continue;
+    const h = seed + i * 19;
+    // Punto d'arrivo: vicino al centro se colpisce, deviato e oltre se manca
+    const spread = hit ? 0.08 : 0.3 + _hash01(h) * 0.15;
+    const side = (_hash01(h + 1) - 0.5) * 2 * spread * ts;
+    const over = hit ? 0 : ts * (0.25 + _hash01(h + 2) * 0.3);
+    const ix = ex + nx * side + ux * over,
+      iy = ey + ny * side + uy * over;
+
+    // Vampata alla bocca dell'arma
+    ctx.globalCompositeOperation = "lighter";
+    const f = local / 0.1;
+    if (f < 1) {
+      _smokePuff(ctx, mx, my, ts * 0.2, "255,225,150", 0.9 * (1 - f));
+      const fl = ts * (sniper ? 0.38 : 0.28) * (1 - f * 0.5),
+        fw = ts * 0.07 * (1 - f);
+      ctx.fillStyle = `rgba(255,240,190,${(0.85 * (1 - f)).toFixed(3)})`;
+      ctx.beginPath();
+      ctx.moveTo(mx + nx * fw, my + ny * fw);
+      ctx.lineTo(mx + ux * fl, my + uy * fl);
+      ctx.lineTo(mx - nx * fw, my - ny * fw);
+      ctx.fill();
+    }
+
+    // Tracciante: testa luminosa con coda sfumata
+    const q = local / travel;
+    if (q < 1) {
+      const hx = mx + (ix - mx) * q,
+        hy = my + (iy - my) * q;
+      const dx = ix - mx,
+        dy = iy - my;
+      const dl = Math.hypot(dx, dy) || 1;
+      const tail = Math.min(ts * (sniper ? 1.6 : 0.9), dl * q);
+      const tx = hx - (dx / dl) * tail,
+        ty = hy - (dy / dl) * tail;
+      const g = ctx.createLinearGradient(tx, ty, hx, hy);
+      g.addColorStop(0, `rgba(${rgb},0)`);
+      g.addColorStop(1, `rgba(${rgb},0.95)`);
+      ctx.strokeStyle = g;
+      ctx.lineWidth = Math.max(1.5, ts * (sniper ? 0.025 : 0.035));
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(hx, hy);
+      ctx.stroke();
+      _smokePuff(ctx, hx, hy, ts * 0.07, "255,245,220", 0.9);
+      continue;
+    }
+
+    // Impatto
+    const r = (local - travel) / 0.22;
+    if (r >= 1) continue;
+    if (hit) {
+      // Scintille che rimbalzano indietro verso il tiratore
+      _smokePuff(ctx, ix, iy, ts * 0.14, "255,200,120", 0.8 * (1 - r));
+      ctx.lineWidth = Math.max(1, ts * 0.015);
+      ctx.strokeStyle = `rgba(255,210,120,${(0.9 * (1 - r)).toFixed(3)})`;
+      for (let k = 0; k < 5; k++) {
+        const a = Math.atan2(-uy, -ux) + (_hash01(h + 3 + k) - 0.5) * 2.4;
+        const d0 = ts * 0.2 * r,
+          d1 = ts * (0.08 + 0.22 * r);
+        ctx.beginPath();
+        ctx.moveTo(ix + Math.cos(a) * d0, iy + Math.sin(a) * d0);
+        ctx.lineTo(ix + Math.cos(a) * d1, iy + Math.sin(a) * d1);
+        ctx.stroke();
+      }
+    } else {
+      // Polvere sollevata dal proiettile che finisce a terra
+      ctx.globalCompositeOperation = "source-over";
+      _smokePuff(ctx, ix, iy, ts * (0.08 + 0.14 * r), "150,128,92", 0.55 * (1 - r));
+      ctx.fillStyle = `rgba(90,70,45,${(0.8 * (1 - r)).toFixed(3)})`;
+      for (let k = 0; k < 3; k++) {
+        const a = _hash01(h + 9 + k) * Math.PI * 2,
+          d = ts * 0.18 * r;
+        ctx.fillRect(ix + Math.cos(a) * d - 1, iy + Math.sin(a) * d - 1, 2, 2);
+      }
     }
   }
   ctx.restore();

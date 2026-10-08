@@ -96,6 +96,7 @@
         "labelEn": "M1911",
         "atk": 1,
         "range": 1,
+        "rounds": 1,
         "sound": "assets/pistol.mp3"
       }
     ],
@@ -137,6 +138,7 @@
         "labelEn": "TT-33",
         "atk": 3,
         "range": 2,
+        "rounds": 1,
         "sound": "assets/pistol.mp3"
       }
     ]
