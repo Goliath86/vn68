@@ -3,8 +3,9 @@ let _tileAnimDt = 16;
 let _tileAnimLastTime = 0;
 let _fxLoopActive = false;
 
-function addFX(type, data, duration) {
-  G.effects.push({ type, data, duration, t0: performance.now() });
+// delay (ms, opzionale): l'effetto parte più tardi, es. all'arrivo del tracciante
+function addFX(type, data, duration, delay = 0) {
+  G.effects.push({ type, data, duration, t0: performance.now() + delay });
   if (!_fxLoopActive) {
     _fxLoopActive = true;
     requestAnimationFrame(_fxTick);
@@ -347,6 +348,12 @@ function renderEffects(ctx, ts) {
   const now = performance.now();
   for (const fx of G.effects) {
     const t = Math.min(1, (now - fx.t0) / fx.duration);
+    if (t < 0) {
+      // Effetto in attesa: l'unità uccisa è già rimossa dalla mappa, la si
+      // tiene in piedi finché il colpo non arriva e parte la caduta
+      if (fx.type === "death") _drawDeathPending(ctx, ts, fx.data);
+      continue;
+    }
     _drawEffect(ctx, ts, fx, t);
   }
 }
@@ -443,6 +450,16 @@ function _drawEffect(ctx, ts, fx, p) {
 // cecchino 1 colpo (più veloce). Se il colpo va a vuoto i traccianti deviano
 // e finiscono a terra oltre il bersaglio.
 const SHOT_TRACER_RGB = { us: "255,95,60", vc: "130,255,110" };
+const SHOT_FX_MS = 700; // durata standard dell'effetto sparo
+// Frazione della durata che il primo tracciante impiega ad arrivare
+const SHOT_TRAVEL = 0.32,
+  SHOT_TRAVEL_SNIPER = 0.2;
+
+// Ms tra lo sparo e l'arrivo del primo tracciante: colpo/mancato/morte
+// partono con questo ritardo così coincidono con l'impatto
+function shotImpactDelay(sniper, shotMs = SHOT_FX_MS) {
+  return (sniper ? SHOT_TRAVEL_SNIPER : SHOT_TRAVEL) * shotMs;
+}
 
 function _drawShot(ctx, ts, fx, p) {
   const { fromCol, fromRow, toCol, toRow, enemy, hit, sniper } = fx.data;
@@ -462,7 +479,7 @@ function _drawShot(ctx, ts, fx, p) {
   const rgb = enemy ? SHOT_TRACER_RGB.vc : SHOT_TRACER_RGB.us;
   const rounds = clamp(Math.round(fx.data.rounds ?? (sniper ? 1 : 3)), 1, 5);
   const stagger = 0.12,
-    travel = sniper ? 0.2 : 0.32;
+    travel = sniper ? SHOT_TRAVEL_SNIPER : SHOT_TRAVEL;
   const seed = Math.floor(fx.t0) % 997;
 
   // Filo di fumo dalla bocca dell'arma
@@ -1238,6 +1255,14 @@ function _drawMiss(ctx, ts, fx, p) {
 // L'unità (già rimossa dalla mappa) viene ridisegnata mentre cade di lato e
 // svanisce; all'impatto si alza polvere, poi si allarga una macchia scura.
 // Senza data.cls (chiamate vecchie) si salta la caduta e resta il resto.
+function _drawDeathPending(ctx, ts, data) {
+  const { col, row, cls, enemy } = data;
+  if (!cls || typeof drawUnitSprite !== "function" || !isTileVisible(col, row))
+    return;
+  const { x, y } = tileToScreen(col, row);
+  drawUnitSprite(ctx, x, y, ts, cls, false, !!enemy);
+}
+
 function _drawDeath(ctx, ts, data, p) {
   const { col, row, cls, enemy } = data;
   const { x, y } = tileToScreen(col, row);

@@ -34,6 +34,12 @@ function _audioResume() {
   if (AUDIO.ctx && AUDIO.ctx.state === "suspended") AUDIO.ctx.resume();
 }
 
+// Suono di sistema dopo `delay` ms (es. impatto sincronizzato col tracciante)
+function sfxAt(type, delay) {
+  if (delay > 0) setTimeout(() => sfx(type), delay);
+  else sfx(type);
+}
+
 function sfx(type) {
   if (AUDIO.muted) return;
   const cached = MISSION_SFX_CACHE[type] || SFX_CACHE[type];

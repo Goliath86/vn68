@@ -64,6 +64,9 @@ async function resolveCombat(
   const save = defVal + defDice;
   const dmg = Math.max(0, hit - save);
 
+  const sniper = !!attacker.cls?.startsWith("sniper");
+  // Colpo/mancato/morte (effetti e suoni) partono all'arrivo del tracciante
+  const impact = shotImpactDelay(sniper);
   sfxShoot(attacker.cls, weapon);
   addFX(
     "shot",
@@ -74,10 +77,10 @@ async function resolveCombat(
       toRow: defender.row,
       enemy: isEnemy,
       hit: dmg > 0,
-      sniper: attacker.cls?.startsWith("sniper"),
+      sniper,
       rounds: weapon?.rounds,
     },
-    700,
+    SHOT_FX_MS,
   );
 
   const defBreakdown =
@@ -99,7 +102,7 @@ async function resolveCombat(
   );
 
   if (dmg > 0) {
-    sfx("hit");
+    sfxAt("hit", impact);
     addFX(
       "hit",
       {
@@ -110,12 +113,13 @@ async function resolveCombat(
         fromRow: attacker.row,
       },
       800,
+      impact,
     );
     defender.hp -= dmg;
     if (defender.hp <= 0) {
       defender.hp = 0;
       defender.alive = false;
-      sfx("death");
+      sfxAt("death", impact);
       log(t("log.unit_eliminated", { name: defender.name }), "combat");
       if (!isEnemy && G.missionType === "search_destroy") {
         G.missionState.kills = (G.missionState.kills || 0) + 1;
@@ -129,6 +133,7 @@ async function resolveCombat(
           enemy: !isEnemy,
         },
         1400,
+        impact,
       );
     } else if (isEnemy && !defender.shaken) {
       // Morale: il difensore (unità US) è scosso se sotto 30% HP
@@ -139,7 +144,7 @@ async function resolveCombat(
       }
     }
   } else {
-    sfx("miss");
+    sfxAt("miss", impact);
     addFX(
       "miss",
       {
@@ -149,6 +154,7 @@ async function resolveCombat(
         fromRow: attacker.row,
       },
       800,
+      impact,
     );
   }
 

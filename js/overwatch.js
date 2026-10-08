@@ -45,6 +45,9 @@ function checkOverwatch(enemy) {
         coverBonus(enemy.col, enemy.row);
 
       const dmg = Math.max(0, roll - sv);
+      const owSniper = ow.cls === "sniper";
+      // Colpo/morte partono all'arrivo del tracciante dell'overwatch
+      const impact = shotImpactDelay(owSniper, OW_SHOT_MS);
       // FX dopo i dadi: il tracciante deve sapere se il colpo va a segno
       addFX(
         "overwatch",
@@ -54,7 +57,7 @@ function checkOverwatch(enemy) {
           tCol: enemy.col,
           tRow: enemy.row,
           hit: dmg > 0,
-          sniper: ow.cls === "sniper",
+          sniper: owSniper,
           rounds: owWeapon?.rounds,
         },
         900,
@@ -72,6 +75,7 @@ function checkOverwatch(enemy) {
             fromRow: ow.row,
           },
           700,
+          impact,
         );
         if (enemy.hp <= 0) {
           enemy.hp = 0;
@@ -88,6 +92,7 @@ function checkOverwatch(enemy) {
             "death",
             { col: enemy.col, row: enemy.row, cls: enemy.cls, enemy: true },
             1400,
+            impact,
           );
         }
       }
