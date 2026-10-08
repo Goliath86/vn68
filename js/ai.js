@@ -509,7 +509,7 @@ function spawnReinforcements(count) {
       weapons: buildWeapons("grunt", G.missionState.vcCarrierCounts),
       weaponIdx: 0,
     });
-    addFX("spawn", { col, row }, 1000);
+    addFX("spawn", { col, row }, 1300);
     spawned++;
   }
   document.getElementById("vc-remain").textContent = G.enemies.filter(
@@ -552,7 +552,7 @@ function spawnAmbush(count, zones) {
       weapons: buildWeapons(cls, G.missionState.vcCarrierCounts),
       weaponIdx: 0,
     });
-    addFX("spawn", { col, row }, 1400);
+    addFX("spawn", { col, row, ambush: true }, 1400);
     spawned++;
   }
   document.getElementById("vc-remain").textContent = G.enemies.filter(

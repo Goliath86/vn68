@@ -423,18 +423,7 @@ function _drawEffect(ctx, ts, fx, p) {
     }
 
     case "spawn": {
-      const { col, row } = fx.data;
-      const { x, y } = tileToScreen(col, row);
-      const cx = x + ts * 0.5,
-        cy = y + ts * 0.5;
-      for (let w = 0; w < 2; w++) {
-        const wt = (p + w * 0.5) % 1;
-        ctx.strokeStyle = `rgba(200,40,40,${(1 - wt) * 0.7})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(cx, cy, ts * 0.65 * wt, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+      _drawSpawn(ctx, ts, fx.data, p);
       break;
     }
 
@@ -1339,6 +1328,111 @@ function _drawDeath(ctx, ts, data, p) {
     ctx.strokeText(t("fx.kia"), cx, ky);
     ctx.fillStyle = `rgba(255,235,225,${ka.toFixed(3)})`;
     ctx.fillText(t("fx.kia"), cx, ky);
+  }
+}
+
+// ── SPAWN — arrivo di VC ────────────────────────────────────────────────
+// Rinforzi: sbucano da un tunnel → botola scura che si apre, zolle di terra
+// lanciate in aria che ricadono, polvere. data.ambush: escono dalla
+// vegetazione → lampo rosso e foglie che schizzano via e ricadono.
+// In entrambi i casi onde rosse d'allarme.
+const SPAWN_CLODS = 8;
+const SPAWN_LEAVES = 12;
+
+function _drawSpawn(ctx, ts, data, p) {
+  const { col, row, ambush } = data;
+  const { x, y } = tileToScreen(col, row);
+  const cx = x + ts * 0.5,
+    cy = y + ts * 0.5;
+  const seed = col * 31 + row * 57;
+  const holeY = y + ts * 0.78;
+
+  if (!ambush) {
+    // Botola del tunnel: si apre, resta, si richiude sul finale
+    const open = Math.min(1, p / 0.2) * (1 - Math.max(0, (p - 0.8) / 0.2));
+    if (open > 0) {
+      const w = ts * 0.3 * (1 - (1 - open) ** 3),
+        h = w * 0.42;
+      ctx.fillStyle = "rgba(105,80,50,0.85)"; // bordo di terra smossa
+      ctx.beginPath();
+      ctx.ellipse(cx, holeY, w * 1.25, h * 1.35, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(15,10,6,0.95)";
+      ctx.beginPath();
+      ctx.ellipse(cx, holeY, w, h, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Polvere attorno all'imbocco
+    const dp = Math.min(1, Math.max(0, (p - 0.08) / 0.6));
+    if (dp > 0 && dp < 1)
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + _hash01(seed + i) * 0.8;
+        const d = ts * (0.15 + 0.25 * dp);
+        _smokePuff(
+          ctx,
+          cx + Math.cos(a) * d,
+          holeY + Math.sin(a) * d * 0.4 - ts * 0.08 * dp,
+          ts * (0.1 + 0.12 * dp),
+          "150,128,92",
+          0.5 * (1 - dp),
+        );
+      }
+    // Zolle di terra: parabole verso l'alto che ricadono
+    const cp = Math.min(1, Math.max(0, (p - 0.1) / 0.55));
+    if (cp > 0 && cp < 1)
+      for (let i = 0; i < SPAWN_CLODS; i++) {
+        const h = seed + i * 13;
+        const vx = (_hash01(h) - 0.5) * ts * 0.9;
+        const vy = ts * (0.5 + _hash01(h + 1) * 0.45);
+        const s = Math.max(2, ts * (0.03 + _hash01(h + 2) * 0.03));
+        ctx.fillStyle = `rgba(${i % 2 ? "95,70,42" : "70,52,32"},${(1 - Math.max(0, (cp - 0.8) / 0.2)).toFixed(3)})`;
+        ctx.fillRect(
+          cx + vx * cp - s / 2,
+          holeY - vy * 4 * cp * (1 - cp) - s / 2, // parabola: su e giù
+          s,
+          s,
+        );
+      }
+  } else {
+    // Lampo rosso dell'imboscata
+    if (p < 0.18) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      _smokePuff(ctx, cx, cy, ts * 0.6, "255,40,30", 0.6 * (1 - p / 0.18));
+      ctx.restore();
+    }
+    // Foglie che schizzano via dalla vegetazione e ricadono ondeggiando
+    const lp = Math.min(1, p / 0.85);
+    for (let i = 0; i < SPAWN_LEAVES; i++) {
+      const h = seed + i * 17;
+      const a = _hash01(h) * Math.PI * 2;
+      const d = ts * (0.25 + _hash01(h + 1) * 0.45) * (1 - (1 - Math.min(1, lp / 0.4)) ** 2);
+      const fall = ts * 0.25 * Math.max(0, lp - 0.3);
+      const lx = cx + Math.cos(a) * d + Math.sin(lp * 10 + h) * ts * 0.04;
+      const ly = cy + Math.sin(a) * d * 0.8 + fall;
+      const la = 1 - Math.max(0, (lp - 0.6) / 0.4);
+      const s = ts * (0.04 + _hash01(h + 2) * 0.03);
+      ctx.save();
+      ctx.translate(lx, ly);
+      ctx.rotate(a + lp * (4 + _hash01(h + 3) * 4));
+      ctx.fillStyle = `rgba(${i % 3 ? "60,110,40" : "95,140,55"},${(0.95 * la).toFixed(3)})`;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, s, s * 0.45, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // Onde rosse d'allarme (tre per l'imboscata)
+  const waves = ambush ? 3 : 2;
+  for (let k = 0; k < waves; k++) {
+    const r = (p - k * 0.2) / 0.55;
+    if (r <= 0 || r >= 1) continue;
+    ctx.strokeStyle = `rgba(230,50,40,${(0.8 * (1 - r)).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1.5, ts * 0.045 * (1 - r));
+    ctx.beginPath();
+    ctx.arc(cx, cy, ts * (0.15 + 0.6 * (1 - (1 - r) ** 2)), 0, Math.PI * 2);
+    ctx.stroke();
   }
 }
 
