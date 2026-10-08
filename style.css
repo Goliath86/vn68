@@ -934,6 +934,10 @@ body {
     body.sheet-collapsed #bottom-sheet {
         display: none;
     }
+    /* La quick-bar è fixed: riserva il suo spazio così il canvas non finisce sotto */
+    body.sheet-collapsed #center {
+        margin-bottom: 56px;
+    }
     body.sheet-collapsed #quick-bar {
         display: flex;
         flex-direction: row;
@@ -978,6 +982,7 @@ body {
     }
     body.sheet-collapsed #center {
         margin-left: 56px;
+        margin-bottom: 0;
     }
     body.sheet-collapsed #quick-bar {
         display: flex;
@@ -1221,6 +1226,9 @@ body {
         left: 0;
         right: 0;
     }
+    body.sheet-collapsed.qwb-active #center {
+        margin-bottom: 108px; /* quick-bar 56 + quick-weapons-bar 52 */
+    }
 }
 
 /* Landscape phone: barra orizzontale in basso, a destra della quick-bar verticale */
@@ -1230,5 +1238,8 @@ body {
         bottom: 0;
         left: 56px;
         right: 0;
+    }
+    body.sheet-collapsed.qwb-active #center {
+        margin-bottom: 52px;
     }
 }

@@ -4,7 +4,10 @@ function resizeCanvas() {
   const h = c.clientHeight;
   G.canvas.width = G.oCanvas.width = w;
   G.canvas.height = G.oCanvas.height = h;
-  if (G.mapData) render();
+  if (G.mapData) {
+    clampCamera();
+    render();
+  }
 }
 
 function setupCanvas() {

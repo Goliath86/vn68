@@ -72,6 +72,10 @@ function updateQuickWeaponsBar(u) {
 
   bar.innerHTML = html;
   bar.classList.toggle("active", html !== "");
+  // Classe sul body: il CSS riserva lo spazio della barra sotto al canvas
+  const wasActive = document.body.classList.contains("qwb-active");
+  document.body.classList.toggle("qwb-active", html !== "");
+  if (wasActive !== (html !== "")) resizeCanvas();
   if (!html) return;
 
   bar.querySelectorAll("[data-widx]").forEach((btn) => {
