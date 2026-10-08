@@ -435,35 +435,7 @@ function _drawEffect(ctx, ts, fx, p) {
     }
 
     case "overwatch": {
-      const { owCol, owRow, tCol, tRow } = fx.data;
-      const { x: ox, y: oy } = tileToScreen(owCol, owRow);
-      const { x: tx2, y: ty2 } = tileToScreen(tCol, tRow);
-      const osx = ox + ts * 0.5,
-        osy = oy + ts * 0.5,
-        otx = tx2 + ts * 0.5,
-        oty = ty2 + ts * 0.5;
-      if (p < 0.35) {
-        const ft = p / 0.35;
-        ctx.strokeStyle = `rgba(180,220,255,${0.9 * (1 - ft)})`;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(ox + 2, oy + 2, ts - 4, ts - 4);
-      }
-      ctx.strokeStyle = `rgba(180,220,255,${0.85 * (1 - p)})`;
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([3, 2]);
-      const tt2 = Math.min(1, p / 0.75);
-      ctx.beginPath();
-      ctx.moveTo(osx, osy);
-      ctx.lineTo(osx + (otx - osx) * tt2, osy + (oty - osy) * tt2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      if (p < 0.5) {
-        ctx.fillStyle = `rgba(180,220,255,${1 - p / 0.5})`;
-        ctx.font = `bold ${Math.round(ts * 0.24)}px 'Oswald'`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "bottom";
-        ctx.fillText(t("fx.overwatch"), osx, oy);
-      }
+      _drawOverwatch(ctx, ts, fx, p);
       break;
     }
 
@@ -808,6 +780,136 @@ function _drawHeal(ctx, ts, data, p) {
   ctx.strokeText(`+${amount}HP`, cx, fy);
   ctx.fillStyle = `rgba(130,255,140,${ta.toFixed(3)})`;
   ctx.fillText(`+${amount}HP`, cx, fy);
+}
+
+// ── OVERWATCH — fuoco di reazione ───────────────────────────────────────
+// Angoli azzurri che si chiudono sul tiratore, mirino che si aggancia al
+// bersaglio, linea di mira tratteggiata e lo stesso sparo di _drawShot
+// (traccianti, vampata, impatto) sulla sua timeline di 700ms.
+const OW_RGB = "150,215,255";
+const OW_SHOT_MS = 700;
+
+// Quattro angoli a "L" attorno a (cx,cy), semi-lato h, lunghezza tacca l
+function _cornerBrackets(ctx, cx, cy, h, l) {
+  for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+    const px = cx + sx * h,
+      py = cy + sy * h;
+    ctx.beginPath();
+    ctx.moveTo(px - sx * l, py);
+    ctx.lineTo(px, py);
+    ctx.lineTo(px, py - sy * l);
+    ctx.stroke();
+  }
+}
+
+function _drawOverwatch(ctx, ts, fx, p) {
+  const { owCol, owRow, tCol, tRow, hit, sniper, rounds } = fx.data;
+  const { x: ox, y: oy } = tileToScreen(owCol, owRow);
+  const { x: tx, y: ty } = tileToScreen(tCol, tRow);
+  const osx = ox + ts * 0.5,
+    osy = oy + ts * 0.5,
+    otx = tx + ts * 0.5,
+    oty = ty + ts * 0.5;
+  const fadeOut = (a, b) => 1 - Math.min(1, Math.max(0, (p - a) / (b - a)));
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  // 1) Angoli sul tiratore: si chiudono dall'esterno e svaniscono
+  const ba = fadeOut(0.35, 0.6);
+  if (ba > 0) {
+    const close = Math.min(1, p / 0.18);
+    const h = ts * (0.62 - 0.16 * (1 - (1 - close) ** 3));
+    ctx.strokeStyle = `rgba(${OW_RGB},${(0.95 * ba).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1.5, ts * 0.04);
+    _cornerBrackets(ctx, osx, osy, h, ts * 0.16);
+  }
+
+  // 2) Linea di mira tratteggiata che corre verso il bersaglio
+  const la = 0.6 * fadeOut(0.2, 0.45);
+  if (la > 0) {
+    const lt = Math.min(1, p / 0.15);
+    ctx.strokeStyle = `rgba(${OW_RGB},${la.toFixed(3)})`;
+    ctx.lineWidth = Math.max(1, ts * 0.018);
+    ctx.setLineDash([ts * 0.08, ts * 0.06]);
+    ctx.beginPath();
+    ctx.moveTo(osx, osy);
+    ctx.lineTo(osx + (otx - osx) * lt, osy + (oty - osy) * lt);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // 3) Mirino sul bersaglio: entra grande e ruotato, si stringe e aggancia
+  const ra = fadeOut(0.45, 0.7);
+  if (ra > 0) {
+    const lock = Math.min(1, p / 0.2);
+    const le = 1 - (1 - lock) ** 3;
+    const r = ts * (0.62 - 0.26 * le);
+    ctx.save();
+    ctx.translate(otx, oty);
+    ctx.rotate((1 - le) * Math.PI * 0.5);
+    ctx.strokeStyle = `rgba(${OW_RGB},${(0.95 * ra * Math.min(1, p / 0.06)).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1.5, ts * 0.03);
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.stroke();
+    for (let k = 0; k < 4; k++) {
+      const a = (k * Math.PI) / 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55);
+      ctx.lineTo(Math.cos(a) * r * 1.3, Math.sin(a) * r * 1.3);
+      ctx.stroke();
+    }
+    ctx.restore();
+    // Bagliore quando il mirino è agganciato
+    if (lock >= 1) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      _smokePuff(ctx, otx, oty, ts * 0.3, OW_RGB, 0.35 * ra);
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+
+  // 4) Lo sparo vero e proprio, identico a un attacco normale
+  const sp = (p * fx.duration) / OW_SHOT_MS;
+  if (sp < 1)
+    _drawShot(
+      ctx,
+      ts,
+      {
+        t0: fx.t0,
+        data: {
+          fromCol: owCol,
+          fromRow: owRow,
+          toCol: tCol,
+          toRow: tRow,
+          enemy: false,
+          hit,
+          sniper,
+          rounds,
+        },
+      },
+      sp,
+    );
+
+  // 5) Scritta "OVERWATCH" sopra il tiratore
+  const pop = Math.min(1, p / 0.12);
+  const scale = pop < 1 ? 1 + 2.2 * (pop - 1) ** 3 + 1.2 * (pop - 1) ** 2 : 1;
+  const ta = fadeOut(0.55, 0.85);
+  if (ta > 0) {
+    const size = ts * 0.24 * Math.max(0.01, scale);
+    ctx.font = `bold ${Math.round(size)}px 'Oswald'`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2, size * 0.18);
+    ctx.strokeStyle = `rgba(5,25,45,${(0.85 * ta).toFixed(3)})`;
+    ctx.strokeText(t("fx.overwatch"), osx, oy - ts * 0.04);
+    ctx.fillStyle = `rgba(${OW_RGB},${ta.toFixed(3)})`;
+    ctx.fillText(t("fx.overwatch"), osx, oy - ts * 0.04);
+  }
 }
 
 // ── HIT — unità colpita ─────────────────────────────────────────────────

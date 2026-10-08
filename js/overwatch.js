@@ -17,16 +17,6 @@ function checkOverwatch(enemy) {
       );
 
       sfxShoot(ow.cls, unitWeapon(ow));
-      addFX(
-        "overwatch",
-        {
-          owCol: ow.col,
-          owRow: ow.row,
-          tCol: enemy.col,
-          tRow: enemy.row,
-        },
-        700,
-      );
 
       ow.hasShot = true;
 
@@ -55,6 +45,20 @@ function checkOverwatch(enemy) {
         coverBonus(enemy.col, enemy.row);
 
       const dmg = Math.max(0, roll - sv);
+      // FX dopo i dadi: il tracciante deve sapere se il colpo va a segno
+      addFX(
+        "overwatch",
+        {
+          owCol: ow.col,
+          owRow: ow.row,
+          tCol: enemy.col,
+          tRow: enemy.row,
+          hit: dmg > 0,
+          sniper: ow.cls === "sniper",
+          rounds: owWeapon?.rounds,
+        },
+        900,
+      );
       if (dmg > 0) {
         enemy.hp -= dmg;
         log(t("log.hit_damage", { dmg }), "combat");
