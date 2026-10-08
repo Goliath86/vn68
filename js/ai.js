@@ -593,7 +593,7 @@ function propagateAlert(source) {
     if (dist(source, other) <= RADIUS) {
       other.alerted = true;
       other.ap = 0; // reagisce all'allerta ma non agisce nello stesso turno
-      addFX("spot", { col: other.col, row: other.row }, 900);
+      addFX("spot", { col: other.col, row: other.row, relay: true }, 900);
     }
   });
 }

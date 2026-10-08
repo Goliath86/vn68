@@ -208,7 +208,7 @@ function revealTrapsAroundEngineers() {
     for (const trap of G.missionState.traps || []) {
       if (trap.revealed || dist(eng, trap) > 1) continue;
       trap.revealed = true;
-      addFX("spot", { col: trap.col, row: trap.row }, 1000);
+      addFX("spot", { col: trap.col, row: trap.row, kind: "trap" }, 1100);
       log(
         t("log.trap_revealed", {
           name: eng.name,

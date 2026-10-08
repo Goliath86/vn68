@@ -403,29 +403,7 @@ function _drawEffect(ctx, ts, fx, p) {
     }
 
     case "spot": {
-      const { col, row } = fx.data;
-      const { x, y } = tileToScreen(col, row);
-      const cx = x + ts * 0.5,
-        bounce = Math.sin(p * Math.PI * 5) * ts * 0.06;
-      const a = p < 0.8 ? 1 : 1 - (p - 0.8) / 0.2;
-      ctx.fillStyle = `rgba(255,180,0,${a})`;
-      ctx.font = `bold ${Math.round(ts * 0.52)}px 'Oswald'`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
-      ctx.fillText("!", cx, y + bounce);
-      if (p < 0.4) {
-        ctx.strokeStyle = `rgba(255,150,0,${0.8 * (1 - p / 0.4)})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(
-          x + ts * 0.5,
-          y + ts * 0.5,
-          ts * 0.5 * (p / 0.4),
-          0,
-          Math.PI * 2,
-        );
-        ctx.stroke();
-      }
+      _drawSpot(ctx, ts, fx.data, p);
       break;
     }
 
@@ -594,6 +572,118 @@ function _drawShot(ctx, ts, fx, p) {
           d = ts * 0.18 * r;
         ctx.fillRect(ix + Math.cos(a) * d - 1, iy + Math.sin(a) * d - 1, 2, 2);
       }
+    }
+  }
+  ctx.restore();
+}
+
+// ── SPOT — avvistamento / allerta ───────────────────────────────────────
+// Default: VC che avvista la squadra → fumetto rosso con "!", trattini di
+// sorpresa e due onde d'allerta. data.relay: VC allertato dai compagni →
+// versione più piccola e sobria. data.kind === "trap": trappola individuata
+// dal geniere → anello di scansione che si stringe e triangolo di pericolo.
+function _drawSpot(ctx, ts, data, p) {
+  const { col, row, relay, kind } = data;
+  const { x, y } = tileToScreen(col, row);
+  const cx = x + ts * 0.5,
+    cy = y + ts * 0.5;
+  const trap = kind === "trap";
+  const rgb = trap ? "255,200,40" : "255,80,40";
+  const fadeOut = (a, b) => 1 - Math.min(1, Math.max(0, (p - a) / (b - a)));
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  if (trap) {
+    // Anello di scansione tratteggiato che si stringe sulla trappola
+    if (p < 0.4) {
+      const sp = p / 0.4;
+      ctx.strokeStyle = `rgba(${rgb},${(0.9 * (1 - sp * 0.5)).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1.5, ts * 0.03);
+      ctx.setLineDash([ts * 0.07, ts * 0.05]);
+      ctx.lineDashOffset = -sp * ts;
+      ctx.beginPath();
+      ctx.arc(cx, cy, ts * (0.85 - 0.5 * (1 - (1 - sp) ** 2)), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // Bagliore ambra sulla trappola appena agganciata
+    if (p >= 0.35) {
+      ctx.globalCompositeOperation = "lighter";
+      _smokePuff(ctx, cx, cy, ts * 0.38, rgb, 0.45 * Math.sin(Math.PI * Math.min(1, (p - 0.35) / 0.65)));
+      ctx.globalCompositeOperation = "source-over";
+    }
+  } else {
+    // Onde d'allerta che si propagano dal VC (una sola se allertato di riflesso)
+    for (let k = 0; k < (relay ? 1 : 2); k++) {
+      const r = (p - k * 0.15) / 0.5;
+      if (r <= 0 || r >= 1) continue;
+      ctx.strokeStyle = `rgba(${rgb},${(0.75 * (1 - r)).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1.5, ts * 0.035 * (1 - r));
+      ctx.beginPath();
+      ctx.arc(cx, cy, ts * (0.2 + 0.6 * (1 - (1 - r) ** 2)), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  // Fumetto / triangolo sopra la testa: rimbalzo d'entrata, scossa, uscita
+  const size = ts * (relay ? 0.3 : 0.4);
+  const pop = Math.min(1, p / 0.15);
+  const scale = pop < 1 ? 1 + 2.2 * (pop - 1) ** 3 + 1.2 * (pop - 1) ** 2 : 1;
+  const ba = fadeOut(0.8, 1);
+  const shake = !relay && p > 0.15 && p < 0.35 ? Math.sin(p * 120) * ts * 0.02 : 0;
+  const bx = cx + shake,
+    by = y - size * 0.15 - (trap ? 0 : ts * 0.04 * Math.sin(Math.min(1, p / 0.3) * Math.PI));
+  if (ba > 0 && scale > 0.01) {
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.scale(scale, scale);
+    ctx.globalAlpha = ba;
+    ctx.lineWidth = Math.max(2, ts * 0.04);
+    ctx.strokeStyle = "rgba(25,10,5,0.9)";
+    if (trap) {
+      // Triangolo di pericolo
+      const h = size * 1.1;
+      ctx.beginPath();
+      ctx.moveTo(0, -h * 0.62);
+      ctx.lineTo(h * 0.6, h * 0.42);
+      ctx.lineTo(-h * 0.6, h * 0.42);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${rgb})`;
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      // Fumetto tondo con codina verso l'unità
+      const r = size * 0.55;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, Math.PI * 0.62, Math.PI * 0.38 + Math.PI * 2);
+      ctx.lineTo(0, r * 1.45);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${rgb})`;
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.fillStyle = trap ? "rgb(25,15,5)" : "rgb(255,245,225)";
+    ctx.font = `bold ${Math.round(size * 0.75)}px 'Oswald'`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(t("fx.spot"), 0, trap ? size * 0.08 : size * 0.02);
+    ctx.restore();
+  }
+
+  // Trattini di sorpresa attorno al fumetto (solo avvistamento diretto)
+  if (!trap && !relay && p > 0.08 && p < 0.45) {
+    const lp = (p - 0.08) / 0.37;
+    ctx.strokeStyle = `rgba(${rgb},${(1 - lp).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1.5, ts * 0.03);
+    for (const a of [-2.3, -1.57, -0.84]) {
+      const r0 = size * (0.75 + 0.25 * lp),
+        r1 = r0 + size * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(bx + Math.cos(a) * r0, by + Math.sin(a) * r0);
+      ctx.lineTo(bx + Math.cos(a) * r1, by + Math.sin(a) * r1);
+      ctx.stroke();
     }
   }
   ctx.restore();
