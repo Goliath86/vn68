@@ -30,6 +30,7 @@ function _getTileAnims() {
     col: f.col,
     row: f.row,
     type: "fire",
+    turnsLeft: f.turnsLeft,
   }));
   const smokes = (G.missionState?.smokes || []).map((s) => ({
     col: s.col,
@@ -62,10 +63,11 @@ function _tileAnimTick(now) {
 
 function renderTileAnimations(ctx, ts) {
   const anims = _getTileAnims();
-  if (!anims.length) {
-    _smokeCloudBorn.clear();
-    return;
-  }
+  // Dimentica gli istanti di comparsa di fumo/fuoco ormai spenti
+  const live = new Set(anims.map(_animKey));
+  for (const k of _tileAnimBorn.keys())
+    if (!live.has(k)) _tileAnimBorn.delete(k);
+  if (!anims.length) return;
   const now = performance.now();
   const seed0 = (anim) => anim.col * 7 + anim.row * 13;
   // Nessun check isTileVisible: il FOW overlay è disegnato dopo e copre
@@ -75,12 +77,27 @@ function renderTileAnimations(ctx, ts) {
   for (const anim of anims) {
     const { x, y } = tileToScreen(anim.col, anim.row);
     if (anim.type === "smoke") _drawTileSmoke(ctx, x, y, ts, _tileAnimDt, anim);
-    else if (anim.type === "fire")
-      _drawTileFire(ctx, x, y, ts, now, seed0(anim));
+    else if (anim.type === "fire") _drawTileFire(ctx, x, y, ts, now, anim);
     else if (anim.type === "fog") _drawTileFog(ctx, x, y, ts, now, seed0(anim));
     else if (anim.type === "smokeCloud") clouds.push(anim);
   }
   _drawSmokeClouds(ctx, ts, now, clouds);
+}
+
+// Runtime-only (non salvato): istante di comparsa di ogni tile animato, per
+// far crescere fumo e fuoco invece di farli apparire di colpo
+const _tileAnimBorn = new Map();
+
+function _animKey(anim) {
+  return `${anim.type}:${anim.col},${anim.row}`;
+}
+
+// 0→1 nei primi `ms` millisecondi dalla comparsa, con easing che rallenta
+function _animGrow(anim, now, ms) {
+  const key = _animKey(anim);
+  if (!_tileAnimBorn.has(key)) _tileAnimBorn.set(key, now);
+  const g = Math.min(1, (now - _tileAnimBorn.get(key)) / ms);
+  return 1 - (1 - g) ** 3;
 }
 
 // ── SMOKE CLOUD — cortina fumogena (fumogeni) ───────────────────────────
@@ -88,8 +105,6 @@ function renderTileAnimations(ctx, ts) {
 // in un'unica nube. Disegnata a strati su tutti i tile insieme (ombre → velo
 // → luci) così un tile non copre gli sbuffi del vicino creando cuciture.
 const SMOKE_PUFFS = 5;
-// Runtime-only (non salvato): istante di comparsa di ogni tile, per il fade-in
-const _smokeCloudBorn = new Map();
 
 function _hash01(n) {
   const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -109,18 +124,11 @@ function _smokePuff(ctx, cx, cy, r, rgb, alpha) {
 }
 
 function _drawSmokeClouds(ctx, ts, now, clouds) {
-  // Dimentica i tile il cui fumo è scaduto
-  const live = new Set(clouds.map((a) => a.col + "," + a.row));
-  for (const k of _smokeCloudBorn.keys())
-    if (!live.has(k)) _smokeCloudBorn.delete(k);
   if (!clouds.length) return;
 
   // Geometria animata di ogni tile (calcolata una volta, usata da tutti gli strati)
   const tiles = clouds.map((anim) => {
-    const key = anim.col + "," + anim.row;
-    if (!_smokeCloudBorn.has(key)) _smokeCloudBorn.set(key, now);
-    const grow = Math.min(1, (now - _smokeCloudBorn.get(key)) / 1400);
-    const ease = 1 - (1 - grow) ** 3; // espansione rapida che rallenta
+    const ease = _animGrow(anim, now, 1400); // espansione rapida che rallenta
     const thin = anim.turnsLeft <= 1 ? 0.6 : 1; // ultimo turno: si dirada
     const seed = anim.col * 31 + anim.row * 57;
     const { x, y } = tileToScreen(anim.col, anim.row);
@@ -237,20 +245,90 @@ function _drawTileSmoke(ctx, x, y, ts, dt, anim) {
   ctx.restore();
 }
 
-function _drawTileFire(ctx, x, y, ts, now, seed) {
+// ── FIRE — incendio: terreno bruciato, bagliore, lingue di fiamma, faville ──
+// Strati: base carbonizzata → fumo che sale → bagliore e fiamme in modalità
+// additiva ("lighter", così si illuminano a vicenda) → faville.
+const FIRE_TONGUES = 7;
+const FIRE_EMBERS = 7;
+
+// Lingua di fiamma a goccia: base arrotondata in (bx,by), punta in (tipX, by-h)
+function _flameTongue(ctx, bx, by, w, h, tipX, stops) {
+  const g = ctx.createLinearGradient(bx, by, bx, by - h);
+  for (const [o, c] of stops) g.addColorStop(o, c);
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(bx - w, by);
+  ctx.quadraticCurveTo(bx - w, by - h * 0.55, tipX, by - h);
+  ctx.quadraticCurveTo(bx + w, by - h * 0.55, bx + w, by);
+  ctx.arc(bx, by, w, 0, Math.PI);
+  ctx.fill();
+}
+
+function _drawTileFire(ctx, x, y, ts, now, anim) {
+  const seed = anim.col * 31 + anim.row * 57;
+  const grow = _animGrow(anim, now, 900);
+  const dying = anim.turnsLeft <= 1 ? 0.65 : 1; // ultimo turno: si affievolisce
+  const k = grow * dying;
+  const cx = x + ts * 0.5,
+    baseY = y + ts * 0.8;
+  // Sfarfallio globale: somma di sinusoidi a frequenze diverse
+  const flick =
+    0.88 + 0.08 * Math.sin(now / 83 + seed) + 0.04 * Math.sin(now / 31 + seed * 2);
+
   ctx.save();
-  for (let i = 0; i < 9; i++) {
-    const phase = (now / 700 + (i + seed * 0.11) / 9) % 1;
-    const px = x + ts * (0.15 + ((i * 0.618 + seed * 0.07) % 0.7));
-    const py = y + ts * (0.88 - phase * 0.72);
-    const alpha = phase < 0.1 ? phase / 0.1 : Math.max(0, 1 - phase);
-    const g = Math.floor(
-      phase < 0.4 ? 60 + phase * 350 : Math.max(0, 200 - (phase - 0.4) * 400),
-    );
-    ctx.globalAlpha = alpha * 0.82;
-    ctx.fillStyle = `rgb(255,${g},0)`;
+  // 1) Terreno carbonizzato
+  _smokePuff(ctx, cx, y + ts * 0.62, ts * 0.48, "25,14,6", 0.5 * grow);
+
+  // 2) Fumo scuro che sale dalle punte delle fiamme
+  for (let i = 0; i < 3; i++) {
+    const ph = (now / 2600 + i / 3 + _hash01(seed + i)) % 1;
+    const sx = cx + Math.sin(now / 900 + i * 2 + seed) * ts * 0.1 + ph * ts * 0.12;
+    const sy = baseY - ts * (0.45 + ph * 0.75);
+    const sa = (ph < 0.2 ? ph / 0.2 : 1 - (ph - 0.2) / 0.8) * 0.3 * k;
+    _smokePuff(ctx, sx, sy, ts * (0.14 + ph * 0.22), "45,42,40", sa);
+  }
+
+  ctx.globalCompositeOperation = "lighter";
+  // 3) Bagliore sul terreno circostante
+  _smokePuff(ctx, cx, baseY - ts * 0.15, ts * 0.85, "255,110,20", 0.22 * k * flick);
+
+  // 4) Lingue di fiamma: esterne rosso-arancio, poi nuclei giallo-bianchi
+  const tongues = [];
+  for (let i = 0; i < FIRE_TONGUES; i++) {
+    const h0 = seed + i * 13;
+    const bx = x + ts * (0.22 + (0.56 * (i + 0.5)) / FIRE_TONGUES) + (_hash01(h0) - 0.5) * ts * 0.06;
+    // Le lingue centrali sono più alte
+    const centre = 1 - Math.abs(i - (FIRE_TONGUES - 1) / 2) / FIRE_TONGUES;
+    const lick = 0.8 + 0.2 * Math.sin(now / (110 + _hash01(h0 + 1) * 90) + h0);
+    const h = ts * (0.22 + 0.38 * centre) * lick * k;
+    const w = ts * (0.07 + _hash01(h0 + 2) * 0.04) * (0.6 + 0.4 * k);
+    const sway = Math.sin(now / 240 + h0) * w * 0.9;
+    const by = baseY + (_hash01(h0 + 3) - 0.5) * ts * 0.06;
+    tongues.push({ bx, by, w, h, tipX: bx + sway });
+  }
+  for (const f of tongues)
+    _flameTongue(ctx, f.bx, f.by, f.w, f.h, f.tipX, [
+      [0, "rgba(255,150,30,0.75)"],
+      [0.5, "rgba(230,70,10,0.55)"],
+      [1, "rgba(150,20,0,0)"],
+    ]);
+  for (const f of tongues)
+    _flameTongue(ctx, f.bx, f.by, f.w * 0.5, f.h * 0.6, f.bx + (f.tipX - f.bx) * 0.6, [
+      [0, "rgba(255,250,215,0.8)"],
+      [0.45, "rgba(255,210,70,0.55)"],
+      [1, "rgba(255,140,20,0)"],
+    ]);
+
+  // 5) Faville: salgono ondeggiando e si spengono
+  for (let i = 0; i < FIRE_EMBERS; i++) {
+    const h0 = seed + i * 29;
+    const ph = (now / (1300 + _hash01(h0) * 900) + _hash01(h0 + 1)) % 1;
+    const ex = x + ts * (0.3 + _hash01(h0 + 2) * 0.4) + Math.sin(ph * 9 + h0) * ts * 0.08;
+    const ey = baseY - ts * (0.15 + ph * 0.95);
+    const ea = (1 - ph) * k;
+    ctx.fillStyle = `rgba(255,${Math.floor(200 - ph * 120)},40,${ea.toFixed(3)})`;
     ctx.beginPath();
-    ctx.arc(px, py, ts * (0.07 * (1 - phase * 0.5)), 0, Math.PI * 2);
+    ctx.arc(ex, ey, Math.max(1, ts * 0.018 * (1 - ph * 0.5)), 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
