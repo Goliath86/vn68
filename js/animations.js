@@ -35,6 +35,7 @@ function _getTileAnims() {
     col: s.col,
     row: s.row,
     type: "smokeCloud",
+    turnsLeft: s.turnsLeft,
   }));
   return [...global, ...mission, ...fires, ...smokes];
 }
@@ -61,36 +62,105 @@ function _tileAnimTick(now) {
 
 function renderTileAnimations(ctx, ts) {
   const anims = _getTileAnims();
-  if (!anims.length) return;
+  if (!anims.length) {
+    _smokeCloudBorn.clear();
+    return;
+  }
   const now = performance.now();
   const seed0 = (anim) => anim.col * 7 + anim.row * 13;
   // Nessun check isTileVisible: il FOW overlay è disegnato dopo e copre
   // naturalmente le animazioni sui tile non visibili. Le particelle che
   // sconfinano in tile visibili adiacenti danno un effetto realistico.
+  const clouds = [];
   for (const anim of anims) {
     const { x, y } = tileToScreen(anim.col, anim.row);
     if (anim.type === "smoke") _drawTileSmoke(ctx, x, y, ts, _tileAnimDt, anim);
     else if (anim.type === "fire")
       _drawTileFire(ctx, x, y, ts, now, seed0(anim));
     else if (anim.type === "fog") _drawTileFog(ctx, x, y, ts, now, seed0(anim));
-    else if (anim.type === "smokeCloud")
-      _drawSmokeCloud(ctx, x, y, ts, now, seed0(anim));
+    else if (anim.type === "smokeCloud") clouds.push(anim);
   }
+  _drawSmokeClouds(ctx, ts, now, clouds);
 }
 
-// ── SMOKE CLOUD — cortina fumogena (fumogeni): velo grigio denso e pulsante
-function _drawSmokeCloud(ctx, x, y, ts, now, seed) {
-  ctx.save();
-  ctx.globalAlpha = 0.62 + 0.08 * Math.sin(now / 900 + seed);
-  ctx.fillStyle = "rgb(170,170,165)";
-  ctx.fillRect(x, y, ts, ts);
-  ctx.globalAlpha = 0.35;
-  ctx.fillStyle = "rgb(215,215,210)";
-  const off = Math.sin(now / 1300 + seed) * ts * 0.08;
+// ── SMOKE CLOUD — cortina fumogena (fumogeni) ───────────────────────────
+// Sbuffi morbidi che sconfinano nei tile vicini: più tile fumati si fondono
+// in un'unica nube. Disegnata a strati su tutti i tile insieme (ombre → velo
+// → luci) così un tile non copre gli sbuffi del vicino creando cuciture.
+const SMOKE_PUFFS = 5;
+// Runtime-only (non salvato): istante di comparsa di ogni tile, per il fade-in
+const _smokeCloudBorn = new Map();
+
+function _hash01(n) {
+  const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+function _smokePuff(ctx, cx, cy, r, rgb, alpha) {
+  if (alpha <= 0.005 || r <= 0) return;
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g.addColorStop(0, `rgba(${rgb},${alpha.toFixed(3)})`);
+  g.addColorStop(0.55, `rgba(${rgb},${(alpha * 0.55).toFixed(3)})`);
+  g.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.arc(x + ts * 0.35 + off, y + ts * 0.4, ts * 0.3, 0, Math.PI * 2);
-  ctx.arc(x + ts * 0.65 - off, y + ts * 0.6, ts * 0.28, 0, Math.PI * 2);
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.fill();
+}
+
+function _drawSmokeClouds(ctx, ts, now, clouds) {
+  // Dimentica i tile il cui fumo è scaduto
+  const live = new Set(clouds.map((a) => a.col + "," + a.row));
+  for (const k of _smokeCloudBorn.keys())
+    if (!live.has(k)) _smokeCloudBorn.delete(k);
+  if (!clouds.length) return;
+
+  // Geometria animata di ogni tile (calcolata una volta, usata da tutti gli strati)
+  const tiles = clouds.map((anim) => {
+    const key = anim.col + "," + anim.row;
+    if (!_smokeCloudBorn.has(key)) _smokeCloudBorn.set(key, now);
+    const grow = Math.min(1, (now - _smokeCloudBorn.get(key)) / 1400);
+    const ease = 1 - (1 - grow) ** 3; // espansione rapida che rallenta
+    const thin = anim.turnsLeft <= 1 ? 0.6 : 1; // ultimo turno: si dirada
+    const seed = anim.col * 31 + anim.row * 57;
+    const { x, y } = tileToScreen(anim.col, anim.row);
+    const cx = x + ts * 0.5,
+      cy = y + ts * 0.5;
+    const windX = Math.sin(now / 4200 + seed * 0.1) * ts * 0.05;
+    const puffs = [];
+    for (let i = 0; i < SMOKE_PUFFS; i++) {
+      const h = seed + i * 17;
+      const dir = i % 2 ? 1 : -1;
+      const ang = _hash01(h) * Math.PI * 2 + dir * now * (0.00012 + _hash01(h + 1) * 0.00015);
+      const d = (0.12 + _hash01(h + 2) * 0.22) * ts * (0.5 + 0.5 * ease);
+      const r =
+        ts *
+        (0.3 + _hash01(h + 3) * 0.16) *
+        (1 + 0.08 * Math.sin(now / 1700 + h)) *
+        (0.4 + 0.6 * ease);
+      puffs.push({
+        px: cx + Math.cos(ang) * d + windX,
+        py: cy + Math.sin(ang) * d * 0.8,
+        r,
+      });
+    }
+    return { cx, cy, a: ease * thin, ease, puffs };
+  });
+
+  ctx.save();
+  // 1) Ombre: danno volume alla parte bassa degli sbuffi
+  for (const tl of tiles)
+    for (const p of tl.puffs)
+      _smokePuff(ctx, p.px + ts * 0.05, p.py + ts * 0.07, p.r, "95,98,94", 0.22 * tl.a);
+  // 2) Velo di base: copre bene il tile e sfuma oltre i bordi
+  for (const tl of tiles)
+    _smokePuff(ctx, tl.cx, tl.cy, ts * 0.8 * (0.5 + 0.5 * tl.ease), "165,167,162", 0.55 * tl.a);
+  // 3) Corpo e luci degli sbuffi
+  for (const tl of tiles)
+    for (const p of tl.puffs) {
+      _smokePuff(ctx, p.px, p.py, p.r, "196,197,191", 0.42 * tl.a);
+      _smokePuff(ctx, p.px - ts * 0.03, p.py - ts * 0.04, p.r * 0.6, "232,232,226", 0.38 * tl.a);
+    }
   ctx.restore();
 }
 
