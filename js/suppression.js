@@ -24,7 +24,7 @@ function checkSuppression(enemy) {
           tCol: enemy.col,
           tRow: enemy.row,
         },
-        700,
+        1200,
       );
 
       sfxShoot(sup.cls, unitWeapon(sup));

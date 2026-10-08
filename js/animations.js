@@ -440,35 +440,7 @@ function _drawEffect(ctx, ts, fx, p) {
     }
 
     case "suppression": {
-      const { supCol, supRow, tCol, tRow } = fx.data;
-      const { x: ox2, y: oy2 } = tileToScreen(supCol, supRow);
-      const { x: tx3, y: ty3 } = tileToScreen(tCol, tRow);
-      const ssx = ox2 + ts * 0.5,
-        ssy = oy2 + ts * 0.5,
-        stx = tx3 + ts * 0.5,
-        sty = ty3 + ts * 0.5;
-      if (p < 0.35) {
-        const ft = p / 0.35;
-        ctx.strokeStyle = `rgba(255,165,50,${0.9 * (1 - ft)})`;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(ox2 + 2, oy2 + 2, ts - 4, ts - 4);
-      }
-      ctx.strokeStyle = `rgba(255,165,50,${0.85 * (1 - p)})`;
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([3, 2]);
-      const stt = Math.min(1, p / 0.75);
-      ctx.beginPath();
-      ctx.moveTo(ssx, ssy);
-      ctx.lineTo(ssx + (stx - ssx) * stt, ssy + (sty - ssy) * stt);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      if (p < 0.5) {
-        ctx.fillStyle = `rgba(255,165,50,${1 - p / 0.5})`;
-        ctx.font = `bold ${Math.round(ts * 0.24)}px 'Oswald'`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "bottom";
-        ctx.fillText(t("fx.suppression"), ssx, oy2);
-      }
+      _drawSuppression(ctx, ts, fx, p);
       break;
     }
 
@@ -909,6 +881,110 @@ function _drawOverwatch(ctx, ts, fx, p) {
     ctx.strokeText(t("fx.overwatch"), osx, oy - ts * 0.04);
     ctx.fillStyle = `rgba(${OW_RGB},${ta.toFixed(3)})`;
     ctx.fillText(t("fx.overwatch"), osx, oy - ts * 0.04);
+  }
+}
+
+// ── SUPPRESSION — fuoco di soppressione ─────────────────────────────────
+// Nessun danno: il bersaglio viene inchiodato. Angoli arancioni sul tiratore,
+// raffica di 5 traccianti (tutti mancati, la polvere si alza attorno al VC)
+// e chevron che scendono schiacciando il bersaglio a terra.
+const SUP_RGB = "255,165,50";
+const SUP_SHOT_MS = 900;
+
+function _drawSuppression(ctx, ts, fx, p) {
+  const { supCol, supRow, tCol, tRow } = fx.data;
+  const { x: ox, y: oy } = tileToScreen(supCol, supRow);
+  const { x: tx, y: ty } = tileToScreen(tCol, tRow);
+  const osx = ox + ts * 0.5,
+    osy = oy + ts * 0.5,
+    otx = tx + ts * 0.5,
+    oty = ty + ts * 0.5;
+  const fadeOut = (a, b) => 1 - Math.min(1, Math.max(0, (p - a) / (b - a)));
+
+  // 1) Angoli sul tiratore: si chiudono dall'esterno e svaniscono
+  const ba = fadeOut(0.3, 0.5);
+  if (ba > 0) {
+    const close = Math.min(1, p / 0.15);
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = `rgba(${SUP_RGB},${(0.95 * ba).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1.5, ts * 0.04);
+    _cornerBrackets(ctx, osx, osy, ts * (0.62 - 0.16 * (1 - (1 - close) ** 3)), ts * 0.16);
+    ctx.restore();
+  }
+
+  // 2) Raffica: stessi traccianti dello sparo, tutti a vuoto attorno al VC
+  const sp = (p * fx.duration) / SUP_SHOT_MS;
+  if (sp < 1.15)
+    _drawShot(
+      ctx,
+      ts,
+      {
+        t0: fx.t0,
+        data: {
+          fromCol: supCol,
+          fromRow: supRow,
+          toCol: tCol,
+          toRow: tRow,
+          enemy: false,
+          hit: false,
+          rounds: 5,
+        },
+      },
+      sp,
+    );
+
+  // 3) Bersaglio inchiodato: bagliore arancione e tre chevron che scendono
+  const pa = Math.min(1, Math.max(0, (p - 0.25) / 0.1)) * fadeOut(0.8, 1);
+  if (pa > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    _smokePuff(ctx, otx, oty, ts * 0.45, SUP_RGB, 0.3 * pa);
+    ctx.restore();
+
+    const press = Math.min(1, Math.max(0, (p - 0.25) / 0.45));
+    const pe = 1 - (1 - press) ** 2;
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2, ts * 0.045);
+    const w = ts * 0.16;
+    for (let k = 0; k < 3; k++) {
+      // Partono distanziati sopra la testa e si compattano verso il basso
+      const cy0 = oty - ts * (0.95 - k * 0.14);
+      const cy1 = oty - ts * (0.48 - k * 0.07);
+      const cy = cy0 + (cy1 - cy0) * pe;
+      const a = pa * (0.55 + 0.15 * k);
+      ctx.strokeStyle = `rgba(40,20,0,${(0.7 * a).toFixed(3)})`;
+      ctx.lineWidth = Math.max(3, ts * 0.075);
+      ctx.beginPath();
+      ctx.moveTo(otx - w, cy - w * 0.55);
+      ctx.lineTo(otx, cy);
+      ctx.lineTo(otx + w, cy - w * 0.55);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(${SUP_RGB},${a.toFixed(3)})`;
+      ctx.lineWidth = Math.max(2, ts * 0.045);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 4) Scritta "SOPPRESSIONE" sopra il tiratore
+  const pop = Math.min(1, p / 0.1);
+  const scale = pop < 1 ? 1 + 2.2 * (pop - 1) ** 3 + 1.2 * (pop - 1) ** 2 : 1;
+  const ta = fadeOut(0.55, 0.8);
+  if (ta > 0) {
+    const size = ts * 0.24 * Math.max(0.01, scale);
+    ctx.font = `bold ${Math.round(size)}px 'Oswald'`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2, size * 0.18);
+    ctx.strokeStyle = `rgba(45,22,0,${(0.85 * ta).toFixed(3)})`;
+    ctx.strokeText(t("fx.suppression"), osx, oy - ts * 0.04);
+    ctx.fillStyle = `rgba(${SUP_RGB},${ta.toFixed(3)})`;
+    ctx.fillText(t("fx.suppression"), osx, oy - ts * 0.04);
   }
 }
 
