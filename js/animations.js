@@ -352,7 +352,6 @@ function renderEffects(ctx, ts) {
 }
 
 function _drawEffect(ctx, ts, fx, p) {
-  const ease = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
   ctx.save();
   switch (fx.type) {
     case "move": {
@@ -511,30 +510,7 @@ function _drawEffect(ctx, ts, fx, p) {
     }
 
     case "heal": {
-      const { col, row, amount } = fx.data;
-      const { x, y } = tileToScreen(col, row);
-      const cx = x + ts * 0.5,
-        cy = y + ts * 0.5;
-      if (p < 0.45) {
-        const ct = p / 0.45,
-          s = ts * 0.28,
-          ca = (1 - ct) * 0.85;
-        ctx.fillStyle = `rgba(80,220,80,${ca})`;
-        ctx.fillRect(cx - s * 0.15, cy - s * 0.5, s * 0.3, s);
-        ctx.fillRect(cx - s * 0.5, cy - s * 0.15, s, s * 0.3);
-      }
-      ctx.strokeStyle = `rgba(80,200,80,${(1 - p) * 0.8})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, ts * 0.52 * ease, 0, Math.PI * 2);
-      ctx.stroke();
-      const fy2 = cy - ts * 0.6 * p,
-        a2 = p < 0.7 ? 1 : 1 - (p - 0.7) / 0.3;
-      ctx.fillStyle = `rgba(100,255,100,${a2})`;
-      ctx.font = `bold ${Math.round(ts * 0.3)}px 'Oswald'`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(`+${amount}HP`, cx, fy2);
+      _drawHeal(ctx, ts, fx.data, p);
       break;
     }
 
@@ -782,6 +758,136 @@ function _drawShot(ctx, ts, fx, p) {
     }
   }
   ctx.restore();
+}
+
+// ── HEAL — cura del medico ──────────────────────────────────────────────
+// Sfera di luce dal medico al ferito (se su tile diversi) → alone e anelli
+// verdi → piccole croci che salgono → croce medica con rimbalzo → "+N HP".
+const HEAL_MOTES = 10;
+
+// Croce "+" centrata in (cx,cy) con lato s
+function _plusPath(ctx, cx, cy, s) {
+  const a = s * 0.5,
+    b = s * 0.17;
+  ctx.beginPath();
+  ctx.moveTo(cx - b, cy - a);
+  ctx.lineTo(cx + b, cy - a);
+  ctx.lineTo(cx + b, cy - b);
+  ctx.lineTo(cx + a, cy - b);
+  ctx.lineTo(cx + a, cy + b);
+  ctx.lineTo(cx + b, cy + b);
+  ctx.lineTo(cx + b, cy + a);
+  ctx.lineTo(cx - b, cy + a);
+  ctx.lineTo(cx - b, cy + b);
+  ctx.lineTo(cx - a, cy + b);
+  ctx.lineTo(cx - a, cy - b);
+  ctx.lineTo(cx - b, cy - b);
+  ctx.closePath();
+}
+
+function _drawHeal(ctx, ts, data, p) {
+  const { col, row, amount, fromCol, fromRow } = data;
+  const { x, y } = tileToScreen(col, row);
+  const cx = x + ts * 0.5,
+    cy = y + ts * 0.5;
+  const seed = col * 31 + row * 57;
+  const hasFrom =
+    fromCol != null && (fromCol !== col || fromRow !== row);
+  const t0 = hasFrom ? 0.2 : 0;
+  const q = Math.max(0, (p - t0) / (1 - t0)); // tempo locale dopo l'arrivo
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+
+  // 1) Sfera di luce dal medico al ferito, con scia
+  if (hasFrom && p < t0 + 0.05) {
+    const { x: mx0, y: my0 } = tileToScreen(fromCol, fromRow);
+    const mx = mx0 + ts * 0.5,
+      my = my0 + ts * 0.5;
+    const o = Math.min(1, p / t0);
+    const e = o * o * (3 - 2 * o);
+    const ox = mx + (cx - mx) * e,
+      oy = my + (cy - my) * e;
+    const trail = Math.max(0, e - 0.25);
+    const g = ctx.createLinearGradient(mx + (cx - mx) * trail, my + (cy - my) * trail, ox, oy);
+    g.addColorStop(0, "rgba(120,255,140,0)");
+    g.addColorStop(1, "rgba(120,255,140,0.7)");
+    ctx.strokeStyle = g;
+    ctx.lineCap = "round";
+    ctx.lineWidth = Math.max(2, ts * 0.06);
+    ctx.beginPath();
+    ctx.moveTo(mx + (cx - mx) * trail, my + (cy - my) * trail);
+    ctx.lineTo(ox, oy);
+    ctx.stroke();
+    _smokePuff(ctx, ox, oy, ts * 0.18, "160,255,170", 0.9);
+  }
+
+  if (q > 0) {
+    // 2) Alone verde che pulsa sotto l'unità
+    _smokePuff(ctx, cx, cy + ts * 0.1, ts * 0.65, "70,220,100", 0.45 * Math.sin(Math.PI * q));
+
+    // 3) Due anelli che si allargano sfasati
+    for (let k = 0; k < 2; k++) {
+      const r = (q - k * 0.18) / 0.6;
+      if (r <= 0 || r >= 1) continue;
+      ctx.strokeStyle = `rgba(120,255,140,${(0.8 * (1 - r)).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1.5, ts * 0.035 * (1 - r));
+      ctx.beginPath();
+      ctx.arc(cx, cy, ts * (0.15 + 0.5 * (1 - (1 - r) ** 2)), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // 4) Piccole croci luminose che salgono ondeggiando
+    for (let i = 0; i < HEAL_MOTES; i++) {
+      const h = seed + i * 17;
+      const start = _hash01(h) * 0.45;
+      const m = (q - start) / 0.5;
+      if (m <= 0 || m >= 1) continue;
+      const mxp = cx + (_hash01(h + 1) - 0.5) * ts * 0.7 + Math.sin(m * 6 + h) * ts * 0.05;
+      const myp = y + ts * (0.85 - 0.75 * m);
+      const ma = Math.sin(Math.PI * m) * 0.9;
+      _smokePuff(ctx, mxp, myp, ts * 0.07, "120,255,140", ma * 0.5);
+      ctx.fillStyle = `rgba(210,255,215,${ma.toFixed(3)})`;
+      _plusPath(ctx, mxp, myp, ts * (0.05 + _hash01(h + 2) * 0.04));
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  if (q <= 0) return;
+
+  // 5) Croce medica: compare con un rimbalzo, sale e svanisce
+  const pop = Math.min(1, q / 0.2);
+  const scale = pop < 1 ? 1 + 2.2 * (pop - 1) ** 3 + 1.2 * (pop - 1) ** 2 : 1; // back-out
+  const ca = q < 0.6 ? 1 : Math.max(0, 1 - (q - 0.6) / 0.3);
+  if (ca > 0) {
+    const crossY = cy - ts * 0.12 * q;
+    const s = ts * 0.34 * scale;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    _smokePuff(ctx, cx, crossY, ts * 0.32 * scale, "90,240,120", 0.55 * ca);
+    ctx.restore();
+    ctx.fillStyle = `rgba(255,255,255,${(0.95 * ca).toFixed(3)})`;
+    ctx.strokeStyle = `rgba(40,150,60,${ca.toFixed(3)})`;
+    ctx.lineWidth = Math.max(1.5, ts * 0.025);
+    ctx.lineJoin = "round";
+    _plusPath(ctx, cx, crossY, s);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // 6) "+N HP" con contorno scuro, leggibile su qualsiasi terreno
+  const fy = cy - ts * 0.35 - ts * 0.4 * q,
+    ta = q < 0.7 ? Math.min(1, q / 0.1) : 1 - (q - 0.7) / 0.3;
+  ctx.font = `bold ${Math.round(ts * 0.3)}px 'Oswald'`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(2, ts * 0.06);
+  ctx.strokeStyle = `rgba(10,40,15,${(0.85 * ta).toFixed(3)})`;
+  ctx.strokeText(`+${amount}HP`, cx, fy);
+  ctx.fillStyle = `rgba(130,255,140,${ta.toFixed(3)})`;
+  ctx.fillText(`+${amount}HP`, cx, fy);
 }
 
 // ── EXPLOSION — granate, RPG, artiglieria, mine ─────────────────────────

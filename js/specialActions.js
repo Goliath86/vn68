@@ -14,7 +14,17 @@ async function handleSpecialAction(col, row) {
       u.ap -= 1;
       u.specialUsed = true;
       sfx("heal");
-      addFX("heal", { col: ally.col, row: ally.row, amount: healed }, 900);
+      addFX(
+        "heal",
+        {
+          col: ally.col,
+          row: ally.row,
+          amount: healed,
+          fromCol: u.col,
+          fromRow: u.row,
+        },
+        1400,
+      );
       log(
         t("log.medic_heal", {
           name: u.name,
