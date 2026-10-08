@@ -70,8 +70,9 @@ async function handleSpecialAction(col, row) {
           col: target.col,
           row: target.row,
           success: true,
+          ignite: true,
         },
-        1000,
+        1100,
       );
       log(
         t("log.fire_set", {
@@ -101,7 +102,7 @@ async function handleSpecialAction(col, row) {
           row: target.row,
           success: true,
         },
-        1200,
+        1500,
       );
       log(
         t("log.demolition_success", {
@@ -118,7 +119,7 @@ async function handleSpecialAction(col, row) {
           row: target.row,
           success: false,
         },
-        1000,
+        1100,
       );
       log(
         t("log.demolition_fail", {

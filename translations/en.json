@@ -245,6 +245,7 @@
     "suppression": "SUP!",
     "demolition_success": "BLOWN!",
     "demolition_fail": "HELD",
+    "ignite": "TORCHED!",
     "explosion": "BOOM!"
   },
 

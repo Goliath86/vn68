@@ -461,32 +461,7 @@ function _drawEffect(ctx, ts, fx, p) {
     }
 
     case "demolition": {
-      const { col, row, success } = fx.data;
-      const { x, y } = tileToScreen(col, row);
-      const cx = x + ts * 0.5,
-        cy = y + ts * 0.5;
-      if (p < 0.55) {
-        const dt = p / 0.55;
-        ctx.fillStyle = `rgba(180,150,80,${(1 - dt) * 0.55})`;
-        ctx.beginPath();
-        ctx.arc(cx, cy, ts * 0.5 * dt, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      if (p > 0.18) {
-        const ta = p < 0.7 ? 1 : 1 - (p - 0.7) / 0.3,
-          fy3 = cy - ts * 0.45 * (p - 0.18);
-        ctx.fillStyle = success
-          ? `rgba(100,255,100,${ta})`
-          : `rgba(255,120,80,${ta})`;
-        ctx.font = `bold ${Math.round(ts * 0.26)}px 'Special Elite'`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(
-          success ? t("fx.demolition_success") : t("fx.demolition_fail"),
-          cx,
-          fy3,
-        );
-      }
+      _drawDemolition(ctx, ts, fx, p);
       break;
     }
 
@@ -1277,6 +1252,169 @@ function _drawDeath(ctx, ts, data, p) {
   }
 }
 
+// ── DEMOLITION — speciale del geniere ───────────────────────────────────
+// Tre varianti:
+//  - riuscita: carica che lampeggia → esplosione → calcinacci che volano e
+//    nube di polvere che copre il crollo (il tile cambia sotto la polvere)
+//  - fallita: piccola esplosione e crepe sulla struttura che regge
+//  - ignite (incendio di un tile burnable): fiammata che si alza
+const DEMO_RUBBLE = 12;
+
+// Scritta finale con rimbalzo e contorno
+function _demoLabel(ctx, ts, cx, cy, text, rgb, p, start) {
+  if (p < start) return;
+  const lp = (p - start) / (1 - start);
+  const pop = Math.min(1, lp / 0.15);
+  const scale = pop < 1 ? 1 + 2.2 * (pop - 1) ** 3 + 1.2 * (pop - 1) ** 2 : 1;
+  const ta = lp < 0.7 ? 1 : 1 - (lp - 0.7) / 0.3;
+  const size = ts * 0.28 * Math.max(0.01, scale);
+  const fy = cy - ts * 0.45 - ts * 0.25 * lp;
+  ctx.font = `bold ${Math.round(size)}px 'Special Elite'`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(2, size * 0.2);
+  ctx.strokeStyle = `rgba(20,15,5,${(0.85 * ta).toFixed(3)})`;
+  ctx.strokeText(text, cx, fy);
+  ctx.fillStyle = `rgba(${rgb},${ta.toFixed(3)})`;
+  ctx.fillText(text, cx, fy);
+}
+
+function _drawDemolition(ctx, ts, fx, p) {
+  const { col, row, success, ignite } = fx.data;
+  const { x, y } = tileToScreen(col, row);
+  const cx = x + ts * 0.5,
+    cy = y + ts * 0.5;
+  const seed = col * 31 + row * 57;
+
+  if (ignite) {
+    // Fiammata: lampo, lingue di fuoco che si alzano e si allargano, faville
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    if (p < 0.15)
+      _smokePuff(ctx, cx, cy + ts * 0.1, ts * 0.5, "255,200,90", 0.9 * (1 - p / 0.15));
+    const wp = Math.min(1, p / 0.55);
+    const wa = 1 - Math.max(0, (p - 0.35) / 0.5);
+    if (wa > 0)
+      for (let i = 0; i < 7; i++) {
+        const h = seed + i * 13;
+        const a = -Math.PI / 2 + (_hash01(h) - 0.5) * 2.2;
+        const d = ts * (0.1 + 0.45 * (1 - (1 - wp) ** 2)) * (0.6 + _hash01(h + 1) * 0.5);
+        const heat = 1 - wp;
+        _smokePuff(
+          ctx,
+          cx + Math.cos(a) * d,
+          cy + ts * 0.15 + Math.sin(a) * d,
+          ts * (0.12 + 0.12 * wp),
+          `255,${Math.floor(110 + 120 * heat)},${Math.floor(20 + 60 * heat)}`,
+          0.7 * wa,
+        );
+      }
+    for (let i = 0; i < 6; i++) {
+      const h = seed + i * 29;
+      const ep = Math.min(1, p / (0.6 + _hash01(h) * 0.3));
+      if (ep >= 1) continue;
+      ctx.fillStyle = `rgba(255,${Math.floor(210 - ep * 120)},50,${(1 - ep).toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(
+        cx + (_hash01(h + 1) - 0.5) * ts * 0.6 + Math.sin(ep * 8 + h) * ts * 0.05,
+        cy + ts * 0.2 - ts * 0.9 * ep,
+        Math.max(1, ts * 0.02),
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    ctx.restore();
+    _demoLabel(ctx, ts, cx, cy, t("fx.ignite"), "255,170,60", p, 0.15);
+    return;
+  }
+
+  // Carica che lampeggia prima della detonazione
+  const fuse = 0.12;
+  if (p < fuse) {
+    const on = Math.floor((p / fuse) * 4) % 2 === 0;
+    ctx.fillStyle = "rgba(60,50,35,0.9)";
+    ctx.fillRect(cx - ts * 0.07, cy - ts * 0.05, ts * 0.14, ts * 0.1);
+    if (on) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      _smokePuff(ctx, cx, cy - ts * 0.02, ts * 0.12, "255,40,30", 0.95);
+      ctx.restore();
+    }
+  }
+  const lp = (p - fuse) / (1 - fuse); // tempo locale dopo la detonazione
+  if (lp <= 0) return;
+
+  if (success) {
+    // Nube di polvere: si allarga e resta fino alla fine, copre il crollo
+    const dp = Math.min(1, lp / 0.5);
+    const da = Math.min(1, lp / 0.15) * (1 - Math.max(0, (lp - 0.6) / 0.4));
+    for (let i = 0; i < 7; i++) {
+      const h = seed + i * 17;
+      const a = (i / 7) * Math.PI * 2 + _hash01(h) * 0.7;
+      const d = ts * (0.15 + 0.4 * (1 - (1 - dp) ** 2)) * (0.6 + _hash01(h + 1) * 0.5);
+      _smokePuff(
+        ctx,
+        cx + Math.cos(a) * d,
+        cy + Math.sin(a) * d * 0.8 - ts * 0.15 * lp,
+        ts * (0.25 + 0.25 * dp),
+        i % 2 ? "165,145,110" : "140,122,94",
+        0.6 * da,
+      );
+    }
+    _drawExplosion(ctx, ts, { col, row, aoe: 1, noText: true }, Math.min(1, lp / 0.75));
+
+    // Calcinacci: blocchi che volano, ruotano, rallentano e si posano
+    const rp = Math.min(1, lp / 0.65);
+    const ra = 1 - Math.max(0, (lp - 0.7) / 0.3);
+    for (let i = 0; i < DEMO_RUBBLE; i++) {
+      const h = seed + i * 23;
+      const a = _hash01(h) * Math.PI * 2;
+      const d = ts * (0.35 + _hash01(h + 1) * 0.75) * (1 - (1 - rp) ** 2);
+      const s = ts * (0.04 + _hash01(h + 2) * 0.05);
+      ctx.save();
+      ctx.translate(cx + Math.cos(a) * d, cy + Math.sin(a) * d);
+      ctx.rotate((_hash01(h + 3) - 0.5) * 10 * rp);
+      ctx.fillStyle = `rgba(${i % 3 ? "120,105,85" : "85,75,62"},${ra.toFixed(3)})`;
+      ctx.fillRect(-s / 2, -s / 2, s, s * 0.75);
+      ctx.restore();
+    }
+    _demoLabel(ctx, ts, cx, cy, t("fx.demolition_success"), "120,255,120", lp, 0.25);
+  } else {
+    // Piccola esplosione che non abbatte la struttura
+    _drawExplosion(ctx, ts, { col, row, aoe: 0, noText: true }, Math.min(1, lp / 0.7));
+    // Crepe scure che si propagano dal centro e restano visibili
+    const cp = Math.min(1, lp / 0.3);
+    const ca = 1 - Math.max(0, (lp - 0.6) / 0.4);
+    ctx.save();
+    ctx.strokeStyle = `rgba(25,18,10,${(0.85 * ca).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1.5, ts * 0.025);
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    for (let i = 0; i < 4; i++) {
+      const h = seed + i * 31;
+      let a = (i / 4) * Math.PI * 2 + _hash01(h) * 0.8;
+      let px = cx,
+        py = cy;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      const segs = 4;
+      for (let s = 1; s <= segs; s++) {
+        if (s / segs > cp) break;
+        a += (_hash01(h + s) - 0.5) * 1.2; // andamento a zig-zag
+        const step = ts * 0.1;
+        px += Math.cos(a) * step;
+        py += Math.sin(a) * step;
+        ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+    _demoLabel(ctx, ts, cx, cy, t("fx.demolition_fail"), "255,130,90", lp, 0.2);
+  }
+}
+
 // ── EXPLOSION — granate, RPG, artiglieria, mine ─────────────────────────
 // Fasi: lampo → onda d'urto → palla di fuoco che si raffredda in fumo, con
 // scie di scintille, detriti e bruciatura sul terreno. La dimensione segue il
@@ -1290,7 +1428,7 @@ function _drawExplosion(ctx, ts, data, p) {
   const { x, y } = tileToScreen(col, row);
   const cx = x + ts * 0.5,
     cy = y + ts * 0.5;
-  const R = ts * (0.55 + 0.4 * (data.aoe || 1)); // raggio palla di fuoco
+  const R = ts * (0.55 + 0.4 * (data.aoe ?? 1)); // raggio palla di fuoco
   const seed = col * 31 + row * 57;
   const out = 1 - (1 - p) ** 3; // espansione rapida che rallenta
   const fadeIn = (a, b) => Math.min(1, Math.max(0, (p - a) / (b - a)));
@@ -1378,8 +1516,8 @@ function _drawExplosion(ctx, ts, data, p) {
   }
   ctx.restore();
 
-  // 8) Testo BOOM
-  if (p > 0.1 && p < 0.72) {
+  // 8) Testo BOOM (data.noText: chi chiama mostra una scritta sua)
+  if (!data.noText && p > 0.1 && p < 0.72) {
     const ta = p < 0.4 ? 1 : 1 - (p - 0.4) / 0.32;
     ctx.fillStyle = `rgba(255,240,80,${ta})`;
     ctx.font = `bold ${Math.round(ts * 0.33)}px 'Oswald'`;

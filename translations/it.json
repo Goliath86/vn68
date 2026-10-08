@@ -250,6 +250,7 @@
     "suppression": "SUP!",
     "demolition_success": "DEMOLITO!",
     "demolition_fail": "RESISTENTE",
+    "ignite": "INCENDIATO!",
     "explosion": "BOOM!"
   },
 
