@@ -111,6 +111,7 @@ async function resolveCombat(
         dmg,
         fromCol: attacker.col,
         fromRow: attacker.row,
+        enemy: !isEnemy,
       },
       800,
       impact,
@@ -152,6 +153,7 @@ async function resolveCombat(
         row: defender.row,
         fromCol: attacker.col,
         fromRow: attacker.row,
+        enemy: !isEnemy,
       },
       800,
       impact,
@@ -278,7 +280,14 @@ async function resolveAoeCombat(
       sfx("hit");
       addFX(
         "hit",
-        { col: def.col, row: def.row, dmg, fromCol: tc, fromRow: tr },
+        {
+          col: def.col,
+          row: def.row,
+          dmg,
+          fromCol: tc,
+          fromRow: tr,
+          enemy: !isUS,
+        },
         800,
       );
       def.hp -= dmg;
@@ -306,7 +315,14 @@ async function resolveAoeCombat(
       sfx("miss");
       addFX(
         "miss",
-        { col: def.col, row: def.row, fromCol: tc, fromRow: tr, blast: true },
+        {
+          col: def.col,
+          row: def.row,
+          fromCol: tc,
+          fromRow: tr,
+          blast: true,
+          enemy: !isUS,
+        },
         800,
       );
     }

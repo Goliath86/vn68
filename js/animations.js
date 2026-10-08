@@ -347,6 +347,7 @@ function _drawTileFog(ctx, x, y, ts, now, seed) {
 function renderEffects(ctx, ts) {
   const now = performance.now();
   for (const fx of G.effects) {
+    if (_fxHiddenByFow(fx)) continue;
     const t = Math.min(1, (now - fx.t0) / fx.duration);
     if (t < 0) {
       // Effetto in attesa: l'unità uccisa è già rimossa dalla mappa, la si
@@ -358,8 +359,50 @@ function renderEffects(ctx, ts) {
   }
 }
 
+// ── FOG OF WAR sugli effetti ────────────────────────────────────────────
+// Gli effetti sono sul canvas overlay, sopra al velo del FOW: senza filtri
+// rivelerebbero i VC nascosti. Gli effetti su un tile di un VC (data.enemy
+// per hit/miss/death; spot e spawn sono sempre VC, tranne le trappole)
+// vengono saltati se il tile non è visibile. Le unità US non si filtrano:
+// alla loro morte il tile può uscire dalla visibilità.
+function _fxHiddenByFow(fx) {
+  const d = fx.data || {};
+  switch (fx.type) {
+    case "spot":
+      return d.kind !== "trap" && !isTileVisible(d.col, d.row);
+    case "spawn":
+      return !isTileVisible(d.col, d.row);
+    case "hit":
+    case "miss":
+    case "death":
+      return !!d.enemy && !isTileVisible(d.col, d.row);
+  }
+  return false;
+}
+
+// Effetti a linea che partono o arrivano nel FOW (tiratore VC nascosto,
+// soppressione su un VC nascosto): si disegnano solo sui tile visibili, così
+// il tracciante sbuca dall'oscurità senza rivelare il punto d'origine
+function _fxNeedsFowClip(fx) {
+  const d = fx.data || {};
+  if (fx.type === "shot") return !!d.enemy && !isTileVisible(d.fromCol, d.fromRow);
+  if (fx.type === "suppression") return !isTileVisible(d.tCol, d.tRow);
+  return false;
+}
+
+function _clipToVisible(ctx, ts) {
+  ctx.beginPath();
+  for (const k of G.visibleTiles) {
+    const [c, r] = k.split(",").map(Number);
+    const { x, y } = tileToScreen(c, r);
+    ctx.rect(x, y, ts, ts);
+  }
+  ctx.clip();
+}
+
 function _drawEffect(ctx, ts, fx, p) {
   ctx.save();
+  if (_fxNeedsFowClip(fx)) _clipToVisible(ctx, ts);
   switch (fx.type) {
     case "move": {
       // Polvere dei passi (da animateEnemyMove): sbuffi bassi ai piedi

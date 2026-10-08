@@ -73,6 +73,7 @@ function checkOverwatch(enemy) {
             dmg,
             fromCol: ow.col,
             fromRow: ow.row,
+            enemy: true,
           },
           700,
           impact,
