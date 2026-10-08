@@ -260,7 +260,11 @@ function triggerTrap(unit, trap) {
     unit.alive = false;
     sfx("death");
     log(t("log.unit_eliminated", { name: unit.name }), "combat");
-    addFX("death", { col: unit.col, row: unit.row }, 1100);
+    addFX(
+      "death",
+      { col: unit.col, row: unit.row, cls: unit.cls, enemy: false },
+      1400,
+    );
     checkGameOver();
   } else if (!unit.shaken && unit.hp / unit.maxHp < 0.3) {
     unit.shaken = true;

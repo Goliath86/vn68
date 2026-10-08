@@ -110,7 +110,16 @@ async function resolveCombat(
       if (!isEnemy && G.missionType === "search_destroy") {
         G.missionState.kills = (G.missionState.kills || 0) + 1;
       }
-      addFX("death", { col: defender.col, row: defender.row }, 1100);
+      addFX(
+        "death",
+        {
+          col: defender.col,
+          row: defender.row,
+          cls: defender.cls,
+          enemy: !isEnemy,
+        },
+        1400,
+      );
     } else if (isEnemy && !defender.shaken) {
       // Morale: il difensore (unità US) è scosso se sotto 30% HP
       const maxHp = UNIT_CLASSES[defender.cls]?.hp ?? defender.maxHp;
@@ -251,7 +260,11 @@ async function resolveAoeCombat(
         log(t("log.unit_eliminated", { name: def.name }), "combat");
         if (!isUS && !isEnemyAttacking && G.missionType === "search_destroy")
           G.missionState.kills = (G.missionState.kills || 0) + 1;
-        addFX("death", { col: def.col, row: def.row }, 1100);
+        addFX(
+          "death",
+          { col: def.col, row: def.row, cls: def.cls, enemy: !isUS },
+          1400,
+        );
         anyKill = true;
       } else if (isUS && !def.shaken) {
         const maxHp = UNIT_CLASSES[def.cls]?.hp ?? def.maxHp;

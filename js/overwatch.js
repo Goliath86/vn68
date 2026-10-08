@@ -70,7 +70,11 @@ function checkOverwatch(enemy) {
           );
           if (G.missionType === "search_destroy")
             G.missionState.kills = (G.missionState.kills || 0) + 1;
-          addFX("death", { col: enemy.col, row: enemy.row }, 1100);
+          addFX(
+            "death",
+            { col: enemy.col, row: enemy.row, cls: enemy.cls, enemy: true },
+            1400,
+          );
         }
       }
 

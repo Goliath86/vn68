@@ -445,40 +445,7 @@ function _drawEffect(ctx, ts, fx, p) {
     }
 
     case "death": {
-      const { col, row } = fx.data;
-      const { x, y } = tileToScreen(col, row);
-      const cx = x + ts * 0.5,
-        cy = y + ts * 0.5;
-      const fa = p < 0.15 ? (p / 0.15) * 0.7 : 0.7 * (1 - (p - 0.15) / 0.85);
-      ctx.fillStyle = `rgba(200,20,20,${fa})`;
-      ctx.fillRect(x, y, ts, ts);
-      ctx.strokeStyle = `rgba(255,60,60,${1 - p})`;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(cx, cy, ts * 0.65 * p, 0, Math.PI * 2);
-      ctx.stroke();
-      if (p > 0.15) {
-        const ka = p < 0.65 ? 1 : 1 - (p - 0.65) / 0.35;
-        ctx.fillStyle = `rgba(255,255,255,${ka})`;
-        ctx.font = `bold ${Math.round(ts * 0.34)}px 'Special Elite'`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(t("fx.kia"), cx, cy);
-      }
-      for (let i = 0; i < 8; i++) {
-        const ang = (i / 8) * Math.PI * 2,
-          pr = ts * 0.55 * p;
-        ctx.fillStyle = `rgba(255,${80 + i * 10},0,${1 - p})`;
-        ctx.beginPath();
-        ctx.arc(
-          cx + Math.cos(ang) * pr,
-          cy + Math.sin(ang) * pr,
-          2.5 * (1 - p) + 1,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-      }
+      _drawDeath(ctx, ts, fx.data, p);
       break;
     }
 
@@ -888,6 +855,100 @@ function _drawHeal(ctx, ts, data, p) {
   ctx.strokeText(`+${amount}HP`, cx, fy);
   ctx.fillStyle = `rgba(130,255,140,${ta.toFixed(3)})`;
   ctx.fillText(`+${amount}HP`, cx, fy);
+}
+
+// ── DEATH — unità eliminata ─────────────────────────────────────────────
+// L'unità (già rimossa dalla mappa) viene ridisegnata mentre cade di lato e
+// svanisce; all'impatto si alza polvere, poi si allarga una macchia scura.
+// Senza data.cls (chiamate vecchie) si salta la caduta e resta il resto.
+function _drawDeath(ctx, ts, data, p) {
+  const { col, row, cls, enemy } = data;
+  const { x, y } = tileToScreen(col, row);
+  const cx = x + ts * 0.5,
+    cy = y + ts * 0.5;
+  const seed = col * 31 + row * 57;
+  const dir = _hash01(seed) < 0.5 ? -1 : 1; // lato su cui cade
+  const fall = Math.min(1, Math.max(0, (p - 0.05) / 0.32));
+  const fe = fall * fall; // accelera come per gravità
+  const footX = cx,
+    footY = y + ts * 0.85;
+  // Dove finisce il corpo a terra: macchia e polvere stanno lì
+  const bodyX = cx + dir * ts * 0.22,
+    bodyY = y + ts * 0.72;
+  const fadeOut = (a, b) => 1 - Math.min(1, Math.max(0, (p - a) / (b - a)));
+
+  // 1) Macchia scura che si allarga sul terreno
+  const pool = Math.min(1, Math.max(0, (p - 0.3) / 0.4));
+  if (pool > 0) {
+    const pa = 0.55 * fadeOut(0.75, 1);
+    for (let i = 0; i < 4; i++) {
+      const h = seed + i * 13;
+      _smokePuff(
+        ctx,
+        bodyX + (_hash01(h) - 0.5) * ts * 0.25,
+        bodyY + (_hash01(h + 1) - 0.5) * ts * 0.12,
+        ts * (0.12 + _hash01(h + 2) * 0.1) * (0.3 + 0.7 * (1 - (1 - pool) ** 2)),
+        "85,8,8",
+        pa,
+      );
+    }
+  }
+
+  // 2) Lampo rosso all'istante del colpo mortale
+  if (p < 0.15) {
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    _smokePuff(ctx, cx, cy, ts * 0.55, "255,50,30", 0.7 * (1 - p / 0.15));
+    ctx.restore();
+  }
+
+  // 3) L'unità cade di lato ruotando attorno ai piedi e svanisce
+  // (non su tile nel FOW: l'artiglieria può uccidere VC nascosti)
+  if (cls && typeof drawUnitSprite === "function" && isTileVisible(col, row)) {
+    const sa = fadeOut(0.5, 0.9);
+    if (sa > 0) {
+      ctx.save();
+      ctx.globalAlpha = sa;
+      ctx.translate(footX, footY);
+      ctx.rotate(dir * fe * Math.PI * 0.45);
+      ctx.translate(-footX, -footY);
+      drawUnitSprite(ctx, x, y, ts, cls, false, !!enemy);
+      ctx.restore();
+    }
+  }
+
+  // 4) Polvere sollevata quando il corpo tocca terra
+  const dust = (p - 0.37) / 0.4;
+  if (dust > 0 && dust < 1) {
+    for (let i = 0; i < 4; i++) {
+      const h = seed + i * 7;
+      const ang = Math.PI + (_hash01(h) - 0.5) * 2.2; // verso l'alto/i lati
+      const d = ts * (0.08 + 0.2 * dust) * (0.6 + _hash01(h + 1) * 0.6);
+      _smokePuff(
+        ctx,
+        bodyX + Math.cos(ang) * d * dir * -1,
+        bodyY + Math.sin(ang) * d * 0.4 - ts * 0.05 * dust,
+        ts * (0.08 + 0.12 * dust),
+        "150,128,92",
+        0.5 * (1 - dust),
+      );
+    }
+  }
+
+  // 5) "KIA" con contorno scuro
+  if (p > 0.15) {
+    const ka = Math.min(1, (p - 0.15) / 0.1) * fadeOut(0.7, 1);
+    const ky = cy - ts * 0.3 - ts * 0.15 * p;
+    ctx.font = `bold ${Math.round(ts * 0.34)}px 'Special Elite'`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2, ts * 0.06);
+    ctx.strokeStyle = `rgba(60,0,0,${(0.85 * ka).toFixed(3)})`;
+    ctx.strokeText(t("fx.kia"), cx, ky);
+    ctx.fillStyle = `rgba(255,235,225,${ka.toFixed(3)})`;
+    ctx.fillText(t("fx.kia"), cx, ky);
+  }
 }
 
 // ── EXPLOSION — granate, RPG, artiglieria, mine ─────────────────────────
