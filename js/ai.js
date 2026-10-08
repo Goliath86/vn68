@@ -561,24 +561,64 @@ function spawnAmbush(count, zones) {
   render();
 }
 
-function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
+// Animazione di movimento (VC e unità US): segue il percorso tile per tile
+// invece di tagliare in diagonale, con un saltello per passo e polvere sui
+// tile visibili (non sui tile nel FOW: non deve tradire VC nascosti).
+const MOVE_STEP_MS = 120;
+const MOVE_MAX_MS = 720;
+const MOVE_HOP = 0.06; // altezza saltello, in frazioni di tile
+
+function _movePath(fromCol, fromRow, toCol, toRow) {
   const steps = Math.abs(toCol - fromCol) + Math.abs(toRow - fromRow);
-  if (steps === 0) return Promise.resolve();
-  const duration = Math.min(steps * 160, 480);
+  const path = getPath(fromCol, fromRow, toCol, toRow);
+  // Fallback alla linea retta se non c'è percorso o è assurdamente lungo
+  if (!path || path.length < 2 || path.length - 1 > steps * 3)
+    return [
+      { col: fromCol, row: fromRow },
+      { col: toCol, row: toRow },
+    ];
+  return path;
+}
+
+function _moveDust(col, row, big) {
+  if (!isTileVisible(col, row)) return;
+  addFX("move", { col, row, big }, big ? 650 : 450);
+}
+
+function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
+  if (fromCol === toCol && fromRow === toRow) return Promise.resolve();
+  const path = _movePath(fromCol, fromRow, toCol, toRow);
+  const segs = path.length - 1;
+  const duration = Math.min(segs * MOVE_STEP_MS, MOVE_MAX_MS);
   const t0 = performance.now();
+  let lastIdx = 0;
   enemy.vx = fromCol;
   enemy.vy = fromRow;
+  _moveDust(fromCol, fromRow, false);
   return new Promise((resolve) => {
     function frame(now) {
       const p = Math.min(1, (now - t0) / duration);
       const ease = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
-      enemy.vx = fromCol + (toCol - fromCol) * ease;
-      enemy.vy = fromRow + (toRow - fromRow) * ease;
+      const s = ease * segs;
+      const idx = Math.min(segs - 1, Math.floor(s));
+      const f = s - idx;
+      const a = path[idx],
+        b = path[idx + 1];
+      enemy.vx = a.col + (b.col - a.col) * f;
+      enemy.vy = a.row + (b.row - a.row) * f - MOVE_HOP * Math.abs(Math.sin(s * Math.PI));
+      // Polvere ogni volta che si entra in un nuovo tile
+      const reached = Math.floor(s + 1e-6);
+      while (lastIdx < reached && lastIdx < segs - 1) {
+        lastIdx++;
+        _moveDust(path[lastIdx].col, path[lastIdx].row, false);
+      }
       render();
       if (p < 1) requestAnimationFrame(frame);
       else {
         enemy.vx = toCol;
         enemy.vy = toRow;
+        _moveDust(toCol, toRow, true);
+        render();
         resolve();
       }
     }

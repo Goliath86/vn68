@@ -26,7 +26,6 @@ async function moveUnit(unit, toCol, toRow, apCost) {
   unit.col = toCol;
   unit.row = toRow;
 
-  //addFX("move", { fromCol: unit.col, fromRow: unit.row, toCol, toRow }, 500);
   await animateEnemyMove(unit, fromCol, fromRow, toCol, toRow);
 
   unit.ap = Math.max(0, unit.ap - apCost);

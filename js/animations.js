@@ -355,29 +355,26 @@ function _drawEffect(ctx, ts, fx, p) {
   ctx.save();
   switch (fx.type) {
     case "move": {
-      const { fromCol, fromRow, toCol, toRow } = fx.data;
-      const { x: fx0, y: fy0 } = tileToScreen(fromCol, fromRow);
-      const { x: tx0, y: ty0 } = tileToScreen(toCol, toRow);
-      const cx0 = fx0 + ts * 0.5,
-        cy0 = fy0 + ts * 0.5,
-        cx1 = tx0 + ts * 0.5,
-        cy1 = ty0 + ts * 0.5;
-      const a = p < 0.7 ? 0.6 : 0.6 * (1 - (p - 0.7) / 0.3);
-      ctx.strokeStyle = `rgba(240,220,150,${a})`;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(cx0, cy0);
-      ctx.lineTo(cx1, cy1);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      if (p > 0.25) {
-        const pct = (p - 0.25) / 0.75;
-        ctx.strokeStyle = `rgba(160,230,160,${(1 - pct) * 0.75})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(cx1, cy1, ts * 0.45 * pct, 0, Math.PI * 2);
-        ctx.stroke();
+      // Polvere dei passi (da animateEnemyMove): sbuffi bassi ai piedi
+      // che si allargano e svaniscono; più grande all'arrivo (data.big)
+      const { col, row, big } = fx.data;
+      const { x, y } = tileToScreen(col, row);
+      const cx = x + ts * 0.5,
+        fy = y + ts * 0.82;
+      const seed = Math.floor(fx.t0) % 997;
+      const n = big ? 4 : 2;
+      for (let i = 0; i < n; i++) {
+        const h = seed + i * 7;
+        const a = (i / n) * Math.PI * 2 + _hash01(h) * 1.2;
+        const d = ts * (0.06 + (big ? 0.22 : 0.12) * p);
+        _smokePuff(
+          ctx,
+          cx + Math.cos(a) * d,
+          fy + Math.sin(a) * d * 0.35 - ts * 0.04 * p,
+          ts * ((big ? 0.1 : 0.07) + (big ? 0.12 : 0.07) * p),
+          "160,140,105",
+          (big ? 0.45 : 0.35) * (1 - p),
+        );
       }
       break;
     }
