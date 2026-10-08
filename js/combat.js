@@ -140,7 +140,16 @@ async function resolveCombat(
     }
   } else {
     sfx("miss");
-    addFX("miss", { col: defender.col, row: defender.row }, 600);
+    addFX(
+      "miss",
+      {
+        col: defender.col,
+        row: defender.row,
+        fromCol: attacker.col,
+        fromRow: attacker.row,
+      },
+      800,
+    );
   }
 
   updateUI();
@@ -289,7 +298,11 @@ async function resolveAoeCombat(
       }
     } else {
       sfx("miss");
-      addFX("miss", { col: def.col, row: def.row }, 600);
+      addFX(
+        "miss",
+        { col: def.col, row: def.row, fromCol: tc, fromRow: tr, blast: true },
+        800,
+      );
     }
   }
 

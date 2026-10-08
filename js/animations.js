@@ -393,15 +393,7 @@ function _drawEffect(ctx, ts, fx, p) {
     }
 
     case "miss": {
-      const { col, row } = fx.data;
-      const { x, y } = tileToScreen(col, row);
-      const fy = y + ts * 0.5 - ts * 0.35 * p,
-        a = p < 0.6 ? 1 : 1 - (p - 0.6) / 0.4;
-      ctx.fillStyle = `rgba(200,180,110,${a})`;
-      ctx.font = `bold ${Math.round(ts * 0.26)}px 'Oswald'`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(t("fx.miss"), x + ts * 0.5, fy);
+      _drawMiss(ctx, ts, fx, p);
       break;
     }
 
@@ -901,6 +893,116 @@ function _drawHit(ctx, ts, fx, p) {
   ctx.strokeText(`-${dmg}`, cx, fy);
   ctx.fillStyle = `rgba(255,85,55,${ta.toFixed(3)})`;
   ctx.fillText(`-${dmg}`, cx, fy);
+}
+
+// ── MISS — colpo mancato ────────────────────────────────────────────────
+// Colpo singolo: scie d'aria del proiettile che passa accanto e rimbalzo
+// (scintilla a terra + scia deviata, in sincronia col suono di ricochet).
+// Esplosione (data.blast): polvere ai piedi, il bersaglio si è riparato.
+// Poi la scritta "MANCATO" con rimbalzo e contorno.
+function _drawMiss(ctx, ts, fx, p) {
+  const { col, row, fromCol, fromRow, blast } = fx.data;
+  const { x, y } = tileToScreen(col, row);
+  const cx = x + ts * 0.5,
+    cy = y + ts * 0.5;
+  const seed = Math.floor(fx.t0) % 997;
+  const hasDir = fromCol != null && (fromCol !== col || fromRow !== row);
+  const ang = hasDir
+    ? Math.atan2(row - fromRow, col - fromCol)
+    : _hash01(seed) * Math.PI * 2;
+  const ux = Math.cos(ang),
+    uy = Math.sin(ang);
+  const side = _hash01(seed + 1) < 0.5 ? -1 : 1;
+  const nx = -uy * side,
+    ny = ux * side;
+
+  if (blast) {
+    // Polvere sollevata ai piedi
+    const dp = Math.min(1, p / 0.6);
+    for (let i = 0; i < 4; i++) {
+      const h = seed + i * 7;
+      const a = _hash01(h) * Math.PI * 2;
+      const d = ts * (0.1 + 0.22 * dp);
+      _smokePuff(
+        ctx,
+        cx + Math.cos(a) * d,
+        y + ts * 0.8 + Math.sin(a) * d * 0.35,
+        ts * (0.08 + 0.12 * dp),
+        "150,128,92",
+        0.5 * (1 - dp),
+      );
+    }
+  } else {
+    // Punto di rimbalzo: di lato e un po' oltre l'unità
+    const ix = cx + nx * ts * 0.32 + ux * ts * 0.18,
+      iy = cy + ny * ts * 0.32 + uy * ts * 0.18;
+
+    // Scie d'aria: due righe sottili che sfrecciano accanto all'unità
+    if (p < 0.3) {
+      const wp = p / 0.3;
+      ctx.lineCap = "round";
+      ctx.lineWidth = Math.max(1, ts * 0.018);
+      for (let k = 0; k < 2; k++) {
+        const off = ts * (0.24 + k * 0.1);
+        const head = -ts * 0.5 + ts * 1.1 * wp - k * ts * 0.08;
+        const tail = head - ts * 0.35;
+        ctx.strokeStyle = `rgba(240,235,220,${(0.7 * (1 - wp)).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.moveTo(cx + nx * off + ux * tail, cy + ny * off + uy * tail);
+        ctx.lineTo(cx + nx * off + ux * head, cy + ny * off + uy * head);
+        ctx.stroke();
+      }
+    }
+
+    // Polvere nel punto d'impatto
+    const dp = Math.min(1, p / 0.5);
+    _smokePuff(ctx, ix, iy, ts * (0.06 + 0.12 * dp), "150,128,92", 0.5 * (1 - dp));
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    // Scintilla del rimbalzo
+    if (p < 0.15) {
+      _smokePuff(ctx, ix, iy, ts * 0.13, "255,225,160", 0.95 * (1 - p / 0.15));
+    }
+    // Scia deviata: riparte dal punto d'impatto con un angolo verso l'esterno
+    if (p < 0.4) {
+      const rp = p / 0.4;
+      const ra = ang + side * (0.7 + _hash01(seed + 2) * 0.5);
+      const head = ts * 0.9 * (1 - (1 - rp) ** 2);
+      const tail = Math.max(0, head - ts * 0.35);
+      const hx = ix + Math.cos(ra) * head,
+        hy = iy + Math.sin(ra) * head;
+      const tx = ix + Math.cos(ra) * tail,
+        ty = iy + Math.sin(ra) * tail;
+      const g = ctx.createLinearGradient(tx, ty, hx, hy);
+      g.addColorStop(0, "rgba(255,220,150,0)");
+      g.addColorStop(1, `rgba(255,235,190,${(0.9 * (1 - rp)).toFixed(3)})`);
+      ctx.strokeStyle = g;
+      ctx.lineCap = "round";
+      ctx.lineWidth = Math.max(1, ts * 0.022);
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(hx, hy);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Scritta "MANCATO": rimbalzo, contorno, sale e svanisce
+  const pop = Math.min(1, p / 0.15);
+  const scale = pop < 1 ? 1 + 2.2 * (pop - 1) ** 3 + 1.2 * (pop - 1) ** 2 : 1;
+  const ta = p < 0.65 ? 1 : 1 - (p - 0.65) / 0.35;
+  const size = ts * 0.26 * Math.max(0.01, scale);
+  const fy = cy - ts * 0.25 - ts * 0.3 * p;
+  ctx.font = `bold ${Math.round(size)}px 'Oswald'`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(2, size * 0.18);
+  ctx.strokeStyle = `rgba(40,30,10,${(0.8 * ta).toFixed(3)})`;
+  ctx.strokeText(t("fx.miss"), cx, fy);
+  ctx.fillStyle = `rgba(230,210,150,${ta.toFixed(3)})`;
+  ctx.fillText(t("fx.miss"), cx, fy);
 }
 
 // ── DEATH — unità eliminata ─────────────────────────────────────────────
