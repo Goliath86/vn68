@@ -633,6 +633,166 @@ function drawTileDetails(ctx, tileDef, x, y, ts, col = 0, row = 0) {
   ctx.restore();
 }
 
+// ── TRANSIZIONI E OMBRE TRA TILE ───────────────────────────────────────
+// Passata eseguita dopo aver disegnato tutti i tile; ogni effetto è disegnato
+// nel tile che lo "riceve": sfumature tra terreni diversi (vince la priorità
+// più alta), rive del fiume, ombre a sud-est dei tile alti (luce da nord-ovest,
+// coerente con i disegni dei tile). Id sconosciuti: altezza da losBlock "full".
+const TILE_BLEED_PRIORITY = {
+  jungle: 6,
+  garden: 5,
+  clearing: 4,
+  swamp: 4,
+  village: 3,
+  debris: 3,
+  trail: 2,
+};
+const TILE_HEIGHT = {
+  wall: 0.32,
+  wall_breach: 0.32,
+  obstacle: 0.25,
+  building: 0.3,
+  temple: 0.34,
+  bunker: 0.12,
+};
+const WATER_IDS = new Set(["river", "ford"]);
+const _DIRS = [
+  [0, -1],
+  [1, 0],
+  [0, 1],
+  [-1, 0],
+]; // N E S W
+
+function _tileHeight(def) {
+  if (!def) return 0;
+  return TILE_HEIGHT[def.id] ?? (def.losBlock === "full" ? 0.25 : 0);
+}
+
+function _isGround(def) {
+  return !!def && !_tileHeight(def) && !WATER_IDS.has(def.id) && def.id !== "bridge";
+}
+
+function _hexRgb(color) {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color || "");
+  if (!m) return null;
+  const h = m[1].length === 3 ? m[1].replace(/./g, "$&$&") : m[1];
+  const n = parseInt(h, 16);
+  return `${n >> 16},${(n >> 8) & 255},${n & 255}`;
+}
+
+// Gradiente dal lato `d` del tile verso l'interno, profondo `len`
+function _edgeGradient(ctx, x, y, ts, d, len, stops) {
+  const [dx, dy] = _DIRS[d];
+  const ex = dx > 0 ? x + ts : x;
+  const ey = dy > 0 ? y + ts : y;
+  const g = dx
+    ? ctx.createLinearGradient(ex, 0, ex - dx * len, 0)
+    : ctx.createLinearGradient(0, ey, 0, ey - dy * len);
+  for (const [o, col] of stops) g.addColorStop(o, col);
+  ctx.fillStyle = g;
+  if (dx) ctx.fillRect(dx > 0 ? x + ts - len : x, y, len, ts);
+  else ctx.fillRect(x, dy > 0 ? y + ts - len : y, ts, len);
+}
+
+// Punto a distanza `depth` dal lato `d`, posizione `s` lungo il lato
+function _edgePoint(x, y, ts, d, s, depth) {
+  const [dx, dy] = _DIRS[d];
+  return [
+    dx ? (dx > 0 ? x + ts - depth : x + depth) : x + s,
+    dy ? (dy > 0 ? y + ts - depth : y + depth) : y + s,
+  ];
+}
+
+function _drawBleed(ctx, x, y, ts, d, rgb, rng) {
+  const len = ts * 0.22;
+  _edgeGradient(ctx, x, y, ts, d, len, [
+    [0, `rgba(${rgb},0.75)`],
+    [0.55, `rgba(${rgb},0.3)`],
+    [1, `rgba(${rgb},0)`],
+  ]);
+  // bordo irregolare: chiazze del terreno vicino a cavallo del lato
+  for (let i = 0; i < 5; i++) {
+    const [px, py] = _edgePoint(x, y, ts, d, ((i + 0.2 + rng() * 0.6) / 5) * ts, rng() * len * 0.5);
+    _disc(ctx, px, py, ts * (0.04 + rng() * 0.05), `rgba(${rgb},0.55)`);
+  }
+}
+
+function _drawShore(ctx, x, y, ts, d) {
+  const len = ts * 0.16;
+  _edgeGradient(ctx, x, y, ts, d, len, [
+    [0, "rgba(70,55,35,0.6)"],
+    [0.5, "rgba(70,55,35,0.25)"],
+    [1, "rgba(70,55,35,0)"],
+  ]);
+  // schiuma ondulata parallela alla riva, continua tra tile (coordinate mondo)
+  const along = _DIRS[d][0] ? y : x;
+  ctx.strokeStyle = _lt(0.28);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let s = 0; s <= ts; s += 2) {
+    const w = len * 0.75 + Math.sin((along + s) * 0.22) * ts * 0.02;
+    const [px, py] = _edgePoint(x, y, ts, d, s, w);
+    if (s === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+}
+
+function _drawCastShadow(ctx, x, y, ts, hN, hW, hNW) {
+  if (hW) _edgeGradient(ctx, x, y, ts, 3, ts * hW, [[0, _dk(0.4)], [1, _dk(0)]]);
+  if (hN) _edgeGradient(ctx, x, y, ts, 0, ts * hN, [[0, _dk(0.4)], [1, _dk(0)]]);
+  if (hNW && !hW && !hN) {
+    // solo l'angolo: il tile alto è in diagonale
+    const g = ctx.createRadialGradient(x, y, 0, x, y, ts * hNW);
+    g.addColorStop(0, _dk(0.35));
+    g.addColorStop(1, _dk(0));
+    ctx.fillStyle = g;
+    ctx.fillRect(x, y, ts * hNW, ts * hNW);
+  }
+}
+
+function drawTerrainTransitions(ctx, md, ts) {
+  const defAt = (c, r) =>
+    c < 0 || r < 0 || c >= md.cols || r >= md.rows ? null : md.tileTypes[md.grid[r][c]];
+  for (let r = 0; r < md.rows; r++) {
+    for (let c = 0; c < md.cols; c++) {
+      const def = defAt(c, r);
+      if (!def) continue;
+      const x = c * ts;
+      const y = r * ts;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, y, ts, ts);
+      ctx.clip();
+      if (def.id === "river") {
+        _DIRS.forEach(([dx, dy], d) => {
+          const n = defAt(c + dx, r + dy);
+          if (n && !WATER_IDS.has(n.id) && n.id !== "bridge") _drawShore(ctx, x, y, ts, d);
+        });
+      } else if (_isGround(def)) {
+        const p = TILE_BLEED_PRIORITY[def.id] || 0;
+        const rng = _tileRng(c + 0.37, r + 0.61);
+        _DIRS.forEach(([dx, dy], d) => {
+          const n = defAt(c + dx, r + dy);
+          if (!_isGround(n) || n.id === def.id) return;
+          if ((TILE_BLEED_PRIORITY[n.id] || 0) <= p) return;
+          const rgb = _hexRgb(n.color);
+          if (rgb) _drawBleed(ctx, x, y, ts, d, rgb, rng);
+        });
+      }
+      if (!_tileHeight(def)) {
+        _drawCastShadow(
+          ctx, x, y, ts,
+          _tileHeight(defAt(c, r - 1)),
+          _tileHeight(defAt(c - 1, r)),
+          _tileHeight(defAt(c - 1, r - 1)),
+        );
+      }
+      ctx.restore();
+    }
+  }
+}
+
 // ── SPRITES PERSONAGGI ─────────────────────────────────────────────────────
 
 function _poly(ctx, pts) {

@@ -61,9 +61,15 @@ function getTerrainCache() {
       ctx.fillRect(x, y, TILE, TILE);
       ctx.globalAlpha = 1;
       drawTileDetails(ctx, tileDef, x, y, TILE, c, r);
-      ctx.strokeStyle = "rgba(0,0,0,0.25)";
-      ctx.lineWidth = 0.5;
-      ctx.strokeRect(x, y, TILE, TILE);
+    }
+  }
+  // Sfumature tra terreni, rive e ombre: richiedono tutti i tile già disegnati
+  drawTerrainTransitions(ctx, md, TILE);
+  ctx.strokeStyle = "rgba(0,0,0,0.25)";
+  ctx.lineWidth = 0.5;
+  for (let r = 0; r < md.rows; r++) {
+    for (let c = 0; c < md.cols; c++) {
+      if (md.tileTypes[md.grid[r][c]]) ctx.strokeRect(c * TILE, r * TILE, TILE, TILE);
     }
   }
 
