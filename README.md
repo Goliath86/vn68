@@ -285,6 +285,21 @@ Il salvataggio viene cancellato automaticamente al termine della partita (vittor
 
 ---
 
+## Mappa procedurale
+
+Il teatro **🎲 Zona Ignota** non usa alcun file JSON: la mappa viene generata al momento (16×12, giungla del delta). Ogni mappa ha:
+
+- un fiume da nord a sud con **due guadi**, sentieri che collegano partenza, guadi e obiettivi;
+- radure, paludi, un villaggio, bunker e ostacoli demolibili;
+- partenza della squadra sul lato ovest, VC oltre il fiume, imboscate ai bordi nord/sud;
+- obiettivi per tutti e 4 i tipi di missione (LZ col pilota, villaggio e bunker da ricognire, postazione radio da tenere).
+
+Il generatore garantisce che ogni tile percorribile sia raggiungibile dalla partenza. Il numero nel nome (**Settore 48213**) è il seed: lo stesso seed produce sempre la stessa mappa. Nel briefing il bottone **🎲 Rigenera mappa** ne crea una nuova prima di iniziare.
+
+La mappa generata viene salvata per intero insieme alla partita: con **▶ RIPRENDI** si ritrova identica (demolizioni comprese). Una nuova partita genera una mappa nuova.
+
+---
+
 ## Animazioni tile
 
 Le mappe possono definire animazioni ambientali su tile specifici, configurabili via JSON senza toccare il codice. Le animazioni sono **sempre visibili**, anche attraverso il Fog of War — il fumo di un relitto o le fiamme di un edificio si vedono da lontano, e possono guidare la squadra verso l'obiettivo.
@@ -566,6 +581,8 @@ Aggiungere una mappa richiede solo due file. Zero modifiche al codice JS.
   }
 }
 ```
+
+Per una mappa procedurale si usa `"generator": "jungle"` al posto di `"file"` (nessun JSON da creare; i generatori disponibili sono in `js/mapGen.js`, `MAP_GENERATORS`).
 
 ### 2. Creare `missions/mia_mappa.json`
 

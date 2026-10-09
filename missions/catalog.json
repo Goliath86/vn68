@@ -18,5 +18,15 @@
       "it": { "label": "Hue City",  "subtitle": "Cittadella Imperiale · 1968", "theater": "URBANO"  },
       "en": { "label": "Hue City",  "subtitle": "Imperial Citadel · 1968",     "theater": "URBAN"   }
     }
+  },
+  {
+    "generator": "jungle",
+    "icon": "🎲",
+    "color": "#3a5a20",
+    "theaterColor": "#6a8a30",
+    "labels": {
+      "it": { "label": "Zona Ignota", "subtitle": "Mappa procedurale · 1968", "theater": "GIUNGLA" },
+      "en": { "label": "Uncharted Zone", "subtitle": "Procedural map · 1968", "theater": "JUNGLE" }
+    }
   }
 ]

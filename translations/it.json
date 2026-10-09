@@ -145,7 +145,8 @@
     "squad_title": "◈ COMPONI LA SQUADRA — click per cambiare classe",
     "resume_title": "PARTITA IN CORSO",
     "resume_turn": "Turno {turn}",
-    "night_mission": "🌙 Missione notturna (visibilità ridotta)"
+    "night_mission": "🌙 Missione notturna (visibilità ridotta)",
+    "regenerate_map": "🎲 Rigenera mappa"
   },
 
   "traps": {

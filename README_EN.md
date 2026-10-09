@@ -286,6 +286,21 @@ The save is automatically cleared when the game ends (victory or defeat).
 
 ---
 
+## Procedural Map
+
+The **🎲 Uncharted Zone** theater uses no JSON file: the map is generated on the spot (16×12, delta jungle). Every map has:
+
+- a north–south river with **two fords**, and trails linking the start, the fords and the objectives;
+- clearings, swamps, a village, bunkers and demolishable obstacles;
+- the squad starting on the west edge, VC beyond the river, ambushes along the north/south edges;
+- objectives for all 4 mission types (LZ with the pilot, village and bunker to scout, radio post to hold).
+
+The generator guarantees that every passable tile can be reached from the start. The number in the name (**Sector 48213**) is the seed: the same seed always produces the same map. In the briefing, the **🎲 Regenerate map** button creates a new one before you start.
+
+The generated map is saved in full with the game: **▶ RESUME** brings it back identical (demolitions included). A new game generates a new map.
+
+---
+
 ## Tile Animations
 
 Maps can define ambient animations on specific tiles, configured via JSON with no code changes. Animations are **always visible**, even through Fog of War — smoke from a wreck or flames from a burning building can be seen from a distance, guiding the squad toward the objective.
@@ -567,6 +582,8 @@ Adding a map requires only two files. Zero JS code changes.
   }
 }
 ```
+
+For a procedural map use `"generator": "jungle"` instead of `"file"` (no JSON to create; the available generators are in `js/mapGen.js`, `MAP_GENERATORS`).
 
 ### 2. Create `missions/my_map.json`
 

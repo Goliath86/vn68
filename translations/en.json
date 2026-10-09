@@ -140,7 +140,8 @@
     "squad_title": "◈ COMPOSE YOUR SQUAD — click to change class",
     "resume_title": "MISSION IN PROGRESS",
     "resume_turn": "Turn {turn}",
-    "night_mission": "🌙 Night mission (reduced visibility)"
+    "night_mission": "🌙 Night mission (reduced visibility)",
+    "regenerate_map": "🎲 Regenerate map"
   },
 
   "traps": {

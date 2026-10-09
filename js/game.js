@@ -1,7 +1,12 @@
 // ── LOAD MAP ───────────────────────────────────────────────────────────
 async function loadMission(jsonPath) {
   const resp = await fetch(jsonPath);
-  G.mapData = await resp.json();
+  return useMission(await resp.json());
+}
+
+// Attiva un mapData già pronto (da JSON o da generatore procedurale)
+function useMission(data) {
+  G.mapData = data;
   loadMissionSounds(G.mapData);
 
   // Imposta scala iniziale per far stare la mappa nello schermo
@@ -14,6 +19,11 @@ async function loadMission(jsonPath) {
 
   // Carica immagine mappa se presente
   const imgName = G.mapData.image;
+  if (!imgName) {
+    G.tileImg = null;
+    render();
+    return G.mapData;
+  }
   const img = new Image();
   img.src = "missions/" + imgName;
   img.onload = () => {

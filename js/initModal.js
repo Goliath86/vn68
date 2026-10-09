@@ -48,7 +48,7 @@ function initModal() {
 
   const grid = document.getElementById("map-select-grid");
   grid.innerHTML = "";
-  let selectedMapFile = null;
+  let selectedMap = null;
 
   // Map cards
   MAPS.forEach((m) => {
@@ -65,17 +65,17 @@ function initModal() {
         .querySelectorAll(".map-card")
         .forEach((el) => el.classList.remove("active"));
       card.classList.add("active");
-      selectedMapFile = m.file;
+      selectedMap = m;
       document.getElementById("btn-select-map").disabled = false;
     });
     grid.appendChild(card);
   });
 
   document.getElementById("btn-select-map").onclick = async () => {
-    if (!selectedMapFile) return;
+    if (!selectedMap) return;
     document.getElementById("modal-step-map").style.display = "none";
     document.getElementById("modal-step-mission").style.display = "block";
-    await loadMissionStep(selectedMapFile);
+    await loadMissionStep(selectedMap);
   };
 
   document.getElementById("btn-back-map").onclick = () => {
@@ -85,19 +85,32 @@ function initModal() {
     document
       .querySelectorAll(".map-card")
       .forEach((el) => el.classList.remove("active"));
-    selectedMapFile = null;
+    selectedMap = null;
   };
 }
 
-async function loadMissionStep(jsonPath) {
+async function loadMissionStep(map) {
   document.getElementById("map-description").textContent = t("modal.loading");
   document.getElementById("modal-start-btn").disabled = true;
   document.getElementById("mission-list").innerHTML = "";
+  const regenBtn = document.getElementById("btn-regen-map");
+  regenBtn.style.display = map.generator ? "" : "none";
 
-  try {
-    const data = await loadMission(jsonPath);
+  const showDescription = (data) => {
     document.getElementById("map-description").textContent =
       `${mt("name") ?? data.name ?? "?"} — ${mt("description") ?? data.description ?? ""}`;
+  };
+
+  try {
+    // Mappa procedurale: generata qui, poi salvata per intero con la partita
+    const data = map.generator
+      ? useMission(generateProceduralMap(map.generator))
+      : await loadMission(map.file);
+    showDescription(data);
+    regenBtn.onclick = () => {
+      showDescription(useMission(generateProceduralMap(map.generator)));
+      sfx("click");
+    };
 
     const list = document.getElementById("mission-list");
     list.innerHTML = "";
