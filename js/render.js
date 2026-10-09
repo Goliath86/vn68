@@ -60,10 +60,10 @@ function getTerrainCache() {
       ctx.fillStyle = tileDef.color || "#2d5a1b";
       ctx.fillRect(x, y, TILE, TILE);
       ctx.globalAlpha = 1;
+      drawTileDetails(ctx, tileDef, x, y, TILE, c, r);
       ctx.strokeStyle = "rgba(0,0,0,0.25)";
       ctx.lineWidth = 0.5;
       ctx.strokeRect(x, y, TILE, TILE);
-      drawTileDetails(ctx, tileDef, x, y, TILE);
     }
   }
 
