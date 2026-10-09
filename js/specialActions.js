@@ -92,6 +92,7 @@ async function handleSpecialAction(col, row) {
     const dice = rollDice(1);//await waitForDice(1, "Demolizione");
     if (diceSum(dice) >= 4) {
       G.mapData.grid[target.row][target.col] = tileType.demolishResult || "J";
+      invalidateTerrainCache();
       u.ap -= 1;
       u.specialUsed = true;
       sfx("demolition");

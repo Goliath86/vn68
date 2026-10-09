@@ -19,6 +19,58 @@ function screenToTile(sx, sy) {
   return { col, row };
 }
 
+// ── CACHE TERRENO PROCEDURALE ──────────────────────────────────────────
+// Il terreno senza immagine di sfondo viene disegnato una volta su un canvas
+// offscreen e poi solo "blittato" a ogni frame. Densità 2.5× = zoom massimo,
+// ridotta se la mappa supererebbe il budget di pixel (limiti canvas mobile).
+const TERRAIN_CACHE_DENSITY = 2.5;
+const TERRAIN_CACHE_MAX_PX = 16e6;
+const TERRAIN_CACHE_MAX_SIDE = 8192;
+let _terrainCache = null; // { canvas, mapData }
+
+function invalidateTerrainCache() {
+  _terrainCache = null;
+}
+
+function getTerrainCache() {
+  const md = G.mapData;
+  if (_terrainCache && _terrainCache.mapData === md) return _terrainCache.canvas;
+
+  const w = md.cols * TILE;
+  const h = md.rows * TILE;
+  const density = Math.min(
+    TERRAIN_CACHE_DENSITY,
+    Math.sqrt(TERRAIN_CACHE_MAX_PX / (w * h)),
+    TERRAIN_CACHE_MAX_SIDE / Math.max(w, h),
+  );
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(w * density);
+  canvas.height = Math.round(h * density);
+  const ctx = canvas.getContext("2d");
+  // Coordinate in unità "scala 1": spessori linee identici al rendering diretto
+  ctx.scale(canvas.width / w, canvas.height / h);
+
+  for (let r = 0; r < md.rows; r++) {
+    for (let c = 0; c < md.cols; c++) {
+      const tileDef = md.tileTypes[md.grid[r][c]];
+      if (!tileDef) continue;
+      const x = c * TILE;
+      const y = r * TILE;
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = tileDef.color || "#2d5a1b";
+      ctx.fillRect(x, y, TILE, TILE);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = "rgba(0,0,0,0.25)";
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(x, y, TILE, TILE);
+      drawTileDetails(ctx, tileDef, x, y, TILE);
+    }
+  }
+
+  _terrainCache = { canvas, mapData: md };
+  return canvas;
+}
+
 function renderMap() {
   if (G.fowEnabled) recomputeVisibility();
   const ctx = G.ctx;
@@ -43,23 +95,8 @@ function renderMap() {
       }
     }
   } else {
-    // Griglia tile colorata con texture
-    for (let r = 0; r < md.rows; r++) {
-      for (let c = 0; c < md.cols; c++) {
-        const key = md.grid[r][c];
-        const tileDef = md.tileTypes[key];
-        if (!tileDef) continue;
-        const { x, y } = tileToScreen(c, r);
-        ctx.globalAlpha = 0.85;
-        ctx.fillStyle = tileDef.color || "#2d5a1b";
-        ctx.fillRect(x, y, ts, ts);
-        ctx.globalAlpha = 1;
-        ctx.strokeStyle = "rgba(0,0,0,0.25)";
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(x, y, ts, ts);
-        drawTileDetails(ctx, tileDef, x, y, ts);
-      }
-    }
+    // Griglia tile procedurale, pre-renderizzata in cache offscreen
+    ctx.drawImage(getTerrainCache(), G.camX, G.camY, md.cols * ts, md.rows * ts);
   }
 
   // Indicatori missione
