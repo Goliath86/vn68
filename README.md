@@ -287,14 +287,24 @@ Il salvataggio viene cancellato automaticamente al termine della partita (vittor
 
 ## Mappa procedurale
 
-Il teatro **🎲 Zona Ignota** non usa alcun file JSON: la mappa viene generata al momento (16×12, giungla del delta). Ogni mappa ha:
+I teatri **🎲 Zona Ignota** (giungla) e **🎲 Città Ignota** (urbano) non usano alcun file JSON: la mappa viene generata al momento (16×12).
+
+**Zona Ignota** — giungla del delta:
 
 - un fiume da nord a sud con **due guadi**, sentieri che collegano partenza, guadi e obiettivi;
 - radure, paludi, un villaggio, bunker e ostacoli demolibili;
 - partenza della squadra sul lato ovest, VC oltre il fiume, imboscate ai bordi nord/sud;
 - obiettivi per tutti e 4 i tipi di missione (LZ col pilota, villaggio e bunker da ricognire, postazione radio da tenere).
 
-Il generatore garantisce che ogni tile percorribile sia raggiungibile dalla partenza. Il numero nel nome (**Settore 48213**) è il seed: lo stesso seed produce sempre la stessa mappa. Nel briefing il bottone **🎲 Rigenera mappa** ne crea una nuova prima di iniziare.
+**Città Ignota** — distretto cittadino durante l'offensiva del Têt:
+
+- una griglia di viali e strade; ogni isolato ha un suo carattere (edifici fitti, parco, rovine) e un colpo d'artiglieria ha ridotto in macerie un gruppo di edifici;
+- un fiume da ovest a est attraversabile **solo sui due ponti**;
+- a nord del fiume una **cittadella murata** con una porta e 1–3 **muri demolibili** (breccia del geniere), pagode e giardini attorno al **Comando NVA**;
+- partenza della squadra sul bordo sud, VC su entrambe le rive e dentro la cittadella, imboscate sui fianchi;
+- obiettivi per tutti e 4 i tipi di missione (pilota al relitto fuori dalle mura, ponte/mercato/comando da ricognire, comando da tenere).
+
+Il generatore garantisce che ogni tile percorribile sia raggiungibile dalla partenza (la cittadella ha sempre una porta: il geniere non è obbligatorio). Il numero nel nome (**Settore 48213**, **Quartiere 48213**) è il seed: lo stesso seed produce sempre la stessa mappa. Nel briefing il bottone **🎲 Rigenera mappa** ne crea una nuova prima di iniziare.
 
 La mappa generata viene salvata per intero insieme alla partita: con **▶ RIPRENDI** si ritrova identica (demolizioni comprese). Una nuova partita genera una mappa nuova.
 
@@ -582,7 +592,7 @@ Aggiungere una mappa richiede solo due file. Zero modifiche al codice JS.
 }
 ```
 
-Per una mappa procedurale si usa `"generator": "jungle"` al posto di `"file"` (nessun JSON da creare; i generatori disponibili sono in `js/mapGen.js`, `MAP_GENERATORS`).
+Per una mappa procedurale si usa `"generator": "jungle"` (o `"urban"`) al posto di `"file"` (nessun JSON da creare; i generatori disponibili sono in `js/mapGen.js`, `MAP_GENERATORS`).
 
 ### 2. Creare `missions/mia_mappa.json`
 

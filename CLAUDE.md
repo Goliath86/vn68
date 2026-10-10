@@ -60,7 +60,7 @@ Altre costanti in `constants.js`: `TILE=64`, `AP_PER_TURN=3`, `SAVE_KEY`, `UNIT_
 | `fowLos.js` | Fog of War e Line of Sight: `recomputeVisibility()`, `isTileVisibleFromUnit()`, costo movimento/copertura per tile |
 | `utils.js` | helper generici: `rnd`, `clamp`, `dist` (Manhattan), `pick`, `sleep`, `isMobile` |
 | `maps.js` | costruisce l'elenco mappe a runtime da `catalog.json` |
-| `mapGen.js` | mappe procedurali: `generateProceduralMap(name, seed)` produce un mapData con lo stesso schema dei JSON missione; registro `MAP_GENERATORS` (oggi `jungle`), seed deterministico (mulberry32), verifica di raggiungibilità BFS |
+| `mapGen.js` | mappe procedurali: `generateProceduralMap(name, seed)` produce un mapData con lo stesso schema dei JSON missione; registro `MAP_GENERATORS` (oggi `jungle` e `urban`), seed deterministico (mulberry32), helper condivisi `_generateWithRetries` (tentativi derivati dal seed), `_allReachable` (verifica BFS), `_procTranslations` (testi `*_TEXT` → blocco `translations`) |
 | `i18n.js` | `t()`/`mt()` lookup traduzioni, `applyTranslationsToData()`, `setLang()` |
 | `alea.js` | dadi: `rollD6`, `rollDice(n)`, `diceSum` |
 | `weapons.js` | `unitWeapon(unit)` — arma correntemente equipaggiata/selezionata |
@@ -98,7 +98,7 @@ Il gioco è pensato per essere estendibile **senza toccare il codice JS**, trami
 
 **Per aggiungere una nuova mappa**: bastano una entry in `missions/catalog.json` + il nuovo file `missions/<nome>.json` — zero modifiche JS (vedi sezione "Creare una nuova missione" in `README.md` per lo schema campo-per-campo completo).
 
-Mappe esistenti oggi: `rung_sat.json`, `hue_city.json`, più la mappa procedurale "Zona Ignota" (voce di catalogo con `"generator": "jungle"` invece di `"file"`: `initModal.js` la genera con `generateProceduralMap()` e la attiva con `game.js:useMission()`, che è anche ciò che usa `loadMission()` dopo il fetch). Il mapData generato viene salvato per intero da `saveGame()`, quindi sopravvive ai salvataggi senza logica dedicata.
+Mappe esistenti oggi: `rung_sat.json`, `hue_city.json`, più le mappe procedurali "Zona Ignota" e "Città Ignota" (voci di catalogo con `"generator": "jungle"` / `"generator": "urban"` invece di `"file"`; l'urbana riusa i tile id di Hue City: `initModal.js` la genera con `generateProceduralMap()` e la attiva con `game.js:useMission()`, che è anche ciò che usa `loadMission()` dopo il fetch). Il mapData generato viene salvato per intero da `saveGame()`, quindi sopravvive ai salvataggi senza logica dedicata.
 
 ## Meccaniche di gioco — riferimento rapido
 

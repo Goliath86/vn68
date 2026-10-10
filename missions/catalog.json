@@ -28,5 +28,15 @@
       "it": { "label": "Zona Ignota", "subtitle": "Mappa procedurale · 1968", "theater": "GIUNGLA" },
       "en": { "label": "Uncharted Zone", "subtitle": "Procedural map · 1968", "theater": "JUNGLE" }
     }
+  },
+  {
+    "generator": "urban",
+    "icon": "🎲",
+    "color": "#4a4030",
+    "theaterColor": "#8a7a50",
+    "labels": {
+      "it": { "label": "Città Ignota", "subtitle": "Mappa procedurale · 1968", "theater": "URBANO" },
+      "en": { "label": "Uncharted City", "subtitle": "Procedural map · 1968", "theater": "URBAN" }
+    }
   }
 ]

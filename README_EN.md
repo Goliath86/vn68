@@ -288,14 +288,24 @@ The save is automatically cleared when the game ends (victory or defeat).
 
 ## Procedural Map
 
-The **🎲 Uncharted Zone** theater uses no JSON file: the map is generated on the spot (16×12, delta jungle). Every map has:
+The **🎲 Uncharted Zone** (jungle) and **🎲 Uncharted City** (urban) theaters use no JSON file: the map is generated on the spot (16×12).
+
+**Uncharted Zone** — delta jungle:
 
 - a north–south river with **two fords**, and trails linking the start, the fords and the objectives;
 - clearings, swamps, a village, bunkers and demolishable obstacles;
 - the squad starting on the west edge, VC beyond the river, ambushes along the north/south edges;
 - objectives for all 4 mission types (LZ with the pilot, village and bunker to scout, radio post to hold).
 
-The generator guarantees that every passable tile can be reached from the start. The number in the name (**Sector 48213**) is the seed: the same seed always produces the same map. In the briefing, the **🎲 Regenerate map** button creates a new one before you start.
+**Uncharted City** — a city district during the Tet Offensive:
+
+- a grid of avenues and streets; each block has its own character (dense buildings, park, ruins), and an artillery strike has turned a cluster of buildings to rubble;
+- a west–east river that can be crossed **only on the two bridges**;
+- north of the river, a **walled citadel** with one gate and 1–3 **breachable walls** (engineer breach), pagodas and gardens around the **NVA Command**;
+- the squad starting on the south edge, VC on both banks and inside the citadel, ambushes on the flanks;
+- objectives for all 4 mission types (pilot at the wreck outside the walls, bridge/market/command to scout, command to hold).
+
+The generator guarantees that every passable tile can be reached from the start (the citadel always has a gate: an engineer is not required). The number in the name (**Sector 48213**, **District 48213**) is the seed: the same seed always produces the same map. In the briefing, the **🎲 Regenerate map** button creates a new one before you start.
 
 The generated map is saved in full with the game: **▶ RESUME** brings it back identical (demolitions included). A new game generates a new map.
 
@@ -583,7 +593,7 @@ Adding a map requires only two files. Zero JS code changes.
 }
 ```
 
-For a procedural map use `"generator": "jungle"` instead of `"file"` (no JSON to create; the available generators are in `js/mapGen.js`, `MAP_GENERATORS`).
+For a procedural map use `"generator": "jungle"` (or `"urban"`) instead of `"file"` (no JSON to create; the available generators are in `js/mapGen.js`, `MAP_GENERATORS`).
 
 ### 2. Create `missions/my_map.json`
 
