@@ -179,6 +179,15 @@ function onCanvasClick(e) {
     return;
   }
 
+  if (G.actionMode === "rotate") {
+    if (G.reachable.some((r) => r.col === col && r.row === row)) {
+      sfx("click");
+      rotateUnit(G.selectedUnit, col, row);
+    }
+    setActionMode(null);
+    return;
+  }
+
   // In modalità attesa conferma AoE: click su canvas annulla
   if (G.actionMode === "aoe_confirm") {
     setActionMode(null);

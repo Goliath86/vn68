@@ -266,7 +266,11 @@ Esempi pratici:
 
 ### Meccaniche tattiche
 
-- **Fiancheggiamento:** se un altro soldato US ha il bersaglio in gittata e in linea di vista da un lato diverso (angolo ≥ 90° rispetto a chi spara), la copertura del bersaglio è **dimezzata** (arrotondata per difetto). Vale per gli attacchi diretti della squadra; il tooltip e il log segnalano quando il bersaglio è fiancheggiato, e la percentuale di colpire ne tiene conto.
+- **Orientamento:** ogni unità, US e VC, guarda in una delle 4 direzioni (freccetta sul bordo della pedina). Rispetto a dove guarda, chi attacca si trova di **fronte** (cono di 90°), **alle spalle** (cono opposto) o **sul fianco** (il resto):
+  - dal fianco la copertura del bersaglio è **dimezzata** (per difetto);
+  - alle spalle la copertura è **nulla** e chi attacca ha **+1 ATK**.
+
+  Vale per tutti gli attacchi diretti, overwatch e imboscate comprese, da entrambe le parti (non per granate, RPG e artiglieria). Muovendosi l'unità si gira nella direzione di marcia; chi spara si gira verso il bersaglio e il bersaglio, se sopravvive, si gira verso chi l'ha colpito. Una volta per turno ogni soldato può **ruotare gratis** (anche senza AP): bottone **⟳ Ruota**, poi click su uno dei 4 tile adiacenti. Annullare un movimento annulla anche la rotazione fatta dopo. I VC in pattuglia si accorgono della squadra a distanza piena davanti, a −1 sui fianchi e solo entro 2 tile alle spalle: avvicinarsi da dietro permette di sorprenderli. Tooltip, log e percentuale di colpire tengono conto del lato d'attacco.
 - **Trappole VC (punji e mine):** nascoste sulla mappa. Un soldato che ci passa sopra si ferma lì e subisce danno (punji 2 HP, mina 4 HP). Il **geniere** individua automaticamente le trappole a distanza 1; una trappola individuata è segnata sulla mappa, il movimento la aggira e il geniere può **disinnescarla** con l'abilità speciale (1 AP). I VC ne sono immuni.
 - **Fumogeni:** l'Assalto ha un fumogeno (×1) che crea una cortina di raggio 1 per 2 turni. Il fumo blocca la linea di vista: chi è dentro vede ed è visto solo da distanza 1. Vale anche per i VC, che non possono sparare attraverso il fumo.
 - **Supporto d'artiglieria:** il geniere porta la radio (una sola per squadra, 1 uso). Il colpo si richiede come un'arma ad area (gittata 10) ma **cade all'inizio del turno successivo**, dopo la mossa dei VC, su chiunque si trovi nell'area — soldati US compresi, e anche i VC nascosti nella nebbia. L'area d'impatto in arrivo è segnata in rosso sulla mappa.
@@ -558,6 +562,7 @@ Le scorciatoie da tastiera sono attive solo durante la **fase giocatore** e quan
 | `M` | Modalità Muovi |
 | `A` | Modalità Attacca |
 | `S` | Modalità Speciale |
+| `R` | Rotazione (gratis, una volta per turno) |
 | `Invio` | Fine turno (nel dialogo di conferma: conferma) |
 | `Esc` | Annulla la modalità corrente (nel dialogo di conferma: annulla) |
 | `U` / `Ctrl+Z` | Annulla l'ultimo movimento |

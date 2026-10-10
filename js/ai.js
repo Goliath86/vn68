@@ -74,6 +74,7 @@ async function runEnemyTurn() {
     if (u.alive) {
       u.ap = u.shaken ? AP_PER_TURN - 1 : AP_PER_TURN;
       u.specialUsed = false;
+      u.rotated = false;
       if (u.needReload) u.needReload = false;
       if (u.hasShot) u.needReload = true;
       u.hasShot = false;
@@ -312,10 +313,15 @@ async function enemyActivation(enemy) {
   const d = dist(enemy, target);
   const stats = getEnemyStats(enemy);
 
-  // Allerta se a distanza visiva (ridotta di notte)
+  // Allerta se un'unità US è a distanza visiva (ridotta di notte e se
+  // arriva dal lato o dalle spalle del VC)
   // TODO: check LOS between enemy and target
-  if (d <= vcAlertDistance() && !enemy.alerted) {
+  const spotted = liveUnits.find(
+    (u) => dist(enemy, u) <= vcAlertDistanceFrom(enemy, u),
+  );
+  if (spotted && !enemy.alerted) {
     enemy.alerted = true;
+    faceToward(enemy, spotted);
     addFX("spot", { col: enemy.col, row: enemy.row }, 1200);
     propagateAlert(enemy);
   }
@@ -504,6 +510,7 @@ function spawnReinforcements(count) {
       maxAp: 2,
       alive: true,
       alerted: true,
+      facing: facingToward({ col, row }, nearestLiveUnit({ col, row }) ?? { col, row }) ?? 2,
       vx: col,
       vy: row,
       weapons: buildWeapons("grunt", G.missionState.vcCarrierCounts),
@@ -546,6 +553,7 @@ function spawnAmbush(count, zones) {
       maxAp: 2,
       alive: true,
       alerted: true,
+      facing: facingToward({ col, row }, nearestLiveUnit({ col, row }) ?? { col, row }) ?? 2,
       suppressed: false,
       vx: col,
       vy: row,
@@ -604,6 +612,8 @@ function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
       const f = s - idx;
       const a = path[idx],
         b = path[idx + 1];
+      // L'unità guarda nella direzione del passo in corso (a fine movimento: l'ultimo)
+      enemy.facing = facingToward(a, b) ?? enemy.facing;
       enemy.vx = a.col + (b.col - a.col) * f;
       enemy.vy = a.row + (b.row - a.row) * f - MOVE_HOP * Math.abs(Math.sin(s * Math.PI));
       // Polvere ogni volta che si entra in un nuovo tile

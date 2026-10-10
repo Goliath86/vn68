@@ -47,6 +47,17 @@ function setActionMode(mode, weapon = null) {
     }
   }
 
+  if (mode === "rotate") {
+    // I 4 tile adiacenti indicano le direzioni (anche se non percorribili)
+    G.reachable = FACING_DIRS.map(([dc, dr]) => ({
+      col: u.col + dc,
+      row: u.row + dr,
+    })).filter(
+      ({ col, row }) =>
+        col >= 0 && row >= 0 && col < G.mapData.cols && row < G.mapData.rows,
+    );
+  }
+
   if (mode === "special") {
     // Medico: adiacenti alleati
     if (u.cls === "medic") {
@@ -82,4 +93,14 @@ function setActionMode(mode, weapon = null) {
   render();
 
   updateUI();
+}
+
+// Rotazione gratuita (0 AP), una volta per turno, verso il tile adiacente scelto
+function rotateUnit(u, col, row) {
+  if (!u || !u.alive || u.rotated) return;
+  const f = facingToward(u, { col, row });
+  if (f === null) return;
+  u.facing = f;
+  u.rotated = true;
+  log(t("log.unit_rotate", { name: u.name, dir: t(`directions.${f}`) }));
 }

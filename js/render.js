@@ -162,6 +162,7 @@ function renderMap() {
     ctx.arc(x + ts * 0.5, y + ts * 0.5, ts * 0.41, 0, Math.PI * 2);
     ctx.stroke();
     drawUnitSprite(ctx, x, y, ts, e.cls, false, true);
+    drawFacingMarker(ctx, x, y, ts, e.facing, "#ff6a40");
     const hpRatio = e.hp / e.maxHp;
     ctx.fillStyle = "#111";
     ctx.fillRect(x + 2, y + ts - 5, ts - 4, 3);
@@ -193,6 +194,7 @@ function renderMap() {
 
     // Sprite personaggio
     drawUnitSprite(ctx, x, y, ts, u.cls, isDone, false);
+    drawFacingMarker(ctx, x, y, ts, u.facing, isSelected ? "#f0c030" : "#e8e0b0");
 
     // Bordo selezione
     if (isSelected) {
@@ -247,6 +249,29 @@ function renderMap() {
     ctx.fillStyle = hpRatio > 0.5 ? "#44aa22" : "#cc4422";
     ctx.fillRect(x + 2, y + ts - 5, (ts - 4) * hpRatio, 3);
   }
+}
+
+// Freccia sul bordo del tile nella direzione in cui guarda l'unità
+function drawFacingMarker(ctx, x, y, ts, facing, color) {
+  if (facing == null) return;
+  const [fx, fy] = FACING_DIRS[facing];
+  const cx = x + ts / 2 + fx * ts * 0.43,
+    cy = y + ts / 2 + fy * ts * 0.43;
+  const s = ts * 0.1;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(Math.atan2(fy, fx));
+  ctx.beginPath();
+  ctx.moveTo(s, 0);
+  ctx.lineTo(-s * 0.7, -s);
+  ctx.lineTo(-s * 0.7, s);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.strokeStyle = "rgba(0,0,0,0.75)";
+  ctx.lineWidth = Math.max(1, ts * 0.02);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
 }
 
 function renderMissionMarkers(ctx, ts) {
@@ -479,6 +504,35 @@ function renderOverlay() {
       const { x, y } = tileToScreen(r.col || r.col, r.row || r.row);
       ctx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
       ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
+    }
+  }
+
+  // Rotazione: frecce sui 4 tile adiacenti, quella attuale evidenziata
+  if (G.actionMode === "rotate" && G.selectedUnit) {
+    const u = G.selectedUnit;
+    ctx.lineWidth = 1.5;
+    for (const r of G.reachable) {
+      const { x, y } = tileToScreen(r.col, r.row);
+      const f = facingToward(u, r);
+      const current = f === u.facing;
+      ctx.fillStyle = current ? "rgba(240,192,48,0.35)" : "rgba(240,192,48,0.15)";
+      ctx.strokeStyle = "rgba(240,192,48,0.8)";
+      ctx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
+      ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
+      // Freccia al centro del tile, puntata verso l'esterno
+      const [fx, fy] = FACING_DIRS[f];
+      ctx.save();
+      ctx.translate(x + ts / 2, y + ts / 2);
+      ctx.rotate(Math.atan2(fy, fx));
+      const s = ts * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(s, 0);
+      ctx.lineTo(-s * 0.6, -s * 0.8);
+      ctx.lineTo(-s * 0.6, s * 0.8);
+      ctx.closePath();
+      ctx.fillStyle = current ? "#f0c030" : "rgba(240,224,176,0.85)";
+      ctx.fill();
+      ctx.restore();
     }
   }
 

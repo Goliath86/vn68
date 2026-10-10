@@ -33,7 +33,7 @@ document
   .addEventListener("click", collapseSheet);
 
 // Bottoni quick bar → delegano ai corrispondenti desktop
-["move", "attack", "special", "endturn"].forEach((action) => {
+["move", "attack", "special", "rotate", "endturn"].forEach((action) => {
   document.getElementById("qb-" + action).addEventListener("click", () => {
     document.getElementById("btn-" + action).click();
   });
@@ -117,11 +117,14 @@ function updateActionButtons() {
 
   const hasSM = G.actionMode === "special";
 
+  const hasRM = G.actionMode === "rotate";
+
   // Aggiorna sia i controlli desktop che mobile in un colpo
   const pairs = [
     ["btn-move", "mob-btn-move"],
     ["btn-attack", "mob-btn-attack"],
     ["btn-special", "mob-btn-special"],
+    ["btn-rotate", "mob-btn-rotate"],
     ["btn-endturn", "mob-btn-endturn"],
     //["btn-dice", "mob-btn-dice"],
   ];
@@ -168,6 +171,12 @@ function updateActionButtons() {
         el.textContent = specLabel;
       }
 
+      // Rotazione: gratuita (anche a 0 AP), una volta per turno
+      if (id.includes("rotate")) {
+        el.disabled = !(isPlayer && hasUnit && !u.rotated);
+        el.style.borderColor = hasRM ? "var(--highlight)" : "";
+      }
+
       if (id.includes("endturn")) {
         el.disabled =
           !isPlayer || !!G.pendingDice || G.actionMode === "aoe_confirm";
@@ -193,6 +202,7 @@ function updateActionButtons() {
     ["btn-move", "qb-move"],
     ["btn-attack", "qb-attack"],
     ["btn-special", "qb-special"],
+    ["btn-rotate", "qb-rotate"],
     ["btn-endturn", "qb-endturn"],
   ].forEach(([src, dst]) => {
     const s = document.getElementById(src),

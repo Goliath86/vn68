@@ -11,6 +11,8 @@ async function moveUnit(unit, toCol, toRow, apCost) {
   const fromCol = unit.col, fromRow = unit.row;
   // Stato prima del movimento, per consentire l'annullamento (vedi undoLastMove)
   const prevAp = unit.ap;
+  const prevFacing = unit.facing;
+  const prevRotated = unit.rotated;
   const seenBefore = visibleEnemyIds();
   const missionBefore = JSON.stringify(G.missionState);
   G.lastMove = null;
@@ -96,7 +98,7 @@ async function moveUnit(unit, toCol, toRow, apCost) {
     !revealed &&
     JSON.stringify(G.missionState) === missionBefore
   ) {
-    G.lastMove = { unit, fromCol, fromRow, prevAp };
+    G.lastMove = { unit, fromCol, fromRow, prevAp, prevFacing, prevRotated };
   }
 
   updateUI();
@@ -130,10 +132,13 @@ function canUndoMove() {
 
 function undoLastMove() {
   if (!canUndoMove()) return;
-  const { unit, fromCol, fromRow, prevAp } = G.lastMove;
+  const { unit, fromCol, fromRow, prevAp, prevFacing, prevRotated } = G.lastMove;
   G.lastMove = null;
   unit.col = fromCol;
   unit.row = fromRow;
+  // Anche una rotazione fatta dopo il movimento viene annullata
+  unit.facing = prevFacing;
+  unit.rotated = prevRotated;
   // L'animazione lascia vx/vy sulla destinazione: senza reset il render userebbe quelle
   delete unit.vx;
   delete unit.vy;

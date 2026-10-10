@@ -267,7 +267,11 @@ Practical examples:
 
 ### Tactical Mechanics
 
-- **Flanking:** if another US soldier has the target in range and line of sight from a different side (angle ≥ 90° from the shooter), the target's cover is **halved** (rounded down). It applies to the squad's direct attacks; the tooltip and the log flag a flanked target, and the hit chance accounts for it.
+- **Facing:** every unit, US and VC, faces one of 4 directions (small arrow on the edge of the counter). Relative to its facing, an attacker is in **front** (90° cone), **behind** (opposite cone) or on the **side** (the rest):
+  - from the side, the target's cover is **halved** (rounded down);
+  - from behind, cover is **zero** and the attacker gets **+1 ATK**.
+
+  It applies to every direct attack, overwatch and ambushes included, for both sides (not to grenades, RPGs or artillery). A unit turns toward its direction of travel when moving; a shooter turns toward its target, and the target, if it survives, turns toward its attacker. Once per turn each soldier can **turn for free** (even with no AP): **⟳ Turn** button, then click one of the 4 adjacent tiles. Undoing a move also undoes a turn made after it. Patrolling VC notice the squad at full distance in front, −1 on the sides and only within 2 tiles from behind: approaching from the rear lets you catch them by surprise. Tooltip, log and hit chance account for the attack side.
 - **VC traps (punji and mines):** hidden on the map. A soldier walking over one stops there and takes damage (punji 2 HP, mine 4 HP). The **Engineer** automatically spots traps at distance 1; a spotted trap is marked on the map, movement routes around it and the Engineer can **disarm** it with the special ability (1 AP). VC are immune.
 - **Smoke grenades:** the Assault carries one smoke grenade (×1) creating a radius-1 screen for 2 turns. Smoke blocks line of sight: anyone inside sees and is seen only from distance 1. This applies to VC as well, who cannot fire through smoke.
 - **Artillery support:** the Engineer carries the radio (one per squad, 1 use). The strike is called like an area weapon (range 10) but **lands at the start of the next turn**, after the VC move, on anyone in the area — US soldiers included, and VC hidden in the fog too. The incoming impact area is marked in red on the map.
@@ -559,6 +563,7 @@ Keyboard shortcuts are active only during the **player phase** and when no dice 
 | `M` | Move mode |
 | `A` | Attack mode |
 | `S` | Special ability mode |
+| `R` | Turn (free, once per turn) |
 | `Enter` | End turn (in the confirmation dialog: confirm) |
 | `Esc` | Cancel current mode (in the confirmation dialog: cancel) |
 | `U` / `Ctrl+Z` | Undo last move |

@@ -56,7 +56,8 @@ function showTooltip(e, col, row) {
       pct: Math.round(pHit * 100),
       dmg: expDmg.toFixed(1),
     });
-    if (isFlanked(G.selectedUnit, enemy)) txt += t("tooltip.flanked");
+    const sector = facingSector(enemy, G.selectedUnit);
+    if (sector !== "front") txt += t(`tooltip.${sector}`);
   }
   tt.textContent = txt;
   tt.style.display = "block";

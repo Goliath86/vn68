@@ -39,7 +39,16 @@
     "attack_mobile": "Attacca",
     "special_mobile": "Spec.",
     "end_turn_mobile": "Fine",
-    "undo_move": "↶ Annulla movimento"
+    "undo_move": "↶ Annulla movimento",
+    "rotate": "⟳ Ruota (gratis)",
+    "rotate_mobile": "Ruota"
+  },
+
+  "directions": {
+    "0": "nord",
+    "1": "est",
+    "2": "sud",
+    "3": "ovest"
   },
 
   "confirm": {
@@ -222,7 +231,9 @@
     "aoe_no_targets": "{name} — {weapon}: nessun bersaglio nell'area",
     "aoe_dice_context": "{weapon} — {name}",
     "aoe_target_result": "  ↳ {name}: {defBreakdown} → {result}",
-    "flanked": "{name} è FIANCHEGGIATO — copertura dimezzata",
+    "attack_side": "{name} colpito sul FIANCO — copertura dimezzata",
+    "attack_rear": "{name} colpito ALLE SPALLE — niente copertura, +1 ATK",
+    "unit_rotate": "{name} si gira verso {dir}",
     "night_mission": "Missione notturna: visibilità ridotta per entrambe le parti",
     "trap_triggered": "{name} finisce in una trappola ({trap})! -{dmg}HP",
     "trap_revealed": "{name} individua una trappola ({trap}) in ({col},{row})",
@@ -261,7 +272,8 @@
     "enemy_append": " | {name} HP:{hp}/{maxHp}",
     "enemy_reloading": " (in ricarica)",
     "hit_odds": " | Colpo: {pct}% · danno medio {dmg}",
-    "flanked": " · fiancheggiato",
+    "side": " · sul fianco",
+    "rear": " · alle spalle",
     "enemy_routed": " (in rotta)",
     "trap": " | ⚠ Trappola: {trap}",
     "smoke": " | Fumo ({turns}T)"

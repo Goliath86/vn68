@@ -39,7 +39,16 @@
     "attack_mobile": "Attack",
     "special_mobile": "Spec.",
     "end_turn_mobile": "End",
-    "undo_move": "↶ Undo move"
+    "undo_move": "↶ Undo move",
+    "rotate": "⟳ Turn (free)",
+    "rotate_mobile": "Turn"
+  },
+
+  "directions": {
+    "0": "north",
+    "1": "east",
+    "2": "south",
+    "3": "west"
   },
 
   "confirm": {
@@ -217,7 +226,9 @@
     "aoe_no_targets": "{name} — {weapon}: no targets in blast area",
     "aoe_dice_context": "{weapon} — {name}",
     "aoe_target_result": "  ↳ {name}: {defBreakdown} → {result}",
-    "flanked": "{name} is FLANKED — cover halved",
+    "attack_side": "{name} hit from the SIDE — cover halved",
+    "attack_rear": "{name} hit from BEHIND — no cover, +1 ATK",
+    "unit_rotate": "{name} turns to face {dir}",
     "night_mission": "Night mission: reduced visibility for both sides",
     "trap_triggered": "{name} triggers a trap ({trap})! -{dmg}HP",
     "trap_revealed": "{name} spots a trap ({trap}) at ({col},{row})",
@@ -256,7 +267,8 @@
     "enemy_append": " | {name} HP:{hp}/{maxHp}",
     "enemy_reloading": " (reloading)",
     "hit_odds": " | Hit: {pct}% · avg dmg {dmg}",
-    "flanked": " · flanked",
+    "side": " · from the side",
+    "rear": " · from behind",
     "enemy_routed": " (routed)",
     "trap": " | ⚠ Trap: {trap}",
     "smoke": " | Smoke ({turns}T)"

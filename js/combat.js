@@ -25,13 +25,15 @@ async function resolveCombat(
     ? weaponRangePenalty(attacker, weapon, range)
     : 0;
 
-  const atkVal = Math.max(1, (weapon?.atk ?? atkDef.attack) - rangePenalty);
-  // Attacco US: copertura dimezzata se il bersaglio è fiancheggiato
-  const defCover = isEnemy
-    ? coverBonus(defender.col, defender.row)
-    : effectiveCover(attacker, defender);
-  if (!isEnemy && defCover < coverBonus(defender.col, defender.row))
-    log(t("log.flanked", { name: defender.name }), "combat");
+  // Orientamento del bersaglio: dal lato copertura dimezzata, alle spalle
+  // copertura nulla e +1 ATK (vale per entrambe le parti)
+  const sector = facingSector(defender, attacker);
+  const atkVal =
+    Math.max(1, (weapon?.atk ?? atkDef.attack) - rangePenalty) +
+    rearAttackBonus(attacker, defender);
+  const defCover = effectiveCover(attacker, defender);
+  if (sector !== "front")
+    log(t(`log.attack_${sector}`, { name: defender.name }), "combat");
   const defStat = isEnemy
     ? (UNIT_CLASSES[defender.cls]?.defense ?? 1)
     : getEnemyStats(defender).defense;
@@ -160,6 +162,8 @@ async function resolveCombat(
     );
   }
 
+  faceAfterShot(attacker, defender);
+
   updateUI();
   render();
   return dmg > 0;
@@ -170,10 +174,11 @@ async function resolveCombat(
 function attackOdds(attacker, defender, weapon) {
   const def = UNIT_CLASSES[attacker.cls];
   const range = dist(attacker, defender);
-  const atkVal = Math.max(
-    1,
-    (weapon?.atk ?? def.attack) - weaponRangePenalty(attacker, weapon, range),
-  );
+  const atkVal =
+    Math.max(
+      1,
+      (weapon?.atk ?? def.attack) - weaponRangePenalty(attacker, weapon, range),
+    ) + rearAttackBonus(attacker, defender);
   const defVal =
     getEnemyStats(defender).defense + effectiveCover(attacker, defender);
   let hits = 0,

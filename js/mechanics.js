@@ -1,30 +1,78 @@
 // ── MECCANICHE TATTICHE ────────────────────────────────────────────────
-// Fiancheggiamento, trappole VC, fumogeni, supporto d'artiglieria, missioni
+// Orientamento, trappole VC, fumogeni, supporto d'artiglieria, missioni
 // notturne e morale VC. Lo stato runtime vive in G.missionState (traps,
 // smokes, artillery, night) così finisce automaticamente nel salvataggio.
 
-// ── FIANCHEGGIAMENTO ───────────────────────────────────────────────────
-// Il bersaglio è fiancheggiato se un altro soldato US lo ha in gittata e in
-// linea di vista da un lato diverso (angolo ≥ 90° rispetto all'attaccante)
-function isFlanked(attacker, target) {
-  const ax = attacker.col - target.col,
-    ay = attacker.row - target.row;
-  return G.units.some((a) => {
-    if (!a.alive || a === attacker) return false;
-    const bx = a.col - target.col,
-      by = a.row - target.row;
-    if (ax * bx + ay * by > 0) return false;
-    return (
-      dist(a, target) <= unitFireRange(a) &&
-      isTileVisibleFromUnit(a, target.col, target.row)
-    );
-  });
+// ── ORIENTAMENTO ───────────────────────────────────────────────────────
+// Ogni unità (US e VC) guarda in una delle 4 direzioni (unit.facing:
+// 0=N 1=E 2=S 3=O). Rispetto a chi guarda, ogni tile cade in un settore:
+// fronte (cono di 90°), retro (cono di 90° opposto) o lato (il resto).
+// Attacco dal lato: copertura dimezzata. Dalle spalle: copertura nulla e +1 ATK.
+const FACING_DIRS = [
+  [0, -1],
+  [1, 0],
+  [0, 1],
+  [-1, 0],
+];
+const REAR_ATK_BONUS = 1;
+const VC_REAR_ALERT_DISTANCE = 2;
+
+// Direzione cardinale da `from` verso `to` (asse dominante; null se coincidono)
+function facingToward(from, to) {
+  const dx = to.col - from.col,
+    dy = to.row - from.row;
+  if (!dx && !dy) return null;
+  if (Math.abs(dx) >= Math.abs(dy)) return dx > 0 ? 1 : 3;
+  return dy > 0 ? 2 : 0;
 }
 
-// Copertura del bersaglio contro un attacco US: dimezzata se fiancheggiato
+function faceToward(unit, to) {
+  const f = facingToward(unit, to);
+  if (f !== null) unit.facing = f;
+}
+
+// Settore di `unit` in cui si trova `from`: "front" | "side" | "rear"
+function facingSector(unit, from) {
+  const [fx, fy] = FACING_DIRS[unit.facing ?? 2];
+  const dx = from.col - unit.col,
+    dy = from.row - unit.row;
+  const fwd = dx * fx + dy * fy;
+  const lat = Math.abs(dx * fy - dy * fx);
+  if (fwd > 0 && lat <= fwd) return "front";
+  if (fwd < 0 && lat <= -fwd) return "rear";
+  return fwd === 0 && lat === 0 ? "front" : "side";
+}
+
+// Orientamento iniziale: verso il baricentro delle zone di spawn VC
+function initialFacing(pos) {
+  const md = G.mapData;
+  const zones = md.vcSpawnZones || [];
+  const target = zones.length
+    ? {
+        col: zones.reduce((s, z) => s + (z.colMin + z.colMax) / 2, 0) / zones.length,
+        row: zones.reduce((s, z) => s + (z.rowMin + z.rowMax) / 2, 0) / zones.length,
+      }
+    : { col: md.cols / 2, row: md.rows / 2 };
+  return facingToward(pos, target) ?? 2;
+}
+
+// Copertura del bersaglio contro un attacco diretto, secondo il lato da cui arriva
 function effectiveCover(attacker, target) {
   const cover = coverBonus(target.col, target.row);
-  return isFlanked(attacker, target) ? Math.floor(cover / 2) : cover;
+  const sector = facingSector(target, attacker);
+  if (sector === "rear") return 0;
+  return sector === "side" ? Math.floor(cover / 2) : cover;
+}
+
+function rearAttackBonus(attacker, target) {
+  return facingSector(target, attacker) === "rear" ? REAR_ATK_BONUS : 0;
+}
+
+// Dopo uno scambio di colpi chi spara guarda il bersaglio e il bersaglio,
+// se sopravvive, si gira verso chi lo ha attaccato
+function faceAfterShot(attacker, defender) {
+  faceToward(attacker, defender);
+  if (defender.alive) faceToward(defender, attacker);
 }
 
 // ── MISSIONI NOTTURNE ──────────────────────────────────────────────────
@@ -49,6 +97,16 @@ function unitVision(unit) {
 // Distanza a cui un VC in pattuglia si accorge della squadra
 function vcAlertDistance() {
   return Math.max(2, VC_ALERT_DISTANCE - nightPenalty());
+}
+
+// Come sopra, ma secondo il lato da cui arriva l'unità US: piena davanti,
+// -1 ai lati, solo a distanza ravvicinata alle spalle
+function vcAlertDistanceFrom(enemy, unit) {
+  const base = vcAlertDistance();
+  const sector = facingSector(enemy, unit);
+  if (sector === "rear") return Math.min(base, VC_REAR_ALERT_DISTANCE);
+  if (sector === "side") return Math.max(VC_REAR_ALERT_DISTANCE, base - 1);
+  return base;
 }
 
 // ── FUMOGENI ───────────────────────────────────────────────────────────

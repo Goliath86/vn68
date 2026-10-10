@@ -23,7 +23,9 @@ function checkOverwatch(enemy) {
       const owWeapon = unitFireWeapon(ow);
       const owRange = dist(ow, enemy);
       const owPenalty = weaponRangePenalty(ow, owWeapon, owRange);
-      const owAtk = Math.max(1, (owWeapon?.atk ?? owDef.attack) - owPenalty);
+      const owAtk =
+        Math.max(1, (owWeapon?.atk ?? owDef.attack) - owPenalty) +
+        rearAttackBonus(ow, enemy);
 
       if (owPenalty > 0)
         log(
@@ -38,11 +40,9 @@ function checkOverwatch(enemy) {
       const dv = rollDice(2);
 
       const roll = diceSum(dv) + owAtk;
-      // Stessa formula di resolveCombat: DEF + copertura + 1d6
+      // Stessa formula di resolveCombat: DEF + copertura (secondo il lato) + 1d6
       const sv =
-        rollD6() +
-        getEnemyStats(enemy).defense +
-        coverBonus(enemy.col, enemy.row);
+        rollD6() + getEnemyStats(enemy).defense + effectiveCover(ow, enemy);
 
       const dmg = Math.max(0, roll - sv);
       const owSniper = ow.cls === "sniper";
@@ -97,6 +97,7 @@ function checkOverwatch(enemy) {
           );
         }
       }
+      faceAfterShot(ow, enemy);
 
       // TODO: set HasShot
     }

@@ -77,6 +77,9 @@ async function resumeGame(save) {
   G.fowEnabled = save.fowEnabled ?? true;
   G.units = save.units;
   G.enemies = save.enemies;
+  // Salvataggi precedenti all'orientamento: direzione iniziale di default
+  G.units.forEach((u) => (u.facing ??= initialFacing(u)));
+  G.enemies.forEach((e) => (e.facing ??= rnd(0, 3)));
   G.missionState = save.missionState;
   G.activeFires = save.activeFires || [];
   G.selectedUnit = null;

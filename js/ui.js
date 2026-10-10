@@ -16,6 +16,12 @@ document
   );
 
 document
+  .getElementById("mob-btn-rotate")
+  .addEventListener("click", () =>
+    document.getElementById("btn-rotate").click(),
+  );
+
+document
   .getElementById("mob-btn-endturn")
   .addEventListener("click", () =>
     document.getElementById("btn-endturn").click(),
@@ -148,6 +154,14 @@ document.getElementById("btn-special").addEventListener("click", () => {
   }
   setActionMode("special");
 });
+document.getElementById("btn-rotate").addEventListener("click", () => {
+  const u = G.selectedUnit;
+  if (!u || !u.alive || u.rotated) return;
+  sfx("click");
+  // Secondo click sul bottone: esce dalla modalità
+  setActionMode(G.actionMode === "rotate" ? null : "rotate");
+});
+
 document.getElementById("btn-undo").addEventListener("click", () => {
   if (!canUndoMove()) return;
   sfx("click");
@@ -241,6 +255,9 @@ document.addEventListener("keydown", (e) => {
     case "s":
       if (u && u.alive && u.ap > 0 && !u.specialUsed)
         document.getElementById("btn-special").click();
+      break;
+    case "r":
+      if (u && u.alive && !u.rotated) document.getElementById("btn-rotate").click();
       break;
     case "enter":
       // preventDefault: evita il doppio click nativo se un bottone ha il focus

@@ -45,7 +45,7 @@ ui.js → selectedUnit.js → init.js → unitList.js → unitMovement.js
 
 ## Lo stato globale `G` (js/constants.js)
 
-Tutto il gioco ruota attorno all'oggetto `G`: `units` (squadra US), `enemies` (VC), `selectedUnit`, `phase` (`player`/`enemy`/`gameover`), `turn`, `missionType`, `missionState` (stato specifico della missione corrente: es. `vcCarrierCounts`, posizione pilota, ecc.), `actionMode` (`move`/`attack`/`weapon_select`/`aoe_confirm`/`special`), `reachable`/`attackable` (celle evidenziate), `overwatchList`/`suppressList`, `activeFires`, `visibleTiles` (Fog of War), stato canvas/camera (`camX`, `camY`, `scale`...).
+Tutto il gioco ruota attorno all'oggetto `G`: `units` (squadra US), `enemies` (VC), `selectedUnit`, `phase` (`player`/`enemy`/`gameover`), `turn`, `missionType`, `missionState` (stato specifico della missione corrente: es. `vcCarrierCounts`, posizione pilota, ecc.), `actionMode` (`move`/`attack`/`weapon_select`/`aoe_confirm`/`special`/`rotate`), `reachable`/`attackable` (celle evidenziate), `overwatchList`/`suppressList`, `activeFires`, `visibleTiles` (Fog of War), stato canvas/camera (`camX`, `camY`, `scale`...).
 
 Altre costanti in `constants.js`: `TILE=64`, `AP_PER_TURN=3`, `SAVE_KEY`, `UNIT_CLASSES` (le 4 classi giocabili con stat base), `MISSION_TYPES` (le 4 tipologie di missione), `SOLDIER_NAMES`/`VC_NAMES`.
 
@@ -71,7 +71,7 @@ Altre costanti in `constants.js`: `TILE=64`, `AP_PER_TURN=3`, `SAVE_KEY`, `UNIT_
 | `render.js` | rendering principale: `render()`, `renderMap()`, `renderOverlay()` (evidenziazioni move/attack/AoE), `renderUnitsOnMap()`, `renderMissionMarkers()` |
 | `saveGame.js` | `saveGame()`/`loadSave()`/`clearSave()` — persistenza `localStorage`, chiave `SAVE_KEY` |
 | `combat.js` | `resolveCombat()` (attacco singolo, formula 2d6+ATK vs DEF+copertura+1d6), `resolveAoeCombat()` (granate/RPG, dado automatico) |
-| `mechanics.js` | meccaniche tattiche: fiancheggiamento (`isFlanked`/`effectiveCover`), notte (`unitVision`, `vcAlertDistance`), fumogeni (`isSmoked`, `smokeBlocks`), artiglieria (`scheduleArtillery`/`resolveArtillery`), trappole VC (`initTraps`, `hiddenTrapOnPath`, `triggerTrap`), morale VC (`checkVcMorale`, `routedActivation`). Stato runtime in `G.missionState` (`traps`, `smokes`, `artillery`, `night`) |
+| `mechanics.js` | meccaniche tattiche: orientamento (`unit.facing` 0=N..3=O, `facingSector` fronte/lato/retro, `effectiveCover`, `rearAttackBonus`, `faceAfterShot`, `vcAlertDistanceFrom`; rotazione gratuita in `actions.js:rotateUnit`, flag `unit.rotated`), notte (`unitVision`, `vcAlertDistance`), fumogeni (`isSmoked`, `smokeBlocks`), artiglieria (`scheduleArtillery`/`resolveArtillery`), trappole VC (`initTraps`, `hiddenTrapOnPath`, `triggerTrap`), morale VC (`checkVcMorale`, `routedActivation`). Stato runtime in `G.missionState` (`traps`, `smokes`, `artillery`, `night`) |
 | `initModal.js` | modale iniziale: scelta mappa, tipo missione, composizione squadra (4 slot classe) |
 | `tabs.js` | UI mobile a tab (bottom sheet): `switchTab`, `collapseSheet`/`expandSheet`, `updateActionButtons` |
 | `backModal.js` | conferma "torna al menu" (bottone ⌂ / tasto indietro Android) |
@@ -103,7 +103,7 @@ Mappe esistenti oggi: `rung_sat.json`, `hue_city.json`, più le mappe procedural
 ## Meccaniche di gioco — riferimento rapido
 
 - **Turno**: fase Giocatore → fase Nemica (`ai.js:runEnemyTurn`). 3 AP/unità, azioni: muovere (costo variabile da terreno), attaccare (1 AP), speciale (1 AP, una volta a turno).
-- **Combattimento singolo**: `2d6 + ATK attaccante` vs `DEF difensore + copertura terreno + 1d6`; danno = max(0, diff). Il giocatore lancia fisicamente il dado (`G.diceQueue`), il nemico lancia automaticamente.
+- **Combattimento singolo**: `2d6 + ATK attaccante` vs `DEF difensore + copertura terreno + 1d6`; danno = max(0, diff). La copertura dipende dal lato rispetto all'orientamento del difensore (fianco: dimezzata; spalle: nulla e +1 ATK). Il giocatore lancia fisicamente il dado (`G.diceQueue`), il nemico lancia automaticamente.
 - **Cecchino**: penalità ATK crescente con la distanza (`combat.js`, floor((range-1)/2)), min ATK sempre 1.
 - **Armi AoE** (granate/RPG): nessun dado manuale, risolte automaticamente in `resolveAoeCombat()`, colpiscono tutti (US + VC) nel raggio.
 - **Morale/Panico**: sotto 30% HP → "SCOSSO" (−1 AP, speciale bloccato) finché il medico non lo cura sopra soglia.
