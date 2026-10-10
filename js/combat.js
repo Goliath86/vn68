@@ -163,6 +163,11 @@ async function resolveCombat(
   }
 
   faceAfterShot(attacker, defender);
+  if (!isEnemy) {
+    // Il VC bersagliato si allerta sempre; lo sparo allerta chi lo sente
+    alertVcToward(defender, attacker);
+    makeNoise(attacker, weaponNoise(attacker, weapon ?? unitFireWeapon(attacker)));
+  }
 
   updateUI();
   render();
@@ -233,6 +238,9 @@ async function resolveAoeCombat(
 
   sfxShoot(attacker.cls, weapon);
   addFX("explosion", { col: tc, row: tr, aoe: weapon.aoe }, 1300);
+  // Esplosione US: il rumore parte dal punto d'impatto
+  if (!isEnemyAttacking)
+    makeNoise({ col: tc, row: tr }, weaponNoise(attacker, weapon));
 
   if (!defenders.length) {
     log(

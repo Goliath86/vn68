@@ -58,7 +58,7 @@ function updateQuickWeaponsBar(u) {
       const aoeStr = w.aoe ? ` · AoE${w.aoe}` : "";
       html += `<button class="btn qwb-btn" ${!hasAmmo ? "disabled" : ""} data-widx="${i}">
 <span class="qwb-name">${w.label} ${ammoStr}</span>
-<span class="qwb-stats">ATK${w.atk} · RNG${w.range}${aoeStr}</span>
+<span class="qwb-stats">ATK${w.atk} · RNG${w.range}${aoeStr} · 🔊${weaponNoise(u, w)}</span>
 </button>`;
     });
     html += cancelBtn;
@@ -227,7 +227,7 @@ function updateActionButtons() {
           ? t("weapons.ammo_inf")
           : t("weapons.ammo_tag", { n: w.ammo });
       const aoeStr = w.aoe ? ` · AoE${w.aoe}` : "";
-      html += `<button class="btn btn-weapon" ${!hasAmmo ? "disabled" : ""} data-widx="${i}">${w.label} ${ammoStr} · ATK${w.atk} · RNG${w.range}${aoeStr}</button>`;
+      html += `<button class="btn btn-weapon" ${!hasAmmo ? "disabled" : ""} data-widx="${i}">${w.label} ${ammoStr} · ATK${w.atk} · RNG${w.range}${aoeStr} · 🔊${weaponNoise(u, w)}</button>`;
     });
     [pickerEl, mobPickerEl].forEach((el) => {
       if (!el) return;

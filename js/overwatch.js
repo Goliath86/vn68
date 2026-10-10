@@ -103,6 +103,8 @@ function checkOverwatch(enemy) {
         }
       }
       faceAfterShot(ow, enemy);
+      alertVcToward(enemy, ow);
+      makeNoise(ow, weaponNoise(ow, owWeapon));
 
       // TODO: set HasShot
     }

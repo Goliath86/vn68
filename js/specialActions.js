@@ -81,6 +81,7 @@ async function handleSpecialAction(col, row) {
         }),
         "success",
       );
+      makeNoise(target, FIRE_NOISE);
       _startTileAnimLoop();
       updateUI();
       render();
@@ -131,6 +132,8 @@ async function handleSpecialAction(col, row) {
       u.ap -= 1;
       u.specialUsed = true;
     }
+    // La carica esplode comunque, anche se il muro regge
+    makeNoise(target, DEMOLITION_NOISE);
     updateUI();
     render();
   }

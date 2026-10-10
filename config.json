@@ -32,6 +32,7 @@
         "labelEn": "M16",
         "atk": 3,
         "range": 3,
+        "noise": 5,
         "sound": "assets/m16.mp3"
       },
       {
@@ -42,6 +43,7 @@
         "range": 3,
         "ammo": 2,
         "aoe": 1,
+        "noise": 6,
         "sound": "assets/grenade.mp3"
       },
       {
@@ -52,7 +54,8 @@
         "range": 3,
         "ammo": 1,
         "aoe": 1,
-        "smoke": 2
+        "smoke": 2,
+        "noise": 1
       }
     ],
     "sniper": [
@@ -63,6 +66,7 @@
         "atk": 4,
         "range": 6,
         "rangePenalty": true,
+        "noise": 7,
         "sound": "assets/sniper_us.mp3"
       }
     ],
@@ -73,6 +77,7 @@
         "labelEn": "M16",
         "atk": 2,
         "range": 3,
+        "noise": 5,
         "sound": "assets/m16.mp3"
       },
       {
@@ -86,6 +91,7 @@
         "minRange": 2,
         "artillery": true,
         "maxCarriers": 1,
+        "noise": 8,
         "sound": "assets/grenade.mp3"
       }
     ],
@@ -97,6 +103,7 @@
         "atk": 1,
         "range": 1,
         "rounds": 1,
+        "noise": 2,
         "sound": "assets/pistol.mp3"
       }
     ],

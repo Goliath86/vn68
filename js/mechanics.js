@@ -76,6 +76,44 @@ function faceAfterShot(attacker, defender) {
   if (defender.alive) faceToward(defender, attacker);
 }
 
+// ── RUMORE ─────────────────────────────────────────────────────────────
+// Ogni azione rumorosa della squadra (sparo, esplosione, demolizione) allerta
+// i VC entro un raggio (Manhattan, il suono passa attraverso il terreno), che
+// si girano verso la fonte. Il raggio delle armi è il campo `noise` in config.
+const DEFAULT_NOISE = 4;
+const DEFAULT_AOE_NOISE = 6;
+const DEMOLITION_NOISE = 6;
+const FIRE_NOISE = 2;
+
+function weaponNoise(unit, weapon) {
+  // Partite salvate prima del campo `noise`: si legge dal config attuale
+  const cfg = (WEAPONS_CONFIG[unit?.cls] || []).find((w) => w.id === weapon?.id);
+  return (
+    weapon?.noise ?? cfg?.noise ?? (weapon?.aoe ? DEFAULT_AOE_NOISE : DEFAULT_NOISE)
+  );
+}
+
+// Allerta un VC verso `src` (bersaglio colpito o rumore udito)
+function alertVcToward(enemy, src) {
+  if (!enemy.alive || enemy.alerted) return false;
+  enemy.alerted = true;
+  faceToward(enemy, src);
+  addFX("spot", { col: enemy.col, row: enemy.row, relay: true }, 900);
+  return true;
+}
+
+function makeNoise(src, radius) {
+  if (!(radius > 0)) return;
+  addFX("noise", { col: src.col, row: src.row, radius }, 1000);
+  let heard = 0;
+  for (const e of G.enemies) {
+    if (dist(e, src) > radius) continue;
+    // Il log conta solo i VC visibili, per non rivelare quelli nel FOW
+    if (alertVcToward(e, src) && isTileVisible(e.col, e.row)) heard++;
+  }
+  if (heard) log(t("log.noise_alert", { count: heard }), "enemy");
+}
+
 // ── MISSIONI NOTTURNE ──────────────────────────────────────────────────
 const NIGHT_VISION_PENALTY = 2;
 const VC_ALERT_DISTANCE = 5;
@@ -152,6 +190,7 @@ function deploySmoke(thrower, weapon, tc, tr) {
     }
   }
   sfxShoot(thrower.cls, weapon);
+  makeNoise({ col: tc, row: tr }, weaponNoise(thrower, weapon));
   log(
     t("log.smoke_deployed", {
       name: thrower.name,
@@ -185,6 +224,7 @@ function scheduleArtillery(caller, weapon, tc, tr) {
     aoe: weapon.aoe,
     label: weapon.label,
     sound: weapon.sound,
+    noise: weaponNoise(caller, weapon),
     callerCls: caller.cls,
     callerName: caller.name,
   });
@@ -205,7 +245,7 @@ async function resolveArtillery() {
     log(t("log.artillery_impact", { col: s.col, row: s.row }), "combat");
     await resolveAoeCombat(
       { cls: s.callerCls, name: s.callerName },
-      { atk: s.atk, aoe: s.aoe, label: s.label, sound: s.sound },
+      { atk: s.atk, aoe: s.aoe, label: s.label, sound: s.sound, noise: s.noise },
       s.col,
       s.row,
       false,

@@ -483,8 +483,36 @@ function _drawEffect(ctx, ts, fx, p) {
       _drawExplosion(ctx, ts, fx.data, p);
       break;
     }
+
+    case "noise": {
+      _drawNoise(ctx, ts, fx.data, p);
+      break;
+    }
   }
   ctx.restore();
+}
+
+// ── NOISE — onda sonora di uno sparo/esplosione ─────────────────────────
+// Due rombi (distanza Manhattan, come il raggio di allerta) che si allargano
+// dalla fonte fino al raggio del rumore e svaniscono
+function _drawNoise(ctx, ts, d, p) {
+  const { x, y } = tileToScreen(d.col, d.row);
+  const cx = x + ts / 2,
+    cy = y + ts / 2;
+  ctx.lineWidth = Math.max(1, ts * 0.025);
+  for (const lag of [0, 0.25]) {
+    const q = (p - lag) / (1 - lag);
+    if (q <= 0) continue;
+    const r = (0.5 + d.radius * Math.sqrt(q)) * ts;
+    ctx.strokeStyle = `rgba(235,230,205,${(0.55 * (1 - q)).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r);
+    ctx.lineTo(cx + r, cy);
+    ctx.lineTo(cx, cy + r);
+    ctx.lineTo(cx - r, cy);
+    ctx.closePath();
+    ctx.stroke();
+  }
 }
 
 // ── SHOT — colpo singolo: vampata, traccianti, impatto ──────────────────

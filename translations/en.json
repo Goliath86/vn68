@@ -229,6 +229,7 @@
     "attack_side": "{name} hit from the SIDE — cover halved",
     "attack_rear": "{name} hit from BEHIND — no cover, +1 ATK",
     "unit_rotate": "{name} turns to face {dir}",
+    "noise_alert": "The noise alerts {count} VC in sight",
     "night_mission": "Night mission: reduced visibility for both sides",
     "trap_triggered": "{name} triggers a trap ({trap})! -{dmg}HP",
     "trap_revealed": "{name} spots a trap ({trap}) at ({col},{row})",

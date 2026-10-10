@@ -463,6 +463,15 @@ function renderOverlay() {
           ctx.stroke();
         }
         ctx.setLineDash([]);
+
+        // Raggio del rumore: i VC entro questo contorno sentiranno lo sparo
+        strokeNoiseOutline(
+          ctx,
+          sx,
+          sy,
+          ts,
+          weaponNoise(G.selectedUnit, G.currentWeapon ?? unitFireWeapon(G.selectedUnit)),
+        );
       }
     }
   }
@@ -485,6 +494,9 @@ function renderOverlay() {
     }
     // Tile bersaglio: bordo più marcato
     const { x: bx, y: by } = tileToScreen(tc, tr);
+    // Raggio del rumore dell'esplosione, dal punto d'impatto
+    if (G.selectedUnit)
+      strokeNoiseOutline(ctx, bx, by, ts, weaponNoise(G.selectedUnit, w));
     ctx.strokeStyle = "rgba(255,220,0,0.95)";
     ctx.lineWidth = 3;
     ctx.strokeRect(bx + 2, by + 2, ts - 4, ts - 4);
@@ -654,6 +666,16 @@ function strokeShapeOutline(ctx, x, y, ts, range, inShape) {
     }
   }
   ctx.stroke();
+}
+
+// Contorno grigio tratteggiato del raggio di rumore attorno a un tile
+function strokeNoiseOutline(ctx, x, y, ts, radius) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(220,215,195,0.5)";
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([2, 4]);
+  strokeRangeOutline(ctx, x, y, ts, radius);
+  ctx.restore();
 }
 
 // Contorno dell'area visiva a cono di un'unità (forma geometrica, senza LOS),

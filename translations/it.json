@@ -234,6 +234,7 @@
     "attack_side": "{name} colpito sul FIANCO — copertura dimezzata",
     "attack_rear": "{name} colpito ALLE SPALLE — niente copertura, +1 ATK",
     "unit_rotate": "{name} si gira verso {dir}",
+    "noise_alert": "Il rumore allerta {count} VC in vista",
     "night_mission": "Missione notturna: visibilità ridotta per entrambe le parti",
     "trap_triggered": "{name} finisce in una trappola ({trap})! -{dmg}HP",
     "trap_revealed": "{name} individua una trappola ({trap}) in ({col},{row})",
