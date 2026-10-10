@@ -507,9 +507,19 @@ function renderOverlay() {
     }
   }
 
-  // Rotazione: frecce sui 4 tile adiacenti, quella attuale evidenziata
+  // Rotazione: frecce sui 4 tile adiacenti, quella attuale evidenziata;
+  // area visiva in anteprima per la freccia sotto il mouse (o quella attuale)
   if (G.actionMode === "rotate" && G.selectedUnit) {
     const u = G.selectedUnit;
+    const hov = G.hoveredTile;
+    const previewFacing =
+      hov && G.reachable.some((r) => r.col === hov.col && r.row === hov.row)
+        ? facingToward(u, hov)
+        : u.facing;
+    const { x: ux, y: uy } = tileToScreen(u.col, u.row);
+    ctx.strokeStyle = "rgba(170,220,255,0.8)";
+    ctx.lineWidth = 2;
+    strokeVisionOutline(ctx, u, ux, uy, ts, previewFacing);
     ctx.lineWidth = 1.5;
     for (const r of G.reachable) {
       const { x, y } = tileToScreen(r.col, r.row);
@@ -546,20 +556,40 @@ function renderOverlay() {
     ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
     ctx.setLineDash([]);
 
+    // Area visiva a cono dell'unità (fronte pieno, lati -1, 2 tile dietro)
+    ctx.strokeStyle = "rgba(170,220,255,0.6)";
+    ctx.lineWidth = 1.5;
+    strokeVisionOutline(ctx, u, x, y, ts);
+
     // Contorno raggio attacco: gittata dell'arma (come in combattimento)
-    ctx.strokeStyle = "rgba(240,192,48,0.35)";
+    ctx.strokeStyle = "rgba(240,192,48,0.28)";
     ctx.lineWidth = 1;
     strokeRangeOutline(ctx, x, y, ts, unitFireRange(u));
   }
 
-  // Zone soppressione (assalti in fuoco soppressivo)
+  // Zone soppressione (assalti in fuoco soppressivo): fronte e lati
   for (const sup of G.suppressList) {
     if (!sup.alive) continue;
     const { x: sx, y: sy } = tileToScreen(sup.col, sup.row);
     ctx.strokeStyle = "rgba(255,165,50,0.55)";
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 3]);
-    strokeRangeOutline(ctx, sx, sy, ts, unitFireRange(sup));
+    strokeShapeOutline(ctx, sx, sy, ts, unitFireRange(sup), (dc, dr) =>
+      suppressionCovers(sup, { col: sup.col + dc, row: sup.row + dr }),
+    );
+    ctx.setLineDash([]);
+  }
+
+  // Overwatch: cono frontale entro la gittata
+  for (const ow of G.overwatchList) {
+    if (!ow.alive || ow.overwatchFired) continue;
+    const { x: ox, y: oy } = tileToScreen(ow.col, ow.row);
+    ctx.strokeStyle = "rgba(170,221,255,0.6)";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    strokeShapeOutline(ctx, ox, oy, ts, unitFireRange(ow), (dc, dr) =>
+      facingSector(ow, { col: ow.col + dc, row: ow.row + dr }) === "front",
+    );
     ctx.setLineDash([]);
   }
 
@@ -592,7 +622,13 @@ function renderOverlay() {
 // Traccia il bordo esterno dei tile entro `range` (distanza Manhattan, coerente con dist())
 // attorno al tile con angolo schermo (x, y). Stile/dash vanno impostati dal chiamante.
 function strokeRangeOutline(ctx, x, y, ts, range) {
-  const inRange = (dc, dr) => Math.abs(dc) + Math.abs(dr) <= range;
+  strokeShapeOutline(ctx, x, y, ts, range, () => true);
+}
+
+// Come sopra, limitato ai tile (offset dc, dr dall'unità) per cui `inShape` è vero
+function strokeShapeOutline(ctx, x, y, ts, range, inShape) {
+  const inRange = (dc, dr) =>
+    Math.abs(dc) + Math.abs(dr) <= range && inShape(dc, dr);
   ctx.beginPath();
   for (let dc = -range; dc <= range; dc++) {
     for (let dr = -range; dr <= range; dr++) {
@@ -618,6 +654,15 @@ function strokeRangeOutline(ctx, x, y, ts, range) {
     }
   }
   ctx.stroke();
+}
+
+// Contorno dell'area visiva a cono di un'unità (forma geometrica, senza LOS),
+// eventualmente per un orientamento diverso da quello attuale
+function strokeVisionOutline(ctx, u, x, y, ts, facing = u.facing) {
+  const at = (dc, dr) => ({ col: u.col + dc, row: u.row + dr });
+  strokeShapeOutline(ctx, x, y, ts, unitVision(u), (dc, dr) =>
+    Math.abs(dc) + Math.abs(dr) <= unitVisionToward(u, at(dc, dr), facing),
+  );
 }
 
 function renderUnitsOnMap() {

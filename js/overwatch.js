@@ -1,8 +1,12 @@
 // ── OVERWATCH ──────────────────────────────────────────────────────────
+// Copre solo il cono frontale dell'unità, ma con la mira già puntata (+1 ATK)
+const OVERWATCH_ATK_BONUS = 1;
+
 function checkOverwatch(enemy) {
   for (const ow of G.overwatchList) {
     if (!ow.alive || ow.overwatchFired) continue;
 
+    if (facingSector(ow, enemy) !== "front") continue;
     if (!isTileVisibleFromUnit(ow, enemy.col, enemy.row)) continue;
     const owDef = UNIT_CLASSES[ow.cls];
 
@@ -25,6 +29,7 @@ function checkOverwatch(enemy) {
       const owPenalty = weaponRangePenalty(ow, owWeapon, owRange);
       const owAtk =
         Math.max(1, (owWeapon?.atk ?? owDef.attack) - owPenalty) +
+        OVERWATCH_ATK_BONUS +
         rearAttackBonus(ow, enemy);
 
       if (owPenalty > 0)

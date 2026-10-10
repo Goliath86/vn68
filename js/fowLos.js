@@ -29,7 +29,8 @@ function isTileVisibleFromUnit(unit, toCol, toRow) {
   const uc = unit.col,
     ur = unit.row;
   if (uc === toCol && ur === toRow) return true;
-  const vision = unitVision(unit);
+  // Visione a cono secondo l'orientamento (vedi mechanics.js)
+  const vision = unitVisionToward(unit, { col: toCol, row: toRow });
   const d = dist(unit, { col: toCol, row: toRow });
   if (d > vision) return false;
   // Fumo: chi è dentro vede ed è visto solo da distanza 1

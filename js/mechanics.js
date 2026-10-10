@@ -32,8 +32,9 @@ function faceToward(unit, to) {
 }
 
 // Settore di `unit` in cui si trova `from`: "front" | "side" | "rear"
-function facingSector(unit, from) {
-  const [fx, fy] = FACING_DIRS[unit.facing ?? 2];
+// (`facing` opzionale: per valutare una direzione diversa da quella attuale)
+function facingSector(unit, from, facing = unit.facing) {
+  const [fx, fy] = FACING_DIRS[facing ?? 2];
   const dx = from.col - unit.col,
     dy = from.row - unit.row;
   const fwd = dx * fx + dy * fy;
@@ -92,6 +93,19 @@ function nightPenalty() {
 // Raggio visivo di un'unità US (ridotto di notte, minimo 1)
 function unitVision(unit) {
   return Math.max(1, UNIT_CLASSES[unit.cls].vision - nightPenalty());
+}
+
+// Visione a cono: piena davanti, -1 ai lati, alle spalle al massimo 2 tile
+// (e mai più che ai lati, così di notte il cono resta coerente)
+const SIDE_VISION_PENALTY = 1;
+const REAR_VISION = 2;
+
+function unitVisionToward(unit, to, facing = unit.facing) {
+  const v = unitVision(unit);
+  const side = Math.max(1, v - SIDE_VISION_PENALTY);
+  const sector = facingSector(unit, to, facing);
+  if (sector === "rear") return Math.min(side, REAR_VISION);
+  return sector === "side" ? side : v;
 }
 
 // Distanza a cui un VC in pattuglia si accorge della squadra

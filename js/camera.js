@@ -17,6 +17,12 @@ function onCanvasMove(e) {
   }
   // Tooltip
   const { col, row } = screenToTile(e.clientX, e.clientY);
+  // Tile sotto il mouse: serve all'anteprima della visione in modalità rotazione
+  const prev = G.hoveredTile;
+  if (!prev || prev.col !== col || prev.row !== row) {
+    G.hoveredTile = { col, row };
+    if (G.actionMode === "rotate") render();
+  }
   if (col >= 0 && row >= 0 && col < G.mapData.cols && row < G.mapData.rows) {
     showTooltip(e, col, row);
   } else {
