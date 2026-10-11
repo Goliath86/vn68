@@ -134,7 +134,7 @@ La composizione di default è una per classe, ma puoi portare due assalti e ness
 | **Assalto** | 10 | 4 | 3 | 1 | 3 | Fuoco Soppressivo · **Granate ×2** (AoE, ATK5, gittata 3) |
 | **Cecchino** | 7 | 3 | 4 | 0 | 6 | Overwatch (attacca nemici in movimento) — **1 sparo per turno**, caricatore da 1 colpo |
 | **Geniere** | 9 | 3 | 2 | 1 | 3 | Demolizione (bunker/ostacoli, dado ≥4) · Incendio (vegetazione, immediato) · Disinnesco trappole |
-| **Medico** | 8 | 3 | 1 | 1 | 1 | Primo Soccorso (cura un alleato adiacente) — **ripristina il morale** |
+| **Medico** | 8 | 3 | 1 | 1 | 1 | Cura (+3 HP a un alleato adiacente) — **ripristina il morale e ferma l'emorragia** |
 
 > ATK e Gittata sono quelli dell'arma principale definita in `config.json` (M16, M14, M1911); se `config.json` non definisce armi per la classe si usano i valori base della classe.
 > L'assalto ha sempre il fucile M16 come arma primaria (illimitata) più 2 granate. Premendo "Attacca" appare il selettore arma.
@@ -153,6 +153,20 @@ Quando un soldato US scende **sotto il 30% degli HP** a causa di un attacco nemi
 Il soldato rimane scosso finché il **medico** non lo cura riportandolo sopra la soglia del 30% HP — a quel punto il morale viene ripristinato e le penalità scompaiono.
 
 > Tenere il medico operativo non è solo per sopravvivere: è l'unico modo per riportare in piena efficienza un soldato sotto shock.
+
+### Ferite ed emorragia
+
+| HP | Stato | ATK | Movimento |
+|---|---|---|---|
+| sopra il 60% | integro | — | normale |
+| ≤ 60% | 🤕 **ferito** | −1 | +1 AP per ogni movimento |
+| sotto il 30% | 🤕 **ferito gravemente** (e scosso) | −2 | +1 AP per ogni movimento (e −1 AP del panico) |
+
+Il malus ATK vale per attacchi e overwatch (l'ATK non scende mai sotto 1); il sovraccosto di movimento si somma a quello della postura.
+
+**Emorragia (🩸):** ogni colpo che ferisce un soldato può causare un'emorragia, con probabilità crescente col danno (1 danno 35%, 2 → 50%, 3 → 65%, 4+ → 80%); le punji la causano sempre. Un soldato che sanguina perde **1 HP all'inizio di ogni turno** e può morire dissanguato. Sulla pedina compare una goccia di sangue pulsante. **Solo il medico** ferma l'emorragia, curando un compagno adiacente (non può fermare la propria).
+
+**Primo soccorso (🩹, tasto H):** una sola volta per missione ogni soldato, medico compreso, può medicarsi da solo: **+2 HP** (anche fuori dal panico se supera il 30%), ma **non ferma l'emorragia** e consuma **tutti gli AP rimasti** (serve almeno 1 AP): per quel turno il soldato non può fare altro.
 
 ---
 

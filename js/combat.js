@@ -28,9 +28,13 @@ async function resolveCombat(
   // Orientamento del bersaglio: dal lato copertura dimezzata, alle spalle
   // copertura nulla e +1 ATK (vale per entrambe le parti)
   const sector = facingSector(defender, attacker);
-  // Postura: bonus ATK di chi spara (US) e DEF di chi è bersagliato (US)
+  // Postura: bonus ATK di chi spara (US) e DEF di chi è bersagliato (US);
+  // ferite: malus ATK di chi spara (US)
   const atkVal =
-    Math.max(1, (weapon?.atk ?? atkDef.attack) - rangePenalty) +
+    Math.max(
+      1,
+      (weapon?.atk ?? atkDef.attack) - rangePenalty - woundAttackPenalty(attacker),
+    ) +
     rearAttackBonus(attacker, defender) +
     stanceAttackBonus(attacker, weapon);
   const defCover = effectiveCover(attacker, defender);
@@ -43,6 +47,14 @@ async function resolveCombat(
   const defVal = defStat + defCover;
 
   if (!isEnemy) {
+    if (woundAttackPenalty(attacker) > 0)
+      log(
+        t("log.wound_atk_penalty", {
+          name: attacker.name,
+          penalty: woundAttackPenalty(attacker),
+        }),
+        "combat",
+      );
     if (rangePenalty > 0)
       log(
         t("log.sniper_range_penalty", {
@@ -143,13 +155,14 @@ async function resolveCombat(
         1400,
         impact,
       );
-    } else if (isEnemy && !defender.shaken) {
+    } else if (isEnemy) {
       // Morale: il difensore (unità US) è scosso se sotto 30% HP
       const maxHp = UNIT_CLASSES[defender.cls]?.hp ?? defender.maxHp;
-      if (defender.hp / maxHp < 0.3) {
+      if (!defender.shaken && defender.hp / maxHp < 0.3) {
         defender.shaken = true;
         log(t("log.unit_shaken", { name: defender.name }), "combat");
       }
+      maybeStartBleeding(defender, dmg);
     }
   } else {
     // Corpo a corpo mancato: niente rimbalzo del proiettile, il VC schiva
@@ -225,7 +238,9 @@ function attackOdds(attacker, defender, weapon) {
   const atkVal =
     Math.max(
       1,
-      (weapon?.atk ?? def.attack) - weaponRangePenalty(attacker, weapon, range),
+      (weapon?.atk ?? def.attack) -
+        weaponRangePenalty(attacker, weapon, range) -
+        woundAttackPenalty(attacker),
     ) +
     rearAttackBonus(attacker, defender) +
     stanceAttackBonus(attacker, weapon);
@@ -365,12 +380,13 @@ async function resolveAoeCombat(
           1400,
         );
         anyKill = true;
-      } else if (isUS && !def.shaken) {
+      } else if (isUS) {
         const maxHp = UNIT_CLASSES[def.cls]?.hp ?? def.maxHp;
-        if (def.hp / maxHp < 0.3) {
+        if (!def.shaken && def.hp / maxHp < 0.3) {
           def.shaken = true;
           log(t("log.unit_shaken", { name: def.name }), "combat");
         }
+        maybeStartBleeding(def, dmg);
       }
     } else {
       sfx("miss");

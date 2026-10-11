@@ -11,6 +11,11 @@ async function handleSpecialAction(col, row) {
         ally.shaken = false;
         log(t("log.unit_recovered", { name: ally.name }), "success");
       }
+      // Il medico ferma anche l'emorragia
+      if (ally.bleeding) {
+        ally.bleeding = false;
+        log(t("log.bleeding_stopped", { name: u.name, target: ally.name }), "success");
+      }
       u.ap -= 1;
       u.specialUsed = true;
       sfx("heal");

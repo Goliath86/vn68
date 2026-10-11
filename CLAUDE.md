@@ -107,6 +107,7 @@ Mappe esistenti oggi: `rung_sat.json`, `hue_city.json`, più le mappe procedural
 - **Cecchino**: penalità ATK crescente con la distanza (`combat.js`, floor((range-1)/2)), min ATK sempre 1.
 - **Armi AoE** (granate/RPG): nessun dado manuale, risolte automaticamente in `resolveAoeCombat()`, colpiscono tutti (US + VC) nel raggio.
 - **Morale/Panico**: sotto 30% HP → "SCOSSO" (−1 AP, speciale bloccato) finché il medico non lo cura sopra soglia.
+- **Ferite/emorragia** (`mechanics.js`, sezione FERITE): `woundLevel` (≤60% / <30%) → `woundAttackPenalty` e `moveActionExtra` (usato da `getReachable` insieme alla postura); `maybeStartBleeding` dopo ogni danno US, `tickBleeding` a inizio turno giocatore (`ai.js`), il medico ferma `unit.bleeding` in `specialActions.js`; primo soccorso una volta per missione (`firstAid`, `unit.firstAidUsed`).
 - **IA VC**: pattugliamento diverso per tipo missione, allerta propagata a raggio 3 (chi è allertato per propagazione non agisce nel turno in cui si sveglia), uso tattico della copertura una volta allertati, rinforzi periodici da `reinforcementTurn`, imboscata a turno singolo non comunicato (`vcAmbushTurn`).
 - **Fog of War**: toggle da header, raggio visione per classe, LOS bloccata/ridotta da terreno (`fowLos.js`).
 - **Salvataggio**: automatico a inizio turno giocatore su `localStorage[SAVE_KEY]`, cancellato a fine partita (vittoria/sconfitta).

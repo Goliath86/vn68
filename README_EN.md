@@ -134,7 +134,7 @@ The default composition is one of each class, but you can bring two Assaults and
 | **Assault** | 10 | 4 | 3 | 1 | 3 | Suppressive Fire · **Grenades ×2** (AoE, ATK5, range 3) |
 | **Sniper** | 7 | 3 | 4 | 0 | 6 | Overwatch (fires at moving enemies) — **1 shot per turn**, 1-round magazine |
 | **Engineer** | 9 | 3 | 2 | 1 | 3 | Demolition (bunkers/obstacles, roll ≥4) · Fire (vegetation, immediate) · Trap disarming |
-| **Medic** | 8 | 3 | 1 | 1 | 1 | First Aid (heals an adjacent ally) — **restores morale** |
+| **Medic** | 8 | 3 | 1 | 1 | 1 | Heal (+3 HP to an adjacent ally) — **restores morale and stops bleeding** |
 
 > ATK and Range are those of the primary weapon defined in `config.json` (M16, M14, M1911); if `config.json` defines no weapons for the class, the class base values are used.
 > The Assault always carries the M16 as primary weapon (unlimited) plus 2 grenades. Pressing "Attack" shows the weapon picker.
@@ -154,6 +154,20 @@ When a US soldier drops **below 30% HP** due to an enemy attack, they enter a **
 The soldier stays shaken until the **Medic** heals them back above the 30% HP threshold — at which point morale is restored and all penalties disappear.
 
 > Keeping the Medic alive is not just about surviving: it's the only way to bring a panicked soldier back to full effectiveness.
+
+### Wounds and bleeding
+
+| HP | State | ATK | Movement |
+|---|---|---|---|
+| above 60% | healthy | — | normal |
+| ≤ 60% | 🤕 **wounded** | −1 | +1 AP per move |
+| below 30% | 🤕 **badly wounded** (and shaken) | −2 | +1 AP per move (plus the −1 AP from panic) |
+
+The ATK penalty applies to attacks and overwatch (ATK never drops below 1); the movement surcharge stacks with the stance one.
+
+**Bleeding (🩸):** every hit that wounds a soldier may cause bleeding, with a chance that grows with damage (1 damage 35%, 2 → 50%, 3 → 65%, 4+ → 80%); punji traps always cause it. A bleeding soldier loses **1 HP at the start of every turn** and can bleed to death. A pulsing blood drop appears on the counter. **Only the Medic** stops the bleeding, by healing an adjacent teammate (they can't stop their own).
+
+**First aid (🩹, key H):** once per mission every soldier, medic included, can patch themselves up: **+2 HP** (also lifting panic if back above 30%), but it **doesn't stop the bleeding** and uses **all remaining AP** (at least 1 AP needed): the soldier can't do anything else that turn.
 
 ---
 

@@ -20,12 +20,12 @@ async function moveUnit(unit, toCol, toRow, apCost) {
   G.lastMove = null;
 
   // Trappola nascosta lungo il percorso: il movimento si ferma lì
-  // (il sovraccosto della postura si paga comunque)
+  // (il sovraccosto di postura e ferite si paga comunque)
   const trapHit = hiddenTrapOnPath(unit, toCol, toRow);
   if (trapHit) {
     toCol = trapHit.col;
     toRow = trapHit.row;
-    apCost = Math.min(apCost, trapHit.cost + (unitStance(unit).moveExtra || 0));
+    apCost = Math.min(apCost, trapHit.cost + moveActionExtra(unit));
   }
 
   unit.col = toCol;

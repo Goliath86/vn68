@@ -47,7 +47,9 @@
     "stance_mobile": "Postura",
     "reload": "🔄 Ricarica",
     "reload_with": "🔄 Ricarica ({ap}AP)",
-    "reload_mobile": "Ricarica"
+    "reload_mobile": "Ricarica",
+    "first_aid": "🩹 Primo soccorso (tutti gli AP)",
+    "first_aid_used": "🩹 Primo soccorso usato"
   },
 
   "aim": {
@@ -146,7 +148,10 @@
       "special_available": "Spec: {label}",
       "shot_used": "Già sparato (1 sparo/turno)",
       "need_reload": "🔄 Caricatore vuoto: ricarica",
-      "out_of_ammo": "✕ Munizioni esaurite"
+      "out_of_ammo": "✕ Munizioni esaurite",
+      "wounded": "🤕 Ferito: −{atk} ATK, movimento +{ap} AP",
+      "wounded_severe": "🤕 Ferito gravemente: −{atk} ATK, movimento +{ap} AP",
+      "bleeding": "🩸 Sanguina: −{n} HP a inizio turno (serve il medico)"
     }
   },
 
@@ -263,6 +268,13 @@
     "attack_rear": "{name} colpito ALLE SPALLE — niente copertura, +1 ATK",
     "unit_rotate": "{name} si gira verso {dir}",
     "stance_change": "{name}: postura {stance}",
+    "bleeding_start": "🩸 {name} è ferito e sanguina!",
+    "bleeding_tick": "🩸 {name} perde sangue: −{dmg} HP ({hp}/{max})",
+    "bled_out": "🩸 {name} è morto dissanguato",
+    "bleeding_stopped": "🩹 {name} ferma l'emorragia di {target}",
+    "first_aid": "🩹 {name} si medica da solo: +{healed} HP ({current}/{max})",
+    "first_aid_bleeding": "🩹 {name} si medica da solo: +{healed} HP ({current}/{max}), ma continua a sanguinare",
+    "wound_atk_penalty": "{name} è ferito: −{penalty} ATK",
     "reload": "🔄 {name} ricarica {weapon} (caricatori di riserva: {mags})",
     "stance_spotted": "👁 {name} è stato individuato dai VC!",
     "stance_unnoticed": "🌿 {vc} non si accorge di {name}",

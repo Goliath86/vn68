@@ -155,6 +155,7 @@ function updateActionButtons() {
     ["btn-rotate", "mob-btn-rotate"],
     ["btn-stance", "mob-btn-stance"],
     ["btn-reload", "mob-btn-reload"],
+    ["btn-firstaid", "mob-btn-firstaid"],
     ["btn-endturn", "mob-btn-endturn"],
     //["btn-dice", "mob-btn-dice"],
   ];
@@ -208,6 +209,18 @@ function updateActionButtons() {
         el.textContent = rw
           ? t("buttons.reload_with", { ap: weaponReloadAp(rw) })
           : t("buttons.reload");
+      }
+
+      // Primo soccorso: una volta per missione, consuma tutti gli AP
+      if (id.includes("firstaid")) {
+        el.disabled =
+          !canFirstAid(u) ||
+          G.actionMode === "weapon_select" ||
+          G.actionMode === "aoe_confirm";
+        el.textContent =
+          hasUnit && u.firstAidUsed
+            ? t("buttons.first_aid_used")
+            : t("buttons.first_aid");
       }
 
       // Postura: primo cambio del turno gratuito, poi 1 AP

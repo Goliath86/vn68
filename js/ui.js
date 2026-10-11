@@ -34,6 +34,12 @@ document
   );
 
 document
+  .getElementById("mob-btn-firstaid")
+  .addEventListener("click", () =>
+    document.getElementById("btn-firstaid").click(),
+  );
+
+document
   .getElementById("mob-btn-endturn")
   .addEventListener("click", () =>
     document.getElementById("btn-endturn").click(),
@@ -190,6 +196,12 @@ document.getElementById("btn-reload").addEventListener("click", () => {
   reloadWeapon(u);
 });
 
+document.getElementById("btn-firstaid").addEventListener("click", () => {
+  const u = G.selectedUnit;
+  if (!canFirstAid(u)) return;
+  firstAid(u);
+});
+
 document.getElementById("btn-undo").addEventListener("click", () => {
   if (!canUndoMove()) return;
   sfx("click");
@@ -286,6 +298,9 @@ document.addEventListener("keydown", (e) => {
       break;
     case "l":
       if (canReload(u)) document.getElementById("btn-reload").click();
+      break;
+    case "h":
+      if (canFirstAid(u)) document.getElementById("btn-firstaid").click();
       break;
     case "enter":
       // preventDefault: evita il doppio click nativo se un bottone ha il focus

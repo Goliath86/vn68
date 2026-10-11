@@ -35,6 +35,8 @@ function selInfoHTML(u) {
       ${(u.weapons || []).some((w) => w.shotsPerTurn && (w.shotsThisTurn || 0) >= w.shotsPerTurn) ? `<br><span style="color:var(--red)">${t("units.status.shot_used")}</span>` : ""}
       ${(u.weapons || []).some(weaponEmpty) ? `<br><span style="color:var(--red)">${t(reloadableWeapon(u) ? "units.status.need_reload" : "units.status.out_of_ammo")}</span>` : ""}
       ${u.shaken ? `<br><span style="color:#ff5028;font-weight:700">${t("units.status.shaken")}</span>` : ""}
+      ${woundLevel(u) > 0 ? `<br><span style="color:#e0a040">${t(woundLevel(u) > 1 ? "units.status.wounded_severe" : "units.status.wounded", { atk: woundAttackPenalty(u), ap: WOUND_MOVE_EXTRA })}</span>` : ""}
+      ${u.bleeding ? `<br><span style="color:#ff3030;font-weight:700">${t("units.status.bleeding", { n: BLEED_PER_TURN })}</span>` : ""}
       ${u.carriesPilot ? `<br><span style="color:var(--yellow)">${t("units.status.carry_pilot")}</span>` : ""}
       ${
         u.weapons && u.weapons.length > 0

@@ -34,6 +34,7 @@ function makeUnitCard(u, mobile) {
           ${u.shaken ? '<span style="font-size:9px;background:#661100;color:#ff5028;padding:1px 4px;border-radius:2px">SCO</span>' : ""}
           ${u.carriesPilot ? '<span style="font-size:11px">✈</span>' : ""}
           ${!dead && u.stance && u.stance !== "stand" ? `<span style="font-size:11px">${STANCE_ICONS[u.stance]}</span>` : ""}
+          ${!dead && u.bleeding ? '<span style="font-size:11px">🩸</span>' : ""}
         </div>
         <div style="font-size:10px;color:var(--paper-dark);display:flex;gap:8px;margin-top:1px">
           <span>HP ${u.hp}/${u.maxHp}</span>
@@ -67,6 +68,7 @@ function makeUnitCard(u, mobile) {
         ${!dead && u.stance && u.stance !== "stand" ? `<span title="${t(`stances.${u.stance}`)}">${STANCE_ICONS[u.stance]}</span>` : ""}
         ${dead ? `<span class="class-tag" style="background:#441111;color:#ff6666">KIA</span>` : ""}
         ${u.shaken && !dead ? `<span class="class-tag" style="background:#661100;color:#ff5028">SCO</span>` : ""}
+        ${u.bleeding && !dead ? `<span title="${t("units.status.bleeding", { n: BLEED_PER_TURN })}">🩸</span>` : ""}
       </div>
       <div class="ustat">
         <span>HP ${u.hp}/${u.maxHp}</span>

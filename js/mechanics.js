@@ -261,6 +261,123 @@ function nearestDetectedUnit(enemy) {
   );
 }
 
+// ── FERITE E SANGUINAMENTO (solo unità US) ─────────────────────────────
+// Ferito (HP ≤ 60%): −1 ATK e +1 AP per ogni azione di movimento.
+// Grave (HP < 30%, coincide con "scosso"): −2 ATK, stesso sovraccosto.
+// Ogni colpo che fa danno può causare un'emorragia (unit.bleeding): a inizio
+// turno l'unità perde 1 HP e può morire dissanguata. Solo il medico la ferma
+// (sugli altri). Primo soccorso: una volta per missione ogni soldato può
+// medicarsi da solo (+2 HP, non ferma l'emorragia) consumando tutti gli AP.
+const WOUND_THRESHOLD = 0.6;
+const SEVERE_WOUND_THRESHOLD = 0.3;
+const WOUND_MOVE_EXTRA = 1;
+const BLEED_PER_TURN = 1;
+const FIRST_AID_HEAL = 2;
+
+// Probabilità di emorragia in base al danno: 1→35%, 2→50%, 3→65%, 4+→80%
+function bleedChance(dmg) {
+  return Math.min(0.8, 0.2 + 0.15 * dmg);
+}
+
+function woundLevel(unit) {
+  if (!unit?.alive || !G.units.includes(unit)) return 0;
+  const r = unit.hp / unit.maxHp;
+  if (r < SEVERE_WOUND_THRESHOLD) return 2;
+  return r <= WOUND_THRESHOLD ? 1 : 0;
+}
+
+// Malus ATK delle ferite (applicato prima del minimo di 1)
+function woundAttackPenalty(unit) {
+  return woundLevel(unit);
+}
+
+// AP extra per ogni azione di movimento: postura + ferite
+function moveActionExtra(unit) {
+  return (
+    (unitStance(unit).moveExtra || 0) +
+    (woundLevel(unit) > 0 ? WOUND_MOVE_EXTRA : 0)
+  );
+}
+
+// Dopo un danno a un'unità US ancora viva: possibile emorragia
+// (alwaysBleed: trappole punji)
+function maybeStartBleeding(unit, dmg, alwaysBleed = false) {
+  if (!unit.alive || unit.bleeding || !G.units.includes(unit)) return;
+  if (!alwaysBleed && Math.random() >= bleedChance(dmg)) return;
+  unit.bleeding = true;
+  log(t("log.bleeding_start", { name: unit.name }), "combat");
+}
+
+// A inizio turno giocatore le unità sanguinanti perdono HP
+function tickBleeding() {
+  for (const u of G.units) {
+    if (!u.alive || !u.bleeding) continue;
+    u.hp = Math.max(0, u.hp - BLEED_PER_TURN);
+    addFX(
+      "hit",
+      { col: u.col, row: u.row, dmg: BLEED_PER_TURN, enemy: false },
+      800,
+    );
+    if (u.hp <= 0) {
+      u.alive = false;
+      u.bleeding = false;
+      sfx("death");
+      log(t("log.bled_out", { name: u.name }), "combat");
+      addFX("death", { col: u.col, row: u.row, cls: u.cls, enemy: false }, 1400);
+      continue;
+    }
+    log(
+      t("log.bleeding_tick", { name: u.name, dmg: BLEED_PER_TURN, hp: u.hp, max: u.maxHp }),
+      "combat",
+    );
+    if (!u.shaken && u.hp / u.maxHp < SEVERE_WOUND_THRESHOLD) {
+      u.shaken = true;
+      log(t("log.unit_shaken", { name: u.name }), "combat");
+    }
+  }
+  checkGameOver();
+}
+
+function canFirstAid(u) {
+  return (
+    !!u &&
+    u.alive &&
+    G.phase === "player" &&
+    G.units.includes(u) &&
+    !u.firstAidUsed &&
+    u.ap >= 1 &&
+    u.hp < u.maxHp
+  );
+}
+
+// Primo soccorso: +2 HP, una volta per missione, consuma tutti gli AP
+function firstAid(u) {
+  if (!canFirstAid(u)) return;
+  const healed = Math.min(FIRST_AID_HEAL, u.maxHp - u.hp);
+  clearLastMove();
+  u.hp += healed;
+  u.ap = 0;
+  u.firstAidUsed = true;
+  if (u.shaken && u.hp / u.maxHp >= SEVERE_WOUND_THRESHOLD) {
+    u.shaken = false;
+    log(t("log.unit_recovered", { name: u.name }), "success");
+  }
+  sfx("heal");
+  addFX("heal", { col: u.col, row: u.row, amount: healed }, 1400);
+  log(
+    t(u.bleeding ? "log.first_aid_bleeding" : "log.first_aid", {
+      name: u.name,
+      healed,
+      current: u.hp,
+      max: u.maxHp,
+    }),
+    "success",
+  );
+  setActionMode(null);
+  updateUI();
+  render();
+}
+
 // ── LINEA DI TIRO ──────────────────────────────────────────────────────
 // Un compagno sui tile intermedi della linea di tiro la blocca (si rischia
 // di colpirlo), a meno che non sia sdraiato: si spara sopra di lui.
@@ -525,9 +642,13 @@ function triggerTrap(unit, trap) {
       1400,
     );
     checkGameOver();
-  } else if (!unit.shaken && unit.hp / unit.maxHp < 0.3) {
-    unit.shaken = true;
-    log(t("log.unit_shaken", { name: unit.name }), "combat");
+  } else {
+    if (!unit.shaken && unit.hp / unit.maxHp < 0.3) {
+      unit.shaken = true;
+      log(t("log.unit_shaken", { name: unit.name }), "combat");
+    }
+    // Le punte delle punji causano sempre un'emorragia
+    maybeStartBleeding(unit, trap.dmg, trap.type === "punji");
   }
 }
 

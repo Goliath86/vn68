@@ -260,6 +260,9 @@ function renderMap() {
       ctx.strokeRect(x + 2, y + 2, ts - 4, ts - 4);
     }
 
+    // Emorragia: goccia di sangue pulsante nell'angolo in alto a destra
+    if (u.bleeding) drawBleedDrop(ctx, x + ts - ts * 0.17, y + ts * 0.17, ts);
+
     // HP bar
     const hpRatio = u.hp / u.maxHp;
     ctx.fillStyle = "#111";
@@ -267,6 +270,30 @@ function renderMap() {
     ctx.fillStyle = hpRatio > 0.5 ? "#44aa22" : "#cc4422";
     ctx.fillRect(x + 2, y + ts - 5, (ts - 4) * hpRatio, 3);
   }
+}
+
+// Goccia di sangue (indicatore di emorragia) centrata in (cx, cy)
+function drawBleedDrop(ctx, cx, cy, ts) {
+  const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 260);
+  const r = ts * (0.075 + 0.012 * pulse);
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r * 1.9);
+  ctx.bezierCurveTo(cx + r * 0.35, cy - r * 1.1, cx + r, cy - r * 0.4, cx + r, cy + r * 0.15);
+  ctx.arc(cx, cy + r * 0.15, r, 0, Math.PI);
+  ctx.bezierCurveTo(cx - r, cy - r * 0.4, cx - r * 0.35, cy - r * 1.1, cx, cy - r * 1.9);
+  ctx.closePath();
+  ctx.fillStyle = `rgba(200,16,16,${0.8 + 0.2 * pulse})`;
+  ctx.fill();
+  ctx.lineWidth = Math.max(1, ts * 0.018);
+  ctx.strokeStyle = "rgba(40,0,0,0.9)";
+  ctx.stroke();
+  // Riflesso
+  ctx.fillStyle = "rgba(255,190,190,0.7)";
+  ctx.beginPath();
+  ctx.arc(cx - r * 0.35, cy - r * 0.05, r * 0.22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 // ── RAGGIO DI MIRA (solo desktop con mouse) ────────────────────────────

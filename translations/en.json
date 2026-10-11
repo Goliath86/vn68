@@ -47,7 +47,9 @@
     "stance_mobile": "Stance",
     "reload": "🔄 Reload",
     "reload_with": "🔄 Reload ({ap}AP)",
-    "reload_mobile": "Reload"
+    "reload_mobile": "Reload",
+    "first_aid": "🩹 First aid (all AP)",
+    "first_aid_used": "🩹 First aid used"
   },
 
   "aim": {
@@ -141,7 +143,10 @@
       "special_available": "Spec: {label}",
       "shot_used": "Shot fired (1 shot/turn)",
       "need_reload": "🔄 Magazine empty: reload",
-      "out_of_ammo": "✕ Out of ammo"
+      "out_of_ammo": "✕ Out of ammo",
+      "wounded": "🤕 Wounded: −{atk} ATK, movement +{ap} AP",
+      "wounded_severe": "🤕 Badly wounded: −{atk} ATK, movement +{ap} AP",
+      "bleeding": "🩸 Bleeding: −{n} HP at turn start (needs the medic)"
     }
   },
 
@@ -258,6 +263,13 @@
     "attack_rear": "{name} hit from BEHIND — no cover, +1 ATK",
     "unit_rotate": "{name} turns to face {dir}",
     "stance_change": "{name}: stance {stance}",
+    "bleeding_start": "🩸 {name} is wounded and bleeding!",
+    "bleeding_tick": "🩸 {name} loses blood: −{dmg} HP ({hp}/{max})",
+    "bled_out": "🩸 {name} bled to death",
+    "bleeding_stopped": "🩹 {name} stops {target}'s bleeding",
+    "first_aid": "🩹 {name} patches themselves up: +{healed} HP ({current}/{max})",
+    "first_aid_bleeding": "🩹 {name} patches themselves up: +{healed} HP ({current}/{max}), but keeps bleeding",
+    "wound_atk_penalty": "{name} is wounded: −{penalty} ATK",
     "reload": "🔄 {name} reloads the {weapon} (spare magazines: {mags})",
     "stance_spotted": "👁 {name} has been spotted by the VC!",
     "stance_unnoticed": "🌿 {vc} doesn't notice {name}",

@@ -1,8 +1,9 @@
 function getReachable(unit, maxAP) {
   // BFS pesata: restituisce mappa {`col,row`: apCost}
-  // Postura: AP extra per azione di movimento (stance.moveExtra, sommati al
-  // primo passo); sdraiato si striscia di un solo tile
+  // Postura e ferite: AP extra per azione di movimento (sommati al primo
+  // passo); sdraiato si striscia di un solo tile
   const stance = unitStance(unit);
+  const moveExtra = moveActionExtra(unit);
   const visited = {};
   const queue = [{ col: unit.col, row: unit.row, cost: 0, steps: 0 }];
   visited[`${unit.col},${unit.row}`] = 0;
@@ -24,7 +25,7 @@ function getReachable(unit, maxAP) {
       if (isOccupied(nc, nr, unit.id)) continue;
       if (isKnownTrap(nc, nr)) continue; // trappole individuate: da aggirare
       const cost =
-        cur.cost + tile.moveCost + (cur.steps === 0 ? stance.moveExtra || 0 : 0);
+        cur.cost + tile.moveCost + (cur.steps === 0 ? moveExtra : 0);
       if (cost > maxAP) continue;
       if (key in visited && visited[key] <= cost) continue;
       visited[key] = cost;

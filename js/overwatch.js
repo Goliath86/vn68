@@ -30,7 +30,10 @@ function checkOverwatch(enemy) {
       const owRange = dist(ow, enemy);
       const owPenalty = weaponRangePenalty(ow, owWeapon, owRange);
       const owAtk =
-        Math.max(1, (owWeapon?.atk ?? owDef.attack) - owPenalty) +
+        Math.max(
+          1,
+          (owWeapon?.atk ?? owDef.attack) - owPenalty - woundAttackPenalty(ow),
+        ) +
         OVERWATCH_ATK_BONUS +
         rearAttackBonus(ow, enemy) +
         stanceAttackBonus(ow, owWeapon);

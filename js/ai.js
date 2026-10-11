@@ -84,6 +84,10 @@ async function runEnemyTurn() {
   });
   G.vcSpotRolls = {};
 
+  // Emorragie: le unità sanguinanti perdono HP a inizio turno
+  tickBleeding();
+  if (G.phase === "gameover") return;
+
   // Colpi d'artiglieria richiesti nel turno precedente: cadono ora
   await resolveArtillery();
   if (G.phase === "gameover") return;
