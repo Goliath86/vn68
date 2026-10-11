@@ -26,7 +26,7 @@ function checkOverwatch(enemy) {
       sfxShoot(ow.cls, unitWeapon(ow));
 
       const owWeapon = unitFireWeapon(ow);
-      if (owWeapon?.mag) owWeapon.loaded = Math.max(0, (owWeapon.loaded ?? owWeapon.mag) - 1);
+      spendRound(owWeapon);
       const owRange = dist(ow, enemy);
       const owPenalty = weaponRangePenalty(ow, owWeapon, owRange);
       const owAtk =

@@ -19,8 +19,7 @@ function checkSuppression(enemy) {
       hasRoundLoaded(unitFireWeapon(sup))
     ) {
       // Ogni raffica di soppressione consuma un colpo del caricatore
-      const sw = unitFireWeapon(sup);
-      if (sw?.mag) sw.loaded = Math.max(0, (sw.loaded ?? sw.mag) - 1);
+      spendRound(unitFireWeapon(sup));
       enemy.suppressed = true;
       enemy.ap = 0;
 

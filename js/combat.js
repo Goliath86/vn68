@@ -156,13 +156,8 @@ async function resolveCombat(
         impact,
       );
     } else if (isEnemy) {
-      // Morale: il difensore (unità US) è scosso se sotto 30% HP
-      const maxHp = UNIT_CLASSES[defender.cls]?.hp ?? defender.maxHp;
-      if (!defender.shaken && defender.hp / maxHp < 0.3) {
-        defender.shaken = true;
-        log(t("log.unit_shaken", { name: defender.name }), "combat");
-      }
-      maybeStartBleeding(defender, dmg);
+      // Difensore US sopravvissuto: morale (scosso sotto il 30%) ed emorragia
+      afterUnitDamage(defender, dmg);
     }
   } else {
     // Corpo a corpo mancato: niente rimbalzo del proiettile, il VC schiva
@@ -381,12 +376,7 @@ async function resolveAoeCombat(
         );
         anyKill = true;
       } else if (isUS) {
-        const maxHp = UNIT_CLASSES[def.cls]?.hp ?? def.maxHp;
-        if (!def.shaken && def.hp / maxHp < 0.3) {
-          def.shaken = true;
-          log(t("log.unit_shaken", { name: def.name }), "combat");
-        }
-        maybeStartBleeding(def, dmg);
+        afterUnitDamage(def, dmg);
       }
     } else {
       sfx("miss");

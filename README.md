@@ -137,7 +137,7 @@ La composizione di default è una per classe, ma puoi portare due assalti e ness
 | **Medico** | 8 | 3 | 1 | 1 | 1 | Cura (+3 HP a un alleato adiacente) — **ripristina il morale e ferma l'emorragia** |
 
 > ATK e Gittata sono quelli dell'arma principale definita in `config.json` (M16, M14, M1911); se `config.json` non definisce armi per la classe si usano i valori base della classe.
-> L'assalto ha sempre il fucile M16 come arma primaria (illimitata) più 2 granate. Premendo "Attacca" appare il selettore arma.
+> L'assalto ha il fucile M16 come arma primaria (caricatore da 3, 4 di riserva) più 2 granate, un fumogeno e il coltello. Premendo "Attacca" appare il selettore arma.
 
 ---
 
@@ -611,14 +611,17 @@ Le scorciatoie da tastiera sono attive solo durante la **fase giocatore** e quan
 | `A` | Modalità Attacca |
 | `S` | Modalità Speciale |
 | `R` | Rotazione (gratis, una volta per turno) |
+| `C` | Postura |
+| `L` | Ricarica |
+| `H` | Primo soccorso (una volta per missione) |
 | `Invio` | Fine turno (nel dialogo di conferma: conferma) |
 | `Esc` | Annulla la modalità corrente (nel dialogo di conferma: annulla) |
 | `U` / `Ctrl+Z` | Annulla l'ultimo movimento |
 | `Tab` / `Shift+Tab` | Seleziona l'unità successiva / precedente con AP |
 
-**Annulla movimento:** si può annullare solo l'ultimo movimento, e solo se non ha rivelato nuovi nemici né cambiato lo stato della missione (pilota raccolto, zona ricognita). Qualsiasi altra azione (attacco, abilità speciale, fine turno) lo rende definitivo.
+**Annulla movimento:** si può annullare solo l'ultimo movimento, e solo se non ha rivelato nuovi nemici né cambiato lo stato della missione (pilota raccolto, zona ricognita). Qualsiasi altra azione (attacco, abilità speciale, ricarica, primo soccorso, fine turno) lo rende definitivo; rotazione e cambio postura fatti dopo il movimento vengono annullati insieme a lui.
 
-**Probabilità di colpire:** in modalità attacco, sopra ogni bersaglio compare la percentuale di colpire (stessa formula del combattimento: 2d6+ATK contro DEF+copertura+1d6, penalità gittata inclusa). Su desktop il tooltip del bersaglio mostra anche il danno medio.
+**Probabilità di colpire:** in modalità attacco, sopra ogni bersaglio compare la percentuale di colpire (stessa formula del combattimento: 2d6+ATK contro DEF+copertura+1d6, penalità gittata, postura e ferite incluse). Su desktop il tooltip del bersaglio mostra anche il danno medio.
 
 ### Bottone ⌂ e back button
 

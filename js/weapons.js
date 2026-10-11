@@ -41,11 +41,16 @@ function canAttack(unit) {
     : true;
 }
 
+// Toglie un colpo dal caricatore (armi senza `mag`: nessun effetto)
+function spendRound(w) {
+  if (w?.mag) w.loaded = Math.max(0, (w.loaded ?? w.mag) - 1);
+}
+
 // Consuma un attacco: un uso, un colpo del caricatore, uno dei colpi del turno
 function consumeShot(w) {
   if (!w) return;
   if (w.ammo != null) w.ammo--;
-  if (w.mag) w.loaded = Math.max(0, (w.loaded ?? w.mag) - 1);
+  spendRound(w);
   w.shotsThisTurn = (w.shotsThisTurn || 0) + 1;
 }
 

@@ -137,8 +137,8 @@ The default composition is one of each class, but you can bring two Assaults and
 | **Medic** | 8 | 3 | 1 | 1 | 1 | Heal (+3 HP to an adjacent ally) — **restores morale and stops bleeding** |
 
 > ATK and Range are those of the primary weapon defined in `config.json` (M16, M14, M1911); if `config.json` defines no weapons for the class, the class base values are used.
-> The Assault always carries the M16 as primary weapon (unlimited) plus 2 grenades. Pressing "Attack" shows the weapon picker.
-> The medic can't heal himself.
+> The Assault carries the M16 as primary weapon (3-round magazine, 4 spare) plus 2 grenades, a smoke grenade and the knife. Pressing "Attack" shows the weapon picker.
+> The medic can't heal themselves with the special ability (only with the once-per-mission first aid).
 
 ---
 
@@ -612,14 +612,17 @@ Keyboard shortcuts are active only during the **player phase** and when no dice 
 | `A` | Attack mode |
 | `S` | Special ability mode |
 | `R` | Turn (free, once per turn) |
+| `C` | Stance |
+| `L` | Reload |
+| `H` | First aid (once per mission) |
 | `Enter` | End turn (in the confirmation dialog: confirm) |
 | `Esc` | Cancel current mode (in the confirmation dialog: cancel) |
 | `U` / `Ctrl+Z` | Undo last move |
 | `Tab` / `Shift+Tab` | Select next / previous unit with AP |
 
-**Undo move:** only the last move can be undone, and only if it revealed no new enemies and did not change the mission state (pilot picked up, zone scouted). Any other action (attack, special ability, end turn) makes it final.
+**Undo move:** only the last move can be undone, and only if it revealed no new enemies and did not change the mission state (pilot picked up, zone scouted). Any other action (attack, special ability, reload, first aid, end turn) makes it final; a turn or stance change made after the move is undone along with it.
 
-**Hit chance:** in attack mode, the hit percentage is shown above each target (same formula as combat: 2d6+ATK vs DEF+cover+1d6, range penalty included). On desktop the target tooltip also shows the average damage.
+**Hit chance:** in attack mode, the hit percentage is shown above each target (same formula as combat: 2d6+ATK vs DEF+cover+1d6, range penalty, stance and wounds included). On desktop the target tooltip also shows the average damage.
 
 ### ⌂ Button and Back Button
 

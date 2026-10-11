@@ -344,9 +344,15 @@ async function enemyActivation(enemy) {
     // Gittata effettiva: considera tutte le armi disponibili
     const effRange = vcEffRange(enemy, stats);
     // Bersaglio: il più vicino tra quelli individuati; se nessuno è
-    // individuato il VC avanza verso la squadra senza sparare
+    // individuato il VC avanza senza sparare verso i soldati non occultati
+    // (non conosce la posizione di chi è nascosto), altrimenti verso il più vicino
     const seen = nearestDetectedUnit(enemy);
     if (seen) target = seen;
+    else {
+      const exposed = liveUnits.filter((u) => !isConcealed(u));
+      if (exposed.length)
+        target = exposed.reduce((b, u) => (dist(enemy, u) < dist(enemy, b) ? u : b));
+    }
     const d = dist(enemy, target);
 
     // Se in gittata (con qualsiasi arma) e senza fumo in mezzo: attacca

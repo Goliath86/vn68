@@ -42,9 +42,19 @@ function _getTileAnims() {
   return [...global, ...mission, ...fires, ...smokes];
 }
 
+// Indicatori pulsanti sulle pedine (scosso, emorragia): richiedono il ciclo
+// di ridisegno anche sulle mappe senza animazioni del terreno
+function _unitsPulsing() {
+  return G.units.some((u) => u.alive && (u.shaken || u.bleeding));
+}
+
+function _needsAnimLoop() {
+  return _getTileAnims().length > 0 || _unitsPulsing();
+}
+
 function _startTileAnimLoop() {
   if (_tileAnimLoopActive) return;
-  if (!_getTileAnims().length) return;
+  if (!_needsAnimLoop()) return;
   _tileAnimLoopActive = true;
   _tileAnimLastTime = 0;
   requestAnimationFrame(_tileAnimTick);
@@ -53,7 +63,7 @@ function _startTileAnimLoop() {
 function _tileAnimTick(now) {
   _tileAnimDt = _tileAnimLastTime ? Math.min(now - _tileAnimLastTime, 64) : 16;
   _tileAnimLastTime = now;
-  if (G.phase === "gameover" || !_getTileAnims().length) {
+  if (G.phase === "gameover" || !_needsAnimLoop()) {
     _tileAnimLoopActive = false;
     _tileAnimLastTime = 0;
     return;

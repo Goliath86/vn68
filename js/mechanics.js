@@ -299,6 +299,21 @@ function moveActionExtra(unit) {
   );
 }
 
+// Morale: un'unità US sotto la soglia grave diventa "scossa"
+function checkShaken(unit) {
+  if (!unit.alive || unit.shaken || !G.units.includes(unit)) return;
+  if (unit.hp / unit.maxHp >= SEVERE_WOUND_THRESHOLD) return;
+  unit.shaken = true;
+  log(t("log.unit_shaken", { name: unit.name }), "combat");
+}
+
+// Dopo un danno a un'unità US sopravvissuta: morale ed emorragia
+// (unico punto usato da combattimento diretto, esplosioni e trappole)
+function afterUnitDamage(unit, dmg, alwaysBleed = false) {
+  checkShaken(unit);
+  maybeStartBleeding(unit, dmg, alwaysBleed);
+}
+
 // Dopo un danno a un'unità US ancora viva: possibile emorragia
 // (alwaysBleed: trappole punji)
 function maybeStartBleeding(unit, dmg, alwaysBleed = false) {
@@ -330,10 +345,7 @@ function tickBleeding() {
       t("log.bleeding_tick", { name: u.name, dmg: BLEED_PER_TURN, hp: u.hp, max: u.maxHp }),
       "combat",
     );
-    if (!u.shaken && u.hp / u.maxHp < SEVERE_WOUND_THRESHOLD) {
-      u.shaken = true;
-      log(t("log.unit_shaken", { name: u.name }), "combat");
-    }
+    checkShaken(u);
   }
   checkGameOver();
 }
@@ -643,12 +655,8 @@ function triggerTrap(unit, trap) {
     );
     checkGameOver();
   } else {
-    if (!unit.shaken && unit.hp / unit.maxHp < 0.3) {
-      unit.shaken = true;
-      log(t("log.unit_shaken", { name: unit.name }), "combat");
-    }
     // Le punte delle punji causano sempre un'emorragia
-    maybeStartBleeding(unit, trap.dmg, trap.type === "punji");
+    afterUnitDamage(unit, trap.dmg, trap.type === "punji");
   }
 }
 

@@ -2,6 +2,8 @@ function render() {
   if (!G.mapData) return;
   renderMap();
   renderOverlay();
+  // Avvia il ciclo d'animazione se serve (es. un'unità ha appena iniziato a sanguinare)
+  _startTileAnimLoop();
 }
 
 function tileToScreen(col, row) {
