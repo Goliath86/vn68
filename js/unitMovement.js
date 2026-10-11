@@ -125,6 +125,9 @@ async function moveUnit(unit, toCol, toRow, apCost) {
     };
   }
 
+  // Dopo il controllo sull'annullabilità: il tutorial scrive in missionState
+  tutorialEvent("move", { cls: unit.cls, col: unit.col, row: unit.row });
+
   updateUI();
 
   render();

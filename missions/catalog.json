@@ -1,5 +1,13 @@
 [
   {
+    "tutorial": true,
+    "icon": "🎓",
+    "labels": {
+      "it": { "label": "Addestramento", "subtitle": "Lezioni guidate su classi e meccaniche" },
+      "en": { "label": "Training", "subtitle": "Guided lessons on classes and mechanics" }
+    }
+  },
+  {
     "file": "rung_sat.json",
     "icon": "🌿",
     "color": "#2d5a1b",

@@ -96,6 +96,10 @@ function setLang(lang) {
     rebuildMapsFromCatalog();
     applyTranslationsToData();
     applyTranslationsToDOM();
-    if (G.missionType) updateUI();
+    if (G.missionType) {
+      updateUI();
+      // Testi dell'istruttore nella nuova lingua (lezioni del tutorial)
+      renderTutorialPanel();
+    }
   });
 }

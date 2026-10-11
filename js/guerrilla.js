@@ -72,6 +72,7 @@ function openTunnels() {
 function revealTunnel(tn) {
   if (!tn || tn.revealed) return;
   tn.revealed = true;
+  tutorialEvent("tunnelFound", { col: tn.col, row: tn.row });
   addFX("spot", { col: tn.col, row: tn.row, kind: "trap" }, 1100);
   log(t("log.tunnel_found", { col: tn.col, row: tn.row }), "success");
 }
@@ -171,6 +172,7 @@ function sealTunnel(engineer, tn) {
   engineer.ap -= 1;
   engineer.specialUsed = true;
   statAdd("tunnelsSealed");
+  tutorialEvent("special", { cls: engineer.cls, kind: "seal" });
   sfx("demolition");
   addFX("demolition", { col: tn.col, row: tn.row, success: true }, 1000);
   log(t("log.tunnel_sealed", { name: engineer.name }), "success");

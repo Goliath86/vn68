@@ -4,6 +4,8 @@ function initModal() {
   document.getElementById("modal-step-mission").style.display = "none";
   document.getElementById("btn-select-map").disabled = true;
   document.getElementById("btn-menu").style.display = "none";
+  document.getElementById("tutorial-overlay").classList.add("hidden");
+  document.getElementById("tutorial-panel").classList.add("hidden");
 
   // "Resume game" banner if a savegame exists
   const existingBanner = document.getElementById("resume-banner");
@@ -53,7 +55,20 @@ function initModal() {
   // Map cards
   MAPS.forEach((m) => {
     const card = document.createElement("div");
-    card.className = "map-card";
+    card.className = m.tutorial ? "map-card tutorial-card" : "map-card";
+    if (m.tutorial) {
+      // Addestramento: apre direttamente l'elenco delle lezioni
+      card.innerHTML = `
+        <div class="map-icon">${m.icon}</div>
+        <div class="map-name">${m.label}</div>
+        <div class="map-sub">${m.subtitle}</div>`;
+      card.addEventListener("click", () => {
+        sfx("click");
+        openTutorialModal();
+      });
+      grid.appendChild(card);
+      return;
+    }
     card.innerHTML = `
       <div class="map-icon">${m.icon}</div>
       <div class="map-name">${m.label}</div>

@@ -189,6 +189,17 @@ async function resolveCombat(
     revealShooter(attacker, noise);
   }
 
+  // Tutorial: attacco del giocatore (arma, corpo a corpo, lato, esito)
+  if (!isEnemy)
+    tutorialEvent("attack", {
+      cls: attacker.cls,
+      weapon: weapon?.id ?? null,
+      melee,
+      sector,
+      hit: dmg > 0,
+      kill: !defender.alive,
+    });
+
   updateUI();
   render();
 

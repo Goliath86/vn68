@@ -20,6 +20,8 @@ function rebuildMapsFromCatalog() {
     return {
       file: entry.file ? `missions/${entry.file}` : null,
       generator: entry.generator || null,
+      // Scheda "Addestramento": apre l'elenco delle lezioni (tutorial.js)
+      tutorial: !!entry.tutorial,
       label: labels.label || entry.file || entry.generator,
       subtitle: labels.subtitle || "",
       theater: labels.theater || "",

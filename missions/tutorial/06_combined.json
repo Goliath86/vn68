@@ -1,0 +1,77 @@
+{
+  "name": "Training 6 — Joint operation",
+  "description": "Full squad: suppressive fire, grenades, line of fire and VC tactics.",
+  "tileSize": 64,
+  "cols": 14,
+  "rows": 9,
+  "sounds": { "move": "assets/footsteps_jungle.mp3" },
+  "ambient": "missions/rung_sat_ambient.mp3",
+
+  "grid": [
+    "JJJJJJJJJJJJJJ",
+    "JCCCJJJJCCCJJJ",
+    "JCCCCTTTTCCVVJ",
+    "CCCJJTCCTTCVVJ",
+    "CCCJJTCCCTCCCJ",
+    "CCCCCTJJCTCCJJ",
+    "JCCCCTJJCCCCJJ",
+    "JJCCCCCCCCJJJJ",
+    "JJJJJJJJJJJJJJ"
+  ],
+
+  "squad": [
+    { "cls": "assault", "col": 1, "row": 3, "facing": 1 },
+    { "cls": "sniper", "col": 0, "row": 4, "facing": 1 },
+    { "cls": "engineer", "col": 1, "row": 5, "facing": 1 },
+    { "cls": "medic", "col": 0, "row": 5, "facing": 1 }
+  ],
+  "enemies": [
+    { "cls": "grunt", "col": 9, "row": 4, "facing": 3, "hold": true },
+    { "cls": "grunt", "col": 10, "row": 6, "facing": 3, "hold": true },
+    { "cls": "grunt", "col": 11, "row": 2, "facing": 2, "hold": true },
+    { "cls": "commander", "col": 12, "row": 3, "facing": 3, "hold": true },
+    { "cls": "sniper_vc", "col": 7, "row": 5, "facing": 3, "hold": true }
+  ],
+  "tunnels": [{ "col": 6, "row": 1 }, { "col": 12, "row": 5 }],
+
+  "objectives": { "search_destroy": { "eliminateAll": false, "minKills": 4 } },
+
+  "tutorial": {
+    "missionType": "search_destroy",
+    "steps": [
+      { "id": "intro", "until": "next", "ui": ["weapon-bar"] },
+      { "id": "lof", "until": "next" },
+      { "id": "vcai", "until": "next" },
+      { "id": "suppression", "until": { "event": "special", "kind": "suppression" }, "ui": ["btn-special"] },
+      { "id": "grenade", "until": { "event": "aoe", "weapon": "grenade" }, "ui": ["weapon-bar"] },
+      { "id": "finish" }
+    ]
+  },
+
+  "translations": {
+    "it": {
+      "name": "Addestramento 6 — Operazione congiunta",
+      "description": "Squadra completa: fuoco soppressivo, granate, linea di tiro e tattiche VC.",
+      "tutorial": {
+        "intro": "Ultima lezione: la **squadra completa**. Sotto **Attacca** ci sono le **schede armi** del soldato selezionato: click su una scheda (o tasti **1-9**) per attaccare con quell'arma; **Attacca** usa l'arma principale. Le **icone** sotto l'abilità (⟳ ruota, postura, 🩹 primo soccorso, ↶ annulla) compaiono solo quando servono.\n\nObiettivo: eliminare **4 VC**.",
+        "lof": "**Linea di tiro**: non puoi sparare attraverso un compagno in piedi o accucciato; uno **sdraiato** non blocca. Su desktop, in modalità attacco, un **raggio** segue il mouse: verde = tiro libero, rosso = compagno in mezzo, arancione = terreno o fumo, grigio = fuori vista o gittata.",
+        "vcai": "I VC qui sono più furbi:\n• cercano i tuoi **fianchi e le spalle** e ripiegano in copertura dopo aver sparato;\n• un VC con il **mirino arancione** è **in agguato**: spara al primo soldato che si ferma davanti o di lato a lui;\n• il **cecchino VC** tra la vegetazione è **invisibile oltre 2 tile** finché non spara;\n• i VC feriti possono sparire nei **tunnel** (🕳) e riemergere altrove.",
+        "suppression": "L'abilità dell'**Assalto** è il **fuoco soppressivo**: fino al tuo prossimo turno blocca ogni VC che agisce davanti o di lato a lui (perde tutti gli AP), al costo di un colpo del caricatore ciascuno. Usalo per coprire un'avanzata: seleziona l'Assalto, ruotalo verso i VC e premi **Abilità**.",
+        "grenade": "Le **granate** (scheda arma dell'Assalto, gittata 3, raggio 1) colpiscono **tutti** nell'area, anche i tuoi: mai sotto distanza 2. Scegli la scheda **Granata**, clicca un tile e **conferma**. Ottime contro VC raggruppati o al riparo.",
+        "finish": "Ora tocca a te: elimina **4 VC**. Usa il cecchino in overwatch, il medico dietro la linea, il geniere per le trappole e l'artiglieria, l'assalto per aprire la strada. In bocca al lupo, soldato."
+      }
+    },
+    "en": {
+      "name": "Training 6 — Joint operation",
+      "description": "Full squad: suppressive fire, grenades, line of fire and VC tactics.",
+      "tutorial": {
+        "intro": "Last lesson: the **full squad**. Under **Attack** are the selected soldier's **weapon cards**: click a card (or keys **1-9**) to attack with that weapon; **Attack** uses the main weapon. The **icons** below the ability (⟳ turn, stance, 🩹 first aid, ↶ undo) only appear when they're useful.\n\nObjective: kill **4 VC**.",
+        "lof": "**Line of fire**: you can't shoot through a standing or crouched teammate; a **prone** one doesn't block. On desktop, in attack mode, a **ray** follows the mouse: green = clear shot, red = teammate in the way, orange = terrain or smoke, grey = out of sight or range.",
+        "vcai": "The VC here are smarter:\n• they go for your **flanks and back** and fall back into cover after firing;\n• a VC with an **orange crosshair** is **in ambush**: it fires at the first soldier who stops in front of or beside it;\n• the **VC sniper** in vegetation is **invisible beyond 2 tiles** until it fires;\n• wounded VC can vanish into **tunnels** (🕳) and reappear elsewhere.",
+        "suppression": "The **Assault**'s ability is **suppressive fire**: until your next turn it pins every VC that acts in front of or beside him (they lose all their AP), at the cost of one round each. Use it to cover an advance: select the Assault, turn him toward the VC and press **Ability**.",
+        "grenade": "**Grenades** (the Assault's weapon card, range 3, radius 1) hit **everyone** in the area, your men too: never below distance 2. Pick the **Grenade** card, click a tile and **confirm**. Great against bunched or covered VC.",
+        "finish": "Now it's up to you: kill **4 VC**. Use the sniper on overwatch, the medic behind the line, the engineer for traps and artillery, the assault to clear the way. Good luck, soldier."
+      }
+    }
+  }
+}

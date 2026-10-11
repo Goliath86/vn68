@@ -1,0 +1,79 @@
+{
+  "name": "Training 2 — Shadows in the jungle",
+  "description": "Stance, vision cones, rear attacks, the knife and noise.",
+  "tileSize": 64,
+  "cols": 12,
+  "rows": 8,
+  "sounds": { "move": "assets/footsteps_jungle.mp3" },
+  "ambient": "missions/rung_sat_ambient.mp3",
+
+  "grid": [
+    "JJJJJJJJJJJJ",
+    "JJCCJJJJJJJJ",
+    "JCCCJCCJJVVJ",
+    "JCCCJJCJJJVJ",
+    "JJCCJJCJJCCJ",
+    "JJJCCJCJJCJJ",
+    "JJJJJJCJJJJJ",
+    "JJJJJJCJJJJJ"
+  ],
+
+  "squad": [{ "cls": "assault", "col": 6, "row": 7, "facing": 0 }],
+  "enemies": [
+    { "cls": "grunt", "col": 6, "row": 3, "facing": 0, "hold": true },
+    { "cls": "grunt", "col": 10, "row": 2, "facing": 3, "hold": true }
+  ],
+
+  "objectives": { "search_destroy": { "eliminateAll": true } },
+
+  "tutorial": {
+    "missionType": "search_destroy",
+    "steps": [
+      { "id": "intro", "until": "next" },
+      { "id": "crouch", "until": { "event": "stance", "stance": "crouch" }, "ui": ["btn-stance"] },
+      { "id": "sneak1", "until": { "event": "move", "at": { "col": 6, "row": 6 } }, "highlight": { "col": 6, "row": 6 }, "ui": ["btn-move"] },
+      { "id": "endturn", "until": { "event": "endTurn" }, "ui": ["btn-endturn"] },
+      { "id": "vcturn", "until": { "event": "turnStart" } },
+      { "id": "stand", "until": { "event": "stance", "stance": "stand" }, "ui": ["btn-stance"] },
+      { "id": "sneak2", "until": { "event": "move", "at": { "col": 6, "row": 4 } }, "highlight": { "col": 6, "row": 4 }, "ui": ["btn-move"] },
+      { "id": "knife", "until": { "event": "attack", "melee": true }, "ui": ["weapon-bar"] },
+      { "id": "noise", "until": "next" },
+      { "id": "finish" }
+    ]
+  },
+
+  "translations": {
+    "it": {
+      "name": "Addestramento 2 — Ombre nella giungla",
+      "description": "Postura, coni di vista, attacchi alle spalle, coltello e rumore.",
+      "tutorial": {
+        "intro": "Una sentinella VC guarda verso **nord**, proprio sopra di te: le arriverai **alle spalle**. Un VC si accorge di un soldato a **5 tile davanti**, **4 sui fianchi** e solo **2 alle spalle**.\n\nPassa il mouse sui tile: il tooltip mostra **costo** di movimento e **copertura**. La giungla dà copertura 2 e nasconde chi sta basso.",
+        "crouch": "Prima abbassati. Premi l'icona della **postura** (tasto **C**) e scegli **Accucciato**: +1 ATK e +1 DEF, ma −1 alla vista e **+1 AP** per ogni movimento. Inoltre i VC ti notano **un tile più vicino**.\n\nIl primo cambio di postura del turno è **gratis**.",
+        "sneak1": "Avanza **accucciato** fino al **tile indicato**: costa 1 AP + 1 per la postura. Sei a 3 tile dalla sentinella, alle sue spalle: da lì non ti vede.",
+        "endturn": "Ti resta 1 AP, ma non basta per arrivare: termina il turno. Nessun problema, la sentinella non ti ha notato.",
+        "vcturn": "**Turno dei VC.** La sentinella continua a guardare a nord…",
+        "stand": "Ora serve velocità: **alzati** (postura **In piedi**, di nuovo gratis perché è il primo cambio di questo turno). In piedi il movimento non costa AP extra.",
+        "sneak2": "Muoviti fino al **tile indicato**, subito dietro la sentinella: 2 AP, te ne resta 1 per colpire.",
+        "knife": "Ora il **coltello**: scegli la sua **scheda arma** sotto Attacca (o tasto **4**) e clicca sul VC. Alle spalle hai **+1 ATK** e il nemico non ha copertura.\n\nIl coltello è **silenzioso** (rumore 0): nessun altro VC sentirà nulla. Se lo uccidi, **prendi il suo posto** gratis.",
+        "noise": "Ogni sparo fa **rumore**: i VC entro il raggio dell'arma si allertano e si girano verso la fonte (M16: 5 tile). In modalità attacco il raggio è il **contorno grigio puntinato** e la scheda arma mostra 🔊.\n\nLa seconda sentinella è nel villaggio a est. Avvicinati nella giungla: **accucciato** (o **sdraiato**) su un tile di vegetazione sei **occultato** (🌿) e un VC ti nota solo se supera un tiro.",
+        "finish": "Elimina la **seconda sentinella**. Puoi tentare un altro colpo di coltello alle spalle oppure spararle da una posizione coperta: a te la scelta."
+      }
+    },
+    "en": {
+      "name": "Training 2 — Shadows in the jungle",
+      "description": "Stance, vision cones, rear attacks, the knife and noise.",
+      "tutorial": {
+        "intro": "A VC sentry is looking **north**, right above you: you'll reach it **from behind**. A VC notices a soldier at **5 tiles in front**, **4 on the flanks** and only **2 behind**.\n\nHover over tiles: the tooltip shows movement **cost** and **cover**. Jungle gives cover 2 and hides whoever keeps low.",
+        "crouch": "First get low. Press the **stance** icon (key **C**) and choose **Crouched**: +1 ATK and +1 DEF, but −1 vision and **+1 AP** for every move. VC also notice you **one tile closer**.\n\nThe first stance change each turn is **free**.",
+        "sneak1": "Advance **crouched** to the **marked tile**: it costs 1 AP + 1 for the stance. You're 3 tiles behind the sentry: it can't see you from there.",
+        "endturn": "You have 1 AP left, but it isn't enough to get there: end the turn. No problem, the sentry hasn't noticed you.",
+        "vcturn": "**VC turn.** The sentry keeps looking north…",
+        "stand": "Now you need speed: **stand up** (stance **Standing**, free again since it's your first change this turn). Standing, moving costs no extra AP.",
+        "sneak2": "Move to the **marked tile**, right behind the sentry: 2 AP, leaving 1 to strike.",
+        "knife": "Now the **knife**: pick its **weapon card** under Attack (or key **4**) and click the VC. From behind you get **+1 ATK** and the enemy has no cover.\n\nThe knife is **silent** (noise 0): no other VC will hear a thing. If you kill the enemy you **take its place** for free.",
+        "noise": "Every shot makes **noise**: VC within the weapon's radius are alerted and turn toward the source (M16: 5 tiles). In attack mode the radius is the **dotted grey outline** and the weapon card shows 🔊.\n\nThe second sentry is in the village to the east. Approach through the jungle: **crouched** (or **prone**) on a vegetation tile you are **concealed** (🌿) and a VC only notices you if it passes a roll.",
+        "finish": "Take out the **second sentry**. You can try another knife strike from behind or shoot it from a covered position: your call."
+      }
+    }
+  }
+}

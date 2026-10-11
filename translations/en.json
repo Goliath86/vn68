@@ -55,6 +55,19 @@
     "attack_with": "Attack · {weapon}"
   },
 
+  "tutorial": {
+    "title": "TRAINING",
+    "subtitle": "Guided lessons: each one introduces a class and a few mechanics. Follow the instructor's directions at the top of the map.",
+    "start": "▶ START LESSON",
+    "back": "← Back to maps",
+    "instructor": "INSTRUCTOR",
+    "step": "Step {n}/{total}",
+    "next": "Next ▸",
+    "hide": "Collapse",
+    "show": "Show",
+    "next_lesson": "▶ Next lesson: {title}"
+  },
+
   "stats": {
     "copy": "📋 Copy stats",
     "copied": "✓ Copied to clipboard",

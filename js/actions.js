@@ -118,6 +118,7 @@ function reloadWeapon(u, w = reloadableWeapon(u)) {
   w.loaded = w.mag;
   if (w.mags != null) w.mags--;
   statAdd("reloads");
+  tutorialEvent("reload", { cls: u.cls, weapon: w.id });
   sfx("reload");
   log(
     t("log.reload", {
@@ -147,6 +148,7 @@ function changeStance(u, stance) {
   u.ap -= stanceChangeCost(u);
   u.stanceChanged = true;
   u.stance = stance;
+  tutorialEvent("stance", { cls: u.cls, stance });
   sfx("move");
   log(t("log.stance_change", { name: u.name, stance: t(`stances.${stance}`) }));
   if (G.fowEnabled) recomputeVisibility();
@@ -161,5 +163,6 @@ function rotateUnit(u, col, row) {
   if (f === null) return;
   u.facing = f;
   u.rotated = true;
+  tutorialEvent("rotate", { cls: u.cls, facing: f });
   log(t("log.unit_rotate", { name: u.name, dir: t(`directions.${f}`) }));
 }

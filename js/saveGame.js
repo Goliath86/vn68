@@ -142,4 +142,6 @@ async function resumeGame(save) {
   updateUI();
 
   log(t("log.game_resumed", { turn: G.turn }), "system");
+  // Lezione del tutorial ripresa: torna il pannello dell'istruttore
+  renderTutorialPanel();
 }

@@ -6,6 +6,9 @@ async function loadMission(jsonPath) {
 
 // Attiva un mapData già pronto (da JSON o da generatore procedurale)
 function useMission(data) {
+  // La griglia si può scrivere come righe di testo ("JJCCT..."): la
+  // demolizione modifica i singoli tile, quindi servono array di caratteri
+  if (data.grid) data.grid = data.grid.map((r) => (typeof r === "string" ? r.split("") : r));
   G.mapData = data;
   loadMissionSounds(G.mapData);
 
@@ -68,40 +71,78 @@ function startGame(
   // maxCarriers vale anche per la squadra US (es. una sola radio)
   const usCarrierCounts = {};
 
-  squadClasses.forEach((cls, i) => {
+  // Squadra: scelta nel briefing (sulle posizioni di partenza) oppure fissa
+  // dalla mappa con "squad": [{ cls, col, row, facing?, hp?, bleeding?, stance? }]
+  // (lezioni del tutorial)
+  const squadDefs =
+    G.mapData.squad ||
+    squadClasses.map((cls, i) => ({ cls, col: starts[i].col, row: starts[i].row }));
+
+  squadDefs.forEach((sd, i) => {
+    const cls = sd.cls;
     const def = UNIT_CLASSES[cls];
+    const hp = Math.min(def.hp, sd.hp ?? def.hp);
 
     G.units.push({
       id: "u" + i,
       name: SOLDIER_NAMES[i],
       cls,
-      col: starts[i].col,
-      row: starts[i].row,
-      hp: def.hp,
+      col: sd.col,
+      row: sd.row,
+      hp,
       maxHp: def.hp,
       ap: AP_PER_TURN,
       maxAp: AP_PER_TURN,
       alive: true,
-      facing: initialFacing(starts[i]),
+      facing: sd.facing ?? initialFacing(sd),
       rotated: false,
-      stance: "stand",
+      stance: sd.stance || "stand",
       stanceChanged: false,
       exposed: false,
       specialUsed: false,
       overwatch: false,
       suppression: false,
       suppressed: false,
-      shaken: false,
+      shaken: hp / def.hp < SEVERE_WOUND_THRESHOLD,
+      bleeding: !!sd.bleeding,
       carriesPilot: false,
       weapons: buildWeapons(cls, usCarrierCounts),
       weaponIdx: 0,
     });
   });
 
-  // Spawn VC
-  const zones = G.mapData.vcSpawnZones;
-  const count = G.mapData.vcCount || 6;
+  // VC fissi dalla mappa: "enemies": [{ cls, col, row, facing?, alerted?, hold?, hp? }]
+  // (hold: sentinella che non pattuglia finché non è allertata)
   let spawned = 0;
+  for (const ed of G.mapData.enemies || []) {
+    const cls = ed.cls || "grunt";
+    const maxHp = cls === "commander" ? 8 : cls === "sniper_vc" ? 6 : 5;
+    G.enemies.push({
+      id: "e" + spawned,
+      name: cls === "sniper_vc" ? VC_NAMES[1] : cls === "commander" ? VC_NAMES[3] : VC_NAMES[0],
+      cls,
+      col: ed.col,
+      row: ed.row,
+      hp: Math.min(maxHp, ed.hp ?? maxHp),
+      maxHp,
+      ap: 2,
+      maxAp: 2,
+      alive: true,
+      alerted: !!ed.alerted,
+      hold: !!ed.hold,
+      facing: ed.facing ?? rnd(0, 3),
+      suppressed: false,
+      vx: ed.col,
+      vy: ed.row,
+      weapons: buildWeapons(cls, G.missionState.vcCarrierCounts),
+      weaponIdx: 0,
+    });
+    spawned++;
+  }
+
+  // Spawn VC casuale
+  const zones = G.mapData.vcSpawnZones;
+  const count = G.mapData.enemies ? 0 : G.mapData.vcCount || 6;
   let attempts = 0;
 
   while (spawned < count && attempts < 500) {
@@ -189,6 +230,9 @@ function startGame(
   if (isNight()) log(t("log.night_mission"), "system");
 
   ambientPlay(G.mapData.ambient);
+
+  // Pannello dell'istruttore: visibile solo nelle lezioni del tutorial
+  renderTutorialPanel();
 
   render();
 
@@ -295,8 +339,11 @@ function showGameOver(win) {
   desc.textContent = win
     ? t("gameover.win_desc", { turn: G.turn, vc, survive })
     : t("gameover.lose_desc", { turn: G.turn, vc });
-  // Riepilogo statistico della missione (js/stats.js)
-  renderMissionStats(win);
+  // Riepilogo statistico della missione (js/stats.js); le lezioni del
+  // tutorial non entrano nello storico
+  renderMissionStats(win, { history: !G.mapData?.tutorial });
+  // Tutorial: lezione superata e bottone per la successiva (tutorial.js)
+  tutorialGameOver(win);
   render();
 }
 
@@ -304,6 +351,7 @@ function endPlayerTurn() {
   if (G.phase !== "player") return;
   if (G.pendingDice) return;
   clearLastMove();
+  tutorialEvent("endTurn", { turn: G.turn });
   // Cancella qualsiasi modalità azione in corso (incluso weapon_select e aoe_confirm)
   G.actionMode = null;
   G.currentWeapon = null;

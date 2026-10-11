@@ -616,6 +616,27 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | Lanciare dado | Pulsante "LANCIA DADO" | Tab DADO |
 | Torna al menu | Bottone **⌂** nell'header | Bottone **⌂** nell'header |
 
+### Addestramento (tutorial)
+
+Nella scelta della mappa, la scheda **🎓 Addestramento** apre l'elenco delle lezioni guidate. Ognuna è una piccola missione con squadra e nemici prestabiliti e un **istruttore** che, in alto sulla mappa, spiega passo passo cosa fare. Indica il tile su cui andare con una freccia gialla e fa lampeggiare il bottone da usare. Si avanza compiendo l'azione richiesta (o con **Avanti ▸** sui passi solo descrittivi); il pannello si può ridurre con **▾**.
+
+| # | Lezione | Classi | Argomenti |
+|---|---|---|---|
+| 1 | Primi passi | Assalto | selezione, AP e costo del terreno, annulla, orientamento e rotazione, attacco e dadi, turni |
+| 2 | Ombre nella giungla | Assalto | postura, coni di vista dei VC, attacchi alle spalle, coltello silenzioso, rumore, occultamento |
+| 3 | Occhio di falco | Cecchino | gittata e penalità, un colpo per turno, ricarica, overwatch |
+| 4 | Genio militare | Geniere, Assalto | trappole, disinnesco, artiglieria via radio, demolizione, tunnel VC |
+| 5 | Sangue e bende | Medico, Assalto, Cecchino | ferite, emorragia, panico, cure, primo soccorso; recupero pilota |
+| 6 | Operazione congiunta | squadra completa | schede armi, linea di tiro, tattiche VC, fuoco soppressivo, granate |
+
+Le lezioni superate sono segnate con ✓ (salvato nel browser) e a fine lezione il bottone **▶ Lezione successiva** porta alla seguente. Le lezioni non entrano nello storico delle statistiche.
+
+**Creare una lezione:** è una normale mappa JSON in `missions/tutorial/`, elencata in `missions/tutorial/index.json` (che contiene anche i tipi di tile condivisi). Rispetto a una missione ha:
+- **`squad` ed `enemies`:** squadra e VC fissi; `"hold": true` indica una sentinella che resta ferma finché non viene allertata.
+- **Blocco `tutorial`:** `missionType` e i passi, `{ "id", "until", "highlight", "ui", "fresh" }`.
+- **`until`:** è `"next"` (bottone Avanti) oppure un evento, con campi da confrontare ed eventualmente `at` / `within` sulla posizione. Gli eventi sono `select`, `move`, `rotate`, `stance`, `attack`, `aoe`, `reload`, `firstaid`, `special` (con `kind`: `overwatch`, `suppression`, `heal`, `disarm`, `demolish`, `burn`, `seal`), `trapFound`, `tunnelFound`, `endTurn`, `turnStart`.
+- **Testi dei passi:** stanno in `translations.<lingua>.tutorial.<id>`.
+
 ### Statistiche di fine missione
 
 A fine missione (vittoria o sconfitta), sotto l'esito, compare un **riepilogo statistico**:
@@ -796,6 +817,9 @@ Struttura completa con tutti i campi:
 | `tunnels` | array | (opzionale) Ingressi di tunnel VC in posizione fissa: `[{ "col", "row" }]`; se presente sostituisce quelli casuali |
 | `tunnelCount` | number | (opzionale) Numero di ingressi casuali (su tile che nascondono, lontano dalla partenza); default 3, `0` = nessun tunnel |
 | `vcTrapPlantMax` | number | (opzionale) Trappole che i VC in pattuglia possono piazzare durante la missione; default 3, `0` = nessuna |
+| `squad` | array | (opzionale) Squadra fissa al posto della scelta nel briefing: `[{ "cls", "col", "row", "facing"?, "hp"?, "bleeding"?, "stance"? }]` |
+| `enemies` | array | (opzionale) VC in posizione fissa al posto dello spawn casuale: `[{ "cls", "col", "row", "facing"?, "alerted"?, "hold"?, "hp"? }]`; `hold` = sentinella che non pattuglia finché non è allertata |
+| `grid` | array | Ogni riga può essere anche una stringa (`"JJCCT..."`) invece di un array di caratteri |
 | `nightVisionPenalty` | number | Riduzione del raggio visivo di notte; default 2 |
 
 ### Campi del tile type

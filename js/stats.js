@@ -247,11 +247,13 @@ function copyTextFallback(text) {
 }
 
 // Chiamato da showGameOver: riempie il pannello e aggiorna lo storico
-function renderMissionStats(win) {
+// (opts.history === false: la missione non entra nello storico, es. tutorial)
+function renderMissionStats(win, opts = {}) {
   const el = document.getElementById("go-stats");
   if (!el) return;
   const summary = missionSummary(win);
-  const history = saveStatsHistory(summary);
+  const history =
+    opts.history === false ? loadStatsHistory() : saveStatsHistory(summary);
   const rows = summaryRows(summary, historyAggregate(history));
   el.innerHTML = summaryHTML(rows);
   const btn = document.getElementById("btn-copy-stats");

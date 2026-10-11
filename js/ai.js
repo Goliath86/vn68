@@ -126,6 +126,8 @@ async function runEnemyTurn() {
   }
 
   checkGameOver();
+  // Tutorial: inizia il turno del giocatore (dopo artiglieria e imboscate)
+  tutorialEvent("turnStart", { turn: G.turn });
   updateUI();
   render();
 }
@@ -381,6 +383,8 @@ async function enemyActivation(enemy) {
           objs[0],
         );
     }
+    // Sentinella ("hold" nella mappa): resta al suo posto finché non è allertata
+    if (enemy.hold) patrolDest = null;
 
     if (
       patrolDest &&

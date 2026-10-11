@@ -217,6 +217,8 @@
                 <canvas id="map-canvas"></canvas>
                 <canvas id="overlay-canvas"></canvas>
                 <div id="tile-tooltip"></div>
+                <!-- Pannello dell'istruttore (tutorial.js:renderTutorialPanel) -->
+                <div id="tutorial-panel" class="hidden"></div>
             </div>
 
             <!-- RIGHT PANEL: LOG (desktop) -->
@@ -513,6 +515,23 @@
             </div>
         </div>
 
+        <!-- ADDESTRAMENTO: elenco lezioni (tutorial.js:openTutorialModal) -->
+        <div id="tutorial-overlay" class="hidden">
+            <div id="tutorial-box">
+                <button class="modal-back-btn" id="btn-tutorial-back" data-i18n="tutorial.back">
+                    ← Torna alle mappe
+                </button>
+                <h2 data-i18n="tutorial.title">ADDESTRAMENTO</h2>
+                <p data-i18n="tutorial.subtitle">
+                    Lezioni guidate: ognuna presenta una classe e alcune meccaniche.
+                </p>
+                <div class="modal-mission-list" id="tutorial-list"></div>
+                <button class="btn btn-attack" id="btn-tutorial-start" data-i18n="tutorial.start" disabled>
+                    ▶ INIZIA LEZIONE
+                </button>
+            </div>
+        </div>
+
         <!-- MISSION SELECT MODAL -->
         <div id="modal-overlay">
             <div id="modal-box">
@@ -643,6 +662,11 @@
                     📋 Copia statistiche
                 </button>
                 <br />
+                <!-- Tutorial superato: passa alla lezione successiva (tutorial.js) -->
+                <button class="btn btn-attack hidden" id="btn-next-lesson" style="margin-bottom: 10px">
+                    ▶ Lezione successiva
+                </button>
+                <br />
                 <button
                     class="btn"
                     id="btn-restart"
@@ -694,6 +718,7 @@
         <script src="js/mechanics.js"></script>
         <script src="js/stats.js"></script>
         <script src="js/guerrilla.js"></script>
+        <script src="js/tutorial.js"></script>
 
         <script src="js/initModal.js"></script>
 

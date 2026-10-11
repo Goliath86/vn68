@@ -248,6 +248,7 @@ function onCanvasClick(e) {
   );
   if (clickedUnit) {
     G.selectedUnit = clickedUnit;
+    tutorialEvent("select", { cls: clickedUnit.cls, col: col, row: row });
     updateUI();
     render();
     return;

@@ -88,6 +88,7 @@ function makeUnitCard(u, mobile) {
     card.addEventListener("click", () => {
       G.selectedUnit = u;
       G.actionMode = null;
+      tutorialEvent("select", { cls: u.cls, col: u.col, row: u.row });
       updateUI();
       render();
       // Su mobile: salta al tab azioni dopo selezione

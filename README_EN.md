@@ -617,6 +617,27 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | Roll dice | "ROLL DICE" button | DICE tab |
 | Return to menu | **⌂** button in header | **⌂** button in header |
 
+### Training (tutorial)
+
+In the map selection, the **🎓 Training** card opens the list of guided lessons. Each one is a small mission with a preset squad and enemies, and an **instructor** at the top of the map explains step by step what to do. It points to the tile to reach with a yellow arrow and flashes the button to use. You progress by performing the requested action (or with **Next ▸** on description-only steps); the panel can be collapsed with **▾**.
+
+| # | Lesson | Classes | Topics |
+|---|---|---|---|
+| 1 | First steps | Assault | selection, AP and terrain cost, undo, facing and turning, attacking and dice, turns |
+| 2 | Shadows in the jungle | Assault | stance, VC vision cones, rear attacks, the silent knife, noise, concealment |
+| 3 | Hawk eye | Sniper | range and penalty, one shot per turn, reloading, overwatch |
+| 4 | Combat engineers | Engineer, Assault | traps, disarming, radio artillery, demolition, VC tunnels |
+| 5 | Blood and bandages | Medic, Assault, Sniper | wounds, bleeding, panic, healing, first aid; pilot rescue |
+| 6 | Joint operation | full squad | weapon cards, line of fire, VC tactics, suppressive fire, grenades |
+
+Completed lessons get a ✓ (stored in the browser) and at the end of a lesson the **▶ Next lesson** button takes you to the next one. Lessons are not added to the stats history.
+
+**Creating a lesson:** it's a regular map JSON in `missions/tutorial/`, listed in `missions/tutorial/index.json` (which also holds the shared tile types). Compared to a mission it has:
+- **`squad` and `enemies`:** fixed squad and VC; `"hold": true` marks a sentry that stays put until alerted.
+- **`tutorial` block:** `missionType` and the steps, `{ "id", "until", "highlight", "ui", "fresh" }`.
+- **`until`:** either `"next"` (Next button) or an event, with fields to match and optionally `at` / `within` on position. The events are `select`, `move`, `rotate`, `stance`, `attack`, `aoe`, `reload`, `firstaid`, `special` (with `kind`: `overwatch`, `suppression`, `heal`, `disarm`, `demolish`, `burn`, `seal`), `trapFound`, `tunnelFound`, `endTurn`, `turnStart`.
+- **Step texts:** they live in `translations.<lang>.tutorial.<id>`.
+
 ### End-of-mission stats
 
 When a mission ends (win or loss), a **stats summary** appears below the outcome:
@@ -797,6 +818,9 @@ Full structure with all fields:
 | `tunnels` | array | (optional) Fixed VC tunnel entrances: `[{ "col", "row" }]`; when present it replaces the random ones |
 | `tunnelCount` | number | (optional) Number of random entrances (on concealing tiles, away from the start); default 3, `0` = no tunnels |
 | `vcTrapPlantMax` | number | (optional) Traps patrolling VC can plant during the mission; default 3, `0` = none |
+| `squad` | array | (optional) Fixed squad instead of the briefing choice: `[{ "cls", "col", "row", "facing"?, "hp"?, "bleeding"?, "stance"? }]` |
+| `enemies` | array | (optional) VC at fixed positions instead of random spawning: `[{ "cls", "col", "row", "facing"?, "alerted"?, "hold"?, "hp"? }]`; `hold` = a sentry that doesn't patrol until alerted |
+| `grid` | array | Each row can also be a string (`"JJCCT..."`) instead of an array of characters |
 | `nightVisionPenalty` | number | Vision reduction at night; default 2 |
 
 ### Tile Type Fields

@@ -1,0 +1,95 @@
+{
+  "name": "Training 4 — Combat engineers",
+  "description": "The Engineer: traps, demolitions, tunnels and artillery.",
+  "tileSize": 64,
+  "cols": 12,
+  "rows": 8,
+  "sounds": { "move": "assets/footsteps_jungle.mp3" },
+  "ambient": "missions/rung_sat_ambient.mp3",
+
+  "grid": [
+    "JJJJJJJJJJJJ",
+    "JCCCJXJJBBCJ",
+    "JCCCJXCCCCCJ",
+    "CTTTTXTTTOCJ",
+    "JCCCJXCCCCCJ",
+    "JCCCJXCCJCCJ",
+    "JCCCJJCCJCCJ",
+    "JJJJJJJJJJJJ"
+  ],
+
+  "squad": [
+    { "cls": "engineer", "col": 0, "row": 3, "facing": 1 },
+    { "cls": "assault", "col": 1, "row": 4, "facing": 1 }
+  ],
+  "enemies": [
+    { "cls": "grunt", "col": 8, "row": 1, "facing": 2, "hold": true },
+    { "cls": "grunt", "col": 9, "row": 1, "facing": 2, "hold": true }
+  ],
+  "traps": [{ "col": 3, "row": 3, "type": "punji" }],
+  "tunnels": [{ "col": 7, "row": 5 }],
+
+  "objectives": {
+    "recon": [
+      { "col": 9, "row": 3, "label": "Radio post" },
+      { "col": 10, "row": 5, "label": "Depot" }
+    ]
+  },
+
+  "tutorial": {
+    "missionType": "recon",
+    "steps": [
+      { "id": "intro", "until": "next" },
+      { "id": "trap", "until": { "event": "trapFound" }, "highlight": { "col": 2, "row": 3 }, "ui": ["btn-move"] },
+      { "id": "disarm", "until": { "event": "special", "kind": "disarm" }, "ui": ["btn-special"] },
+      { "id": "radio", "until": { "event": "aoe", "weapon": "radio" }, "ui": ["weapon-bar"] },
+      { "id": "endturn", "until": { "event": "endTurn" }, "ui": ["btn-endturn"] },
+      { "id": "vcturn", "until": { "event": "turnStart" } },
+      { "id": "demolish", "until": { "event": "special", "kind": "demolish" }, "highlight": { "col": 5, "row": 3 }, "ui": ["btn-special"] },
+      { "id": "tunnel", "until": { "event": "tunnelFound" }, "highlight": { "col": 7, "row": 5 } },
+      { "id": "seal", "until": { "event": "special", "kind": "seal" }, "ui": ["btn-special"] },
+      { "id": "finish" }
+    ]
+  },
+
+  "translations": {
+    "it": {
+      "name": "Addestramento 4 — Genio militare",
+      "description": "Il geniere: trappole, demolizioni, tunnel e artiglieria.",
+      "objectives": {
+        "recon": [{ "label": "Postazione radio" }, { "label": "Deposito" }]
+      },
+      "tutorial": {
+        "intro": "Il **Geniere** è l'uomo degli attrezzi. La sua **abilità speciale** (una volta per turno, 1 AP) agisce su un tile adiacente: **disinnesca** le trappole, **demolisce** bunker e ostacoli, **incendia** la vegetazione e **sigilla** gli ingressi dei tunnel VC. Porta anche la **radio** per l'artiglieria.\n\nObiettivo: **ricognizione** della postazione radio e del deposito oltre il muro (porta un soldato a 1 tile da ciascun punto).",
+        "trap": "I VC nascondono **trappole** (punji e mine): chi ci passa sopra si ferma e si ferisce. Solo il geniere le scopre, quando arriva **a 1 tile**. Porta il **Geniere** sul **tile indicato**, all'imbocco del sentiero.",
+        "disarm": "Trappola individuata! Ora è segnata sulla mappa e il movimento la aggira. Disinnescala: **Abilità** (tasto **S**) e clicca sul tile della trappola.",
+        "radio": "Due VC presidiano i **bunker** a nord-est (copertura 3!). Chiamiamo l'**artiglieria**: scegli la scheda **Radio** del geniere e clicca un bunker, poi conferma. Il colpo **cade all'inizio del prossimo turno** e colpisce **chiunque** nell'area (anche i tuoi, anche i VC nascosti): l'area è segnata in rosso.",
+        "endturn": "Tieni i soldati lontani dall'area rossa e termina il turno.",
+        "vcturn": "**Turno dei VC**… poi arriva l'artiglieria.",
+        "demolish": "Il **muro** blocca il sentiero (c'è un giro lungo nella giungla a sud). Più rapido farlo saltare: porta il geniere accanto al **tile indicato** e usa l'**Abilità** su di esso. Riesce con **4+ sul dado**: se fallisce, riprova il turno dopo. L'esplosione fa rumore.",
+        "tunnel": "Oltre il muro i VC hanno scavato un **tunnel**. Gli ingressi sono nascosti: un soldato li nota da **1 tile**, il geniere da **2**. Avvicinati al **tile indicato**.",
+        "seal": "Ingresso trovato (🕳). Un VC ferito ci si infilerebbe per riapparire altrove, in agguato. **Sigillalo**: Abilità del geniere sul tile del tunnel.",
+        "finish": "Completa la **ricognizione**: porta un soldato a 1 tile dalla **postazione radio** e dal **deposito**. Attento ai VC sopravvissuti."
+      }
+    },
+    "en": {
+      "name": "Training 4 — Combat engineers",
+      "description": "The Engineer: traps, demolitions, tunnels and artillery.",
+      "objectives": {
+        "recon": [{ "label": "Radio post" }, { "label": "Depot" }]
+      },
+      "tutorial": {
+        "intro": "The **Engineer** is the tool man. His **special ability** (once per turn, 1 AP) works on an adjacent tile: it **disarms** traps, **demolishes** bunkers and obstacles, **sets fire** to vegetation and **seals** VC tunnel entrances. He also carries the **radio** for artillery.\n\nObjective: **recon** the radio post and the depot beyond the wall (bring a soldier within 1 tile of each point).",
+        "trap": "The VC hide **traps** (punji and mines): whoever steps on one stops and gets hurt. Only the engineer spots them, when he gets **within 1 tile**. Bring the **Engineer** to the **marked tile**, at the start of the trail.",
+        "disarm": "Trap spotted! It's now marked on the map and movement routes around it. Disarm it: **Ability** (key **S**) and click the trap tile.",
+        "radio": "Two VC hold the **bunkers** to the north-east (cover 3!). Let's call in **artillery**: pick the Engineer's **Radio** card, click a bunker and confirm. The strike **lands at the start of next turn** and hits **everyone** in the area (your men too, hidden VC too): the area is marked in red.",
+        "endturn": "Keep your soldiers away from the red area and end the turn.",
+        "vcturn": "**VC turn**… then the artillery arrives.",
+        "demolish": "The **wall** blocks the trail (there's a long way round through the jungle to the south). Faster to blow it: bring the engineer next to the **marked tile** and use the **Ability** on it. It works on a **4+ on the die**: if it fails, try again next turn. The blast is noisy.",
+        "tunnel": "Beyond the wall the VC have dug a **tunnel**. Entrances are hidden: a soldier notices them from **1 tile**, the engineer from **2**. Move close to the **marked tile**.",
+        "seal": "Entrance found (🕳). A wounded VC would slip in and reappear elsewhere, in ambush. **Seal it**: the Engineer's Ability on the tunnel tile.",
+        "finish": "Finish the **recon**: bring a soldier within 1 tile of the **radio post** and the **depot**. Watch out for surviving VC."
+      }
+    }
+  }
+}

@@ -434,6 +434,7 @@ function firstAid(u) {
   u.ap = 0;
   u.firstAidUsed = true;
   statAdd("firstAid");
+  tutorialEvent("firstaid", { cls: u.cls });
   if (u.shaken && u.hp / u.maxHp >= SEVERE_WOUND_THRESHOLD) {
     u.shaken = false;
     log(t("log.unit_recovered", { name: u.name }), "success");
@@ -665,6 +666,7 @@ function revealTrapsAroundEngineers() {
     for (const trap of G.missionState.traps || []) {
       if (trap.revealed || dist(eng, trap) > 1) continue;
       trap.revealed = true;
+      tutorialEvent("trapFound", { col: trap.col, row: trap.row });
       addFX("spot", { col: trap.col, row: trap.row, kind: "trap" }, 1100);
       log(
         t("log.trap_revealed", {
@@ -735,6 +737,7 @@ function disarmTrap(engineer, trap) {
   removeTrap(trap);
   engineer.ap -= 1;
   engineer.specialUsed = true;
+  tutorialEvent("special", { cls: engineer.cls, kind: "disarm" });
   sfx("disarm");
   addFX("demolition", { col: trap.col, row: trap.row, success: true }, 1000);
   log(

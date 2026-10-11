@@ -9,6 +9,7 @@ async function handleSpecialAction(col, row) {
       ally.hp += healed;
       statAdd("medicHeal", healed);
       if (ally.bleeding) statAdd("bleedStopped");
+      tutorialEvent("special", { cls: u.cls, kind: "heal", bleeding: !!ally.bleeding });
       if (ally.shaken && ally.hp / ally.maxHp >= SEVERE_WOUND_THRESHOLD) {
         ally.shaken = false;
         log(t("log.unit_recovered", { name: ally.name }), "success");
@@ -95,6 +96,7 @@ async function handleSpecialAction(col, row) {
         "success",
       );
       makeNoise(target, FIRE_NOISE);
+      tutorialEvent("special", { cls: u.cls, kind: "burn" });
       _startTileAnimLoop();
       updateUI();
       render();
@@ -147,6 +149,7 @@ async function handleSpecialAction(col, row) {
     }
     // La carica esplode comunque, anche se il muro regge
     makeNoise(target, DEMOLITION_NOISE);
+    tutorialEvent("special", { cls: u.cls, kind: "demolish", col: target.col, row: target.row });
     updateUI();
     render();
   }
@@ -159,6 +162,7 @@ function confirmAoeAttack() {
   clearLastMove();
   u.ap -= 1;
   consumeShot(w);
+  tutorialEvent("aoe", { cls: u.cls, weapon: w.id });
   resolveAoeCombat(u, w, tc, tr, false);
   setActionMode(null);
   updateUI();

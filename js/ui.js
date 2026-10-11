@@ -160,6 +160,7 @@ document.getElementById("btn-special").addEventListener("click", () => {
     if (!G.suppressList.find((s) => s.id === u.id)) G.suppressList.push(u);
     sfx("overwatch");
     log(t("log.suppression_set", { name: u.name }), "system");
+    tutorialEvent("special", { cls: u.cls, kind: "suppression" });
     updateUI();
     render();
     return;
@@ -174,6 +175,7 @@ document.getElementById("btn-special").addEventListener("click", () => {
     if (!G.overwatchList.find((o) => o.id === u.id)) G.overwatchList.push(u);
     sfx("overwatch");
     log(t("log.overwatch_set", { name: u.name }), "system");
+    tutorialEvent("special", { cls: u.cls, kind: "overwatch" });
     updateUI();
     render();
     return;
@@ -248,6 +250,7 @@ function selectNextUnit(dir) {
       ? list[dir > 0 ? 0 : list.length - 1]
       : list[(cur + dir + list.length) % list.length];
   G.selectedUnit = next;
+  tutorialEvent("select", { cls: next.cls, col: next.col, row: next.row });
   setActionMode(null);
   updateUI();
 }

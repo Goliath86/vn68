@@ -1,0 +1,76 @@
+{
+  "name": "Training 1 — First steps",
+  "description": "Basic training: movement, facing, attacking and turns.",
+  "tileSize": 64,
+  "cols": 12,
+  "rows": 8,
+  "sounds": { "move": "assets/footsteps_jungle.mp3" },
+  "ambient": "missions/rung_sat_ambient.mp3",
+
+  "grid": [
+    "JJJJJJJJJJJJ",
+    "JJCCCCJJCCCJ",
+    "JCCCCCCCCCCJ",
+    "JCCJJCCCCVCJ",
+    "CCCJJTTTTTCJ",
+    "JCCCCCCCCCCJ",
+    "JJCCCCCCJJJJ",
+    "JJJJJJJJJJJJ"
+  ],
+
+  "squad": [{ "cls": "assault", "col": 0, "row": 4, "facing": 1 }],
+  "enemies": [
+    { "cls": "grunt", "col": 6, "row": 5, "facing": 1, "hold": true },
+    { "cls": "grunt", "col": 9, "row": 3, "facing": 0, "hold": true }
+  ],
+
+  "objectives": { "search_destroy": { "eliminateAll": true } },
+
+  "tutorial": {
+    "missionType": "search_destroy",
+    "steps": [
+      { "id": "intro", "until": "next" },
+      { "id": "select", "until": { "event": "select", "cls": "assault" }, "highlight": { "col": 0, "row": 4 } },
+      { "id": "move", "until": { "event": "move", "at": { "col": 2, "row": 5 } }, "highlight": { "col": 2, "row": 5 }, "ui": ["btn-move"] },
+      { "id": "rotate", "until": { "event": "rotate" }, "ui": ["btn-rotate"] },
+      { "id": "endturn", "until": { "event": "endTurn" }, "ui": ["btn-endturn"] },
+      { "id": "vcturn", "until": { "event": "turnStart" } },
+      { "id": "approach", "until": { "event": "move", "at": { "col": 6, "row": 5 }, "within": 3 }, "highlight": { "col": 3, "row": 5 }, "ui": ["btn-move"] },
+      { "id": "attack", "until": { "event": "attack" }, "ui": ["btn-attack"] },
+      { "id": "finish" }
+    ]
+  },
+
+  "translations": {
+    "it": {
+      "name": "Addestramento 1 — Primi passi",
+      "description": "Addestramento di base: movimento, orientamento, attacco e turni.",
+      "tutorial": {
+        "intro": "Benvenuto, soldato. Hai un solo uomo, un **Assalto** (il più resistente, fucile M16). Due sentinelle **VC** sorvegliano la zona: eliminale entrambe.\n\nLa parte scura della mappa è la **nebbia di guerra**: vedi solo ciò che i tuoi soldati vedono. Puoi trascinare la mappa col tasto destro (o col dito) e zoomare con la rotella.",
+        "select": "**Seleziona il tuo soldato**: clicca sulla sua pedina (il riquadro lampeggiante) oppure sulla sua scheda nel pannello Squadra. Il pannello dell'unità mostra punti vita (**HP**), punti azione (**AP**) e lo stato in piccole etichette.",
+        "move": "Ogni turno un soldato ha **3 AP**. Muoversi costa AP in base al terreno: **radura e sentiero 1 AP**, **giungla 2 AP**, palude 3.\n\nPremi **Muovi** (tasto **M**): i tile raggiungibili si colorano di verde. Poi clicca sul **tile indicato** dalla freccia gialla. Se sbagli, **↶ Annulla** (tasto **U**) rimette tutto com'era.",
+        "rotate": "Ogni pedina ha una **freccetta**: è la direzione in cui guarda. Si vede bene **davanti**, peggio sui **fianchi** e quasi niente **alle spalle**. Vale anche per i VC: arrivare da dietro è un grosso vantaggio.\n\nUna volta per turno puoi **ruotare gratis** (anche senza AP): premi l'icona **⟳** (tasto **R**) e clicca una delle frecce attorno al soldato. Giralo verso **est** (destra).",
+        "endturn": "Hai finito gli AP. Premi **Fine turno** (tasto **Invio**): tocca ai VC.",
+        "vcturn": "**Turno dei VC.** Le sentinelle restano al loro posto finché non si accorgono di te. Attendi…",
+        "approach": "Nuovo turno, AP pieni. Il tuo M16 ha **gittata 3**: avvicinati alla prima sentinella fino al **tile indicato**. Ti dà le spalle, quindi non ti vedrà arrivare.",
+        "attack": "Premi **Attacca** (tasto **A**): i nemici a tiro si colorano di rosso con la **probabilità di colpire** sopra. Clicca sul VC.\n\nIl colpo si risolve coi dadi: **2d6 + ATK** contro **DEF + copertura + 1d6**; la differenza è il danno. Colpendo **alle spalle** ottieni **+1 ATK** e il bersaglio non ha copertura. Con gli AP rimasti puoi sparare ancora.",
+        "finish": "Ottimo lavoro. Ora elimina **anche la seconda sentinella** (nel villaggio a nord-est). Avvicinati sfruttando la **giungla** (copertura 2) ed evita di farti vedere di fronte. Quando tutti i VC sono eliminati, la lezione è superata."
+      }
+    },
+    "en": {
+      "name": "Training 1 — First steps",
+      "description": "Basic training: movement, facing, attacking and turns.",
+      "tutorial": {
+        "intro": "Welcome, soldier. You have a single man, an **Assault** (the toughest, M16 rifle). Two **VC** sentries guard the area: take them both out.\n\nThe dark part of the map is the **fog of war**: you only see what your soldiers see. Drag the map with the right mouse button (or your finger) and zoom with the wheel.",
+        "select": "**Select your soldier**: click his counter (the flashing square) or his card in the Squad panel. The unit panel shows hit points (**HP**), action points (**AP**) and status chips.",
+        "move": "Each turn a soldier has **3 AP**. Moving costs AP depending on terrain: **clearing and trail 1 AP**, **jungle 2 AP**, swamp 3.\n\nPress **Move** (key **M**): reachable tiles turn green. Then click the **marked tile** under the yellow arrow. If you make a mistake, **↶ Undo** (key **U**) puts everything back.",
+        "rotate": "Every counter has a small **arrow**: the direction it faces. A soldier sees well **ahead**, worse on the **flanks** and almost nothing **behind**. The same goes for VC: coming from behind is a big advantage.\n\nOnce per turn you can **turn for free** (even with no AP): press the **⟳** icon (key **R**) and click one of the arrows around the soldier. Turn him to face **east** (right).",
+        "endturn": "You're out of AP. Press **End turn** (key **Enter**): it's the VC's move.",
+        "vcturn": "**VC turn.** The sentries stay put until they notice you. Wait…",
+        "approach": "New turn, full AP. Your M16 has **range 3**: move toward the first sentry up to the **marked tile**. He has his back to you, so he won't see you coming.",
+        "attack": "Press **Attack** (key **A**): enemies in range turn red with the **hit chance** above them. Click the VC.\n\nThe shot is resolved with dice: **2d6 + ATK** against **DEF + cover + 1d6**; the difference is the damage. Hitting **from behind** gives **+1 ATK** and the target gets no cover. With the AP you have left you can fire again.",
+        "finish": "Good work. Now take out **the second sentry too** (in the village to the north-east). Approach using the **jungle** (cover 2) and avoid being seen from the front. Once every VC is down, the lesson is complete."
+      }
+    }
+  }
+}

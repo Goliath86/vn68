@@ -281,6 +281,9 @@ function renderMap() {
     ctx.fillStyle = hpRatio > 0.5 ? "#44aa22" : "#cc4422";
     ctx.fillRect(x + 2, y + ts - 5, (ts - 4) * hpRatio, 3);
   }
+
+  // Tutorial: tile indicato dall'istruttore (tutorial.js)
+  drawTutorialMarker(ctx, ts);
 }
 
 // Ingresso di tunnel: botola scura con bordo di legno; sigillato: macerie e X

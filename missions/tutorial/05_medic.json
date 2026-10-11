@@ -1,0 +1,82 @@
+{
+  "name": "Training 5 — Blood and bandages",
+  "description": "The Medic: wounds, bleeding, panic, healing and first aid.",
+  "tileSize": 64,
+  "cols": 12,
+  "rows": 8,
+  "sounds": { "move": "assets/footsteps_jungle.mp3" },
+  "ambient": "missions/rung_sat_ambient.mp3",
+
+  "grid": [
+    "JJJJJJJJJJJJ",
+    "JCCCJJJCCCCJ",
+    "JCCCCTTTTPCJ",
+    "CCCCCTCCCCCJ",
+    "CCCJJTJJCCCJ",
+    "JCCCCTCCCCJJ",
+    "JJCCCCCCJJJJ",
+    "JJJJJJJJJJJJ"
+  ],
+
+  "squad": [
+    { "cls": "medic", "col": 1, "row": 3, "facing": 1 },
+    { "cls": "assault", "col": 1, "row": 4, "facing": 1, "hp": 5, "bleeding": true },
+    { "cls": "sniper", "col": 0, "row": 3, "facing": 1, "hp": 2, "bleeding": true }
+  ],
+  "enemies": [
+    { "cls": "grunt", "col": 9, "row": 5, "facing": 3 },
+    { "cls": "grunt", "col": 10, "row": 1, "facing": 3 }
+  ],
+
+  "objectives": {
+    "rescue_pilot": {
+      "pilotCol": 9,
+      "pilotRow": 2,
+      "extractCol": 0,
+      "extractRow": 4,
+      "tileAnimations": [{ "col": 9, "row": 2, "type": "smoke" }]
+    }
+  },
+
+  "tutorial": {
+    "missionType": "rescue_pilot",
+    "steps": [
+      { "id": "intro", "until": "next" },
+      { "id": "heal", "until": { "event": "special", "kind": "heal" }, "ui": ["btn-special"] },
+      { "id": "firstaid", "until": { "event": "firstaid" }, "ui": ["btn-firstaid"] },
+      { "id": "endturn", "until": { "event": "endTurn" }, "ui": ["btn-endturn"] },
+      { "id": "vcturn", "until": { "event": "turnStart" } },
+      { "id": "heal2", "until": { "event": "special", "kind": "heal" }, "fresh": true, "ui": ["btn-special"] },
+      { "id": "finish" }
+    ]
+  },
+
+  "translations": {
+    "it": {
+      "name": "Addestramento 5 — Sangue e bende",
+      "description": "Il medico: ferite, emorragia, panico, cure e primo soccorso.",
+      "tutorial": {
+        "intro": "Un'imboscata è andata male: l'**Assalto** e il **Cecchino** sono feriti e **sanguinano** (🩸 sulla pedina). Selezionali e guarda le etichette nel pannello unità:\n• **Ferito** (HP ≤ 60%): −1 ATK e +1 AP per ogni movimento.\n• **Grave/Scosso** (HP < 30%): −2 ATK, −1 AP e niente abilità speciale.\n• **Sanguina**: perde **1 HP all'inizio di ogni turno**, finché il medico non lo ferma. Si può morire dissanguati.",
+        "heal": "Seleziona il **Medico** e usa la sua **Abilità** (tasto **S**) su un compagno **adiacente**: **+3 HP**, **ferma l'emorragia** e, se torna sopra il 30%, gli fa passare il panico. Comincia dal più grave: il **Cecchino**.",
+        "firstaid": "Il medico cura una volta per turno. L'altro ferito può arrangiarsi col **🩹 Primo soccorso** (tasto **H**): **+2 HP**, una sola volta per missione, ma **consuma tutti gli AP** rimasti e **non ferma l'emorragia**. Seleziona l'**Assalto** e usalo.",
+        "endturn": "Termina il turno: osserva cosa succede a chi sanguina ancora.",
+        "vcturn": "**Turno dei VC.** All'inizio del tuo turno chi sanguina perde 1 HP…",
+        "heal2": "L'Assalto ha perso sangue. Ora il medico può curarlo di nuovo: **Abilità** su di lui (dev'essere adiacente) per fermare l'emorragia.",
+        "finish": "Squadra rimessa in sesto. Missione: **recupera il pilota** abbattuto (tile arancione col fumo a nord-est) portandoci un soldato, poi riportalo al **punto di estrazione** (a ovest). Due VC stanno convergendo sul pilota: muoviti con attenzione e tieni il medico vicino ai compagni."
+      }
+    },
+    "en": {
+      "name": "Training 5 — Blood and bandages",
+      "description": "The Medic: wounds, bleeding, panic, healing and first aid.",
+      "tutorial": {
+        "intro": "An ambush went wrong: the **Assault** and the **Sniper** are wounded and **bleeding** (🩸 on the counter). Select them and look at the chips in the unit panel:\n• **Wounded** (HP ≤ 60%): −1 ATK and +1 AP for every move.\n• **Badly hurt/Shaken** (HP < 30%): −2 ATK, −1 AP and no special ability.\n• **Bleeding**: loses **1 HP at the start of every turn** until the medic stops it. You can bleed to death.",
+        "heal": "Select the **Medic** and use his **Ability** (key **S**) on an **adjacent** teammate: **+3 HP**, it **stops the bleeding** and, if back above 30%, it ends the panic. Start with the worst case: the **Sniper**.",
+        "firstaid": "The medic heals once per turn. The other casualty can use **🩹 First aid** (key **H**): **+2 HP**, once per mission, but it **uses all remaining AP** and **doesn't stop the bleeding**. Select the **Assault** and use it.",
+        "endturn": "End the turn: watch what happens to whoever is still bleeding.",
+        "vcturn": "**VC turn.** At the start of your turn, whoever is bleeding loses 1 HP…",
+        "heal2": "The Assault has lost blood. Now the medic can heal him again: **Ability** on him (he must be adjacent) to stop the bleeding.",
+        "finish": "Squad patched up. Mission: **rescue the downed pilot** (the orange tile with smoke to the north-east) by bringing a soldier onto it, then take him back to the **extraction point** (to the west). Two VC are closing on the pilot: move carefully and keep the medic near your men."
+      }
+    }
+  }
+}

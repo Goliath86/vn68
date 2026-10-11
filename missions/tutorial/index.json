@@ -1,0 +1,89 @@
+{
+  "tileTypes": {
+    "J": { "id": "jungle", "label": "Giungla", "moveCost": 2, "coverBonus": 2, "color": "#2d5a1b", "losBlock": "partial", "burnable": true },
+    "S": { "id": "swamp", "label": "Palude", "moveCost": 3, "coverBonus": 1, "color": "#4a6741", "losBlock": "partial" },
+    "R": { "id": "river", "label": "Fiume", "moveCost": 0, "coverBonus": 0, "color": "#1a4d7a", "impassable": true },
+    "V": { "id": "village", "label": "Villaggio", "moveCost": 1, "coverBonus": 1, "color": "#8b6914", "losBlock": "partial", "burnable": true },
+    "C": { "id": "clearing", "label": "Radura", "moveCost": 1, "coverBonus": 0, "color": "#7a9e40" },
+    "T": { "id": "trail", "label": "Sentiero", "moveCost": 1, "coverBonus": 0, "color": "#a08060" },
+    "B": { "id": "bunker", "label": "Bunker VC", "moveCost": 1, "coverBonus": 3, "color": "#5a4a30", "demolishable": true, "demolishResult": "J", "losBlock": "full" },
+    "X": { "id": "obstacle", "label": "Ostacolo", "moveCost": 0, "coverBonus": 0, "color": "#333333", "impassable": true, "demolishable": true, "demolishResult": "C", "losBlock": "full" },
+    "F": { "id": "ford", "label": "Guado", "moveCost": 2, "coverBonus": 0, "color": "#2e7a9e" },
+    "O": { "id": "objective", "label": "Obiettivo", "moveCost": 1, "coverBonus": 0, "color": "#cc9900" },
+    "P": { "id": "pilot", "label": "Pilota abbattuto", "moveCost": 1, "coverBonus": 0, "color": "#cc6600" }
+  },
+  "tileLabels": {
+    "it": {
+      "jungle": "Giungla", "swamp": "Palude", "river": "Fiume", "village": "Villaggio",
+      "clearing": "Radura", "trail": "Sentiero", "bunker": "Bunker VC", "obstacle": "Ostacolo",
+      "ford": "Guado", "objective": "Obiettivo", "pilot": "Pilota abbattuto"
+    },
+    "en": {
+      "jungle": "Jungle", "swamp": "Swamp", "river": "River", "village": "Village",
+      "clearing": "Clearing", "trail": "Trail", "bunker": "VC Bunker", "obstacle": "Obstacle",
+      "ford": "Ford", "objective": "Objective", "pilot": "Downed Pilot"
+    }
+  },
+  "lessons": [
+    {
+      "id": "t1_basics",
+      "file": "01_basics.json",
+      "icon": "👣",
+      "classes": ["assault"],
+      "labels": {
+        "it": { "title": "Primi passi", "desc": "Selezione, movimento e punti azione, orientamento, attacco e turni. Classe: Assalto." },
+        "en": { "title": "First steps", "desc": "Selection, movement and action points, facing, attacking and turns. Class: Assault." }
+      }
+    },
+    {
+      "id": "t2_stealth",
+      "file": "02_stealth.json",
+      "icon": "🔪",
+      "classes": ["assault"],
+      "labels": {
+        "it": { "title": "Ombre nella giungla", "desc": "Postura, coni di vista dei VC, attacchi alle spalle, coltello silenzioso e rumore." },
+        "en": { "title": "Shadows in the jungle", "desc": "Stance, VC vision cones, rear attacks, the silent knife and noise." }
+      }
+    },
+    {
+      "id": "t3_sniper",
+      "file": "03_sniper.json",
+      "icon": "🎯",
+      "classes": ["sniper"],
+      "labels": {
+        "it": { "title": "Occhio di falco", "desc": "Il cecchino: gittata e penalità, un colpo per turno, ricarica e overwatch." },
+        "en": { "title": "Hawk eye", "desc": "The Sniper: range and penalty, one shot per turn, reloading and overwatch." }
+      }
+    },
+    {
+      "id": "t4_engineer",
+      "file": "04_engineer.json",
+      "icon": "🧨",
+      "classes": ["engineer", "assault"],
+      "labels": {
+        "it": { "title": "Genio militare", "desc": "Il geniere: trappole, demolizioni, tunnel VC e artiglieria via radio." },
+        "en": { "title": "Combat engineers", "desc": "The Engineer: traps, demolitions, VC tunnels and radio artillery." }
+      }
+    },
+    {
+      "id": "t5_medic",
+      "file": "05_medic.json",
+      "icon": "🩹",
+      "classes": ["medic", "assault", "sniper"],
+      "labels": {
+        "it": { "title": "Sangue e bende", "desc": "Il medico: ferite, emorragia, panico, cure e primo soccorso. Missione: recupero pilota." },
+        "en": { "title": "Blood and bandages", "desc": "The Medic: wounds, bleeding, panic, healing and first aid. Mission: pilot rescue." }
+      }
+    },
+    {
+      "id": "t6_combined",
+      "file": "06_combined.json",
+      "icon": "⭐",
+      "classes": ["assault", "sniper", "engineer", "medic"],
+      "labels": {
+        "it": { "title": "Operazione congiunta", "desc": "Squadra completa: fuoco soppressivo, granate, linea di tiro e le tattiche dei VC." },
+        "en": { "title": "Joint operation", "desc": "Full squad: suppressive fire, grenades, line of fire and VC tactics." }
+      }
+    }
+  ]
+}

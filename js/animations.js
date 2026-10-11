@@ -49,7 +49,12 @@ function _unitsPulsing() {
 }
 
 function _needsAnimLoop() {
-  return _getTileAnims().length > 0 || _unitsPulsing();
+  return (
+    _getTileAnims().length > 0 ||
+    _unitsPulsing() ||
+    // Tile evidenziato dall'istruttore del tutorial (lampeggia)
+    (tutorialActive() && !!currentTutorialStep()?.highlight)
+  );
 }
 
 function _startTileAnimLoop() {

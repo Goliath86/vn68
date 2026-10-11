@@ -55,6 +55,19 @@
     "attack_with": "Attacca · {weapon}"
   },
 
+  "tutorial": {
+    "title": "ADDESTRAMENTO",
+    "subtitle": "Lezioni guidate: ognuna presenta una classe e alcune meccaniche. Segui le istruzioni dell'istruttore in alto sulla mappa.",
+    "start": "▶ INIZIA LEZIONE",
+    "back": "← Torna alle mappe",
+    "instructor": "ISTRUTTORE",
+    "step": "Passo {n}/{total}",
+    "next": "Avanti ▸",
+    "hide": "Riduci",
+    "show": "Mostra",
+    "next_lesson": "▶ Lezione successiva: {title}"
+  },
+
   "stats": {
     "copy": "📋 Copia statistiche",
     "copied": "✓ Copiate negli appunti",

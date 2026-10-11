@@ -1,0 +1,74 @@
+{
+  "name": "Training 3 — Hawk eye",
+  "description": "The Sniper: range, reloading and overwatch.",
+  "tileSize": 64,
+  "cols": 12,
+  "rows": 8,
+  "sounds": { "move": "assets/footsteps_jungle.mp3" },
+  "ambient": "missions/rung_sat_ambient.mp3",
+
+  "grid": [
+    "JJJJJJJJJJJJ",
+    "JJCCCCCJJJJJ",
+    "JJCCCCCCJJVJ",
+    "JJCCCCCCCJJJ",
+    "JJCCCCCCCCJJ",
+    "JJCCCCCCCJJJ",
+    "JJJCCCCCJJJJ",
+    "JJJJJJJJJJJJ"
+  ],
+
+  "squad": [{ "cls": "sniper", "col": 1, "row": 4, "facing": 1 }],
+  "enemies": [
+    { "cls": "grunt", "col": 4, "row": 3, "facing": 0, "hold": true },
+    { "cls": "grunt", "col": 7, "row": 5, "facing": 3, "hold": true },
+    { "cls": "grunt", "col": 10, "row": 2, "facing": 3, "hold": true }
+  ],
+
+  "objectives": { "search_destroy": { "eliminateAll": true } },
+
+  "tutorial": {
+    "missionType": "search_destroy",
+    "steps": [
+      { "id": "intro", "until": "next" },
+      { "id": "shoot", "until": { "event": "attack", "cls": "sniper" }, "ui": ["btn-attack"] },
+      { "id": "reload", "until": { "event": "reload" }, "ui": ["weapon-bar"] },
+      { "id": "crouch", "until": { "event": "stance", "stance": ["crouch", "prone"] }, "ui": ["btn-stance"] },
+      { "id": "overwatch", "until": { "event": "special", "kind": "overwatch" }, "ui": ["btn-special"] },
+      { "id": "endturn", "until": { "event": "endTurn" }, "ui": ["btn-endturn"] },
+      { "id": "vcturn", "until": { "event": "turnStart" } },
+      { "id": "finish" }
+    ]
+  },
+
+  "translations": {
+    "it": {
+      "name": "Addestramento 3 — Occhio di falco",
+      "description": "Il cecchino: gittata, ricarica e overwatch.",
+      "tutorial": {
+        "intro": "Questa volta comandi un **Cecchino**: pochi HP (7) e nessuna difesa, ma vede lontano (**6 tile**) e ha l'**M14**, ATK 4 e **gittata 6**.\n\nRegole del fucile di precisione: **−1 ATK ogni 2 tile** di distanza oltre il primo, **un solo colpo per turno**, e il caricatore ha **1 colpo**: dopo ogni sparo va ricaricato. Sei nascosto nella giungla al margine della radura.",
+        "shoot": "Spara alla sentinella più vicina: **Attacca** e clicca sul VC. Guarda la **percentuale**: tiene già conto della penalità di distanza (nel log trovi il calcolo). Lo sparo fa **molto rumore** (raggio 7): gli altri VC vicini verranno a cercarti.",
+        "reload": "Il caricatore è vuoto: la **scheda dell'M14** è diventata rossa e dice **🔄 Ricarica**. Cliccala (o tasto **L**): costa **1 AP** e consuma uno dei caricatori di riserva (+10).",
+        "crouch": "Abbassati: **accucciato** hai +1 ATK anche in overwatch e +1 DEF; **sdraiato** +2 DEF ma vedi 2 tile in meno. Per l'overwatch serve vedere lontano: scegli **Accucciato**.",
+        "overwatch": "Ora l'abilità del cecchino: **Overwatch** (bottone **Abilità**, tasto **S**). Durante il turno VC sparerà **una volta**, con **+1 ATK**, al primo nemico che si muove nel suo **cono frontale** (tratteggiato sulla mappa). Serve un **colpo in canna**: per questo hai ricaricato.",
+        "endturn": "Termina il turno e guarda l'overwatch in azione.",
+        "vcturn": "**Turno dei VC.** Chi ha sentito lo sparo avanza verso di te: se entra nel cono, l'overwatch fa fuoco…",
+        "finish": "Elimina **tutti i VC**. Ricorda il ritmo del cecchino: spara, ricarica, e quando non hai bersagli metti l'overwatch. Se un VC ti arriva troppo vicino, hai sempre il **coltello**."
+      }
+    },
+    "en": {
+      "name": "Training 3 — Hawk eye",
+      "description": "The Sniper: range, reloading and overwatch.",
+      "tutorial": {
+        "intro": "This time you command a **Sniper**: few HP (7) and no defense, but he sees far (**6 tiles**) and carries the **M14**, ATK 4 and **range 6**.\n\nPrecision rifle rules: **−1 ATK every 2 tiles** of distance beyond the first, **one shot per turn**, and the magazine holds **1 round**: it must be reloaded after every shot. You're hidden in the jungle at the edge of the clearing.",
+        "shoot": "Shoot the nearest sentry: **Attack** and click the VC. Look at the **percentage**: it already includes the range penalty (the log shows the math). The shot is **very loud** (radius 7): other nearby VC will come looking for you.",
+        "reload": "The magazine is empty: the **M14 card** turned red and reads **🔄 Reload**. Click it (or key **L**): it costs **1 AP** and uses one of the spare magazines (+10).",
+        "crouch": "Get low: **crouched** you get +1 ATK, overwatch included, and +1 DEF; **prone** +2 DEF but you see 2 tiles less. Overwatch needs to see far: choose **Crouched**.",
+        "overwatch": "Now the sniper's ability: **Overwatch** (the **Ability** button, key **S**). During the VC turn he'll fire **once**, with **+1 ATK**, at the first enemy moving in his **front cone** (dashed on the map). It needs a **round chambered**: that's why you reloaded.",
+        "endturn": "End the turn and watch overwatch in action.",
+        "vcturn": "**VC turn.** Whoever heard the shot advances toward you: if they enter the cone, overwatch opens fire…",
+        "finish": "Take out **every VC**. Remember the sniper's rhythm: shoot, reload, and when there's no target set overwatch. If a VC gets too close, you always have the **knife**."
+      }
+    }
+  }
+}
