@@ -16,7 +16,7 @@ const G = {
   missionState: {}, // stato specifico missione
   diceQueue: null, // { resolve, context } per i lanci manuali
   pendingDice: null,
-  actionMode: null, // 'move' | 'attack' | 'weapon_select' | 'aoe_confirm' | 'special'
+  actionMode: null, // 'move' | 'attack' | 'weapon_select' | 'aoe_confirm' | 'special' | 'rotate' | 'stance'
   currentWeapon: null, // arma attiva durante l'azione corrente
   pendingAoe: null, // { col, row, weapon } — AoE in attesa di conferma
   lastMove: null, // { unit, fromCol, fromRow, prevAp } — ultimo movimento annullabile

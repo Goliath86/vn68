@@ -28,14 +28,17 @@ async function resolveCombat(
   // Orientamento del bersaglio: dal lato copertura dimezzata, alle spalle
   // copertura nulla e +1 ATK (vale per entrambe le parti)
   const sector = facingSector(defender, attacker);
+  // Postura: bonus ATK di chi spara (US) e DEF di chi è bersagliato (US)
   const atkVal =
     Math.max(1, (weapon?.atk ?? atkDef.attack) - rangePenalty) +
-    rearAttackBonus(attacker, defender);
+    rearAttackBonus(attacker, defender) +
+    stanceAttackBonus(attacker, weapon);
   const defCover = effectiveCover(attacker, defender);
   if (sector !== "front")
     log(t(`log.attack_${sector}`, { name: defender.name }), "combat");
   const defStat = isEnemy
-    ? (UNIT_CLASSES[defender.cls]?.defense ?? 1)
+    ? (UNIT_CLASSES[defender.cls]?.defense ?? 1) +
+      stanceDefenseBonus(defender, attacker)
     : getEnemyStats(defender).defense;
   const defVal = defStat + defCover;
 
@@ -170,7 +173,9 @@ async function resolveCombat(
   if (!isEnemy) {
     // Il VC bersagliato si allerta sempre; lo sparo allerta chi lo sente
     alertVcToward(defender, attacker);
-    makeNoise(attacker, weaponNoise(attacker, weapon ?? unitFireWeapon(attacker)));
+    const noise = weaponNoise(attacker, weapon ?? unitFireWeapon(attacker));
+    makeNoise(attacker, noise);
+    revealShooter(attacker, noise);
   }
 
   updateUI();
@@ -221,7 +226,9 @@ function attackOdds(attacker, defender, weapon) {
     Math.max(
       1,
       (weapon?.atk ?? def.attack) - weaponRangePenalty(attacker, weapon, range),
-    ) + rearAttackBonus(attacker, defender);
+    ) +
+    rearAttackBonus(attacker, defender) +
+    stanceAttackBonus(attacker, weapon);
   const defVal =
     getEnemyStats(defender).defense + effectiveCover(attacker, defender);
   let hits = 0,
@@ -276,9 +283,12 @@ async function resolveAoeCombat(
 
   sfxShoot(attacker.cls, weapon);
   addFX("explosion", { col: tc, row: tr, aoe: weapon.aoe }, 1300);
-  // Esplosione US: il rumore parte dal punto d'impatto
-  if (!isEnemyAttacking)
-    makeNoise({ col: tc, row: tr }, weaponNoise(attacker, weapon));
+  // Esplosione US: il rumore parte dal punto d'impatto (e il lancio svela chi lancia)
+  if (!isEnemyAttacking) {
+    const noise = weaponNoise(attacker, weapon);
+    makeNoise({ col: tc, row: tr }, noise);
+    revealShooter(attacker, noise);
+  }
 
   if (!defenders.length) {
     log(
@@ -307,7 +317,7 @@ async function resolveAoeCombat(
     const isUS = G.units.includes(def);
     const defCover = coverBonus(def.col, def.row);
     const defStat = isUS
-      ? (UNIT_CLASSES[def.cls]?.defense ?? 1)
+      ? (UNIT_CLASSES[def.cls]?.defense ?? 1) + stanceAoeDefenseBonus(def)
       : getEnemyStats(def).defense;
     const defDice = rollD6();
     const save = defStat + defCover + defDice;

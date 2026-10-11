@@ -13,16 +13,19 @@ async function moveUnit(unit, toCol, toRow, apCost) {
   const prevAp = unit.ap;
   const prevFacing = unit.facing;
   const prevRotated = unit.rotated;
+  const prevStance = unit.stance;
+  const prevStanceChanged = unit.stanceChanged;
   const seenBefore = visibleEnemyIds();
   const missionBefore = JSON.stringify(G.missionState);
   G.lastMove = null;
 
   // Trappola nascosta lungo il percorso: il movimento si ferma lì
+  // (il sovraccosto della postura si paga comunque)
   const trapHit = hiddenTrapOnPath(unit, toCol, toRow);
   if (trapHit) {
     toCol = trapHit.col;
     toRow = trapHit.row;
-    apCost = Math.min(apCost, trapHit.cost);
+    apCost = Math.min(apCost, trapHit.cost + (unitStance(unit).moveExtra || 0));
   }
 
   unit.col = toCol;
@@ -98,7 +101,16 @@ async function moveUnit(unit, toCol, toRow, apCost) {
     !revealed &&
     JSON.stringify(G.missionState) === missionBefore
   ) {
-    G.lastMove = { unit, fromCol, fromRow, prevAp, prevFacing, prevRotated };
+    G.lastMove = {
+      unit,
+      fromCol,
+      fromRow,
+      prevAp,
+      prevFacing,
+      prevRotated,
+      prevStance,
+      prevStanceChanged,
+    };
   }
 
   updateUI();
@@ -132,13 +144,24 @@ function canUndoMove() {
 
 function undoLastMove() {
   if (!canUndoMove()) return;
-  const { unit, fromCol, fromRow, prevAp, prevFacing, prevRotated } = G.lastMove;
+  const {
+    unit,
+    fromCol,
+    fromRow,
+    prevAp,
+    prevFacing,
+    prevRotated,
+    prevStance,
+    prevStanceChanged,
+  } = G.lastMove;
   G.lastMove = null;
   unit.col = fromCol;
   unit.row = fromRow;
-  // Anche una rotazione fatta dopo il movimento viene annullata
+  // Anche una rotazione o un cambio postura fatti dopo il movimento vengono annullati
   unit.facing = prevFacing;
   unit.rotated = prevRotated;
+  unit.stance = prevStance;
+  unit.stanceChanged = prevStanceChanged;
   // L'animazione lascia vx/vy sulla destinazione: senza reset il render userebbe quelle
   delete unit.vx;
   delete unit.vy;

@@ -1,6 +1,8 @@
 async function runEnemyTurn() {
   log(t("log.vc_turn_start"), "turn");
   const liveEnemies = G.enemies.filter((e) => e.alive);
+  // Tiri di avvistamento delle unità occultate: uno per coppia VC/unità per turno
+  G.vcSpotRolls = {};
 
   // Reset AP nemici
   liveEnemies.forEach((e) => {
@@ -75,11 +77,15 @@ async function runEnemyTurn() {
       u.ap = u.shaken ? AP_PER_TURN - 1 : AP_PER_TURN;
       u.specialUsed = false;
       u.rotated = false;
+      u.stanceChanged = false;
       if (u.needReload) u.needReload = false;
       if (u.hasShot) u.needReload = true;
       u.hasShot = false;
     }
+    // Posizione svelata (spari, avvistamenti): torna nascosta
+    u.exposed = false;
   });
+  G.vcSpotRolls = {};
 
   // Colpi d'artiglieria richiesti nel turno precedente: cadono ora
   await resolveArtillery();
@@ -96,7 +102,7 @@ async function runEnemyTurn() {
       const range = getEnemyStats(e).range;
       for (const u of G.units.filter((u) => u.alive)) {
         const penalty = losRangePenalty(e.col, e.row, u.col, u.row);
-        if (dist(e, u) + penalty <= range)
+        if (dist(e, u) + penalty <= range && vcDetects(e, u))
           pairs.push({ ambusher: e, target: u });
       }
     }
@@ -266,9 +272,11 @@ async function sniperReposition(enemy, stats, range) {
 // senza avvicinarsi troppo; dopo ogni colpo salta un turno per ricaricare
 async function sniperActivation(enemy, stats) {
   const range = vcEffRange(enemy, stats);
-  let target = nearestLiveUnit(enemy);
+  // Spara solo a chi ha individuato (le unità occultate possono sfuggirgli)
+  let target = nearestDetectedUnit(enemy);
 
   if (
+    target &&
     vcCanShoot(enemy) &&
     enemy.ap >= 1 &&
     dist(enemy, target) <= range &&
@@ -286,7 +294,7 @@ async function sniperActivation(enemy, stats) {
   if (!enemy.alive || enemy.ap < 1) return;
   await sniperReposition(enemy, stats, range);
 
-  target = nearestLiveUnit(enemy);
+  target = nearestDetectedUnit(enemy);
   if (
     enemy.alive &&
     target &&
@@ -310,14 +318,14 @@ async function enemyActivation(enemy) {
     (best, u) => (dist(enemy, u) < dist(enemy, best) ? u : best),
     liveUnits[0],
   );
-  const d = dist(enemy, target);
   const stats = getEnemyStats(enemy);
 
-  // Allerta se un'unità US è a distanza visiva (ridotta di notte e se
-  // arriva dal lato o dalle spalle del VC)
+  // Allerta se un'unità US è a distanza visiva (ridotta di notte, se
+  // arriva dal lato o dalle spalle del VC e dalla postura) e, se occultata,
+  // se il VC supera il tiro di avvistamento
   // TODO: check LOS between enemy and target
   const spotted = liveUnits.find(
-    (u) => dist(enemy, u) <= vcAlertDistanceFrom(enemy, u),
+    (u) => dist(enemy, u) <= vcAlertDistanceFrom(enemy, u) && vcDetects(enemy, u),
   );
   if (spotted && !enemy.alerted) {
     enemy.alerted = true;
@@ -334,9 +342,14 @@ async function enemyActivation(enemy) {
   } else if (enemy.alerted) {
     // Gittata effettiva: considera tutte le armi disponibili
     const effRange = vcEffRange(enemy, stats);
+    // Bersaglio: il più vicino tra quelli individuati; se nessuno è
+    // individuato il VC avanza verso la squadra senza sparare
+    const seen = nearestDetectedUnit(enemy);
+    if (seen) target = seen;
+    const d = dist(enemy, target);
 
     // Se in gittata (con qualsiasi arma) e senza fumo in mezzo: attacca
-    if (d <= effRange && enemy.ap >= 1 && !smokeBlocks(enemy, target)) {
+    if (seen && d <= effRange && enemy.ap >= 1 && !smokeBlocks(enemy, target)) {
       checkOverwatch(enemy);
       checkSuppression(enemy);
       if (enemy.ap >= 1) {
@@ -393,15 +406,17 @@ async function enemyActivation(enemy) {
           checkOverwatch(enemy);
           checkSuppression(enemy);
 
-          // Attacca se ora in gittata (con qualsiasi arma)
+          // Attacca se ora in gittata (con qualsiasi arma) un'unità individuata
           const newEffRange = vcEffRange(enemy, stats);
+          const fireAt = enemy.alive ? nearestDetectedUnit(enemy) : null;
 
           if (
-            dist(enemy, target) <= newEffRange &&
+            fireAt &&
+            dist(enemy, fireAt) <= newEffRange &&
             enemy.ap >= 1 &&
-            !smokeBlocks(enemy, target)
+            !smokeBlocks(enemy, fireAt)
           ) {
-            await vcShoot(enemy, target, "log.vc_fire");
+            await vcShoot(enemy, fireAt, "log.vc_fire");
           }
         }
       }

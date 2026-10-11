@@ -192,9 +192,27 @@ function renderMap() {
     ctx.fillStyle = isDone ? "rgba(55,68,38,0.72)" : "rgba(38,58,20,0.72)";
     ctx.fillRect(x + ts * 0.11, y + ts * 0.11, ts * 0.78, ts * 0.78);
 
-    // Sprite personaggio
+    // Sprite personaggio: schiacciato verso il basso secondo la postura
+    const squash = STANCE_SQUASH[u.stance];
+    if (squash) {
+      const cx = x + ts * 0.5,
+        by = y + ts * 0.89;
+      ctx.save();
+      ctx.translate(cx, by);
+      ctx.scale(squash[0], squash[1]);
+      ctx.translate(-cx, -by);
+    }
     drawUnitSprite(ctx, x, y, ts, u.cls, isDone, false);
+    if (squash) ctx.restore();
     drawFacingMarker(ctx, x, y, ts, u.facing, isSelected ? "#f0c030" : "#e8e0b0");
+
+    // Occultamento: 🌿 nascosto ai VC, 👁 posizione svelata (sparo/avvistamento)
+    if (u.stance && u.stance !== "stand" && isConcealingTile(u.col, u.row)) {
+      ctx.font = `${Math.max(8, Math.round(ts * 0.22))}px serif`;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(u.exposed ? "👁" : "🌿", x + 3, y + 3);
+    }
 
     // Bordo selezione
     if (isSelected) {
@@ -250,6 +268,9 @@ function renderMap() {
     ctx.fillRect(x + 2, y + ts - 5, (ts - 4) * hpRatio, 3);
   }
 }
+
+// Scala [x, y] dello sprite per postura (ancorata ai piedi)
+const STANCE_SQUASH = { crouch: [1, 0.8], prone: [1.12, 0.56] };
 
 // Freccia sul bordo del tile nella direzione in cui guarda l'unità
 function drawFacingMarker(ctx, x, y, ts, facing, color) {

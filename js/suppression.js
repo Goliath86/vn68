@@ -40,7 +40,9 @@ function checkSuppression(enemy) {
 
       sfxShoot(sup.cls, unitWeapon(sup));
       alertVcToward(enemy, sup);
-      makeNoise(sup, weaponNoise(sup, unitFireWeapon(sup)));
+      const noise = weaponNoise(sup, unitFireWeapon(sup));
+      makeNoise(sup, noise);
+      revealShooter(sup, noise);
       break;
     }
   }

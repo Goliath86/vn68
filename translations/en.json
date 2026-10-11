@@ -41,7 +41,21 @@
     "end_turn_mobile": "End",
     "undo_move": "↶ Undo move",
     "rotate": "⟳ Turn (free)",
-    "rotate_mobile": "Turn"
+    "rotate_mobile": "Turn",
+    "stance": "🧍 Stance",
+    "stance_with": "{icon} Stance: {label}",
+    "stance_mobile": "Stance"
+  },
+
+  "stances": {
+    "stand": "Standing",
+    "crouch": "Crouched",
+    "prone": "Prone",
+    "crawl": "crawl 1 tile (+1AP)",
+    "no_mods": "no modifiers, full movement",
+    "pick_prompt": "Choose a stance ({cost}):",
+    "cost_free": "free",
+    "cost_ap": "{n} AP"
   },
 
   "directions": {
@@ -111,6 +125,8 @@
       "in_overwatch": "🔭 IN OVERWATCH",
       "in_suppression": "🔥 SUPPRESSIVE FIRE",
       "shaken": "⚠ SHAKEN — -1AP, no special ability",
+      "concealed": "🌿 Concealed",
+      "exposed": "👁 Position revealed",
       "special_used": "Ability used",
       "special_available": "Spec: {label}",
       "shot_used": "Shot fired (1 shot/turn)",
@@ -230,6 +246,9 @@
     "attack_side": "{name} hit from the SIDE — cover halved",
     "attack_rear": "{name} hit from BEHIND — no cover, +1 ATK",
     "unit_rotate": "{name} turns to face {dir}",
+    "stance_change": "{name}: stance {stance}",
+    "stance_spotted": "👁 {name} has been spotted by the VC!",
+    "stance_unnoticed": "🌿 {vc} doesn't notice {name}",
     "noise_alert": "The noise alerts {count} VC in sight",
     "night_mission": "Night mission: reduced visibility for both sides",
     "trap_triggered": "{name} triggers a trap ({trap})! -{dmg}HP",
@@ -290,7 +309,8 @@
   "unit_panel": {
     "stats": "{class} · ATK {atk} · DEF {def} · RNG {rng}",
     "status": "HP {hp}/{maxHp} · AP {ap}/{maxAp} · ({col},{row})",
-    "tile": "Tile: {label}"
+    "tile": "Tile: {label}",
+    "stance": "Stance: {icon} {label}"
   },
 
   "ui": {

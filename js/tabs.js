@@ -33,7 +33,7 @@ document
   .addEventListener("click", collapseSheet);
 
 // Bottoni quick bar → delegano ai corrispondenti desktop
-["move", "attack", "special", "rotate", "endturn"].forEach((action) => {
+["move", "attack", "special", "rotate", "stance", "endturn"].forEach((action) => {
   document.getElementById("qb-" + action).addEventListener("click", () => {
     document.getElementById("btn-" + action).click();
   });
@@ -62,6 +62,15 @@ function updateQuickWeaponsBar(u) {
 </button>`;
     });
     html += cancelBtn;
+  } else if (G.actionMode === "stance" && u) {
+    const cur = u.stance || "stand";
+    STANCE_ORDER.forEach((s) => {
+      html += `<button class="btn qwb-btn" ${s === cur ? "disabled" : ""} data-stance="${s}">
+<span class="qwb-name">${STANCE_ICONS[s]} ${t(`stances.${s}`)}</span>
+<span class="qwb-stats">${stanceSummary(s)}</span>
+</button>`;
+    });
+    html += cancelBtn;
   } else if (G.actionMode === "aoe_confirm" && G.pendingAoe) {
     const w = G.pendingAoe.weapon;
     html = `<button class="btn btn-attack qwb-btn" data-qwb="confirm">
@@ -87,6 +96,7 @@ function updateQuickWeaponsBar(u) {
       }
     });
   });
+  bindStanceButtons(bar);
   bar.querySelector('[data-qwb="confirm"]')?.addEventListener("click", () => {
     sfx("click");
     confirmAoeAttack();
@@ -95,6 +105,27 @@ function updateQuickWeaponsBar(u) {
     sfx("click");
     setActionMode(null);
     updateUI();
+  });
+}
+
+// Modificatori di una postura in breve, es. "ATK+1 · DEF+1 · VIS−1 · MOV+1AP"
+function stanceSummary(stance) {
+  const s = STANCES[stance];
+  const parts = [];
+  if (s.atk) parts.push(`ATK+${s.atk}`);
+  if (s.def) parts.push(`DEF+${s.def}`);
+  if (s.vision) parts.push(`VIS−${s.vision}`);
+  if (s.crawl) parts.push(t("stances.crawl"));
+  else if (s.moveExtra) parts.push(`MOV+${s.moveExtra}AP`);
+  return parts.length ? parts.join(" · ") : t("stances.no_mods");
+}
+
+function bindStanceButtons(root) {
+  root.querySelectorAll("[data-stance]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+      changeStance(G.selectedUnit, btn.dataset.stance);
+    });
   });
 }
 
@@ -125,6 +156,7 @@ function updateActionButtons() {
     ["btn-attack", "mob-btn-attack"],
     ["btn-special", "mob-btn-special"],
     ["btn-rotate", "mob-btn-rotate"],
+    ["btn-stance", "mob-btn-stance"],
     ["btn-endturn", "mob-btn-endturn"],
     //["btn-dice", "mob-btn-dice"],
   ];
@@ -167,6 +199,21 @@ function updateActionButtons() {
         el.style.borderColor = hasRM ? "var(--highlight)" : "";
       }
 
+      // Postura: primo cambio del turno gratuito, poi 1 AP
+      if (id.includes("stance")) {
+        const cur = (hasUnit && u.stance) || "stand";
+        el.disabled =
+          !canChangeStance(u) ||
+          G.actionMode === "weapon_select" ||
+          G.actionMode === "aoe_confirm";
+        el.style.borderColor =
+          G.actionMode === "stance" ? "var(--highlight)" : "";
+        el.textContent = t("buttons.stance_with", {
+          icon: STANCE_ICONS[cur],
+          label: t(`stances.${cur}`),
+        });
+      }
+
       if (id.includes("endturn")) {
         el.disabled =
           !isPlayer || !!G.pendingDice || G.actionMode === "aoe_confirm";
@@ -193,12 +240,16 @@ function updateActionButtons() {
     ["btn-attack", "qb-attack"],
     ["btn-special", "qb-special"],
     ["btn-rotate", "qb-rotate"],
+    ["btn-stance", "qb-stance"],
     ["btn-endturn", "qb-endturn"],
   ].forEach(([src, dst]) => {
     const s = document.getElementById(src),
       d = document.getElementById(dst);
     if (s && d) d.disabled = s.disabled;
   });
+  const qbStanceIcon = document.getElementById("qb-stance-icon");
+  if (qbStanceIcon)
+    qbStanceIcon.textContent = STANCE_ICONS[(hasUnit && u.stance) || "stand"];
 
   updateQuickWeaponsBar(hasUnit ? u : null);
 
@@ -234,6 +285,22 @@ function updateActionButtons() {
           }
         });
       });
+    });
+  } else if (G.actionMode === "stance" && hasUnit) {
+    const cur = u.stance || "stand";
+    const cost = stanceChangeCost(u);
+    let html = `<div style="font-size:10px;color:var(--paper-dark);margin-bottom:3px">${t(
+      "stances.pick_prompt",
+      { cost: cost ? t("stances.cost_ap", { n: cost }) : t("stances.cost_free") },
+    )}</div>`;
+    STANCE_ORDER.forEach((s) => {
+      html += `<button class="btn btn-weapon" ${s === cur ? "disabled" : ""} data-stance="${s}">${STANCE_ICONS[s]} ${t(`stances.${s}`)} · ${stanceSummary(s)}</button>`;
+    });
+    [pickerEl, mobPickerEl].forEach((el) => {
+      if (!el) return;
+      el.innerHTML = html;
+      el.style.display = "flex";
+      bindStanceButtons(el);
     });
   } else if (G.actionMode === "aoe_confirm" && G.pendingAoe) {
     const w = G.pendingAoe.weapon;

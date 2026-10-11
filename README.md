@@ -275,6 +275,19 @@ Esempi pratici:
 - **Overwatch e fuoco soppressivo direzionali:** l'overwatch del cecchino copre solo il **cono frontale** (fino alla gittata), ma spara con **+1 ATK**; il fuoco soppressivo dell'assalto copre **fronte e fianchi**, non le spalle, e solo in linea di vista. Le aree coperte sono tratteggiate sulla mappa: conviene ruotare il soldato dopo averli attivati.
 - **Rumore:** ogni azione rumorosa della squadra allerta i VC entro un raggio (in tile, attraverso qualsiasi terreno), che si girano verso la fonte; il VC bersagliato si allerta sempre. Raggi: M1911 **2**, M16 **5**, M14 **7**, granata **6**, fumogeno **1**, artiglieria **8**, demolizione **6**, incendio **2**; armi dirette, overwatch e fuoco soppressivo dal tiratore, esplosioni dal punto d'impatto. In modalità attacco il contorno grigio puntinato mostra il raggio dell'arma scelta (🔊 nel selettore armi). Gli spari dei VC non allertano altri VC. Il log segnala solo i VC allertati in vista.
 - **Coltello (arma bianca):** tutti i soldati hanno un coltello (ATK 2, gittata 1, rumore **0**), scelto dal selettore armi come le altre. Si usa sui tile adiacenti in orizzontale/verticale con la normale formula d'attacco: alle spalle di un VC (+1 ATK, copertura nulla) permette di eliminarlo senza allertare nessuno, oltre al VC colpito. Se il colpo **uccide** il nemico il soldato **avanza nel suo tile** gratis (0 AP, non annullabile; si ferma su un'eventuale trappola come un normale movimento): utile per strappare una posizione coperta. Il coltello non conta come sparo per il cecchino ed è utilizzabile anche dopo il colpo o durante la ricarica del fucile; non viene usato in overwatch né nel fuoco soppressivo.
+- **Postura (🧍 in piedi / 🧎 accucciato / 🐍 sdraiato):** bottone **Postura** (tasto **C**). Il primo cambio del turno è gratuito, i successivi costano 1 AP; annullare un movimento annulla anche il cambio fatto dopo.
+
+  | | In piedi | Accucciato | Sdraiato |
+  |---|---|---|---|
+  | ATK fuoco diretto (anche overwatch, non il coltello) | — | +1 | +1 |
+  | DEF contro il fuoco diretto | — | +1 | +2 (solo +1 da distanza 1) |
+  | DEF contro esplosioni | — | — | +1 |
+  | Visione | — | −1 | −2 |
+  | Distanza a cui i VC si accorgono di te | — | −1 | −2 |
+  | Movimento | normale | +1 AP per movimento | striscia 1 solo tile, +1 AP |
+  | Probabilità di essere notato se occultato | — | 50% | 30% |
+
+  **Occultamento (🌿):** un soldato accucciato o sdraiato su un terreno che nasconde (vegetazione/macerie con LOS parziale, o copertura ≥2) è occultato. Un VC oltre distanza 1 lo nota solo se è entro la propria distanza d'allerta **e** supera il tiro di avvistamento (un tiro per VC per turno): altrimenti non si allerta e non gli spara, al massimo si avvicina alla squadra. A distanza 1 si viene sempre notati. Quando un VC ti individua, o quando spari / lanci con un'arma rumorosa, la posizione è **svelata** (👁) per tutti i VC fino alla fine del turno nemico; il coltello (rumore 0) non svela.
 - **Trappole VC (punji e mine):** nascoste sulla mappa. Un soldato che ci passa sopra si ferma lì e subisce danno (punji 2 HP, mina 4 HP). Il **geniere** individua automaticamente le trappole a distanza 1; una trappola individuata è segnata sulla mappa, il movimento la aggira e il geniere può **disinnescarla** con l'abilità speciale (1 AP). I VC ne sono immuni.
 - **Fumogeni:** l'Assalto ha un fumogeno (×1) che crea una cortina di raggio 1 per 2 turni. Il fumo blocca la linea di vista: chi è dentro vede ed è visto solo da distanza 1. Vale anche per i VC, che non possono sparare attraverso il fumo.
 - **Supporto d'artiglieria:** il geniere porta la radio (una sola per squadra, 1 uso). Il colpo si richiede come un'arma ad area (gittata 10) ma **cade all'inizio del turno successivo**, dopo la mossa dei VC, su chiunque si trovi nell'area — soldati US compresi, e anche i VC nascosti nella nebbia. L'area d'impatto in arrivo è segnata in rosso sulla mappa.

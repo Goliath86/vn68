@@ -95,6 +95,30 @@ function setActionMode(mode, weapon = null) {
   updateUI();
 }
 
+// Cambio postura: il primo del turno è gratuito, i successivi costano 1 AP
+const STANCE_CHANGE_AP = 1;
+
+function stanceChangeCost(u) {
+  return u.stanceChanged ? STANCE_CHANGE_AP : 0;
+}
+
+function canChangeStance(u) {
+  return !!u && u.alive && G.phase === "player" && u.ap >= stanceChangeCost(u);
+}
+
+function changeStance(u, stance) {
+  if (!STANCES[stance] || !canChangeStance(u)) return;
+  if ((u.stance || "stand") === stance) return;
+  u.ap -= stanceChangeCost(u);
+  u.stanceChanged = true;
+  u.stance = stance;
+  sfx("move");
+  log(t("log.stance_change", { name: u.name, stance: t(`stances.${stance}`) }));
+  if (G.fowEnabled) recomputeVisibility();
+  setActionMode(null);
+  updateUI();
+}
+
 // Rotazione gratuita (0 AP), una volta per turno, verso il tile adiacente scelto
 function rotateUnit(u, col, row) {
   if (!u || !u.alive || u.rotated) return;

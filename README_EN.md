@@ -276,6 +276,19 @@ Practical examples:
 - **Directional overwatch and suppressive fire:** the sniper's overwatch covers only the **front cone** (up to weapon range) but fires with **+1 ATK**; the assault's suppressive fire covers **front and sides**, not the rear, and only within line of sight. The covered areas are dashed on the map: turn the soldier after activating them.
 - **Noise:** every noisy squad action alerts the VC within a radius (in tiles, through any terrain), who turn toward the source; the targeted VC is always alerted. Radii: M1911 **2**, M16 **5**, M14 **7**, grenade **6**, smoke **1**, artillery **8**, demolition **6**, fire **2**; direct weapons, overwatch and suppressive fire from the shooter, explosions from the impact point. In attack mode the dotted grey outline shows the chosen weapon's radius (🔊 in the weapon picker). VC gunfire does not alert other VC. The log reports only alerted VC in sight.
 - **Knife (melee):** every soldier carries a knife (ATK 2, range 1, noise **0**), picked from the weapon selector like the others. It works on orthogonally adjacent tiles with the normal attack formula: from behind a VC (+1 ATK, no cover) it lets you take them out without alerting anyone but the target. If the blow **kills** the enemy the soldier **advances into their tile** for free (0 AP, cannot be undone; it stops on a trap like a normal move): handy for seizing a covered position. The knife does not count as the Sniper's shot and stays usable after the shot or while the rifle is reloading; it is never used for overwatch or suppressive fire.
+- **Stance (🧍 standing / 🧎 crouched / 🐍 prone):** **Stance** button (key **C**). The first change each turn is free, further ones cost 1 AP; undoing a move also undoes a stance change made after it.
+
+  | | Standing | Crouched | Prone |
+  |---|---|---|---|
+  | Direct-fire ATK (overwatch too, not the knife) | — | +1 | +1 |
+  | DEF vs direct fire | — | +1 | +2 (only +1 at distance 1) |
+  | DEF vs explosions | — | — | +1 |
+  | Vision | — | −1 | −2 |
+  | Distance at which VC notice you | — | −1 | −2 |
+  | Movement | normal | +1 AP per move | crawl 1 tile only, +1 AP |
+  | Chance of being noticed while concealed | — | 50% | 30% |
+
+  **Concealment (🌿):** a crouched or prone soldier on concealing terrain (vegetation/rubble with partial LOS, or cover ≥2) is concealed. A VC beyond distance 1 notices them only if within its alert distance **and** it passes a spotting roll (one roll per VC per turn): otherwise it doesn't get alerted and doesn't shoot at them, at most it moves toward the squad. At distance 1 you are always noticed. When a VC spots you, or when you fire / throw a noisy weapon, your position is **revealed** (👁) to all VC until the end of the enemy turn; the knife (noise 0) doesn't reveal you.
 - **VC traps (punji and mines):** hidden on the map. A soldier walking over one stops there and takes damage (punji 2 HP, mine 4 HP). The **Engineer** automatically spots traps at distance 1; a spotted trap is marked on the map, movement routes around it and the Engineer can **disarm** it with the special ability (1 AP). VC are immune.
 - **Smoke grenades:** the Assault carries one smoke grenade (×1) creating a radius-1 screen for 2 turns. Smoke blocks line of sight: anyone inside sees and is seen only from distance 1. This applies to VC as well, who cannot fire through smoke.
 - **Artillery support:** the Engineer carries the radio (one per squad, 1 use). The strike is called like an area weapon (range 10) but **lands at the start of the next turn**, after the VC move, on anyone in the area — US soldiers included, and VC hidden in the fog too. The incoming impact area is marked in red on the map.

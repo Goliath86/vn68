@@ -18,6 +18,13 @@ function selInfoHTML(u) {
       ${t("unit_panel.stats", { class: def.name, atk, def: def.defense, rng })}<br>
       ${t("unit_panel.status", { hp: u.hp, maxHp: u.maxHp, ap: u.ap, maxAp: AP_PER_TURN, col: u.col, row: u.row })}<br>
       ${t("unit_panel.tile", { label: tileLabel })}<br>
+      ${t("unit_panel.stance", { icon: STANCE_ICONS[u.stance || "stand"], label: t(`stances.${u.stance || "stand"}`) })}${
+        isConcealed(u)
+          ? ` · <span style="color:#8fd16a">${t("units.status.concealed")}</span>`
+          : u.exposed && u.stance && u.stance !== "stand" && isConcealingTile(u.col, u.row)
+            ? ` · <span style="color:var(--red)">${t("units.status.exposed")}</span>`
+            : ""
+      }<br>
       ${
         u.specialUsed
           ? `<span style="color:var(--red)">${t("units.status.special_used")}</span>`

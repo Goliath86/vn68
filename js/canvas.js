@@ -188,8 +188,8 @@ function onCanvasClick(e) {
     return;
   }
 
-  // In modalità attesa conferma AoE: click su canvas annulla
-  if (G.actionMode === "aoe_confirm") {
+  // In modalità attesa conferma AoE o scelta postura: click su canvas annulla
+  if (G.actionMode === "aoe_confirm" || G.actionMode === "stance") {
     setActionMode(null);
     updateUI();
     return;

@@ -41,7 +41,21 @@
     "end_turn_mobile": "Fine",
     "undo_move": "↶ Annulla movimento",
     "rotate": "⟳ Ruota (gratis)",
-    "rotate_mobile": "Ruota"
+    "rotate_mobile": "Ruota",
+    "stance": "🧍 Postura",
+    "stance_with": "{icon} Postura: {label}",
+    "stance_mobile": "Postura"
+  },
+
+  "stances": {
+    "stand": "In piedi",
+    "crouch": "Accucciato",
+    "prone": "Sdraiato",
+    "crawl": "striscia 1 tile (+1AP)",
+    "no_mods": "nessun modificatore, movimento pieno",
+    "pick_prompt": "Scegli la postura ({cost}):",
+    "cost_free": "gratis",
+    "cost_ap": "{n} AP"
   },
 
   "directions": {
@@ -116,6 +130,8 @@
       "in_overwatch": "🔭 IN OVERWATCH",
       "in_suppression": "🔥 FUOCO SOPPRESSIVO",
       "shaken": "⚠ SCOSSO — -1AP, nessuna abilità speciale",
+      "concealed": "🌿 Occultato",
+      "exposed": "👁 Posizione svelata",
       "special_used": "Abilità usata",
       "special_available": "Spec: {label}",
       "shot_used": "Già sparato (1 sparo/turno)",
@@ -235,6 +251,9 @@
     "attack_side": "{name} colpito sul FIANCO — copertura dimezzata",
     "attack_rear": "{name} colpito ALLE SPALLE — niente copertura, +1 ATK",
     "unit_rotate": "{name} si gira verso {dir}",
+    "stance_change": "{name}: postura {stance}",
+    "stance_spotted": "👁 {name} è stato individuato dai VC!",
+    "stance_unnoticed": "🌿 {vc} non si accorge di {name}",
     "noise_alert": "Il rumore allerta {count} VC in vista",
     "night_mission": "Missione notturna: visibilità ridotta per entrambe le parti",
     "trap_triggered": "{name} finisce in una trappola ({trap})! -{dmg}HP",
@@ -295,7 +314,8 @@
   "unit_panel": {
     "stats": "{class} · ATK {atk} · DEF {def} · RNG {rng}",
     "status": "HP {hp}/{maxHp} · AP {ap}/{maxAp} · ({col},{row})",
-    "tile": "Tile: {label}"
+    "tile": "Tile: {label}",
+    "stance": "Postura: {icon} {label}"
   },
 
   "ui": {

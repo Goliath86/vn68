@@ -128,9 +128,12 @@ function nightPenalty() {
     : 0;
 }
 
-// Raggio visivo di un'unità US (ridotto di notte, minimo 1)
+// Raggio visivo di un'unità US (ridotto di notte e dalla postura, minimo 1)
 function unitVision(unit) {
-  return Math.max(1, UNIT_CLASSES[unit.cls].vision - nightPenalty());
+  return Math.max(
+    1,
+    UNIT_CLASSES[unit.cls].vision - nightPenalty() - unitStance(unit).vision,
+  );
 }
 
 // Visione a cono: piena davanti, -1 ai lati, alle spalle al massimo 2 tile
@@ -153,12 +156,114 @@ function vcAlertDistance() {
 
 // Come sopra, ma secondo il lato da cui arriva l'unità US: piena davanti,
 // -1 ai lati, solo a distanza ravvicinata alle spalle
+// La postura bassa riduce ulteriormente la distanza (minimo 1)
 function vcAlertDistanceFrom(enemy, unit) {
   const base = vcAlertDistance();
   const sector = facingSector(enemy, unit);
-  if (sector === "rear") return Math.min(base, VC_REAR_ALERT_DISTANCE);
-  if (sector === "side") return Math.max(VC_REAR_ALERT_DISTANCE, base - 1);
-  return base;
+  let d = base;
+  if (sector === "rear") d = Math.min(base, VC_REAR_ALERT_DISTANCE);
+  else if (sector === "side") d = Math.max(VC_REAR_ALERT_DISTANCE, base - 1);
+  return Math.max(1, d - unitStance(unit).spotRange);
+}
+
+// ── POSTURA ────────────────────────────────────────────────────────────
+// In piedi / accucciato / sdraiato (unit.stance). Più si sta bassi più si
+// mira e ci si ripara meglio, ma si vede meno e ci si muove a fatica.
+//   atk        bonus ATK al fuoco diretto (non arma bianca), anche overwatch
+//   def        bonus DEF contro il fuoco diretto (sdraiato: non a distanza 1)
+//   aoeDef     bonus DEF contro esplosioni
+//   vision     malus al raggio visivo
+//   spotRange  malus alla distanza a cui i VC in pattuglia si accorgono di te
+//   spotChance probabilità che un VC noti un'unità occultata (vedi sotto)
+//   moveExtra  AP extra per ogni azione di movimento
+//   crawl      striscia: un solo tile per azione di movimento
+const STANCES = {
+  stand: { atk: 0, def: 0, aoeDef: 0, vision: 0, spotRange: 0, spotChance: 1, moveExtra: 0 },
+  crouch: { atk: 1, def: 1, aoeDef: 0, vision: 1, spotRange: 1, spotChance: 0.5, moveExtra: 1 },
+  prone: { atk: 1, def: 2, aoeDef: 1, vision: 2, spotRange: 2, spotChance: 0.3, moveExtra: 1, crawl: true },
+};
+const STANCE_ORDER = ["stand", "crouch", "prone"];
+const STANCE_ICONS = { stand: "🧍", crouch: "🧎", prone: "🐍" };
+
+function unitStance(unit) {
+  return STANCES[unit?.stance] || STANCES.stand;
+}
+
+// Bonus ATK della postura per un attacco diretto (l'arma bianca non ne beneficia)
+function stanceAttackBonus(unit, weapon) {
+  if (!G.units.includes(unit) || weapon?.melee) return 0;
+  return unitStance(unit).atk;
+}
+
+// Bonus DEF della postura contro il fuoco diretto: chi è sdraiato è
+// vulnerabile da vicino, quindi a distanza 1 vale solo il bonus accucciato
+function stanceDefenseBonus(unit, attacker) {
+  if (!G.units.includes(unit)) return 0;
+  const s = unitStance(unit);
+  if (s.crawl && attacker && dist(unit, attacker) <= 1) return STANCES.crouch.def;
+  return s.def;
+}
+
+function stanceAoeDefenseBonus(unit) {
+  return G.units.includes(unit) ? unitStance(unit).aoeDef : 0;
+}
+
+// Terreno che nasconde chi sta basso: vegetazione/macerie (LOS parziale) o
+// copertura solida (≥2)
+function isConcealingTile(col, row) {
+  const t = getTileAt(col, row);
+  return !!t && (t.losBlock === "partial" || (t.coverBonus || 0) >= 2);
+}
+
+// Occultata: postura bassa su terreno che nasconde e non scoperta (unit.exposed:
+// ha sparato o è stata individuata; vale fino alla fine del turno VC)
+function isConcealed(unit) {
+  return (
+    unit.alive &&
+    unit.stance &&
+    unit.stance !== "stand" &&
+    !unit.exposed &&
+    isConcealingTile(unit.col, unit.row)
+  );
+}
+
+// Un VC si accorge di un'unità? Le unità occultate oltre distanza 1 sono
+// invisibili oltre la distanza d'allerta e, entro quella, richiedono un tiro
+// (spotChance della postura), uno per coppia VC/unità per turno.
+// Se riesce l'unità è scoperta per tutti i VC fino alla fine del turno.
+function vcDetects(enemy, unit) {
+  if (!unit.alive) return false;
+  if (!isConcealed(unit) || dist(enemy, unit) <= 1) return true;
+  if (dist(enemy, unit) > vcAlertDistanceFrom(enemy, unit)) return false;
+  G.vcSpotRolls = G.vcSpotRolls || {};
+  const key = enemy.id + ">" + unit.id;
+  if (!(key in G.vcSpotRolls)) {
+    const seen = Math.random() < unitStance(unit).spotChance;
+    G.vcSpotRolls[key] = seen;
+    if (seen) {
+      unit.exposed = true;
+      log(t("log.stance_spotted", { name: unit.name }), "enemy");
+    } else if (isTileVisible(enemy.col, enemy.row)) {
+      log(t("log.stance_unnoticed", { name: unit.name, vc: enemy.name }), "success");
+    }
+  }
+  return G.vcSpotRolls[key];
+}
+
+// Unità US più vicina tra quelle di cui il VC si accorge (null se nessuna)
+// (dal più vicino: non si tira per unità che non sarebbero comunque il bersaglio)
+function nearestDetectedUnit(enemy) {
+  return (
+    G.units
+      .filter((u) => u.alive)
+      .sort((a, b) => dist(enemy, a) - dist(enemy, b))
+      .find((u) => vcDetects(enemy, u)) ?? null
+  );
+}
+
+// Sparare (azione rumorosa) svela la posizione fino alla fine del turno VC
+function revealShooter(unit, noise) {
+  if (noise > 0 && G.units.includes(unit)) unit.exposed = true;
 }
 
 // ── FUMOGENI ───────────────────────────────────────────────────────────

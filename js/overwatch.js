@@ -30,7 +30,8 @@ function checkOverwatch(enemy) {
       const owAtk =
         Math.max(1, (owWeapon?.atk ?? owDef.attack) - owPenalty) +
         OVERWATCH_ATK_BONUS +
-        rearAttackBonus(ow, enemy);
+        rearAttackBonus(ow, enemy) +
+        stanceAttackBonus(ow, owWeapon);
 
       if (owPenalty > 0)
         log(
@@ -104,7 +105,9 @@ function checkOverwatch(enemy) {
       }
       faceAfterShot(ow, enemy);
       alertVcToward(enemy, ow);
-      makeNoise(ow, weaponNoise(ow, owWeapon));
+      const noise = weaponNoise(ow, owWeapon);
+      makeNoise(ow, noise);
+      revealShooter(ow, noise);
 
       // TODO: set HasShot
     }
