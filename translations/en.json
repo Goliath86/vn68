@@ -47,6 +47,13 @@
     "stance_mobile": "Stance"
   },
 
+  "aim": {
+    "ally": "✕ {name} is in the line of fire",
+    "los": "✕ Line of sight blocked",
+    "vision": "✕ Out of field of view",
+    "range": "✕ Out of range"
+  },
+
   "stances": {
     "stand": "Standing",
     "crouch": "Crouched",

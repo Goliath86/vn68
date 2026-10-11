@@ -269,6 +269,97 @@ function renderMap() {
   }
 }
 
+// ── RAGGIO DI MIRA (solo desktop con mouse) ────────────────────────────
+// In modalità attacco a bersaglio singolo un raggio va dall'unità al tile
+// sotto il mouse; il colore dice se la linea di tiro è libera e, se no,
+// perché (vedi mechanics.js:fireLineStatus). Una X segna cosa la blocca.
+const AIM_RAY_RGB = {
+  clear: "90,230,110",
+  ally: "255,70,60",
+  los: "255,160,40",
+  vision: "170,170,170",
+  range: "170,170,170",
+};
+
+function aimRayEnabled() {
+  return (
+    !isMobile() && window.matchMedia("(hover: hover) and (pointer: fine)").matches
+  );
+}
+
+function drawAimRay(ctx, ts, u, hov, weapon) {
+  if (!hov || !aimRayEnabled()) return;
+  const md = G.mapData;
+  if (hov.col < 0 || hov.row < 0 || hov.col >= md.cols || hov.row >= md.rows) return;
+  if (hov.col === u.col && hov.row === u.row) return;
+
+  const res = fireLineStatus(u, hov, weapon);
+  const rgb = AIM_RAY_RGB[res.status];
+  const { x: ux, y: uy } = tileToScreen(u.col, u.row);
+  const { x: hx, y: hy } = tileToScreen(hov.col, hov.row);
+  const sx = ux + ts / 2,
+    sy = uy + ts / 2,
+    ex = hx + ts / 2,
+    ey = hy + ts / 2;
+
+  ctx.save();
+  ctx.lineCap = "round";
+  // Alone + linea piena
+  ctx.strokeStyle = `rgba(${rgb},0.25)`;
+  ctx.lineWidth = Math.max(4, ts * 0.11);
+  ctx.beginPath();
+  ctx.moveTo(sx, sy);
+  ctx.lineTo(ex, ey);
+  ctx.stroke();
+  ctx.strokeStyle = `rgba(${rgb},0.95)`;
+  ctx.lineWidth = Math.max(1.5, ts * 0.035);
+  ctx.beginPath();
+  ctx.moveTo(sx, sy);
+  ctx.lineTo(ex, ey);
+  ctx.stroke();
+  // Punto d'arrivo
+  ctx.fillStyle = `rgba(${rgb},0.95)`;
+  ctx.beginPath();
+  ctx.arc(ex, ey, Math.max(2.5, ts * 0.06), 0, Math.PI * 2);
+  ctx.fill();
+
+  // X sul tile che blocca (compagno, muro, fumo)
+  if (res.block) {
+    const { x: bx, y: by } = tileToScreen(res.block.col, res.block.row);
+    const cx = bx + ts / 2,
+      cy = by + ts / 2,
+      r = ts * 0.2;
+    ctx.lineWidth = Math.max(2.5, ts * 0.06);
+    ctx.strokeStyle = "rgba(0,0,0,0.7)";
+    for (const pass of [0, 1]) {
+      if (pass) {
+        ctx.lineWidth = Math.max(1.5, ts * 0.035);
+        ctx.strokeStyle = `rgba(${rgb},1)`;
+      }
+      ctx.beginPath();
+      ctx.moveTo(cx - r, cy - r);
+      ctx.lineTo(cx + r, cy + r);
+      ctx.moveTo(cx + r, cy - r);
+      ctx.lineTo(cx - r, cy + r);
+      ctx.stroke();
+    }
+  }
+
+  // Motivo del blocco sotto il tile puntato
+  if (res.status !== "clear") {
+    const label = t(`aim.${res.status}`, { name: res.ally?.name ?? "" });
+    ctx.font = `bold ${Math.max(10, Math.round(ts * 0.2))}px 'Oswald'`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(0,0,0,0.85)";
+    ctx.fillStyle = `rgb(${rgb})`;
+    ctx.strokeText(label, ex, hy + ts + 2);
+    ctx.fillText(label, ex, hy + ts + 2);
+  }
+  ctx.restore();
+}
+
 // Scala [x, y] dello sprite per postura (ancorata ai piedi)
 const STANCE_SQUASH = { crouch: [1, 0.8], prone: [1.12, 0.56] };
 
@@ -493,6 +584,8 @@ function renderOverlay() {
           ts,
           weaponNoise(G.selectedUnit, G.currentWeapon ?? unitFireWeapon(G.selectedUnit)),
         );
+
+        drawAimRay(ctx, ts, G.selectedUnit, G.hoveredTile, G.currentWeapon);
       }
     }
   }

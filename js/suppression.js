@@ -14,7 +14,8 @@ function checkSuppression(enemy) {
 
     if (
       suppressionCovers(sup, enemy) &&
-      isTileVisibleFromUnit(sup, enemy.col, enemy.row)
+      isTileVisibleFromUnit(sup, enemy.col, enemy.row) &&
+      !allyBlockingFire(sup, enemy)
     ) {
       enemy.suppressed = true;
       enemy.ap = 0;

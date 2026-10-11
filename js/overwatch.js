@@ -8,6 +8,7 @@ function checkOverwatch(enemy) {
 
     if (facingSector(ow, enemy) !== "front") continue;
     if (!isTileVisibleFromUnit(ow, enemy.col, enemy.row)) continue;
+    if (allyBlockingFire(ow, enemy)) continue;
     const owDef = UNIT_CLASSES[ow.cls];
 
     if (dist(ow, enemy) <= unitFireRange(ow)) {

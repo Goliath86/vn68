@@ -261,6 +261,48 @@ function nearestDetectedUnit(enemy) {
   );
 }
 
+// ── LINEA DI TIRO ──────────────────────────────────────────────────────
+// Un compagno sui tile intermedi della linea di tiro la blocca (si rischia
+// di colpirlo), a meno che non sia sdraiato: si spara sopra di lui.
+// Vale per attacchi diretti, overwatch e fuoco soppressivo US (non per le AoE).
+function allyBlockingFire(shooter, to) {
+  const line = getLineTiles(shooter.col, shooter.row, to.col, to.row);
+  for (const tl of line.slice(0, -1)) {
+    const ally = G.units.find(
+      (u) =>
+        u.alive && u !== shooter && u.col === tl.col && u.row === tl.row,
+    );
+    if (ally && ally.stance !== "prone") return ally;
+  }
+  return null;
+}
+
+// Primo tile che blocca del tutto la vista lungo la linea (terreno "full" o fumo)
+function firstLosBlockTile(from, to) {
+  const line = getLineTiles(from.col, from.row, to.col, to.row);
+  for (const tl of line.slice(0, -1)) {
+    if (isSmoked(tl.col, tl.row) || getTileAt(tl.col, tl.row)?.losBlock === "full")
+      return tl;
+  }
+  return null;
+}
+
+// Perché `shooter` può o non può colpire il tile `to` con il fuoco diretto:
+// { status: "clear"|"ally"|"los"|"vision"|"range", block?: {col,row}, ally? }
+// Usato dal raggio di mira su desktop (render.js)
+function fireLineStatus(shooter, to, weapon) {
+  const d = dist(shooter, to);
+  const ally = allyBlockingFire(shooter, to);
+  if (ally) return { status: "ally", block: ally, ally };
+  if (!isTileVisibleFromUnit(shooter, to.col, to.row)) {
+    if (d > unitVisionToward(shooter, to)) return { status: "vision" };
+    return { status: "los", block: firstLosBlockTile(shooter, to) };
+  }
+  const range = weapon?.range ?? UNIT_CLASSES[shooter.cls].range;
+  if (d > range) return { status: "range" };
+  return { status: "clear" };
+}
+
 // Sparare (azione rumorosa) svela la posizione fino alla fine del turno VC
 function revealShooter(unit, noise) {
   if (noise > 0 && G.units.includes(unit)) unit.exposed = true;

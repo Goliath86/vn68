@@ -47,6 +47,13 @@
     "stance_mobile": "Postura"
   },
 
+  "aim": {
+    "ally": "✕ {name} è sulla linea di tiro",
+    "los": "✕ Linea di vista bloccata",
+    "vision": "✕ Fuori dal campo visivo",
+    "range": "✕ Fuori gittata"
+  },
+
   "stances": {
     "stand": "In piedi",
     "crouch": "Accucciato",

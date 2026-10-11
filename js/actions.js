@@ -36,13 +36,15 @@ function setActionMode(mode, weapon = null) {
       }
     } else {
       // Singolo bersaglio: solo nemici vivi in gittata e in linea di vista
-      // dell'unità che spara (non basta che li veda un compagno)
+      // dell'unità che spara (non basta che li veda un compagno), senza
+      // compagni in piedi o accucciati sulla linea di tiro
       G.attackable = G.enemies.filter(
         (e) =>
           e.alive &&
           dist(u, e) <= range &&
           isTileVisible(e.col, e.row) &&
-          isTileVisibleFromUnit(u, e.col, e.row),
+          isTileVisibleFromUnit(u, e.col, e.row) &&
+          !allyBlockingFire(u, e),
       );
     }
   }

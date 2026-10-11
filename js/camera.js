@@ -17,11 +17,12 @@ function onCanvasMove(e) {
   }
   // Tooltip
   const { col, row } = screenToTile(e.clientX, e.clientY);
-  // Tile sotto il mouse: serve all'anteprima della visione in modalità rotazione
+  // Tile sotto il mouse: serve all'anteprima della visione in modalità
+  // rotazione e al raggio di mira in modalità attacco
   const prev = G.hoveredTile;
   if (!prev || prev.col !== col || prev.row !== row) {
     G.hoveredTile = { col, row };
-    if (G.actionMode === "rotate") render();
+    if (G.actionMode === "rotate" || isAimRayMode()) render();
   }
   if (col >= 0 && row >= 0 && col < G.mapData.cols && row < G.mapData.rows) {
     showTooltip(e, col, row);
@@ -29,6 +30,10 @@ function onCanvasMove(e) {
     document.getElementById("tile-tooltip").style.display = "none";
   }
 }
+function isAimRayMode() {
+  return G.actionMode === "attack" && !G.currentWeapon?.aoe;
+}
+
 function onWheel(e) {
   const delta = e.deltaY > 0 ? 0.9 : 1.1;
   const rect = G.canvas.getBoundingClientRect();
