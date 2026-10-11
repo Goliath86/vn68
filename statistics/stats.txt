@@ -1,0 +1,54 @@
+VIETNAM '68 — Settore 31716 · search_destroy · WIN · 2026-10-11 14:28
+
+[Missione]
+Turni: 9
+Sopravvissuti: 4/4
+VC eliminati: 5/10
+HP rimasti (sopravvissuti): 100%
+
+[Fuoco della squadra]
+Colpi a segno: 6/6 (100% · attesa 94%)
+Danni inflitti: 46
+Dal fianco / alle spalle: 3 / 0
+Uccisioni col coltello: 0
+Overwatch a segno: 0/0
+Soppressioni: 0
+Esplosivi: 0 · artiglieria 0
+Fuoco amico (HP): 0
+
+[Fuoco dei VC]
+Colpi a segno: 1/1 (100% · attesa 84%)
+Danni subiti: 1
+Dal fianco / alle spalle: 0 / 0
+Spari dall'agguato: 0
+RPG lanciati: 0
+
+[Munizioni]
+Colpi sparati: 6
+Ricariche: 2
+Caricatori di riserva rimasti: 18
+Granate/fumogeni/radio rimasti: 4
+
+[Ferite e cure]
+Emorragie: 1 · −0 HP · morti 0
+Primo soccorso: 0
+Medico: +3 HP · emorragie fermate 1
+Trappole: 1 · −2 HP
+
+[Furtività]
+VC allertati dal rumore: 0 · dagli spari VC 2
+Avvistato / passato inosservato: 0 / 0
+
+[Guerriglia VC]
+Tunnel: entrate / uscite: 1 / 1
+Tunnel sigillati: 1
+Trappole piazzate dai VC: 3
+
+[Ultime 1 missioni]
+Vittorie: 1/1
+Turni medi · caduti medi: 9.0 · 0.0
+Precisione squadra: 100% (attesa 94%)
+Precisione VC: 100% (attesa 84%)
+Spari dall'agguato medi: 0.0
+
+raw: {"date":"2026-10-11 14:28","map":"Settore 31716","mission":"search_destroy","night":false,"win":true,"turns":9,"squad":["assault","sniper","engineer","medic"],"survivors":4,"kia":0,"vcKilled":5,"vcTotal":10,"hpLeftPct":100,"spareMags":18,"emptyGuns":0,"usesLeft":4,"usShots":6,"usHits":6,"usExpHits":5.62962962962963,"usDmg":46,"usFlank":3,"usRear":0,"meleeKills":0,"owShots":0,"owHits":0,"suppressions":0,"aoeUs":0,"artillery":0,"friendlyFire":0,"vcShots":1,"vcHits":1,"vcExpHits":0.8379629629629629,"vcDmg":1,"vcFlank":0,"vcRear":0,"vcAmbushFire":0,"aoeVc":0,"roundsFired":6,"reloads":2,"bleedStarts":1,"bleedDmg":0,"bledOut":0,"firstAid":0,"medicHeal":3,"bleedStopped":1,"traps":1,"trapDmg":2,"noiseAlerts":0,"vcNoiseAlerts":2,"spotted":0,"unnoticed":0,"tunnelDives":1,"tunnelEmerges":1,"tunnelsSealed":1,"trapsPlanted":3}
