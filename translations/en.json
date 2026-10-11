@@ -150,6 +150,21 @@
       "wounded": "🤕 Wounded: −{atk} ATK, movement +{ap} AP",
       "wounded_severe": "🤕 Badly wounded: −{atk} ATK, movement +{ap} AP",
       "bleeding": "🩸 Bleeding: −{n} HP at turn start (needs the medic)"
+    },
+    "chips": {
+      "special_used": "used",
+      "concealed": "Concealed",
+      "exposed": "Revealed",
+      "overwatch": "Overwatch",
+      "suppression": "Suppression",
+      "shot_used": "Shot fired",
+      "need_reload": "Empty",
+      "out_of_ammo": "No ammo",
+      "wounded": "Wounded",
+      "wounded_severe": "Badly hurt",
+      "shaken": "Shaken",
+      "bleeding": "Bleeding",
+      "pilot": "Pilot"
     }
   },
 

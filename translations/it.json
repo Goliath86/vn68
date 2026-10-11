@@ -155,6 +155,21 @@
       "wounded": "🤕 Ferito: −{atk} ATK, movimento +{ap} AP",
       "wounded_severe": "🤕 Ferito gravemente: −{atk} ATK, movimento +{ap} AP",
       "bleeding": "🩸 Sanguina: −{n} HP a inizio turno (serve il medico)"
+    },
+    "chips": {
+      "special_used": "usata",
+      "concealed": "Occultato",
+      "exposed": "Svelato",
+      "overwatch": "Overwatch",
+      "suppression": "Soppressione",
+      "shot_used": "Già sparato",
+      "need_reload": "Scarico",
+      "out_of_ammo": "Senza colpi",
+      "wounded": "Ferito",
+      "wounded_severe": "Grave",
+      "shaken": "Scosso",
+      "bleeding": "Sanguina",
+      "pilot": "Pilota"
     }
   },
 

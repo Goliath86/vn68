@@ -83,7 +83,7 @@ Altre costanti in `constants.js`: `TILE=64`, `AP_PER_TURN=3`, `SAVE_KEY`, `UNIT_
 | `log.js` | `log(msg, type)` — pannello log di combattimento |
 | `tooltip.js` | tooltip al hover su tile (rispetta FOW) |
 | `ui.js` | `updateUI()`, pannello obiettivo (`objPanelHTML`) |
-| `selectedUnit.js` | pannello dettaglio unità selezionata |
+| `selectedUnit.js` | pannello dettaglio unità selezionata: statistiche + chip di stato (`unitStatusChips`/`statusChip`: etichetta breve da `units.chips.*`, spiegazione completa nel tooltip da `units.status.*`) |
 | `init.js` | bootstrap iniziale della pagina |
 | `unitList.js` | render delle card unità nel pannello squadra |
 | `unitMovement.js` | esecuzione movimento (consumo AP, animazione, aggiornamento visibilità) |

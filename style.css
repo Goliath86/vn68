@@ -271,6 +271,28 @@ body {
     background: rgba(130, 95, 15, 0.75);
     border-color: #ddbb55;
 }
+/* ── CHIP DI STATO (pannello unità selezionata) ──── */
+.status-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 5px;
+}
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    border: 1px solid rgba(var(--chip), 0.6);
+    border-radius: 9px;
+    background: rgba(var(--chip), 0.12);
+    color: rgb(var(--chip));
+    font-size: 10px;
+    line-height: 1.5;
+    white-space: nowrap;
+    cursor: default;
+}
+
 /* ── SCHEDE ARMI (unità selezionata) ─────────────── */
 .weapon-bar {
     display: grid;
