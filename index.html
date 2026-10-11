@@ -119,6 +119,9 @@
                         Attacca (1AP)
                     </button>
 
+                    <!-- Schede armi dell'unità selezionata (tabs.js:renderWeaponBars) -->
+                    <div class="weapon-bar" id="weapon-bar"></div>
+
                     <button
                         class="btn"
                         id="btn-special"
@@ -128,50 +131,21 @@
                         Abilità spec.
                     </button>
 
-                    <button
-                        class="btn"
-                        id="btn-rotate"
-                        data-i18n="buttons.rotate"
-                        disabled
-                    >
-                        ⟳ Ruota (gratis)
-                    </button>
-
-                    <button
-                        class="btn"
-                        id="btn-stance"
-                        data-i18n="buttons.stance"
-                        disabled
-                    >
-                        🧍 Postura
-                    </button>
-
-                    <button
-                        class="btn"
-                        id="btn-reload"
-                        data-i18n="buttons.reload"
-                        disabled
-                    >
-                        🔄 Ricarica
-                    </button>
-
-                    <button
-                        class="btn"
-                        id="btn-firstaid"
-                        data-i18n="buttons.first_aid"
-                        disabled
-                    >
-                        🩹 Primo soccorso
-                    </button>
-
-                    <button
-                        class="btn"
-                        id="btn-undo"
-                        data-i18n="buttons.undo_move"
-                        disabled
-                    >
-                        ↶ Annulla movimento
-                    </button>
+                    <!-- Azioni secondarie: solo icone, nascoste se non disponibili -->
+                    <div class="icon-actions" id="icon-actions">
+                        <button class="btn btn-icon" id="btn-rotate" data-key="R" disabled>
+                            <span class="ic">⟳</span>
+                        </button>
+                        <button class="btn btn-icon" id="btn-stance" data-key="C" disabled>
+                            <span class="ic">🧍</span>
+                        </button>
+                        <button class="btn btn-icon" id="btn-firstaid" data-key="H" disabled>
+                            <span class="ic">🩹</span>
+                        </button>
+                        <button class="btn btn-icon" id="btn-undo" data-key="U" disabled>
+                            <span class="ic">↶</span>
+                        </button>
+                    </div>
 
                     <button
                         class="btn btn-end"
@@ -345,6 +319,8 @@
                             Attacca (1AP)
                         </button>
 
+                        <div class="weapon-bar" id="mob-weapon-bar"></div>
+
                         <button
                             class="btn"
                             id="mob-btn-special"
@@ -354,50 +330,24 @@
                             Abilità spec.
                         </button>
 
-                        <button
-                            class="btn"
-                            id="mob-btn-rotate"
-                            data-i18n="buttons.rotate"
-                            disabled
-                        >
-                            ⟳ Ruota (gratis)
-                        </button>
-
-                        <button
-                            class="btn"
-                            id="mob-btn-stance"
-                            data-i18n="buttons.stance"
-                            disabled
-                        >
-                            🧍 Postura
-                        </button>
-
-                        <button
-                            class="btn"
-                            id="mob-btn-reload"
-                            data-i18n="buttons.reload"
-                            disabled
-                        >
-                            🔄 Ricarica
-                        </button>
-
-                        <button
-                            class="btn"
-                            id="mob-btn-firstaid"
-                            data-i18n="buttons.first_aid"
-                            disabled
-                        >
-                            🩹 Primo soccorso
-                        </button>
-
-                        <button
-                            class="btn"
-                            id="mob-btn-undo"
-                            data-i18n="buttons.undo_move"
-                            disabled
-                        >
-                            ↶ Annulla movimento
-                        </button>
+                        <div class="icon-actions" id="mob-icon-actions">
+                            <button class="btn btn-icon" id="mob-btn-rotate" disabled>
+                                <span class="ic">⟳</span>
+                                <span class="ic-label" data-i18n="buttons.rotate_mobile">Ruota</span>
+                            </button>
+                            <button class="btn btn-icon" id="mob-btn-stance" disabled>
+                                <span class="ic">🧍</span>
+                                <span class="ic-label" data-i18n="buttons.stance_mobile">Postura</span>
+                            </button>
+                            <button class="btn btn-icon" id="mob-btn-firstaid" disabled>
+                                <span class="ic">🩹</span>
+                                <span class="ic-label" data-i18n="buttons.first_aid_mobile">Medicarsi</span>
+                            </button>
+                            <button class="btn btn-icon" id="mob-btn-undo" disabled>
+                                <span class="ic">↶</span>
+                                <span class="ic-label" data-i18n="buttons.undo_mobile">Annulla</span>
+                            </button>
+                        </div>
 
                         <button
                             class="btn btn-end"

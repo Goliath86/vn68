@@ -97,18 +97,21 @@ function setActionMode(mode, weapon = null) {
   updateUI();
 }
 
-// Ricarica: riempie il caricatore della prima arma ricaricabile consumando
-// un caricatore di riserva (se limitati). Costa weaponReloadAp AP.
-function canReload(u) {
-  const w = reloadableWeapon(u);
+// Ricarica: riempie il caricatore di `w` (default: la prima arma
+// ricaricabile) consumando un caricatore di riserva (se limitati).
+// Costa weaponReloadAp AP.
+function canReload(u, w = reloadableWeapon(u)) {
   return (
-    !!w && u.alive && G.phase === "player" && u.ap >= weaponReloadAp(w)
+    !!w &&
+    weaponNeedsReload(w) &&
+    u.alive &&
+    G.phase === "player" &&
+    u.ap >= weaponReloadAp(w)
   );
 }
 
-function reloadWeapon(u) {
-  if (!canReload(u)) return;
-  const w = reloadableWeapon(u);
+function reloadWeapon(u, w = reloadableWeapon(u)) {
+  if (!canReload(u, w)) return;
   clearLastMove();
   u.ap -= weaponReloadAp(w);
   w.loaded = w.mag;

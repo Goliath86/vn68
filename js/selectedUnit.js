@@ -38,20 +38,8 @@ function selInfoHTML(u) {
       ${woundLevel(u) > 0 ? `<br><span style="color:#e0a040">${t(woundLevel(u) > 1 ? "units.status.wounded_severe" : "units.status.wounded", { atk: woundAttackPenalty(u), ap: WOUND_MOVE_EXTRA })}</span>` : ""}
       ${u.bleeding ? `<br><span style="color:#ff3030;font-weight:700">${t("units.status.bleeding", { n: BLEED_PER_TURN })}</span>` : ""}
       ${u.carriesPilot ? `<br><span style="color:var(--yellow)">${t("units.status.carry_pilot")}</span>` : ""}
-      ${
-        u.weapons && u.weapons.length > 0
-          ? "<br>" +
-            u.weapons
-              .map((w) => {
-                const depleted = (w.ammo != null && w.ammo <= 0) || weaponEmpty(w);
-                const ammoStr = weaponAmmoLabel(w);
-                const aoeStr = w.aoe ? ` AoE${w.aoe}` : "";
-                return `<span style="color:${depleted ? "var(--red)" : "var(--paper-dark)"}">${w.label}${aoeStr} ${ammoStr}</span>`;
-              })
-              .join(" · ")
-          : ""
-      }
     </div>`;
+  // Armi e munizioni: nelle schede armi del pannello azioni (tabs.js)
 }
 
 function updateSelInfo() {

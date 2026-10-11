@@ -28,12 +28,6 @@ document
   );
 
 document
-  .getElementById("mob-btn-reload")
-  .addEventListener("click", () =>
-    document.getElementById("btn-reload").click(),
-  );
-
-document
   .getElementById("mob-btn-firstaid")
   .addEventListener("click", () =>
     document.getElementById("btn-firstaid").click(),
@@ -121,18 +115,30 @@ document.getElementById("btn-move").addEventListener("click", () => {
   setActionMode("move");
 });
 
+// Attacca: modalità attacco con l'arma predefinita (le altre armi si scelgono
+// dalle schede armi, o dal selettore della barra rapida su mobile)
 document.getElementById("btn-attack").addEventListener("click", () => {
   const u = G.selectedUnit;
-  if (!u || u.ap < 1) return;
+  if (!u || u.ap < 1 || !canAttack(u)) return;
   sfx("click");
-  if (!canAttack(u)) return;
-  const usable = (u.weapons || []).filter((w) => weaponUsable(u, w));
-  if (usable.length > 1) {
-    setActionMode("weapon_select");
-  } else {
-    setActionMode("attack", usable[0] ?? null);
-  }
+  setActionMode("attack", defaultAttackWeapon(u));
 });
+
+// Scheda arma: attacca con quell'arma (secondo click: annulla); se l'arma è
+// scarica e c'è riserva, ricarica
+function weaponCardAction(idx) {
+  const u = G.selectedUnit;
+  const w = u?.weapons?.[idx];
+  if (!w || !u.alive || G.phase !== "player") return;
+  if (weaponEmpty(w)) {
+    if (canReload(u, w)) reloadWeapon(u, w);
+    return;
+  }
+  if (u.ap < 1 || !weaponUsable(u, w)) return;
+  sfx("click");
+  const again = G.actionMode === "attack" && G.currentWeapon === w;
+  setActionMode(again ? null : "attack", again ? null : w);
+}
 
 document.getElementById("btn-special").addEventListener("click", () => {
   if (
@@ -188,12 +194,6 @@ document.getElementById("btn-stance").addEventListener("click", () => {
   sfx("click");
   // Secondo click sul bottone: chiude il selettore
   setActionMode(G.actionMode === "stance" ? null : "stance");
-});
-
-document.getElementById("btn-reload").addEventListener("click", () => {
-  const u = G.selectedUnit;
-  if (!canReload(u)) return;
-  reloadWeapon(u);
 });
 
 document.getElementById("btn-firstaid").addEventListener("click", () => {
@@ -297,7 +297,7 @@ document.addEventListener("keydown", (e) => {
       if (canChangeStance(u)) document.getElementById("btn-stance").click();
       break;
     case "l":
-      if (canReload(u)) document.getElementById("btn-reload").click();
+      if (canReload(u)) reloadWeapon(u);
       break;
     case "h":
       if (canFirstAid(u)) document.getElementById("btn-firstaid").click();
@@ -313,5 +313,9 @@ document.addEventListener("keydown", (e) => {
         sfx("click");
       }
       break;
+    default:
+      // 1-9: scheda arma corrispondente
+      if (/^[1-9]$/.test(e.key) && u?.weapons?.[+e.key - 1])
+        weaponCardAction(+e.key - 1);
   }
 });

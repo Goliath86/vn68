@@ -33,10 +33,26 @@ document
   .addEventListener("click", collapseSheet);
 
 // Bottoni quick bar → delegano ai corrispondenti desktop
-["move", "attack", "special", "rotate", "stance", "reload", "endturn"].forEach((action) => {
+["move", "special", "rotate", "stance", "endturn"].forEach((action) => {
   document.getElementById("qb-" + action).addEventListener("click", () => {
     document.getElementById("btn-" + action).click();
   });
+});
+
+// Quick bar Attacca: a pannello chiuso le schede armi non si vedono, quindi
+// con più armi utilizzabili si apre il selettore della quick weapons bar
+document.getElementById("qb-attack").addEventListener("click", () => {
+  const u = G.selectedUnit;
+  if (!u || u.ap < 1 || !canAttack(u)) return;
+  sfx("click");
+  const usable = (u.weapons || []).filter((w) => weaponUsable(u, w));
+  if (usable.length > 1) setActionMode("weapon_select");
+  else setActionMode("attack", usable[0] ?? null);
+});
+
+document.getElementById("qb-reload").addEventListener("click", () => {
+  const u = G.selectedUnit;
+  if (canReload(u)) reloadWeapon(u);
 });
 
 // Quick weapons bar (mobile, sheet collassata): scelta arma dopo "Attacca" e conferma AoE.
@@ -126,6 +142,91 @@ function bindStanceButtons(root) {
   });
 }
 
+// Schede armi dell'unità selezionata (desktop e pannello mobile): click =
+// attacca con quell'arma; un'arma scarica con riserva diventa "Ricarica"
+function weaponBarHTML(u, withKeys) {
+  if (!u?.alive || !u.weapons?.length) return "";
+  const isPlayer = G.phase === "player";
+  const hasEnemy = G.enemies.some((e) => e.alive);
+  const inPick =
+    G.actionMode === "weapon_select" || G.actionMode === "aoe_confirm";
+  return u.weapons
+    .map((w, i) => {
+      const empty = weaponEmpty(w);
+      const reload = empty && weaponNeedsReload(w);
+      const enabled = reload
+        ? canReload(u, w) && !inPick
+        : isPlayer && u.ap > 0 && hasEnemy && weaponUsable(u, w) && !inPick;
+      const active =
+        (G.actionMode === "attack" || G.actionMode === "aoe_confirm") &&
+        (G.currentWeapon === w || G.pendingAoe?.weapon === w);
+      const stats = reload
+        ? t("buttons.reload_with", { ap: weaponReloadAp(w) })
+        : `ATK${w.atk} · RNG${w.range}${w.aoe ? ` · AoE${w.aoe}` : ""} · 🔊${weaponNoise(u, w)}`;
+      const cls = `btn weapon-card${active ? " active" : ""}${empty ? " empty" : ""}`;
+      const key = withKeys && i < 9 ? ` data-key="${i + 1}"` : "";
+      return `<button class="${cls}" data-wcard="${i}"${key} ${enabled ? "" : "disabled"}>
+<span class="wc-top"><span class="wc-name">${w.label}</span><span class="wc-ammo">${weaponAmmoLabel(w)}</span></span>
+<span class="wc-stats">${stats}</span>
+</button>`;
+    })
+    .join("");
+}
+
+function renderWeaponBars(u) {
+  [
+    ["weapon-bar", true],
+    ["mob-weapon-bar", false],
+  ].forEach(([id, withKeys]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = weaponBarHTML(u, withKeys);
+    el.querySelectorAll("[data-wcard]").forEach((btn) =>
+      btn.addEventListener("click", () => weaponCardAction(+btn.dataset.wcard)),
+    );
+  });
+}
+
+// Azioni secondarie a icone: visibili solo se disponibili. Ogni voce:
+// [id senza prefisso, disponibile, titolo, evidenziata, icona]
+function updateIconActions(u, hasUnit, isPlayer, inPick) {
+  const cur = (hasUnit && u.stance) || "stand";
+  const stanceCost = hasUnit ? stanceChangeCost(u) : 0;
+  const acts = [
+    ["rotate", isPlayer && hasUnit && !u.rotated, t("buttons.rotate"), G.actionMode === "rotate", "⟳"],
+    [
+      "stance",
+      canChangeStance(u),
+      `${t("buttons.stance_with", { icon: STANCE_ICONS[cur], label: t(`stances.${cur}`) })} (${
+        stanceCost ? t("stances.cost_ap", { n: stanceCost }) : t("stances.cost_free")
+      })`,
+      G.actionMode === "stance",
+      STANCE_ICONS[cur],
+    ],
+    ["firstaid", canFirstAid(u), t("buttons.first_aid"), false, "🩹"],
+    ["undo", canUndoMove(), t("buttons.undo_move"), false, "↶"],
+  ];
+  [
+    ["btn-", "icon-actions", true],
+    ["mob-btn-", "mob-icon-actions", false],
+  ].forEach(([prefix, rowId, desktop]) => {
+    let any = false;
+    for (const [id, avail, title, hl, icon] of acts) {
+      const el = document.getElementById(prefix + id);
+      if (!el) continue;
+      el.style.display = avail ? "" : "none";
+      el.disabled = !avail || inPick;
+      el.style.borderColor = hl ? "var(--highlight)" : "";
+      el.title = desktop && el.dataset.key ? `${title} [${el.dataset.key}]` : title;
+      const ic = el.querySelector(".ic");
+      if (ic) ic.textContent = icon;
+      if (avail) any = true;
+    }
+    const row = document.getElementById(rowId);
+    if (row) row.style.display = any ? "" : "none";
+  });
+}
+
 function updateActionButtons() {
   const u = G.selectedUnit;
   const isPlayer = G.phase === "player";
@@ -145,17 +246,15 @@ function updateActionButtons() {
 
   const hasSM = G.actionMode === "special";
 
-  const hasRM = G.actionMode === "rotate";
+  const inPick =
+    G.actionMode === "weapon_select" || G.actionMode === "aoe_confirm";
+  const atkWeapon = hasUnit ? defaultAttackWeapon(u) : null;
 
   // Aggiorna sia i controlli desktop che mobile in un colpo
   const pairs = [
     ["btn-move", "mob-btn-move"],
     ["btn-attack", "mob-btn-attack"],
     ["btn-special", "mob-btn-special"],
-    ["btn-rotate", "mob-btn-rotate"],
-    ["btn-stance", "mob-btn-stance"],
-    ["btn-reload", "mob-btn-reload"],
-    ["btn-firstaid", "mob-btn-firstaid"],
     ["btn-endturn", "mob-btn-endturn"],
     //["btn-dice", "mob-btn-dice"],
   ];
@@ -170,13 +269,18 @@ function updateActionButtons() {
         el.style.borderColor = hasMM ? "var(--highlight)" : "";
       }
 
+      // Attacca: con l'arma predefinita, il cui nome compare sul bottone
       if (id.includes("attack")) {
-        const inPick =
-          G.actionMode === "weapon_select" || G.actionMode === "aoe_confirm";
         el.disabled =
           !(isPlayer && hasAP && hasEnemy && canAttack(u)) || inPick;
         el.style.borderColor =
-          hasAM || G.actionMode === "weapon_select" ? "var(--highlight)" : "";
+          (hasAM && G.currentWeapon === atkWeapon) ||
+          G.actionMode === "weapon_select"
+            ? "var(--highlight)"
+            : "";
+        el.textContent = atkWeapon
+          ? t("buttons.attack_with", { weapon: atkWeapon.label })
+          : t("buttons.attack");
       }
 
       if (id.includes("special")) {
@@ -191,53 +295,6 @@ function updateActionButtons() {
         el.textContent = specLabel;
       }
 
-      // Rotazione: gratuita (anche a 0 AP), una volta per turno
-      if (id.includes("rotate")) {
-        el.disabled = !(isPlayer && hasUnit && !u.rotated);
-        el.style.borderColor = hasRM ? "var(--highlight)" : "";
-      }
-
-      // Ricarica: arma con caricatore non pieno e riserva; evidenziata se scarica
-      if (id.includes("reload")) {
-        const rw = hasUnit ? reloadableWeapon(u) : null;
-        el.disabled =
-          !canReload(u) ||
-          G.actionMode === "weapon_select" ||
-          G.actionMode === "aoe_confirm";
-        el.style.borderColor =
-          rw && weaponEmpty(rw) && !el.disabled ? "var(--red)" : "";
-        el.textContent = rw
-          ? t("buttons.reload_with", { ap: weaponReloadAp(rw) })
-          : t("buttons.reload");
-      }
-
-      // Primo soccorso: una volta per missione, consuma tutti gli AP
-      if (id.includes("firstaid")) {
-        el.disabled =
-          !canFirstAid(u) ||
-          G.actionMode === "weapon_select" ||
-          G.actionMode === "aoe_confirm";
-        el.textContent =
-          hasUnit && u.firstAidUsed
-            ? t("buttons.first_aid_used")
-            : t("buttons.first_aid");
-      }
-
-      // Postura: primo cambio del turno gratuito, poi 1 AP
-      if (id.includes("stance")) {
-        const cur = (hasUnit && u.stance) || "stand";
-        el.disabled =
-          !canChangeStance(u) ||
-          G.actionMode === "weapon_select" ||
-          G.actionMode === "aoe_confirm";
-        el.style.borderColor =
-          G.actionMode === "stance" ? "var(--highlight)" : "";
-        el.textContent = t("buttons.stance_with", {
-          icon: STANCE_ICONS[cur],
-          label: t(`stances.${cur}`),
-        });
-      }
-
       if (id.includes("endturn")) {
         el.disabled =
           !isPlayer || !!G.pendingDice || G.actionMode === "aoe_confirm";
@@ -249,14 +306,9 @@ function updateActionButtons() {
     });
   });
 
-  ["btn-undo", "mob-btn-undo"].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el)
-      el.disabled =
-        !canUndoMove() ||
-        G.actionMode === "weapon_select" ||
-        G.actionMode === "aoe_confirm";
-  });
+  // Azioni secondarie (rotazione, postura, primo soccorso, annulla) e schede armi
+  updateIconActions(u, hasUnit, isPlayer, inPick);
+  renderWeaponBars(hasUnit ? u : null);
 
   // Sync disabled state ai bottoni della quick bar
   [
@@ -265,13 +317,14 @@ function updateActionButtons() {
     ["btn-special", "qb-special"],
     ["btn-rotate", "qb-rotate"],
     ["btn-stance", "qb-stance"],
-    ["btn-reload", "qb-reload"],
     ["btn-endturn", "qb-endturn"],
   ].forEach(([src, dst]) => {
     const s = document.getElementById(src),
       d = document.getElementById(dst);
     if (s && d) d.disabled = s.disabled;
   });
+  const qbReload = document.getElementById("qb-reload");
+  if (qbReload) qbReload.disabled = !canReload(u) || inPick;
   const qbStanceIcon = document.getElementById("qb-stance-icon");
   if (qbStanceIcon)
     qbStanceIcon.textContent = STANCE_ICONS[(hasUnit && u.stance) || "stand"];

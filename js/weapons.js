@@ -68,6 +68,15 @@ function weaponNeedsReload(w) {
   return !!w?.mag && (w.loaded ?? w.mag) < w.mag && (w.mags == null || w.mags > 0);
 }
 
+// Arma usata dal bottone Attacca (e dal tasto A): la prima arma a fuoco
+// diretto utilizzabile nell'ordine del loadout (fucile, poi coltello),
+// altrimenti la prima utilizzabile (es. granata). Le altre si scelgono
+// dalle schede armi.
+function defaultAttackWeapon(u) {
+  const usable = (u?.weapons || []).filter((w) => weaponUsable(u, w));
+  return usable.find((w) => !w.aoe) ?? usable[0] ?? null;
+}
+
 // Prima arma ricaricabile dell'unità (null se nessuna)
 function reloadableWeapon(unit) {
   return unit?.weapons?.find(weaponNeedsReload) ?? null;

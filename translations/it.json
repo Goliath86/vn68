@@ -49,7 +49,10 @@
     "reload_with": "🔄 Ricarica ({ap}AP)",
     "reload_mobile": "Ricarica",
     "first_aid": "🩹 Primo soccorso (tutti gli AP)",
-    "first_aid_used": "🩹 Primo soccorso usato"
+    "first_aid_used": "🩹 Primo soccorso usato",
+    "first_aid_mobile": "Medicarsi",
+    "undo_mobile": "Annulla",
+    "attack_with": "Attacca · {weapon}"
   },
 
   "aim": {
