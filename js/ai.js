@@ -96,14 +96,12 @@ async function runEnemyTurn() {
 
   // Check ambush (tentativo casuale)
   if (Math.random() < (G.mapData.ambushChance || 0)) {
-    // Solo coppie VC/soldato con bersaglio in gittata e in linea di vista
-    // (ogni tile a LOS parziale lungo la linea riduce la gittata di 1)
+    // Solo coppie VC/soldato con bersaglio in gittata, in vista e individuato
     const pairs = [];
     for (const e of liveEnemies.filter((e) => e.alive && vcCanShoot(e))) {
       const range = getEnemyStats(e).range;
       for (const u of G.units.filter((u) => u.alive)) {
-        const penalty = losRangePenalty(e.col, e.row, u.col, u.row);
-        if (dist(e, u) + penalty <= range && vcDetects(e, u))
+        if (vcCanFireAt(e, u, range) && vcDetects(e, u))
           pairs.push({ ambusher: e, target: u });
       }
     }
@@ -229,7 +227,9 @@ function sniperTileScore(tile, enemy, range, canShoot) {
   if (d < SNIPER_VC_MIN_DIST) score = -(SNIPER_VC_MIN_DIST - d) * 20;
   else if (d > range) score = -(d - range) * 10;
   else score = 50 + d;
-  if (canShoot && d <= range && enemy.ap - tile.cost >= 1) score += 30;
+  // Bonus solo se da quel tile il bersaglio è anche in vista
+  if (canShoot && d <= range && enemy.ap - tile.cost >= 1 && vcSees(tile, target))
+    score += 30;
   score += coverBonus(tile.col, tile.row) * 3;
   score -= tile.cost * 0.5; // a parità preferisce non muoversi
   return score;
@@ -273,16 +273,10 @@ async function sniperReposition(enemy, stats, range) {
 // senza avvicinarsi troppo; dopo ogni colpo salta un turno per ricaricare
 async function sniperActivation(enemy, stats) {
   const range = vcEffRange(enemy, stats);
-  // Spara solo a chi ha individuato (le unità occultate possono sfuggirgli)
-  let target = nearestDetectedUnit(enemy);
+  // Spara solo a chi è in gittata, in vista e individuato
+  let target = vcCanShoot(enemy) ? vcFireTarget(enemy, range) : null;
 
-  if (
-    target &&
-    vcCanShoot(enemy) &&
-    enemy.ap >= 1 &&
-    dist(enemy, target) <= range &&
-    !smokeBlocks(enemy, target)
-  ) {
+  if (target && enemy.ap >= 1) {
     checkOverwatch(enemy);
     checkSuppression(enemy);
     if (enemy.alive && enemy.ap >= 1) {
@@ -295,15 +289,9 @@ async function sniperActivation(enemy, stats) {
   if (!enemy.alive || enemy.ap < 1) return;
   await sniperReposition(enemy, stats, range);
 
-  target = nearestDetectedUnit(enemy);
-  if (
-    enemy.alive &&
-    target &&
-    vcCanShoot(enemy) &&
-    enemy.ap >= 1 &&
-    dist(enemy, target) <= range &&
-    !smokeBlocks(enemy, target)
-  ) {
+  target =
+    enemy.alive && vcCanShoot(enemy) ? vcFireTarget(enemy, range) : null;
+  if (target && enemy.ap >= 1) {
     await vcShoot(enemy, target, "log.vc_fire");
   }
 }
@@ -321,12 +309,11 @@ async function enemyActivation(enemy) {
   );
   const stats = getEnemyStats(enemy);
 
-  // Allerta se un'unità US è a distanza visiva (ridotta di notte, se
-  // arriva dal lato o dalle spalle del VC e dalla postura) e, se occultata,
-  // se il VC supera il tiro di avvistamento
-  // TODO: check LOS between enemy and target
+  // Allerta se un'unità US è in vista: entro la distanza d'allerta (ridotta
+  // di notte, dal lato o dalle spalle del VC e dalla postura) e in linea di
+  // vista; se occultata, serve anche il tiro di avvistamento
   const spotted = liveUnits.find(
-    (u) => dist(enemy, u) <= vcAlertDistanceFrom(enemy, u) && vcDetects(enemy, u),
+    (u) => vcSees(enemy, u, vcAlertDistanceFrom(enemy, u)) && vcDetects(enemy, u),
   );
   if (spotted && !enemy.alerted) {
     enemy.alerted = true;
@@ -353,14 +340,14 @@ async function enemyActivation(enemy) {
       if (exposed.length)
         target = exposed.reduce((b, u) => (dist(enemy, u) < dist(enemy, b) ? u : b));
     }
-    const d = dist(enemy, target);
-
-    // Se in gittata (con qualsiasi arma) e senza fumo in mezzo: attacca
-    if (seen && d <= effRange && enemy.ap >= 1 && !smokeBlocks(enemy, target)) {
+    // Se un'unità individuata è in gittata (con qualsiasi arma) e in vista:
+    // attacca; altrimenti avanza verso il bersaglio per guadagnare la vista
+    const fireAt = vcFireTarget(enemy, effRange);
+    if (fireAt && enemy.ap >= 1) {
       checkOverwatch(enemy);
       checkSuppression(enemy);
-      if (enemy.ap >= 1) {
-        await vcShoot(enemy, target, "log.vc_attack");
+      if (enemy.alive && enemy.ap >= 1) {
+        await vcShoot(enemy, fireAt, "log.vc_attack");
       }
     } else {
       // Muovi verso il target
@@ -413,17 +400,12 @@ async function enemyActivation(enemy) {
           checkOverwatch(enemy);
           checkSuppression(enemy);
 
-          // Attacca se ora in gittata (con qualsiasi arma) un'unità individuata
+          // Attacca se ora un'unità individuata è in gittata e in vista
           const newEffRange = vcEffRange(enemy, stats);
-          const fireAt = enemy.alive ? nearestDetectedUnit(enemy) : null;
+          const fireAfter = enemy.alive ? vcFireTarget(enemy, newEffRange) : null;
 
-          if (
-            fireAt &&
-            dist(enemy, fireAt) <= newEffRange &&
-            enemy.ap >= 1 &&
-            !smokeBlocks(enemy, fireAt)
-          ) {
-            await vcShoot(enemy, fireAt, "log.vc_fire");
+          if (fireAfter && enemy.ap >= 1) {
+            await vcShoot(enemy, fireAfter, "log.vc_fire");
           }
         }
       }

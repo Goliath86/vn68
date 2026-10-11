@@ -166,6 +166,37 @@ function vcAlertDistanceFrom(enemy, unit) {
   return Math.max(1, d - unitStance(unit).spotRange);
 }
 
+// ── LINEA DI VISTA VC ──────────────────────────────────────────────────
+// Stesse regole dei soldati (fowLos.js:isTileVisibleFromUnit): ogni tile
+// intermedio a LOS parziale toglie 1 alla vista, terreno pieno e fumo la
+// bloccano, chi è nel fumo vede ed è visto solo da distanza 1. La vista del
+// VC è la sua distanza d'allerta (ridotta di notte); per sparare il bersaglio
+// deve essere in gittata e in vista (il VC si gira verso chi colpisce, quindi
+// per il fuoco non conta il cono).
+function vcSees(from, to, sight = vcAlertDistance()) {
+  const d = dist(from, to);
+  if (d <= 1) return true;
+  if (d > sight) return false;
+  if (isSmoked(from.col, from.row) || isSmoked(to.col, to.row)) return false;
+  return d + losRangePenalty(from.col, from.row, to.col, to.row) <= sight;
+}
+
+function vcCanFireAt(enemy, unit, range) {
+  return dist(enemy, unit) <= range && vcSees(enemy, unit);
+}
+
+// Bersaglio di fuoco: l'unità più vicina in gittata, in vista e individuata
+// (la vista si controlla prima, così non si tira l'avvistamento per chi è
+// dietro un muro)
+function vcFireTarget(enemy, range) {
+  return (
+    G.units
+      .filter((u) => u.alive)
+      .sort((a, b) => dist(enemy, a) - dist(enemy, b))
+      .find((u) => vcCanFireAt(enemy, u, range) && vcDetects(enemy, u)) ?? null
+  );
+}
+
 // ── POSTURA ────────────────────────────────────────────────────────────
 // In piedi / accucciato / sdraiato (unit.stance). Più si sta bassi più si
 // mira e ci si ripara meglio, ma si vede meno e ci si muove a fatica.
@@ -228,13 +259,15 @@ function isConcealed(unit) {
 }
 
 // Un VC si accorge di un'unità? Le unità occultate oltre distanza 1 sono
-// invisibili oltre la distanza d'allerta e, entro quella, richiedono un tiro
-// (spotChance della postura), uno per coppia VC/unità per turno.
-// Se riesce l'unità è scoperta per tutti i VC fino alla fine del turno.
+// invisibili fuori dalla vista del VC (distanza d'allerta e linea di vista)
+// e, dentro, richiedono un tiro (spotChance della postura), uno per coppia
+// VC/unità per turno. Se riesce l'unità è scoperta per tutti i VC fino alla
+// fine del turno. Le unità non occultate sono note a tutti i VC in allerta
+// (si muovono verso di loro anche senza vederle; per sparare serve la vista).
 function vcDetects(enemy, unit) {
   if (!unit.alive) return false;
   if (!isConcealed(unit) || dist(enemy, unit) <= 1) return true;
-  if (dist(enemy, unit) > vcAlertDistanceFrom(enemy, unit)) return false;
+  if (!vcSees(enemy, unit, vcAlertDistanceFrom(enemy, unit))) return false;
   G.vcSpotRolls = G.vcSpotRolls || {};
   const key = enemy.id + ">" + unit.id;
   if (!(key in G.vcSpotRolls)) {
@@ -444,14 +477,6 @@ function isSmoked(col, row) {
   return (G.missionState?.smokes || []).some(
     (s) => s.col === col && s.row === row,
   );
-}
-
-// Fumo tra due posizioni (usato dall'IA VC, che non considera il resto del LOS)
-function smokeBlocks(from, to) {
-  if (dist(from, to) > 1 && (isSmoked(from.col, from.row) || isSmoked(to.col, to.row)))
-    return true;
-  const line = getLineTiles(from.col, from.row, to.col, to.row);
-  return line.slice(0, -1).some((t) => isSmoked(t.col, t.row));
 }
 
 function deploySmoke(thrower, weapon, tc, tr) {
