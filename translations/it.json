@@ -279,6 +279,7 @@
     "stance_spotted": "👁 {name} è stato individuato dai VC!",
     "stance_unnoticed": "🌿 {vc} non si accorge di {name}",
     "noise_alert": "Il rumore allerta {count} VC in vista",
+    "vc_noise_alert": "Gli spari richiamano {count} VC in vista",
     "night_mission": "Missione notturna: visibilità ridotta per entrambe le parti",
     "trap_triggered": "{name} finisce in una trappola ({trap})! -{dmg}HP",
     "trap_revealed": "{name} individua una trappola ({trap}) in ({col},{row})",

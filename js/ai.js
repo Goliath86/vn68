@@ -117,6 +117,7 @@ async function runEnemyTurn() {
       );
       ambusher.hasShot = true;
       await resolveCombat(ambusher, target, true);
+      makeVcNoise(ambusher, target, unitFireWeapon(ambusher));
     }
   }
 
@@ -174,6 +175,8 @@ async function vcShoot(enemy, target, logKey) {
   } else {
     await resolveCombat(enemy, target, true, w);
   }
+  // Lo sparo richiama gli altri VC a portata d'orecchio
+  makeVcNoise(enemy, target, w);
 }
 
 function nearestLiveUnit(pos) {

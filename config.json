@@ -159,6 +159,7 @@
         "labelEn": "AK-47",
         "atk": 2,
         "range": 2,
+        "noise": 5,
         "sound": "assets/ak47.mp3"
       },
       {
@@ -167,6 +168,7 @@
         "labelEn": "RPG-7",
         "atk": 4,
         "range": 4,
+        "noise": 7,
         "ammo": 1,
         "aoe": 1,
         "maxCarriers": 1,
@@ -180,6 +182,7 @@
         "labelEn": "Mosin",
         "atk": 3,
         "range": 4,
+        "noise": 6,
         "sound": "assets/mosin.mp3"
       }
     ],
@@ -190,6 +193,7 @@
         "labelEn": "TT-33",
         "atk": 3,
         "range": 2,
+        "noise": 3,
         "rounds": 1,
         "sound": "assets/pistol.mp3"
       }

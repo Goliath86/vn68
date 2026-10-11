@@ -509,17 +509,18 @@ function _drawEffect(ctx, ts, fx, p) {
 
 // ── NOISE — onda sonora di uno sparo/esplosione ─────────────────────────
 // Due rombi (distanza Manhattan, come il raggio di allerta) che si allargano
-// dalla fonte fino al raggio del rumore e svaniscono
+// dalla fonte fino al raggio del rumore e svaniscono (rossastri per gli spari VC)
 function _drawNoise(ctx, ts, d, p) {
   const { x, y } = tileToScreen(d.col, d.row);
   const cx = x + ts / 2,
     cy = y + ts / 2;
+  const rgb = d.vc ? "255,130,110" : "235,230,205";
   ctx.lineWidth = Math.max(1, ts * 0.025);
   for (const lag of [0, 0.25]) {
     const q = (p - lag) / (1 - lag);
     if (q <= 0) continue;
     const r = (0.5 + d.radius * Math.sqrt(q)) * ts;
-    ctx.strokeStyle = `rgba(235,230,205,${(0.55 * (1 - q)).toFixed(3)})`;
+    ctx.strokeStyle = `rgba(${rgb},${(0.55 * (1 - q)).toFixed(3)})`;
     ctx.beginPath();
     ctx.moveTo(cx, cy - r);
     ctx.lineTo(cx + r, cy);

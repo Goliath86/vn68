@@ -114,6 +114,25 @@ function makeNoise(src, radius) {
   if (heard) log(t("log.noise_alert", { count: heard }), "enemy");
 }
 
+// Spari VC: allertano gli altri VC entro il raggio di rumore dell'arma
+// (campo `noise`, come per la squadra), che si girano verso il bersaglio,
+// cioè dove si combatte. Disattivabile per mappa con "vcNoise": false.
+// L'onda sonora si disegna solo se il tiratore è visibile, per non rivelarlo;
+// il log conta solo i VC allertati in vista.
+function makeVcNoise(shooter, target, weapon) {
+  if (G.mapData?.vcNoise === false) return;
+  const radius = weaponNoise(shooter, weapon);
+  if (!(radius > 0)) return;
+  if (isTileVisible(shooter.col, shooter.row))
+    addFX("noise", { col: shooter.col, row: shooter.row, radius, vc: true }, 1000);
+  let heard = 0;
+  for (const e of G.enemies) {
+    if (e === shooter || dist(e, shooter) > radius) continue;
+    if (alertVcToward(e, target) && isTileVisible(e.col, e.row)) heard++;
+  }
+  if (heard) log(t("log.vc_noise_alert", { count: heard }), "enemy");
+}
+
 // ── MISSIONI NOTTURNE ──────────────────────────────────────────────────
 const NIGHT_VISION_PENALTY = 2;
 const VC_ALERT_DISTANCE = 5;
