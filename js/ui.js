@@ -28,6 +28,12 @@ document
   );
 
 document
+  .getElementById("mob-btn-reload")
+  .addEventListener("click", () =>
+    document.getElementById("btn-reload").click(),
+  );
+
+document
   .getElementById("mob-btn-endturn")
   .addEventListener("click", () =>
     document.getElementById("btn-endturn").click(),
@@ -127,7 +133,8 @@ document.getElementById("btn-special").addEventListener("click", () => {
     !G.selectedUnit ||
     G.selectedUnit.ap < 1 ||
     G.selectedUnit.specialUsed ||
-    G.selectedUnit.shaken
+    G.selectedUnit.shaken ||
+    specialBlockedByAmmo(G.selectedUnit)
   )
     return;
 
@@ -175,6 +182,12 @@ document.getElementById("btn-stance").addEventListener("click", () => {
   sfx("click");
   // Secondo click sul bottone: chiude il selettore
   setActionMode(G.actionMode === "stance" ? null : "stance");
+});
+
+document.getElementById("btn-reload").addEventListener("click", () => {
+  const u = G.selectedUnit;
+  if (!canReload(u)) return;
+  reloadWeapon(u);
 });
 
 document.getElementById("btn-undo").addEventListener("click", () => {
@@ -270,6 +283,9 @@ document.addEventListener("keydown", (e) => {
       break;
     case "c":
       if (canChangeStance(u)) document.getElementById("btn-stance").click();
+      break;
+    case "l":
+      if (canReload(u)) document.getElementById("btn-reload").click();
       break;
     case "enter":
       // preventDefault: evita il doppio click nativo se un bottone ha il focus

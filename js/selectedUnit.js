@@ -32,8 +32,8 @@ function selInfoHTML(u) {
       }
       ${u.overwatch ? `<br><span style="color:#aaddff">${t("units.status.in_overwatch")}</span>` : ""}
       ${u.suppression ? `<br><span style="color:#ffaa33">${t("units.status.in_suppression")}</span>` : ""}
-      ${u.cls === "sniper" && u.hasShot ? `<br><span style="color:var(--red)">${t("units.status.shot_used")}</span>` : ""}
-      ${u.cls === "sniper" && u.needReload ? `<br><span style="color:var(--red)">${t("units.status.need_reload")}</span>` : ""}
+      ${(u.weapons || []).some((w) => w.shotsPerTurn && (w.shotsThisTurn || 0) >= w.shotsPerTurn) ? `<br><span style="color:var(--red)">${t("units.status.shot_used")}</span>` : ""}
+      ${(u.weapons || []).some(weaponEmpty) ? `<br><span style="color:var(--red)">${t(reloadableWeapon(u) ? "units.status.need_reload" : "units.status.out_of_ammo")}</span>` : ""}
       ${u.shaken ? `<br><span style="color:#ff5028;font-weight:700">${t("units.status.shaken")}</span>` : ""}
       ${u.carriesPilot ? `<br><span style="color:var(--yellow)">${t("units.status.carry_pilot")}</span>` : ""}
       ${
@@ -41,11 +41,8 @@ function selInfoHTML(u) {
           ? "<br>" +
             u.weapons
               .map((w) => {
-                const depleted = w.ammo !== null && w.ammo <= 0;
-                const ammoStr =
-                  w.ammo === null
-                    ? t("weapons.ammo_inf")
-                    : t("weapons.ammo_tag", { n: w.ammo });
+                const depleted = (w.ammo != null && w.ammo <= 0) || weaponEmpty(w);
+                const ammoStr = weaponAmmoLabel(w);
                 const aoeStr = w.aoe ? ` AoE${w.aoe}` : "";
                 return `<span style="color:${depleted ? "var(--red)" : "var(--paper-dark)"}">${w.label}${aoeStr} ${ammoStr}</span>`;
               })

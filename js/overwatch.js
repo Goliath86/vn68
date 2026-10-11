@@ -9,6 +9,8 @@ function checkOverwatch(enemy) {
     if (facingSector(ow, enemy) !== "front") continue;
     if (!isTileVisibleFromUnit(ow, enemy.col, enemy.row)) continue;
     if (allyBlockingFire(ow, enemy)) continue;
+    // Serve un colpo in canna: l'overwatch lo consuma
+    if (!hasRoundLoaded(unitFireWeapon(ow))) continue;
     const owDef = UNIT_CLASSES[ow.cls];
 
     if (dist(ow, enemy) <= unitFireRange(ow)) {
@@ -23,9 +25,8 @@ function checkOverwatch(enemy) {
 
       sfxShoot(ow.cls, unitWeapon(ow));
 
-      ow.hasShot = true;
-
       const owWeapon = unitFireWeapon(ow);
+      if (owWeapon?.mag) owWeapon.loaded = Math.max(0, (owWeapon.loaded ?? owWeapon.mag) - 1);
       const owRange = dist(ow, enemy);
       const owPenalty = weaponRangePenalty(ow, owWeapon, owRange);
       const owAtk =
@@ -109,8 +110,6 @@ function checkOverwatch(enemy) {
       const noise = weaponNoise(ow, owWeapon);
       makeNoise(ow, noise);
       revealShooter(ow, noise);
-
-      // TODO: set HasShot
     }
   }
 }

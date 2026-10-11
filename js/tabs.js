@@ -33,7 +33,7 @@ document
   .addEventListener("click", collapseSheet);
 
 // Bottoni quick bar → delegano ai corrispondenti desktop
-["move", "attack", "special", "rotate", "stance", "endturn"].forEach((action) => {
+["move", "attack", "special", "rotate", "stance", "reload", "endturn"].forEach((action) => {
   document.getElementById("qb-" + action).addEventListener("click", () => {
     document.getElementById("btn-" + action).click();
   });
@@ -51,10 +51,7 @@ function updateQuickWeaponsBar(u) {
   if (G.actionMode === "weapon_select" && u) {
     (u.weapons || []).forEach((w, i) => {
       const hasAmmo = weaponUsable(u, w);
-      const ammoStr =
-        w.ammo === null
-          ? t("weapons.ammo_inf")
-          : t("weapons.ammo_tag", { n: w.ammo });
+      const ammoStr = weaponAmmoLabel(w);
       const aoeStr = w.aoe ? ` · AoE${w.aoe}` : "";
       html += `<button class="btn qwb-btn" ${!hasAmmo ? "disabled" : ""} data-widx="${i}">
 <span class="qwb-name">${w.label} ${ammoStr}</span>
@@ -157,6 +154,7 @@ function updateActionButtons() {
     ["btn-special", "mob-btn-special"],
     ["btn-rotate", "mob-btn-rotate"],
     ["btn-stance", "mob-btn-stance"],
+    ["btn-reload", "mob-btn-reload"],
     ["btn-endturn", "mob-btn-endturn"],
     //["btn-dice", "mob-btn-dice"],
   ];
@@ -186,8 +184,7 @@ function updateActionButtons() {
           hasAP &&
           !u?.specialUsed &&
           !u?.shaken &&
-          !(u?.cls === "sniper" && u?.hasShot) &&
-          !(u?.cls === "sniper" && u?.needReload)
+          !specialBlockedByAmmo(u)
         );
         el.style.borderColor = hasSM ? "var(--highlight)" : "";
         el.textContent = specLabel;
@@ -197,6 +194,20 @@ function updateActionButtons() {
       if (id.includes("rotate")) {
         el.disabled = !(isPlayer && hasUnit && !u.rotated);
         el.style.borderColor = hasRM ? "var(--highlight)" : "";
+      }
+
+      // Ricarica: arma con caricatore non pieno e riserva; evidenziata se scarica
+      if (id.includes("reload")) {
+        const rw = hasUnit ? reloadableWeapon(u) : null;
+        el.disabled =
+          !canReload(u) ||
+          G.actionMode === "weapon_select" ||
+          G.actionMode === "aoe_confirm";
+        el.style.borderColor =
+          rw && weaponEmpty(rw) && !el.disabled ? "var(--red)" : "";
+        el.textContent = rw
+          ? t("buttons.reload_with", { ap: weaponReloadAp(rw) })
+          : t("buttons.reload");
       }
 
       // Postura: primo cambio del turno gratuito, poi 1 AP
@@ -241,6 +252,7 @@ function updateActionButtons() {
     ["btn-special", "qb-special"],
     ["btn-rotate", "qb-rotate"],
     ["btn-stance", "qb-stance"],
+    ["btn-reload", "qb-reload"],
     ["btn-endturn", "qb-endturn"],
   ].forEach(([src, dst]) => {
     const s = document.getElementById(src),
@@ -263,10 +275,7 @@ function updateActionButtons() {
     let html = `<div style="font-size:10px;color:var(--paper-dark);margin-bottom:3px">${t("weapons.pick_prompt")}</div>`;
     ws.forEach((w, i) => {
       const hasAmmo = weaponUsable(u, w);
-      const ammoStr =
-        w.ammo === null
-          ? t("weapons.ammo_inf")
-          : t("weapons.ammo_tag", { n: w.ammo });
+      const ammoStr = weaponAmmoLabel(w);
       const aoeStr = w.aoe ? ` · AoE${w.aoe}` : "";
       html += `<button class="btn btn-weapon" ${!hasAmmo ? "disabled" : ""} data-widx="${i}">${w.label} ${ammoStr} · ATK${w.atk} · RNG${w.range}${aoeStr} · 🔊${weaponNoise(u, w)}</button>`;
     });

@@ -33,6 +33,8 @@
         "atk": 3,
         "range": 3,
         "noise": 5,
+        "mag": 3,
+        "mags": 4,
         "sound": "assets/m16.mp3"
       },
       {
@@ -76,6 +78,9 @@
         "range": 6,
         "rangePenalty": true,
         "noise": 7,
+        "mag": 1,
+        "mags": 10,
+        "shotsPerTurn": 1,
         "sound": "assets/sniper_us.mp3"
       },
       {
@@ -96,6 +101,8 @@
         "atk": 2,
         "range": 3,
         "noise": 5,
+        "mag": 3,
+        "mags": 3,
         "sound": "assets/m16.mp3"
       },
       {
@@ -131,6 +138,8 @@
         "range": 1,
         "rounds": 1,
         "noise": 2,
+        "mag": 2,
+        "mags": 3,
         "sound": "assets/pistol.mp3"
       },
       {

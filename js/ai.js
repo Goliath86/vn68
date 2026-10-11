@@ -65,7 +65,6 @@ async function runEnemyTurn() {
   G.overwatchList = [];
   G.suppressList = [];
   G.units.forEach((u) => {
-    // if (u.overwatch) u.hasShot = true;
     u.overwatch = false;
     u.suppression = false;
     u.overwatchFired = false;
@@ -78,9 +77,7 @@ async function runEnemyTurn() {
       u.specialUsed = false;
       u.rotated = false;
       u.stanceChanged = false;
-      if (u.needReload) u.needReload = false;
-      if (u.hasShot) u.needReload = true;
-      u.hasShot = false;
+      (u.weapons || []).forEach((w) => (w.shotsThisTurn = 0));
     }
     // Posizione svelata (spari, avvistamenti): torna nascosta
     u.exposed = false;

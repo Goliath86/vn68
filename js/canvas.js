@@ -221,10 +221,7 @@ function onCanvasClick(e) {
     if (target) {
       clearLastMove();
       G.selectedUnit.ap -= 1;
-      if (w?.ammo !== null && w?.ammo != null) w.ammo--;
-      // Il coltello non scarica il fucile del cecchino
-      if (G.selectedUnit.cls === "sniper" && !w?.melee)
-        G.selectedUnit.hasShot = true;
+      consumeShot(w);
       resolveCombat(G.selectedUnit, target, false, w);
       setActionMode(null);
       updateUI();

@@ -42,6 +42,16 @@ async function loadConfig() {
   }
 }
 
+// Armi con caricatore (`mag`): parte carica; `mags` = caricatori di riserva
+// (null/assente = illimitati)
+function initWeaponMag(w) {
+  if (w.mag) {
+    w.loaded = w.loaded ?? w.mag;
+    w.mags = w.mags ?? null;
+  }
+  return w;
+}
+
 // Crea l'array di armi per un'unità rispettando il limite maxCarriers per missione
 function buildWeapons(cls, carrierCounts) {
   return (WEAPONS_CONFIG[cls] || []).reduce((acc, w) => {
@@ -50,7 +60,7 @@ function buildWeapons(cls, carrierCounts) {
       if ((carrierCounts[key] || 0) >= w.maxCarriers) return acc;
       carrierCounts[key] = (carrierCounts[key] || 0) + 1;
     }
-    acc.push({ ...w, ammo: w.ammo ?? null });
+    acc.push(initWeaponMag({ ...w, ammo: w.ammo ?? null }));
     return acc;
   }, []);
 }

@@ -44,7 +44,10 @@
     "rotate_mobile": "Turn",
     "stance": "🧍 Stance",
     "stance_with": "{icon} Stance: {label}",
-    "stance_mobile": "Stance"
+    "stance_mobile": "Stance",
+    "reload": "🔄 Reload",
+    "reload_with": "🔄 Reload ({ap}AP)",
+    "reload_mobile": "Reload"
   },
 
   "aim": {
@@ -137,7 +140,8 @@
       "special_used": "Ability used",
       "special_available": "Spec: {label}",
       "shot_used": "Shot fired (1 shot/turn)",
-      "need_reload": "Need to reload"
+      "need_reload": "🔄 Magazine empty: reload",
+      "out_of_ammo": "✕ Out of ammo"
     }
   },
 
@@ -254,6 +258,7 @@
     "attack_rear": "{name} hit from BEHIND — no cover, +1 ATK",
     "unit_rotate": "{name} turns to face {dir}",
     "stance_change": "{name}: stance {stance}",
+    "reload": "🔄 {name} reloads the {weapon} (spare magazines: {mags})",
     "stance_spotted": "👁 {name} has been spotted by the VC!",
     "stance_unnoticed": "🌿 {vc} doesn't notice {name}",
     "noise_alert": "The noise alerts {count} VC in sight",

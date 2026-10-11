@@ -79,6 +79,24 @@ async function resumeGame(save) {
   G.enemies = save.enemies;
   // Salvataggi precedenti all'orientamento: direzione iniziale di default
   G.units.forEach((u) => (u.facing ??= initialFacing(u)));
+  // Salvataggi precedenti ai caricatori: campi presi dal config attuale
+  // (caricatore pieno); il vecchio blocco del cecchino non esiste più
+  G.units.forEach((u) => {
+    delete u.hasShot;
+    delete u.needReload;
+    for (const w of u.weapons || []) {
+      if (w.mag) continue;
+      const cfg = (WEAPONS_CONFIG[u.cls] || []).find((c) => c.id === w.id);
+      if (!cfg?.mag) continue;
+      Object.assign(w, {
+        mag: cfg.mag,
+        mags: cfg.mags ?? null,
+        reloadAp: cfg.reloadAp,
+        shotsPerTurn: cfg.shotsPerTurn,
+      });
+      initWeaponMag(w);
+    }
+  });
   G.enemies.forEach((e) => (e.facing ??= rnd(0, 3)));
   G.missionState = save.missionState;
   G.activeFires = save.activeFires || [];

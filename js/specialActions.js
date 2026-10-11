@@ -145,8 +145,7 @@ function confirmAoeAttack() {
   const { col: tc, row: tr, weapon: w } = G.pendingAoe;
   clearLastMove();
   u.ap -= 1;
-  if (w.ammo !== null) w.ammo--;
-  if (u.cls === "sniper") u.hasShot = true;
+  consumeShot(w);
   resolveAoeCombat(u, w, tc, tr, false);
   setActionMode(null);
   updateUI();

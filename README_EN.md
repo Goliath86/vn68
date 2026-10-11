@@ -132,7 +132,7 @@ The default composition is one of each class, but you can bring two Assaults and
 | Class | HP | Move | ATK | DEF | Range | Special Ability |
 |---|---|---|---|---|---|---|
 | **Assault** | 10 | 4 | 3 | 1 | 3 | Suppressive Fire · **Grenades ×2** (AoE, ATK5, range 3) |
-| **Sniper** | 7 | 3 | 4 | 0 | 6 | Overwatch (fires at moving enemies) — **1 shot per turn** |
+| **Sniper** | 7 | 3 | 4 | 0 | 6 | Overwatch (fires at moving enemies) — **1 shot per turn**, 1-round magazine |
 | **Engineer** | 9 | 3 | 2 | 1 | 3 | Demolition (bunkers/obstacles, roll ≥4) · Fire (vegetation, immediate) · Trap disarming |
 | **Medic** | 8 | 3 | 1 | 1 | 1 | First Aid (heals an adjacent ally) — **restores morale** |
 
@@ -289,6 +289,16 @@ Practical examples:
   | Chance of being noticed while concealed | — | 50% | 30% |
 
   **Concealment (🌿):** a crouched or prone soldier on concealing terrain (vegetation/rubble with partial LOS, or cover ≥2) is concealed. A VC beyond distance 1 notices them only if within its alert distance **and** it passes a spotting roll (one roll per VC per turn): otherwise it doesn't get alerted and doesn't shoot at them, at most it moves toward the squad. At distance 1 you are always noticed. When a VC spots you, or when you fire / throw a noisy weapon, your position is **revealed** (👁) to all VC until the end of the enemy turn; the knife (noise 0) doesn't reveal you.
+- **Ammo and reloading:** firearms have a magazine; every attack uses a round, and so does every overwatch shot and every suppressive-fire burst (which only trigger with a round chambered). The **🔄 Reload** button (key **L**, 1 AP) refills the magazine using one of the spare magazines: once those run out, the knife is all that's left. The button turns red when the magazine is empty; the weapon selector and unit panel show ammo as `rounds/magazine +spare`.
+
+  | Weapon | Magazine | Spare | Notes |
+  |---|---|---|---|
+  | M16 (Assault) | 3 | 4 | |
+  | M16 (Engineer) | 3 | 3 | |
+  | M14 (Sniper) | 1 | 10 | at most 1 shot per turn |
+  | M1911 (Medic) | 2 | 3 | |
+
+  The **Sniper** fires a single shot per turn and must reload after every shot: shooting + reloading takes 2 AP, or you shoot and reload next turn (also before setting overwatch, which needs a round chambered). The knife is always available. Grenades, smoke and the radio keep their limited uses without a magazine. VC have no magazines (the VC sniper still skips a turn after each shot).
 - **Line of fire:** you can't shoot through a standing or crouched teammate on the line between shooter and target (you'd risk hitting them); a **prone** teammate doesn't block, you fire over them. It applies to direct attacks, overwatch and suppressive fire, not to grenades, RPGs and artillery. On desktop, in attack mode, an **aim ray** follows the mouse from the selected unit: green if the line of fire is clear, red if a teammate blocks it, orange if terrain or smoke block the view, grey if the point is outside the field of view or out of range; an ✕ marks what blocks it and the reason appears below the tile. On mobile there is no ray: only the attackable targets are highlighted.
 - **VC traps (punji and mines):** hidden on the map. A soldier walking over one stops there and takes damage (punji 2 HP, mine 4 HP). The **Engineer** automatically spots traps at distance 1; a spotted trap is marked on the map, movement routes around it and the Engineer can **disarm** it with the special ability (1 AP). VC are immune.
 - **Smoke grenades:** the Assault carries one smoke grenade (×1) creating a radius-1 screen for 2 turns. Smoke blocks line of sight: anyone inside sees and is seen only from distance 1. This applies to VC as well, who cannot fire through smoke.
@@ -524,7 +534,11 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | `label` / `labelEn` | string | Display name in Italian / English |
 | `atk` | number | Weapon ATK value (overrides class default) |
 | `range` | number | Maximum range in tiles |
-| `ammo` | number or null | Available ammo; `null` = unlimited |
+| `ammo` | number or null | Total uses available (grenades, smoke, radio); `null` = unlimited |
+| `mag` | number | (optional, US only) Rounds per magazine: every attack (and every overwatch shot / suppression burst) uses 1; an empty magazine must be reloaded |
+| `mags` | number | (optional, with `mag`) Spare magazines; each reload uses one. Unlimited when absent |
+| `reloadAp` | number | (optional, with `mag`) AP to reload; default 1 |
+| `shotsPerTurn` | number | (optional) Max attacks per turn with this weapon (sniper: 1) |
 | `aoe` | number | (optional) Area-of-effect radius in Manhattan distance |
 | `minRange` | number | (optional, AoE weapons only) Minimum range in tiles; defaults to `aoe + 1` so the thrower is never inside the blast |
 | `maxCarriers` | number | (optional) Max units per mission that can carry this weapon (separate counters for the US squad and the VC) |

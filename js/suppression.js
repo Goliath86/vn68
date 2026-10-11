@@ -15,8 +15,12 @@ function checkSuppression(enemy) {
     if (
       suppressionCovers(sup, enemy) &&
       isTileVisibleFromUnit(sup, enemy.col, enemy.row) &&
-      !allyBlockingFire(sup, enemy)
+      !allyBlockingFire(sup, enemy) &&
+      hasRoundLoaded(unitFireWeapon(sup))
     ) {
+      // Ogni raffica di soppressione consuma un colpo del caricatore
+      const sw = unitFireWeapon(sup);
+      if (sw?.mag) sw.loaded = Math.max(0, (sw.loaded ?? sw.mag) - 1);
       enemy.suppressed = true;
       enemy.ap = 0;
 

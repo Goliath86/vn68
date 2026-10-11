@@ -97,6 +97,34 @@ function setActionMode(mode, weapon = null) {
   updateUI();
 }
 
+// Ricarica: riempie il caricatore della prima arma ricaricabile consumando
+// un caricatore di riserva (se limitati). Costa weaponReloadAp AP.
+function canReload(u) {
+  const w = reloadableWeapon(u);
+  return (
+    !!w && u.alive && G.phase === "player" && u.ap >= weaponReloadAp(w)
+  );
+}
+
+function reloadWeapon(u) {
+  if (!canReload(u)) return;
+  const w = reloadableWeapon(u);
+  clearLastMove();
+  u.ap -= weaponReloadAp(w);
+  w.loaded = w.mag;
+  if (w.mags != null) w.mags--;
+  sfx("reload");
+  log(
+    t("log.reload", {
+      name: u.name,
+      weapon: w.label,
+      mags: w.mags == null ? t("weapons.ammo_inf") : w.mags,
+    }),
+  );
+  setActionMode(null);
+  updateUI();
+}
+
 // Cambio postura: il primo del turno è gratuito, i successivi costano 1 AP
 const STANCE_CHANGE_AP = 1;
 

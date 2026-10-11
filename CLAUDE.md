@@ -63,7 +63,7 @@ Altre costanti in `constants.js`: `TILE=64`, `AP_PER_TURN=3`, `SAVE_KEY`, `UNIT_
 | `mapGen.js` | mappe procedurali: `generateProceduralMap(name, seed)` produce un mapData con lo stesso schema dei JSON missione; registro `MAP_GENERATORS` (oggi `jungle` e `urban`), seed deterministico (mulberry32), helper condivisi `_generateWithRetries` (tentativi derivati dal seed), `_allReachable` (verifica BFS), `_procTranslations` (testi `*_TEXT` → blocco `translations`) |
 | `i18n.js` | `t()`/`mt()` lookup traduzioni, `applyTranslationsToData()`, `setLang()` |
 | `alea.js` | dadi: `rollD6`, `rollDice(n)`, `diceSum` |
-| `weapons.js` | `unitWeapon(unit)` — arma correntemente equipaggiata/selezionata |
+| `weapons.js` | `unitWeapon(unit)` — arma correntemente equipaggiata/selezionata; munizioni: `weaponUsable`/`canAttack`, `consumeShot` (usi `ammo`, caricatore `mag`/`loaded`, `shotsPerTurn`), `reloadableWeapon`, `weaponAmmoLabel` (ricarica in `actions.js:reloadWeapon`; il vecchio `hasShot`/`needReload` resta solo per il cecchino VC) |
 | `actions.js` | `setActionMode()` — entra/esce da modalità muovi/attacca/speciale |
 | `specialActions.js` | logica delle 4 abilità speciali (soppressione, overwatch, demolizione/incendio, cura) e `confirmAoeAttack()` |
 | `overwatch.js` | `checkOverwatch(enemy)` — trigger overwatch durante la fase nemica |

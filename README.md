@@ -132,7 +132,7 @@ La composizione di default è una per classe, ma puoi portare due assalti e ness
 | Classe | HP | Movimento | ATK | DEF | Gittata | Abilità Speciale |
 |---|---|---|---|---|---|---|
 | **Assalto** | 10 | 4 | 3 | 1 | 3 | Fuoco Soppressivo · **Granate ×2** (AoE, ATK5, gittata 3) |
-| **Cecchino** | 7 | 3 | 4 | 0 | 6 | Overwatch (attacca nemici in movimento) — **1 sparo per turno** |
+| **Cecchino** | 7 | 3 | 4 | 0 | 6 | Overwatch (attacca nemici in movimento) — **1 sparo per turno**, caricatore da 1 colpo |
 | **Geniere** | 9 | 3 | 2 | 1 | 3 | Demolizione (bunker/ostacoli, dado ≥4) · Incendio (vegetazione, immediato) · Disinnesco trappole |
 | **Medico** | 8 | 3 | 1 | 1 | 1 | Primo Soccorso (cura un alleato adiacente) — **ripristina il morale** |
 
@@ -288,6 +288,16 @@ Esempi pratici:
   | Probabilità di essere notato se occultato | — | 50% | 30% |
 
   **Occultamento (🌿):** un soldato accucciato o sdraiato su un terreno che nasconde (vegetazione/macerie con LOS parziale, o copertura ≥2) è occultato. Un VC oltre distanza 1 lo nota solo se è entro la propria distanza d'allerta **e** supera il tiro di avvistamento (un tiro per VC per turno): altrimenti non si allerta e non gli spara, al massimo si avvicina alla squadra. A distanza 1 si viene sempre notati. Quando un VC ti individua, o quando spari / lanci con un'arma rumorosa, la posizione è **svelata** (👁) per tutti i VC fino alla fine del turno nemico; il coltello (rumore 0) non svela.
+- **Munizioni e ricarica:** le armi da fuoco hanno un caricatore; ogni attacco consuma un colpo, e così ogni sparo d'overwatch e ogni raffica di fuoco soppressivo (che si attivano solo con un colpo in canna). Il bottone **🔄 Ricarica** (tasto **L**, 1 AP) riempie il caricatore usando uno dei caricatori di riserva: finiti quelli, resta il coltello. Il bottone si colora di rosso quando il caricatore è vuoto; nel selettore armi e nel pannello unità le munizioni sono indicate come `colpi/caricatore +riserva`.
+
+  | Arma | Caricatore | Riserva | Note |
+  |---|---|---|---|
+  | M16 (Assalto) | 3 | 4 | |
+  | M16 (Geniere) | 3 | 3 | |
+  | M14 (Cecchino) | 1 | 10 | massimo 1 sparo per turno |
+  | M1911 (Medico) | 2 | 3 | |
+
+  Il **cecchino** spara un solo colpo per turno e deve ricaricare dopo ogni colpo: sparare + ricaricare occupa 2 AP, oppure si spara e si ricarica il turno dopo (anche prima di attivare l'overwatch, che richiede il colpo in canna). Il coltello resta sempre disponibile. Le granate, il fumogeno e la radio mantengono i loro usi limitati senza caricatore. I VC non hanno caricatori (il cecchino VC salta ancora un turno dopo ogni colpo).
 - **Linea di tiro:** non si può sparare attraverso un compagno in piedi o accucciato che si trova sulla linea tra tiratore e bersaglio (si rischierebbe di colpirlo); un compagno **sdraiato** non blocca, si spara sopra di lui. Vale per attacchi diretti, overwatch e fuoco soppressivo, non per granate, RPG e artiglieria. Su desktop, in modalità attacco, un **raggio di mira** segue il mouse dall'unità selezionata: verde se la linea di tiro è libera, rosso se un compagno la blocca, arancione se il terreno o il fumo bloccano la vista, grigio se il punto è fuori dal campo visivo o dalla gittata; una ✕ segna cosa blocca e sotto il tile compare il motivo. Su mobile il raggio non c'è: restano evidenziati solo i bersagli attaccabili.
 - **Trappole VC (punji e mine):** nascoste sulla mappa. Un soldato che ci passa sopra si ferma lì e subisce danno (punji 2 HP, mina 4 HP). Il **geniere** individua automaticamente le trappole a distanza 1; una trappola individuata è segnata sulla mappa, il movimento la aggira e il geniere può **disinnescarla** con l'abilità speciale (1 AP). I VC ne sono immuni.
 - **Fumogeni:** l'Assalto ha un fumogeno (×1) che crea una cortina di raggio 1 per 2 turni. Il fumo blocca la linea di vista: chi è dentro vede ed è visto solo da distanza 1. Vale anche per i VC, che non possono sparare attraverso il fumo.
@@ -523,7 +533,11 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | `label` / `labelEn` | string | Nome visualizzato in italiano / inglese |
 | `atk` | number | Valore ATK dell'arma (sovrascrive quello della classe) |
 | `range` | number | Gittata massima in tile |
-| `ammo` | number o null | Munizioni disponibili; `null` = illimitate |
+| `ammo` | number o null | Usi totali disponibili (granate, fumogeni, radio); `null` = illimitati |
+| `mag` | number | (opzionale, solo US) Colpi per caricatore: ogni attacco (e ogni overwatch/raffica di soppressione) ne consuma 1; a caricatore vuoto serve ricaricare |
+| `mags` | number | (opzionale, con `mag`) Caricatori di riserva; ogni ricarica ne consuma uno. Se assente sono illimitati |
+| `reloadAp` | number | (opzionale, con `mag`) AP per ricaricare; default 1 |
+| `shotsPerTurn` | number | (opzionale) Attacchi massimi per turno con quest'arma (il cecchino: 1) |
 | `aoe` | number | (opzionale) Raggio area d'effetto in distanza Manhattan |
 | `minRange` | number | (opzionale, solo armi AoE) Gittata minima in tile; default `aoe + 1`, così chi lancia non è mai nel raggio dell'esplosione |
 | `maxCarriers` | number | (opzionale) Max unità per missione che possono portare quest'arma (contatori separati per squadra US e VC) |

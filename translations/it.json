@@ -44,7 +44,10 @@
     "rotate_mobile": "Ruota",
     "stance": "🧍 Postura",
     "stance_with": "{icon} Postura: {label}",
-    "stance_mobile": "Postura"
+    "stance_mobile": "Postura",
+    "reload": "🔄 Ricarica",
+    "reload_with": "🔄 Ricarica ({ap}AP)",
+    "reload_mobile": "Ricarica"
   },
 
   "aim": {
@@ -142,7 +145,8 @@
       "special_used": "Abilità usata",
       "special_available": "Spec: {label}",
       "shot_used": "Già sparato (1 sparo/turno)",
-      "need_reload": "Necessita di ricaricare"
+      "need_reload": "🔄 Caricatore vuoto: ricarica",
+      "out_of_ammo": "✕ Munizioni esaurite"
     }
   },
 
@@ -259,6 +263,7 @@
     "attack_rear": "{name} colpito ALLE SPALLE — niente copertura, +1 ATK",
     "unit_rotate": "{name} si gira verso {dir}",
     "stance_change": "{name}: postura {stance}",
+    "reload": "🔄 {name} ricarica {weapon} (caricatori di riserva: {mags})",
     "stance_spotted": "👁 {name} è stato individuato dai VC!",
     "stance_unnoticed": "🌿 {vc} non si accorge di {name}",
     "noise_alert": "Il rumore allerta {count} VC in vista",

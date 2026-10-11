@@ -64,6 +64,9 @@ function sfx(type) {
     case "melee":
       _sfxMelee(ac, out, t0);
       break;
+    case "reload":
+      _sfxReload(ac, out, t0);
+      break;
     case "move":
       _sfxMove(ac, out, t0);
       break;
@@ -218,6 +221,13 @@ function _sfxMelee(ac, out, t) {
   // Swish: fruscio acuto e breve della lama che fende l'aria
   _noise(ac, "bandpass", 2600, out, t, 0.14, 0.22, 1.4);
   _noise(ac, "highpass", 4200, out, t + 0.03, 0.08, 0.12);
+}
+function _sfxReload(ac, out, t) {
+  // Caricatore che esce e rientra, poi otturatore: tre clic metallici
+  _noise(ac, "bandpass", 1800, out, t, 0.04, 0.25, 3);
+  _noise(ac, "bandpass", 1500, out, t + 0.18, 0.05, 0.3, 3);
+  _noise(ac, "bandpass", 2400, out, t + 0.36, 0.04, 0.35, 4);
+  _osc(ac, "square", 320, out, t + 0.36, 0.03, 0.08, 200);
 }
 function _sfxMove(ac, out, t) {
   // Soft thud (footstep on earth)
