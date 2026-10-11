@@ -37,6 +37,7 @@ function showTooltip(e, col, row) {
   )
     txt += t("tooltip.enemy_reloading");
   if (enemy?.routed > 0) txt += t("tooltip.enemy_routed");
+  if (enemy?.ambush) txt += t("tooltip.enemy_ambush");
   const trap = trapAt(col, row);
   if (trap?.revealed) txt += t("tooltip.trap", { trap: trapLabel(trap) });
   const smoke = (G.missionState?.smokes || []).find(

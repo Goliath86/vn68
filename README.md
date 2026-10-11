@@ -180,7 +180,7 @@ I VC si muovono e attaccano automaticamente durante la fase nemica. Il loro spos
 | Cecchino VC | Pericoloso a distanza, ATK 3 (Mosin), gittata 4. Dopo ogni colpo salta un turno per ricaricare; una volta allertato non si avvicina oltre 3 caselle, resta al limite della gittata cercando copertura |
 | Comandante VC | Più resistente e mobile, ATK 3 (TT-33), DEF 1 |
 
-**Armi speciali VC:** un solo guerrigliero per missione può essere equipaggiato con un RPG-7 (1 colpo). Una volta a tiro, lo usa quando la squadra è raggruppata o quando il bersaglio è fuori gittata dell'AK-47.
+**Armi speciali VC:** un solo guerrigliero per missione può essere equipaggiato con un RPG-7 (1 colpo, mai sotto distanza 2). Lo usa quando l'esplosione colpirebbe più soldati, o quando rende più dell'AK-47 (per esempio se il bersaglio è fuori gittata dell'AK); evita di coinvolgere altri VC.
 
 **Comportamento pattuglia:** finché non avvistano un soldato US (raggio 5), i VC pattugliano attivamente in base alla missione in corso:
 
@@ -193,7 +193,12 @@ I VC si muovono e attaccano automaticamente durante la fase nemica. Il loro spos
 
 **Propagazione dell'allerta:** quando un VC avvista la squadra, avvisa automaticamente tutti i compagni entro raggio 3. I VC allertati per propagazione si svegliano ma **non agiscono nel turno in cui vengono allertati** — il giocatore ha un turno per riposizionarsi o cercare copertura prima che la risposta nemica diventi piena. Solo il VC che ha avvistato direttamente la squadra attacca immediatamente.
 
-**Uso tattico della copertura:** una volta allertati, i VC non avanzano in linea retta ma scelgono percorsi che privilegiano giungla, bunker e terreni coperti rispetto a radure e strade esposte. Tenersi al riparo non basta — il nemico cercherà attivamente di fare lo stesso.
+**IA tattica:** una volta allertati, guerriglieri e comandanti valutano ogni tile raggiungibile nel turno:
+- **Da dove e a chi sparare:** scelgono la combinazione di posizione, bersaglio e arma col miglior danno atteso e la maggiore probabilità di uccidere. In pratica **aggirano** per colpire sul fianco (copertura dimezzata) o alle spalle (niente copertura, +1 ATK), preferiscono i soldati allo scoperto o feriti e tengono conto della postura.
+- **Dove stare:** a parità di tiro preferiscono tile coperti o nascosti, visti da pochi soldati, fuori dai coni di overwatch e dalle aree di fuoco soppressivo, e non ammassati con altri VC (granate). Dopo aver sparato, con AP rimasti, **ripiegano in copertura** se il guadagno è netto.
+- **Avanzata e agguato:** se non possono sparare avanzano di copertura in copertura verso la squadra. Se sono già ben coperti e la squadra è vicina possono **restare in agguato** (il comandante lo fa sempre, i guerriglieri metà delle volte). Gli AP non spesi diventano un **agguato**: nel tuo turno il VC spara una volta al primo soldato che termina un movimento davanti o di lato a lui, in gittata, in vista e individuato. Un VC in agguato visibile ha un **mirino arancione** sulla pedina (e una nota nel tooltip): aggiralo, passa alle sue spalle o fuori dalla sua vista, oppure lascia che il primo movimento "consumi" l'agguato.
+
+Tenersi al riparo non basta: il nemico cercherà le tue spalle e i tuoi fianchi.
 
 Dal turno configurato nella mappa possono arrivare **rinforzi VC** periodici — sempre guerriglieri, sempre dallo stesso lato.
 

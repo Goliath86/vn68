@@ -9,6 +9,8 @@ async function runEnemyTurn() {
     e.ap = e.maxAp || 2;
     //e.alerted = false;
     e.suppressed = false;
+    // L'agguato dura fino al turno VC successivo: ogni VC decide di nuovo
+    e.ambush = false;
     // Cecchino VC: se ha sparato nel turno precedente, in questo turno ricarica
     e.needReload = !!e.hasShot;
     e.hasShot = false;
@@ -131,16 +133,16 @@ function vcChooseWeapon(enemy, target) {
   const weapons = enemy.weapons || [];
   if (weapons.length <= 1) return weapons[0] ?? null;
   const primary = weapons[0];
+  const d = dist(enemy, target);
+  // Armi ad area mai sotto la gittata minima: l'esplosione colpirebbe chi spara
   const specials = weapons
     .slice(1)
-    .filter((w) => w.ammo === null || w.ammo > 0);
+    .filter((w) => (w.ammo === null || w.ammo > 0) && d >= weaponMinRange(w));
   if (!specials.length) return primary;
-  const d = dist(enemy, target);
   for (const spec of specials) {
     // Usa se la primaria non raggiunge ma la speciale sì
     if (d > primary.range && d <= spec.range) return spec;
-    // TODO: probabilmente il codice sotto al return spec non viene mai raggiunto se spec in range
-    // Usa AoE se 2+ unità US sono raggruppate nel raggio di esplosione
+    // Primaria in gittata: AoE solo se 2+ unità US sono raggruppate nel raggio
     if (spec.aoe && d <= spec.range) {
       const cluster = G.units.filter(
         (u) => u.alive && dist(u, target) <= spec.aoe,
@@ -163,9 +165,10 @@ function vcCanShoot(enemy) {
   return !(enemy.cls === "sniper_vc" && (enemy.hasShot || enemy.needReload));
 }
 
-// Esegue un attacco VC contro il bersaglio (sceglie l'arma, consuma AP e munizioni)
-async function vcShoot(enemy, target, logKey) {
-  const w = vcChooseWeapon(enemy, target);
+// Esegue un attacco VC contro il bersaglio (consuma AP e munizioni); l'arma
+// è quella scelta dall'IA tattica o, se assente, da vcChooseWeapon
+async function vcShoot(enemy, target, logKey, weapon) {
+  const w = weapon !== undefined ? weapon : vcChooseWeapon(enemy, target);
   if (w && w.ammo !== null) w.ammo--;
   enemy.ap--;
   enemy.hasShot = true;
@@ -305,11 +308,6 @@ async function enemyActivation(enemy) {
   const liveUnits = G.units.filter((u) => u.alive);
   if (!liveUnits.length) return;
 
-  // Trova unità più vicina
-  let target = liveUnits.reduce(
-    (best, u) => (dist(enemy, u) < dist(enemy, best) ? u : best),
-    liveUnits[0],
-  );
   const stats = getEnemyStats(enemy);
 
   // Allerta se un'unità US è in vista: entro la distanza d'allerta (ridotta
@@ -331,88 +329,9 @@ async function enemyActivation(enemy) {
   } else if (enemy.alerted && enemy.cls === "sniper_vc") {
     await sniperActivation(enemy, stats);
   } else if (enemy.alerted) {
-    // Gittata effettiva: considera tutte le armi disponibili
-    const effRange = vcEffRange(enemy, stats);
-    // Bersaglio: il più vicino tra quelli individuati; se nessuno è
-    // individuato il VC avanza senza sparare verso i soldati non occultati
-    // (non conosce la posizione di chi è nascosto), altrimenti verso il più vicino
-    const seen = nearestDetectedUnit(enemy);
-    if (seen) target = seen;
-    else {
-      const exposed = liveUnits.filter((u) => !isConcealed(u));
-      if (exposed.length)
-        target = exposed.reduce((b, u) => (dist(enemy, u) < dist(enemy, b) ? u : b));
-    }
-    // Se un'unità individuata è in gittata (con qualsiasi arma) e in vista:
-    // attacca; altrimenti avanza verso il bersaglio per guadagnare la vista
-    const fireAt = vcFireTarget(enemy, effRange);
-    if (fireAt && enemy.ap >= 1) {
-      checkOverwatch(enemy);
-      checkSuppression(enemy);
-      if (enemy.alive && enemy.ap >= 1) {
-        await vcShoot(enemy, fireAt, "log.vc_attack");
-      }
-    } else {
-      // Muovi verso il target
-      if (enemy.ap >= 1) {
-        const fromCol = enemy.col, fromRow = enemy.row;
-        const path = getPath(
-          enemy.col,
-          enemy.row,
-          target.col,
-          target.row,
-          true,
-        );
-
-        if (path && path.length > 1) {
-          let moved = 0;
-          for (
-            let i = 1;
-            i < path.length && moved < stats.move && enemy.ap > 0;
-            i++
-          ) {
-            const step = path[i];
-            const tile = getTileAt(step.col, step.row);
-            if (!tile || tile.impassable || isOnFire(step.col, step.row)) break;
-            if (isOccupied(step.col, step.row, enemy.id)) break;
-            enemy.col = step.col;
-            enemy.row = step.row;
-            moved += tile.moveCost || 1;
-            enemy.ap = Math.max(0, enemy.ap - (tile.moveCost || 1));
-          }
-          if (enemy.col !== fromCol || enemy.row !== fromRow) {
-            await animateEnemyMove(
-              enemy,
-              fromCol,
-              fromRow,
-              enemy.col,
-              enemy.row,
-            );
-            const newDist = dist(enemy, target);
-            log(
-              t("log.vc_advance", {
-                name: enemy.name,
-                target: target.name,
-                dist: newDist,
-              }),
-              "enemy",
-            );
-          }
-
-          // Overwatch e fuoco soppressivo: controlla dopo il movimento
-          checkOverwatch(enemy);
-          checkSuppression(enemy);
-
-          // Attacca se ora un'unità individuata è in gittata e in vista
-          const newEffRange = vcEffRange(enemy, stats);
-          const fireAfter = enemy.alive ? vcFireTarget(enemy, newEffRange) : null;
-
-          if (fireAfter && enemy.ap >= 1) {
-            await vcShoot(enemy, fireAfter, "log.vc_fire");
-          }
-        }
-      }
-    }
+    // IA tattica: sceglie da dove e a chi sparare, oppure avanza di copertura
+    // in copertura o resta in agguato (vedi sezione IA TATTICA)
+    await tacticalActivation(enemy, stats, liveUnits);
   } else {
     // Pattuglia: comportamento basato sul tipo di missione
     let patrolDest = null;
@@ -653,4 +572,309 @@ function propagateAlert(source) {
       addFX("spot", { col: other.col, row: other.row, relay: true }, 900);
     }
   });
+}
+
+// ── IA TATTICA (VC in allerta, escluso il cecchino) ─────────────────────
+// Ogni VC valuta tutti i tile raggiungibili con gli AP del turno:
+//  1. se da qualche tile (compreso il suo) può sparare a un soldato in
+//     gittata, in vista e individuato, sceglie la combinazione tile+bersaglio+
+//     arma migliore: danno atteso e probabilità di uccidere (che premiano i
+//     tiri sul fianco o alle spalle, i bersagli scoperti e i feriti) più la
+//     bontà del tile (copertura, poche armi US puntate, fuori dai coni di
+//     overwatch e soppressione, non ammassato con altri VC). Dopo lo sparo,
+//     con AP residui, ripiega in un tile più sicuro se il guadagno è netto.
+//  2. altrimenti avanza di copertura in copertura verso la squadra, oppure,
+//     se è già ben coperto e la squadra è vicina, resta fermo in agguato.
+//     Gli AP non spesi diventano un agguato: spara una volta al primo
+//     soldato che, nel turno del giocatore, termina un movimento nel suo
+//     campo di tiro (fronte e lati, in vista, individuato).
+const VC_TACTICS = {
+  attackWeight: 10, // per punto di danno atteso
+  killWeight: 20, // per probabilità di uccidere
+  aoeSingleFactor: 0.5, // RPG su un solo bersaglio: meglio conservarlo
+  coverWeight: 3, // per punto di copertura del tile
+  concealWeight: 1, // tile che nasconde (vegetazione, macerie)
+  threatPenalty: 2.5, // per ogni soldato che vede il tile e lo ha in gittata
+  overwatchPenalty: 6, // tile nel cono di un overwatch US attivo
+  suppressionPenalty: 4, // tile nell'area di un fuoco soppressivo US
+  clusterPenalty: 1.5, // per ogni altro VC adiacente (granate)
+  costWeight: 0.3, // per AP di movimento
+  approachWeight: 1.2, // per AP di distanza dal bersaglio (avanzata)
+  farApproachFactor: 3, // avanzata più decisa se la squadra è lontana
+  holdRange: 4, // agguato se la squadra è entro gittata + holdRange
+  holdChance: 0.5, // probabilità di restare in agguato (comandante: sempre)
+  scootMinGain: 2, // guadagno minimo per ripiegare dopo lo sparo
+};
+
+const _tkey = (c, r) => `${c},${r}`;
+
+// Probabilità di colpire, danno atteso e probabilità di uccidere per
+// 2d6 + atk contro def + 1d6 (stessa formula di resolveCombat)
+function diceOdds(atk, def, hp) {
+  let hits = 0,
+    kills = 0,
+    dmgSum = 0;
+  for (let a = 1; a <= 6; a++)
+    for (let b = 1; b <= 6; b++)
+      for (let d = 1; d <= 6; d++) {
+        const dmg = Math.max(0, a + b + atk - (def + d));
+        if (dmg > 0) hits++;
+        if (dmg >= hp) kills++;
+        dmgSum += dmg;
+      }
+  return { pHit: hits / 216, expDmg: dmgSum / 216, pKill: kills / 216 };
+}
+
+// Valore di un attacco diretto VC da `from` (orientamento e postura del
+// bersaglio contano: dal fianco copertura dimezzata, alle spalle +1 ATK)
+function vcDirectScore(enemy, from, target, weapon) {
+  const atk =
+    (weapon?.atk ?? getEnemyStats(enemy).attack) + rearAttackBonus(from, target);
+  const def =
+    (UNIT_CLASSES[target.cls]?.defense ?? 1) +
+    stanceDefenseBonus(target, from) +
+    effectiveCover(from, target);
+  const o = diceOdds(atk, def, target.hp);
+  return o.expDmg * VC_TACTICS.attackWeight + o.pKill * VC_TACTICS.killWeight;
+}
+
+// Valore di un colpo ad area centrato su `target`: somma sulle unità US nel
+// raggio, meno i VC che verrebbero colpiti
+function vcAoeScore(enemy, target, weapon) {
+  const inBlast = (x) => x.alive && dist(x, target) <= weapon.aoe;
+  let score = 0,
+    hitUs = 0;
+  for (const u of G.units.filter(inBlast)) {
+    const def =
+      (UNIT_CLASSES[u.cls]?.defense ?? 1) +
+      stanceAoeDefenseBonus(u) +
+      coverBonus(u.col, u.row);
+    const o = diceOdds(weapon.atk, def, u.hp);
+    score += o.expDmg * VC_TACTICS.attackWeight + o.pKill * VC_TACTICS.killWeight;
+    hitUs++;
+  }
+  for (const e of G.enemies.filter(inBlast)) {
+    if (e === enemy) continue;
+    const def = getEnemyStats(e).defense + coverBonus(e.col, e.row);
+    score -= diceOdds(weapon.atk, def, e.hp).expDmg * VC_TACTICS.attackWeight * 1.5;
+  }
+  return hitUs === 1 ? score * VC_TACTICS.aoeSingleFactor : score;
+}
+
+// Miglior attacco possibile da `from` (il VC stesso o un tile ipotetico):
+// { target, weapon, score } oppure null
+function vcBestAttackFrom(enemy, from) {
+  const stats = getEnemyStats(enemy);
+  const usable = (enemy.weapons || []).filter((w) => w.ammo === null || w.ammo > 0);
+  const options = usable.length ? usable : [null];
+  let best = null;
+  for (const u of G.units) {
+    if (!u.alive) continue;
+    const d = dist(from, u);
+    // Dal tile ipotetico il VC guarderebbe verso il bersaglio
+    const viewer =
+      from === enemy
+        ? enemy
+        : { col: from.col, row: from.row, facing: facingToward(from, u) ?? enemy.facing };
+    let seenChecked = false;
+    for (const w of options) {
+      const range = w?.range ?? stats.range;
+      if (d > range || (w?.aoe && d < weaponMinRange(w))) continue;
+      // Vista prima del tiro di avvistamento: niente tiri per chi è dietro un muro
+      if (!seenChecked) {
+        if (!vcSees(from, u) || !vcDetects(enemy, u, viewer)) break;
+        seenChecked = true;
+      }
+      const score = w?.aoe ? vcAoeScore(enemy, u, w) : vcDirectScore(enemy, from, u, w);
+      if (!best || score > best.score) best = { target: u, weapon: w, score };
+    }
+  }
+  return best;
+}
+
+// Bontà difensiva di un tile per un VC (più alto = meglio); con `field`
+// (distanze dal bersaglio) premia anche l'avvicinamento
+function vcTileScore(enemy, tile, field = null, farFactor = 1) {
+  const T = VC_TACTICS;
+  let s =
+    coverBonus(tile.col, tile.row) * T.coverWeight +
+    (isConcealingTile(tile.col, tile.row) ? T.concealWeight : 0) -
+    (tile.cost || 0) * T.costWeight;
+  for (const u of G.units) {
+    if (!u.alive) continue;
+    if (dist(u, tile) <= unitFireRange(u) && isTileVisibleFromUnit(u, tile.col, tile.row))
+      s -= T.threatPenalty;
+  }
+  for (const ow of G.overwatchList) {
+    if (
+      ow.alive &&
+      !ow.overwatchFired &&
+      hasRoundLoaded(unitFireWeapon(ow)) &&
+      facingSector(ow, tile) === "front" &&
+      dist(ow, tile) <= unitFireRange(ow) &&
+      isTileVisibleFromUnit(ow, tile.col, tile.row)
+    )
+      s -= T.overwatchPenalty;
+  }
+  for (const sup of G.suppressList) {
+    if (sup.alive && suppressionCovers(sup, tile) && isTileVisibleFromUnit(sup, tile.col, tile.row))
+      s -= T.suppressionPenalty;
+  }
+  for (const e of G.enemies) {
+    if (e.alive && e !== enemy && dist(e, tile) <= 1) s -= T.clusterPenalty;
+  }
+  if (field) s -= (field.get(_tkey(tile.col, tile.row)) ?? 99) * T.approachWeight * farFactor;
+  return s;
+}
+
+// Distanza (in costo di movimento) di ogni tile percorribile da `goal`
+function vcDistanceField(goal) {
+  const field = new Map([[_tkey(goal.col, goal.row), 0]]);
+  const open = [{ col: goal.col, row: goal.row, cost: 0 }];
+  while (open.length) {
+    open.sort((a, b) => a.cost - b.cost);
+    const cur = open.shift();
+    if (cur.cost > field.get(_tkey(cur.col, cur.row))) continue;
+    for (const [dc, dr] of FACING_DIRS) {
+      const c = cur.col + dc,
+        r = cur.row + dr;
+      if (!isTilePassable(c, r)) continue;
+      const cost = cur.cost + moveCost(c, r);
+      if (cost >= (field.get(_tkey(c, r)) ?? Infinity)) continue;
+      field.set(_tkey(c, r), cost);
+      open.push({ col: c, row: r, cost });
+    }
+  }
+  return field;
+}
+
+// Sposta il VC su un tile raggiungibile (animazione, AP, reazioni US)
+async function vcMoveTo(enemy, tile, target, logKey = "log.vc_advance") {
+  if (tile.cost > 0) {
+    const fromCol = enemy.col,
+      fromRow = enemy.row;
+    enemy.col = tile.col;
+    enemy.row = tile.row;
+    enemy.ap = Math.max(0, enemy.ap - tile.cost);
+    await animateEnemyMove(enemy, fromCol, fromRow, enemy.col, enemy.row);
+    if (target)
+      log(t(logKey, { name: enemy.name, target: target.name, dist: dist(enemy, target) }), "enemy");
+  }
+  // Overwatch e fuoco soppressivo reagiscono al movimento (o all'azione)
+  checkOverwatch(enemy);
+  checkSuppression(enemy);
+}
+
+function setVcAmbush(enemy) {
+  if (!enemy.alive || enemy.ap < 1) return;
+  enemy.ambush = true;
+  if (isTileVisible(enemy.col, enemy.row))
+    log(t("log.vc_ambush_set", { name: enemy.name }), "enemy");
+}
+
+async function tacticalActivation(enemy, stats, liveUnits) {
+  if (enemy.ap < 1) return;
+  const tiles = vcReachableTiles(enemy, Math.min(enemy.ap, stats.move));
+
+  // 1) Sparare: miglior combinazione tile + bersaglio + arma
+  let plan = null;
+  for (const tl of tiles) {
+    if (enemy.ap - tl.cost < 1) continue;
+    const atk = vcBestAttackFrom(enemy, tl.cost === 0 ? enemy : tl);
+    if (!atk) continue;
+    const score = atk.score + vcTileScore(enemy, tl);
+    if (!plan || score > plan.score) plan = { ...atk, tile: tl, score };
+  }
+  if (plan) {
+    const moved = plan.tile.cost > 0;
+    await vcMoveTo(enemy, plan.tile, plan.target, "log.vc_flank");
+    if (enemy.alive && enemy.ap >= 1 && plan.target.alive) {
+      // Dopo il movimento (o un overwatch) il bersaglio potrebbe non essere più valido
+      const ok =
+        dist(enemy, plan.target) <= (plan.weapon?.range ?? stats.range) &&
+        vcSees(enemy, plan.target);
+      if (ok)
+        await vcShoot(enemy, plan.target, moved ? "log.vc_fire" : "log.vc_attack", plan.weapon);
+    }
+    // Spara e ripiega: con AP residui cerca un tile più sicuro
+    if (enemy.alive && enemy.ap >= 1) {
+      const here = { col: enemy.col, row: enemy.row, cost: 0 };
+      const hereScore = vcTileScore(enemy, here);
+      const retreat = vcReachableTiles(enemy, Math.min(enemy.ap, stats.move)).reduce(
+        (b, tl) => {
+          const s = vcTileScore(enemy, tl);
+          return s > b.s ? { tl, s } : b;
+        },
+        { tl: here, s: hereScore },
+      );
+      if (retreat.tl.cost > 0 && retreat.s - hereScore >= VC_TACTICS.scootMinGain) {
+        await vcMoveTo(enemy, retreat.tl, null);
+        if (isTileVisible(enemy.col, enemy.row))
+          log(t("log.vc_take_cover", { name: enemy.name }), "enemy");
+      }
+    }
+    return;
+  }
+
+  // 2) Nessun tiro possibile: avanzare di copertura in copertura o restare in agguato.
+  // Bersaglio: il più vicino tra gli individuati, poi tra i non occultati
+  // (il VC non conosce la posizione di chi è nascosto), poi il più vicino
+  const byDist = (a, b) => dist(enemy, a) - dist(enemy, b);
+  const goal =
+    nearestDetectedUnit(enemy) ??
+    liveUnits.filter((u) => !isConcealed(u)).sort(byDist)[0] ??
+    [...liveUnits].sort(byDist)[0];
+  const effRange = vcEffRange(enemy, stats);
+  const here = tiles.find((tl) => tl.cost === 0);
+  const goodCover =
+    coverBonus(enemy.col, enemy.row) >= 1 || isConcealingTile(enemy.col, enemy.row);
+  const near = dist(enemy, goal) <= effRange + VC_TACTICS.holdRange;
+  const holdChance = enemy.cls === "commander" ? 1 : VC_TACTICS.holdChance;
+  if (goodCover && near && Math.random() < holdChance) {
+    checkOverwatch(enemy);
+    checkSuppression(enemy);
+    setVcAmbush(enemy);
+    return;
+  }
+
+  const field = vcDistanceField(goal);
+  const farFactor = near ? 1 : VC_TACTICS.farApproachFactor;
+  const dest = tiles.reduce(
+    (b, tl) => {
+      const s = vcTileScore(enemy, tl, field, farFactor);
+      return s > b.s ? { tl, s } : b;
+    },
+    { tl: here, s: vcTileScore(enemy, here, field, farFactor) },
+  ).tl;
+  await vcMoveTo(enemy, dest, goal);
+  // Gli AP non spesi diventano un agguato per il turno del giocatore
+  setVcAmbush(enemy);
+}
+
+// Fuoco dall'agguato: chiamato quando un soldato termina un movimento nel
+// turno del giocatore. Ogni VC in agguato spara al massimo una volta, solo se
+// il soldato è davanti o di lato, in gittata, in vista e individuato.
+// Restituisce true se almeno un VC ha sparato.
+async function vcAmbushFire(unit) {
+  let fired = false;
+  for (const e of G.enemies) {
+    if (!unit.alive || G.phase !== "player") break;
+    if (!e.alive || !e.ambush || e.routed > 0) continue;
+    if (facingSector(e, unit) === "rear") continue;
+    const w = vcChooseWeapon(e, unit);
+    if (w?.aoe) continue; // in agguato solo fuoco diretto
+    const range = w?.range ?? getEnemyStats(e).range;
+    if (!vcCanFireAt(e, unit, range) || !vcDetects(e, unit)) continue;
+    e.ambush = false;
+    log(t("log.vc_ambush_fire", { name: e.name, target: unit.name }), "enemy");
+    await resolveCombat(e, unit, true, w);
+    makeVcNoise(e, unit, w);
+    fired = true;
+  }
+  if (fired) {
+    checkGameOver();
+    updateUI();
+    render();
+  }
+  return fired;
 }

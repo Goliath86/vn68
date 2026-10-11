@@ -178,6 +178,8 @@ function renderMap() {
       ctx.textBaseline = "top";
       ctx.fillText("⚐", x + ts - 2, y + 2);
     }
+    // VC in agguato: mirino arancione (sparerà a chi si muove nel suo campo di tiro)
+    if (e.ambush) drawAmbushMark(ctx, x + ts * 0.2, y + ts * 0.2, ts);
   }
 
   // Unità alleate
@@ -272,6 +274,27 @@ function renderMap() {
     ctx.fillStyle = hpRatio > 0.5 ? "#44aa22" : "#cc4422";
     ctx.fillRect(x + 2, y + ts - 5, (ts - 4) * hpRatio, 3);
   }
+}
+
+// Mirino dell'agguato VC centrato in (cx, cy)
+function drawAmbushMark(ctx, cx, cy, ts) {
+  const r = ts * 0.1;
+  ctx.save();
+  ctx.lineWidth = Math.max(1.5, ts * 0.03);
+  ctx.strokeStyle = "rgba(0,0,0,0.75)";
+  ctx.fillStyle = "rgba(0,0,0,0.45)";
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 1.35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#ffa040";
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.moveTo(cx - r * 1.4, cy);
+  ctx.lineTo(cx + r * 1.4, cy);
+  ctx.moveTo(cx, cy - r * 1.4);
+  ctx.lineTo(cx, cy + r * 1.4);
+  ctx.stroke();
+  ctx.restore();
 }
 
 // Goccia di sangue (indicatore di emorragia) centrata in (cx, cy)

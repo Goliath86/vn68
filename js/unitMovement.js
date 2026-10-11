@@ -96,9 +96,20 @@ async function moveUnit(unit, toCol, toRow, apCost) {
   // né cambiato lo stato della missione (pilota, zone ricognite, estrazione)
   if (G.fowEnabled) recomputeVisibility();
   const revealed = [...visibleEnemyIds()].some((id) => !seenBefore.has(id));
+
+  // VC in agguato: sparano al soldato che termina il movimento nel loro campo di tiro
+  const ambushed = await vcAmbushFire(unit);
+  if (!unit.alive || G.phase !== "player") {
+    G.lastMove = null;
+    updateUI();
+    render();
+    return;
+  }
+
   if (
     G.phase === "player" &&
     !revealed &&
+    !ambushed &&
     JSON.stringify(G.missionState) === missionBefore
   ) {
     G.lastMove = {

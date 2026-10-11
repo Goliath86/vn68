@@ -250,6 +250,10 @@
     "vc_attack": "{name} attacks {target}",
     "vc_advance": "{name} advances toward {target} (distance: {dist})",
     "vc_fire": "{name} opens fire on {target}",
+    "vc_flank": "{name} moves into a firing position on {target} (distance: {dist})",
+    "vc_take_cover": "{name} falls back into cover",
+    "vc_ambush_set": "{name} lies in ambush",
+    "vc_ambush_fire": "⚠ {name} opens fire from ambush on {target}!",
     "vc_sniper_reload": "{name} reloads the rifle",
     "vc_sniper_reposition": "{name} repositions (distance from {target}: {dist})",
     "attack_prompt": "{attacker} attacks {defender} — ROLL THE DICE",
@@ -334,6 +338,7 @@
     "side": " · from the side",
     "rear": " · from behind",
     "enemy_routed": " (routed)",
+    "enemy_ambush": " (in ambush: fires at anyone moving into its field of fire)",
     "trap": " | ⚠ Trap: {trap}",
     "smoke": " | Smoke ({turns}T)"
   },

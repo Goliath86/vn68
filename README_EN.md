@@ -181,7 +181,7 @@ VC move and attack automatically during the enemy phase. Their movement is anima
 | VC Sniper | Dangerous at range, ATK 3 (Mosin), range 4. Skips a turn to reload after every shot; once alerted it won't come closer than 3 tiles, holding near max range and seeking cover |
 | VC Commander | More durable and mobile, ATK 3 (TT-33), DEF 1 |
 
-**VC special weapons:** only one guerrilla per mission can carry an RPG-7 (1 shot). Once in range, they use it when the squad is clustered or when the target is beyond the AK-47's reach.
+**VC special weapons:** only one guerrilla per mission can carry an RPG-7 (1 shot, never below distance 2). They use it when the blast would hit several soldiers, or when it pays off more than the AK-47 (e.g. the target is beyond the AK's reach); they avoid catching other VC in it.
 
 **Patrol behavior:** until they spot a US soldier (within radius 5), VC actively patrol based on the current mission type:
 
@@ -194,7 +194,12 @@ VC move and attack automatically during the enemy phase. Their movement is anima
 
 **Alert propagation:** when a VC spots the squad, they automatically alert all comrades within radius 3. Alerted VC wake up but **do not act on the turn they are alerted** — the player has one turn to reposition or take cover before the enemy response is in full swing. Only the VC who directly spotted the squad attacks immediately.
 
-**Tactical use of cover:** once alerted, VC do not advance in a straight line — they choose paths that favor jungle, bunkers, and covered terrain over clearings and exposed roads. Staying in cover isn't enough: the enemy will actively do the same.
+**Tactical AI:** once alerted, guerrillas and commanders evaluate every tile they can reach this turn:
+- **Where to shoot from and at whom:** they pick the combination of position, target and weapon with the best expected damage and kill chance. In practice they **flank** to hit from the side (half cover) or from behind (no cover, +1 ATK), prefer exposed or wounded soldiers, and account for stance.
+- **Where to stand:** all else equal they prefer covered or concealing tiles, seen by few soldiers, outside overwatch cones and suppressive-fire areas, and not bunched with other VC (grenades). After firing, with AP left, they **fall back into cover** when the gain is clear.
+- **Advance and ambush:** if they can't fire they advance cover to cover toward the squad. If they are already well covered and the squad is close they may **hold in ambush** (the commander always does, guerrillas half the time). Unspent AP become an **ambush**: on your turn the VC fires once at the first soldier who ends a move in front of or beside it, in range, in sight and spotted. A visible VC in ambush shows an **orange crosshair** on its counter (and a note in the tooltip): go around it, get behind it or out of its sight, or let a first move "spring" the ambush.
+
+Staying in cover isn't enough: the enemy will go for your back and flanks.
 
 Starting from a configured turn, **VC reinforcements** can arrive periodically — always guerrillas, always from the same side.
 

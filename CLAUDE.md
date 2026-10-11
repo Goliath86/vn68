@@ -78,7 +78,7 @@ Altre costanti in `constants.js`: `TILE=64`, `AP_PER_TURN=3`, `SAVE_KEY`, `UNIT_
 | `pathfind.js` | `getReachable()` (BFS/Dijkstra pesato su costo terreno), `getPath()`, `isOccupied()` |
 | `camera.js` | pan/zoom mappa: mouse drag, wheel, touch (pinch/drag) |
 | `animations.js` | effetti visivi: `addFX()`, animazioni tile ambientali (`smoke`/`fire`/`fog`), loop di rendering effetti |
-| `ai.js` | **IA Vietcong**: `runEnemyTurn()`, `enemyActivation()` (decide muovi/attacca per singolo VC), pattugliamento per tipo missione, `propagateAlert()` (allerta a raggio 3), `spawnReinforcements()`, `spawnAmbush()` |
+| `ai.js` | **IA Vietcong**: `runEnemyTurn()`, `enemyActivation()` (decide muovi/attacca per singolo VC); sezione IA TATTICA per i VC in allerta (`tacticalActivation`: valuta ogni tile raggiungibile con `vcBestAttackFrom` = danno atteso/prob. di uccidere via `diceOdds`, inclusi fianco/retro e RPG con `vcAoeScore`, + `vcTileScore` = copertura, minacce US, coni overwatch/soppressione, ammassamento; poi spara-e-ripiega, avanzata con `vcDistanceField` o agguato `enemy.ambush` → `vcAmbushFire` chiamato da `unitMovement.js:moveUnit`; pesi in `VC_TACTICS`), pattugliamento per tipo missione, `propagateAlert()` (allerta a raggio 3), `spawnReinforcements()`, `spawnAmbush()` |
 | `game.js` | ciclo principale: `loadMission()`, `startGame()`, `initMissionState()`, `checkVictory()`/`checkGameOver()`, `endPlayerTurn()` |
 | `log.js` | `log(msg, type)` — pannello log di combattimento |
 | `tooltip.js` | tooltip al hover su tile (rispetta FOW) |

@@ -204,7 +204,7 @@ function vcCanFireAt(enemy, unit, range) {
   return dist(enemy, unit) <= range && vcSees(enemy, unit);
 }
 
-// Bersaglio di fuoco: l'unità più vicina in gittata, in vista e individuata
+// Bersaglio di fuoco (cecchino VC): l'unità più vicina in gittata, in vista e individuata
 // (la vista si controlla prima, così non si tira l'avvistamento per chi è
 // dietro un muro)
 function vcFireTarget(enemy, range) {
@@ -283,10 +283,12 @@ function isConcealed(unit) {
 // VC/unità per turno. Se riesce l'unità è scoperta per tutti i VC fino alla
 // fine del turno. Le unità non occultate sono note a tutti i VC in allerta
 // (si muovono verso di loro anche senza vederle; per sparare serve la vista).
-function vcDetects(enemy, unit) {
+// `viewer` ({col,row,facing}): posizione da cui il VC guarda, di default la
+// sua; l'IA tattica la usa per valutare i tile su cui potrebbe spostarsi.
+function vcDetects(enemy, unit, viewer = enemy) {
   if (!unit.alive) return false;
-  if (!isConcealed(unit) || dist(enemy, unit) <= 1) return true;
-  if (!vcSees(enemy, unit, vcAlertDistanceFrom(enemy, unit))) return false;
+  if (!isConcealed(unit) || dist(viewer, unit) <= 1) return true;
+  if (!vcSees(viewer, unit, vcAlertDistanceFrom(viewer, unit))) return false;
   G.vcSpotRolls = G.vcSpotRolls || {};
   const key = enemy.id + ">" + unit.id;
   if (!(key in G.vcSpotRolls)) {

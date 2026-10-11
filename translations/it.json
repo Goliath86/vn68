@@ -255,6 +255,10 @@
     "vc_attack": "{name} attacca {target}",
     "vc_advance": "{name} avanza verso {target} (distanza: {dist})",
     "vc_fire": "{name} apre il fuoco su {target}",
+    "vc_flank": "{name} si porta in posizione di tiro su {target} (distanza: {dist})",
+    "vc_take_cover": "{name} ripiega in copertura",
+    "vc_ambush_set": "{name} si apposta in agguato",
+    "vc_ambush_fire": "⚠ {name} apre il fuoco dall'agguato su {target}!",
     "vc_sniper_reload": "{name} ricarica il fucile",
     "vc_sniper_reposition": "{name} si riposiziona (distanza da {target}: {dist})",
     "attack_prompt": "{attacker} attacca {defender} — LANCIA IL DADO",
@@ -339,6 +343,7 @@
     "side": " · sul fianco",
     "rear": " · alle spalle",
     "enemy_routed": " (in rotta)",
+    "enemy_ambush": " (in agguato: spara a chi si muove nel suo campo di tiro)",
     "trap": " | ⚠ Trappola: {trap}",
     "smoke": " | Fumo ({turns}T)"
   },
