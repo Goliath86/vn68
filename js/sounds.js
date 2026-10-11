@@ -85,6 +85,9 @@ function sfx(type) {
     case "demolition":
       _sfxDemolition(ac, out, t0);
       break;
+    case "disarm":
+      _sfxDisarm(ac, out, t0);
+      break;
     case "heal":
       _sfxHeal(ac, out, t0);
       break;
@@ -259,6 +262,14 @@ function _sfxDemolition(ac, out, t) {
   _noise(ac, "lowpass", 160, out, t, 0.65, 0.7);
   _osc(ac, "sine", 75, out, t, 0.5, 0.58, 22);
   _noise(ac, "bandpass", 900, out, t + 0.05, 0.2, 0.3, 0.5);
+}
+function _sfxDisarm(ac, out, t) {
+  // Disinnesco: raschiate di attrezzi sul congegno, poi lo scatto metallico finale
+  _noise(ac, "bandpass", 1600, out, t, 0.06, 0.18, 2.5);
+  _noise(ac, "bandpass", 2100, out, t + 0.14, 0.05, 0.16, 2.5);
+  _noise(ac, "bandpass", 1300, out, t + 0.27, 0.07, 0.2, 2.5);
+  _osc(ac, "square", 1450, out, t + 0.48, 0.04, 0.12, 900);
+  _osc(ac, "triangle", 2600, out, t + 0.5, 0.18, 0.1, 2400);
 }
 function _sfxHeal(ac, out, t) {
   [523, 659, 784].forEach((f, i) => {

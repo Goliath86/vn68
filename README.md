@@ -489,6 +489,9 @@ Anche i suoni di gioco (vittoria, morte, movimento, ecc.) possono essere sostitu
     "miss":       "",
     "ambush":     "assets/ambush.mp3",
     "demolition": "assets/explosion.mp3",
+    "disarm":     "",
+    "melee":      "",
+    "reload":     "",
     "heal":       "",
     "overwatch":  "",
     "spawn":      "",
@@ -501,6 +504,7 @@ Anche i suoni di gioco (vittoria, morte, movimento, ecc.) possono essere sostitu
 ```
 
 - Lasciare il valore vuoto `""` per mantenere il suono sintetizzato
+- `disarm` = disinnesco di una trappola da parte del geniere, `melee` = fendente del coltello, `reload` = ricarica
 - I suoni di sparo (`shoot`, `shoot_vc`) **non vanno qui** — si definiscono nel campo `sound` di ogni arma
 - Se il file non è caricabile, il gioco torna automaticamente al sintetizzato
 

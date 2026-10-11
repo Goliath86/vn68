@@ -16,6 +16,7 @@
     "miss": "assets/bullet_ricochet.mp3",
     "ambush": "assets/ambush.mp3",
     "demolition": "",
+    "disarm": "",
     "heal": "assets/bandaging.mp3",
     "overwatch": "",
     "spawn": "",

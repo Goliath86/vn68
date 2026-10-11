@@ -735,7 +735,7 @@ function disarmTrap(engineer, trap) {
   removeTrap(trap);
   engineer.ap -= 1;
   engineer.specialUsed = true;
-  sfx("click");
+  sfx("disarm");
   addFX("demolition", { col: trap.col, row: trap.row, success: true }, 1000);
   log(
     t("log.trap_disarmed", { name: engineer.name, trap: trapLabel(trap) }),

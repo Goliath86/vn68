@@ -490,6 +490,9 @@ Game sounds (victory, death, movement, etc.) can also be replaced with custom au
     "miss":       "",
     "ambush":     "assets/ambush.mp3",
     "demolition": "assets/explosion.mp3",
+    "disarm":     "",
+    "melee":      "",
+    "reload":     "",
     "heal":       "",
     "overwatch":  "",
     "spawn":      "",
@@ -502,6 +505,7 @@ Game sounds (victory, death, movement, etc.) can also be replaced with custom au
 ```
 
 - Set to empty string `""` to keep the synthesized sound
+- `disarm` = the Engineer disarming a trap, `melee` = knife slash, `reload` = reloading
 - Shooting sounds (`shoot`, `shoot_vc`) **do not go here** — they are defined in the `sound` field of each weapon
 - If a file fails to load, the game falls back to the synthesized sound automatically
 
