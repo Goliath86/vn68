@@ -788,7 +788,7 @@ body {
     border: 3px solid var(--tan-dark);
     border-radius: 4px;
     padding: 36px 44px;
-    max-width: 480px;
+    max-width: 620px;
     width: 90%;
     text-align: center;
 }
@@ -809,6 +809,44 @@ body {
     color: var(--paper-dark);
     margin-bottom: 20px;
     line-height: 1.7;
+}
+/* Riepilogo statistico della missione */
+#gameover-box {
+    max-height: 92vh;
+    overflow-y: auto;
+}
+#go-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 14px;
+    margin: -6px 0 16px;
+    text-align: left;
+}
+#go-stats:empty {
+    display: none;
+}
+.go-sec-title {
+    font-family: var(--ui-font);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--highlight);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3px;
+}
+.go-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 10px;
+    line-height: 1.6;
+    color: var(--paper-dark);
+}
+.go-row span:last-child {
+    color: var(--paper);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
 }
 
 /* ── CONFIRM OVERLAY ─────────────────────────────── */
@@ -1227,6 +1265,9 @@ body {
 
     #gameover-box {
         padding: 24px 20px;
+    }
+    #go-stats {
+        grid-template-columns: 1fr;
     }
     #gameover-box h2 {
         font-size: 26px;

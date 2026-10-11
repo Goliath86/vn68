@@ -43,7 +43,9 @@ function canAttack(unit) {
 
 // Toglie un colpo dal caricatore (armi senza `mag`: nessun effetto)
 function spendRound(w) {
-  if (w?.mag) w.loaded = Math.max(0, (w.loaded ?? w.mag) - 1);
+  if (!w?.mag) return;
+  w.loaded = Math.max(0, (w.loaded ?? w.mag) - 1);
+  statAdd("roundsFired");
 }
 
 // Consuma un attacco: un uso, un colpo del caricatore, uno dei colpi del turno

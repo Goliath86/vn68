@@ -607,6 +607,18 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | Lanciare dado | Pulsante "LANCIA DADO" | Tab DADO |
 | Torna al menu | Bottone **⌂** nell'header | Bottone **⌂** nell'header |
 
+### Statistiche di fine missione
+
+A fine missione (vittoria o sconfitta), sotto l'esito, compare un **riepilogo statistico**:
+- **Missione:** turni, sopravvissuti, VC eliminati, HP rimasti.
+- **Fuoco della squadra e dei VC:** colpi a segno con la precisione **reale** confrontata con quella **attesa** (la stessa formula dei dadi: se la reale è molto sotto, è stata sfortuna), danni, attacchi dal fianco e alle spalle, overwatch, soppressioni, esplosivi, uccisioni col coltello, fuoco amico, spari dall'agguato dei VC, RPG.
+- **Munizioni:** colpi sparati, ricariche, caricatori di riserva e granate rimasti.
+- **Ferite e cure:** emorragie, HP persi e morti per dissanguamento, primo soccorso, cure del medico, trappole.
+- **Furtività:** VC allertati dal rumore (della squadra e degli spari VC), volte in cui un VC ti ha avvistato o non si è accorto di te.
+- **Ultime missioni:** medie sulle ultime missioni giocate (fino a 50, salvate nel browser): vittorie, turni, caduti, precisione.
+
+Il bottone **📋 Copia statistiche** copia tutto come testo, con anche i dati grezzi: utile per confrontare le partite e ritoccare i numeri del bilanciamento.
+
 ### Hotkeys desktop
 
 Le scorciatoie da tastiera sono attive solo durante la **fase giocatore** e quando non è in corso un lancio di dado.

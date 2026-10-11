@@ -56,6 +56,11 @@ function checkOverwatch(enemy) {
         rollD6() + getEnemyStats(enemy).defense + effectiveCover(ow, enemy);
 
       const dmg = Math.max(0, roll - sv);
+      // Statistiche: l'overwatch conta anche nella precisione US
+      const owDefVal = getEnemyStats(enemy).defense + effectiveCover(ow, enemy);
+      statAttack(true, diceOdds(owAtk, owDefVal, enemy.hp).pHit, dmg, facingSector(enemy, ow));
+      statAdd("owShots");
+      if (dmg > 0) statAdd("owHits");
       const owSniper = ow.cls === "sniper";
       // Colpo/morte partono all'arrivo del tracciante dell'overwatch
       const impact = shotImpactDelay(owSniper, OW_SHOT_MS);

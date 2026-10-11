@@ -80,6 +80,8 @@ async function resolveCombat(
   const defDice = rollD6();
   const save = defVal + defDice;
   const dmg = Math.max(0, hit - save);
+  // Statistiche: precisione reale contro probabilità attesa (stessa formula)
+  statAttack(!isEnemy, diceOdds(atkVal, defVal, defender.hp).pHit, dmg, sector);
 
   const sniper = !!attacker.cls?.startsWith("sniper");
   const melee = !!weapon?.melee;
@@ -144,6 +146,7 @@ async function resolveCombat(
       if (!isEnemy && G.missionType === "search_destroy") {
         G.missionState.kills = (G.missionState.kills || 0) + 1;
       }
+      if (!isEnemy && weapon?.melee) statAdd("meleeKills");
       addFX(
         "death",
         {
@@ -293,6 +296,8 @@ async function resolveAoeCombat(
 
   sfxShoot(attacker.cls, weapon);
   addFX("explosion", { col: tc, row: tr, aoe: weapon.aoe }, 1300);
+  // Statistiche: artiglieria (hitHidden), esplosivi US, RPG VC
+  statAdd(isEnemyAttacking ? "aoeVc" : hitHidden ? "artillery" : "aoeUs");
   // Esplosione US: il rumore parte dal punto d'impatto (e il lancio svela chi lancia)
   if (!isEnemyAttacking) {
     const noise = weaponNoise(attacker, weapon);
@@ -348,6 +353,9 @@ async function resolveAoeCombat(
     );
 
     if (dmg > 0) {
+      // Statistiche: danno inflitto/subito; US colpiti da esplosivi US = fuoco amico
+      if (isUS) statAdd(isEnemyAttacking ? "vcDmg" : "friendlyFire", dmg);
+      else if (!isEnemyAttacking) statAdd("usDmg", dmg);
       sfx("hit");
       addFX(
         "hit",

@@ -866,6 +866,7 @@ async function vcAmbushFire(unit) {
     const range = w?.range ?? getEnemyStats(e).range;
     if (!vcCanFireAt(e, unit, range) || !vcDetects(e, unit)) continue;
     e.ambush = false;
+    statAdd("vcAmbushFire");
     log(t("log.vc_ambush_fire", { name: e.name, target: unit.name }), "enemy");
     await resolveCombat(e, unit, true, w);
     makeVcNoise(e, unit, w);

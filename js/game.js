@@ -276,6 +276,8 @@ function checkGameOver() {
  * Function to display a game over overlay to the player in case of victory or defeat
  */
 function showGameOver(win) {
+  // Una sola volta: il riepilogo aggiorna lo storico delle statistiche
+  if (G.phase === "gameover") return;
   G.phase = "gameover";
   clearSave();
   sfx(win ? "victory" : "defeat");
@@ -291,6 +293,8 @@ function showGameOver(win) {
   desc.textContent = win
     ? t("gameover.win_desc", { turn: G.turn, vc, survive })
     : t("gameover.lose_desc", { turn: G.turn, vc });
+  // Riepilogo statistico della missione (js/stats.js)
+  renderMissionStats(win);
   render();
 }
 

@@ -637,6 +637,12 @@
             <div id="gameover-box">
                 <h2 id="go-title">—</h2>
                 <p id="go-desc">—</p>
+                <!-- Riepilogo statistico (js/stats.js:renderMissionStats) -->
+                <div id="go-stats"></div>
+                <button class="btn" id="btn-copy-stats" data-i18n="stats.copy" style="margin-bottom: 10px">
+                    📋 Copia statistiche
+                </button>
+                <br />
                 <button
                     class="btn"
                     id="btn-restart"
@@ -686,6 +692,7 @@
         <script src="js/combat.js"></script>
 
         <script src="js/mechanics.js"></script>
+        <script src="js/stats.js"></script>
 
         <script src="js/initModal.js"></script>
 

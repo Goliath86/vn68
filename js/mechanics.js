@@ -109,7 +109,10 @@ function makeNoise(src, radius) {
   for (const e of G.enemies) {
     if (dist(e, src) > radius) continue;
     // Il log conta solo i VC visibili, per non rivelare quelli nel FOW
-    if (alertVcToward(e, src) && isTileVisible(e.col, e.row)) heard++;
+    // (le statistiche invece li contano tutti)
+    if (!alertVcToward(e, src)) continue;
+    statAdd("noiseAlerts");
+    if (isTileVisible(e.col, e.row)) heard++;
   }
   if (heard) log(t("log.noise_alert", { count: heard }), "enemy");
 }
@@ -128,7 +131,9 @@ function makeVcNoise(shooter, target, weapon) {
   let heard = 0;
   for (const e of G.enemies) {
     if (e === shooter || dist(e, shooter) > radius) continue;
-    if (alertVcToward(e, target) && isTileVisible(e.col, e.row)) heard++;
+    if (!alertVcToward(e, target)) continue;
+    statAdd("vcNoiseAlerts");
+    if (isTileVisible(e.col, e.row)) heard++;
   }
   if (heard) log(t("log.vc_noise_alert", { count: heard }), "enemy");
 }
@@ -294,6 +299,7 @@ function vcDetects(enemy, unit, viewer = enemy) {
   if (!(key in G.vcSpotRolls)) {
     const seen = Math.random() < unitStance(unit).spotChance;
     G.vcSpotRolls[key] = seen;
+    statAdd(seen ? "spotted" : "unnoticed");
     if (seen) {
       unit.exposed = true;
       log(t("log.stance_spotted", { name: unit.name }), "enemy");
@@ -374,6 +380,7 @@ function maybeStartBleeding(unit, dmg, alwaysBleed = false) {
   if (!unit.alive || unit.bleeding || !G.units.includes(unit)) return;
   if (!alwaysBleed && Math.random() >= bleedChance(dmg)) return;
   unit.bleeding = true;
+  statAdd("bleedStarts");
   log(t("log.bleeding_start", { name: unit.name }), "combat");
 }
 
@@ -381,6 +388,7 @@ function maybeStartBleeding(unit, dmg, alwaysBleed = false) {
 function tickBleeding() {
   for (const u of G.units) {
     if (!u.alive || !u.bleeding) continue;
+    statAdd("bleedDmg", Math.min(u.hp, BLEED_PER_TURN));
     u.hp = Math.max(0, u.hp - BLEED_PER_TURN);
     addFX(
       "hit",
@@ -390,6 +398,7 @@ function tickBleeding() {
     if (u.hp <= 0) {
       u.alive = false;
       u.bleeding = false;
+      statAdd("bledOut");
       sfx("death");
       log(t("log.bled_out", { name: u.name }), "combat");
       addFX("death", { col: u.col, row: u.row, cls: u.cls, enemy: false }, 1400);
@@ -424,6 +433,7 @@ function firstAid(u) {
   u.hp += healed;
   u.ap = 0;
   u.firstAidUsed = true;
+  statAdd("firstAid");
   if (u.shaken && u.hp / u.maxHp >= SEVERE_WOUND_THRESHOLD) {
     u.shaken = false;
     log(t("log.unit_recovered", { name: u.name }), "success");
@@ -674,6 +684,8 @@ function hiddenTrapOnPath(unit, toCol, toRow) {
 
 function triggerTrap(unit, trap) {
   removeTrap(trap);
+  statAdd("traps");
+  statAdd("trapDmg", Math.min(unit.hp, trap.dmg));
   sfx(trap.type === "mine" ? "demolition" : "hit");
   addFX(
     trap.type === "mine" ? "explosion" : "hit",

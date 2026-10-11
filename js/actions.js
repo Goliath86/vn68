@@ -116,6 +116,7 @@ function reloadWeapon(u, w = reloadableWeapon(u)) {
   u.ap -= weaponReloadAp(w);
   w.loaded = w.mag;
   if (w.mags != null) w.mags--;
+  statAdd("reloads");
   sfx("reload");
   log(
     t("log.reload", {

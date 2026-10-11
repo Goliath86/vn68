@@ -20,6 +20,7 @@ function checkSuppression(enemy) {
     ) {
       // Ogni raffica di soppressione consuma un colpo del caricatore
       spendRound(unitFireWeapon(sup));
+      statAdd("suppressions");
       enemy.suppressed = true;
       enemy.ap = 0;
 

@@ -7,6 +7,8 @@ async function handleSpecialAction(col, row) {
     if (ally) {
       const healed = Math.min(3, ally.maxHp - ally.hp);
       ally.hp += healed;
+      statAdd("medicHeal", healed);
+      if (ally.bleeding) statAdd("bleedStopped");
       if (ally.shaken && ally.hp / ally.maxHp >= SEVERE_WOUND_THRESHOLD) {
         ally.shaken = false;
         log(t("log.unit_recovered", { name: ally.name }), "success");

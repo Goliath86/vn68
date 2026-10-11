@@ -608,6 +608,18 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | Roll dice | "ROLL DICE" button | DICE tab |
 | Return to menu | **⌂** button in header | **⌂** button in header |
 
+### End-of-mission stats
+
+When a mission ends (win or loss), a **stats summary** appears below the outcome:
+- **Mission:** turns, survivors, VC killed, HP left.
+- **Squad and VC fire:** hits with the **actual** accuracy compared to the **expected** one (same dice formula: if actual is well below, it was bad luck), damage, flank and rear attacks, overwatch, suppressions, explosives, knife kills, friendly fire, VC ambush shots, RPGs.
+- **Ammo:** rounds fired, reloads, spare magazines and grenades left.
+- **Wounds and care:** bleeding, HP lost and deaths from bleeding, first aid, medic heals, traps.
+- **Stealth:** VC alerted by noise (squad's and VC gunfire), times a VC spotted you or didn't notice you.
+- **Last missions:** averages over the last missions played (up to 50, stored in the browser): wins, turns, KIA, accuracy.
+
+The **📋 Copy stats** button copies everything as text, raw data included: handy for comparing games and tuning the balance numbers.
+
 ### Desktop Hotkeys
 
 Keyboard shortcuts are active only during the **player phase** and when no dice roll is in progress.
