@@ -42,8 +42,8 @@ function setActionMode(mode, weapon = null) {
         (e) =>
           e.alive &&
           dist(u, e) <= range &&
-          isTileVisible(e.col, e.row) &&
-          isTileVisibleFromUnit(u, e.col, e.row) &&
+          isEnemyVisible(e) &&
+          unitSeesEnemy(u, e) &&
           !allyBlockingFire(u, e),
       );
     }
@@ -86,6 +86,7 @@ function setActionMode(mode, weapon = null) {
         const t = getTileAt(col, row);
         return (
           isKnownTrap(col, row) ||
+          isKnownTunnel(col, row) ||
           (t && (t.demolishable || (t.burnable && !isOnFire(col, row))))
         );
       });

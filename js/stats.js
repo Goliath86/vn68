@@ -22,6 +22,8 @@ function newMissionStats() {
     bleedStopped: 0, traps: 0, trapDmg: 0,
     // Furtività
     noiseAlerts: 0, vcNoiseAlerts: 0, spotted: 0, unnoticed: 0,
+    // Guerriglia VC (guerrilla.js)
+    tunnelDives: 0, tunnelEmerges: 0, tunnelsSealed: 0, trapsPlanted: 0,
   };
 }
 
@@ -181,6 +183,11 @@ function summaryRows(s, agg) {
     [t("stats.sec_stealth"), [
       [t("stats.noise_alerts"), `${s.noiseAlerts} · ${t("stats.vc_noise")} ${s.vcNoiseAlerts}`],
       [t("stats.spotting"), `${s.spotted} / ${s.unnoticed}`],
+    ]],
+    [t("stats.sec_guerrilla"), [
+      [t("stats.tunnel_use"), `${s.tunnelDives} / ${s.tunnelEmerges}`],
+      [t("stats.tunnels_sealed"), s.tunnelsSealed],
+      [t("stats.traps_planted"), s.trapsPlanted],
     ]],
   ];
   if (agg)

@@ -11,6 +11,8 @@ async function runEnemyTurn() {
     e.suppressed = false;
     // L'agguato dura fino al turno VC successivo: ogni VC decide di nuovo
     e.ambush = false;
+    // Il cecchino che ha sparato torna mimetizzato (guerrilla.js)
+    e.exposed = false;
     // Cecchino VC: se ha sparato nel turno precedente, in questo turno ricarica
     e.needReload = !!e.hasShot;
     e.hasShot = false;
@@ -172,6 +174,8 @@ async function vcShoot(enemy, target, logKey, weapon) {
   if (w && w.ammo !== null) w.ammo--;
   enemy.ap--;
   enemy.hasShot = true;
+  // Lo sparo svela il cecchino mimetizzato fino al prossimo turno VC
+  enemy.exposed = true;
   log(t(logKey, { name: enemy.name, target: target.name }), "enemy");
   if (w?.aoe) {
     await resolveAoeCombat(enemy, w, target.col, target.row, true);
@@ -237,6 +241,8 @@ function sniperTileScore(tile, enemy, range, canShoot) {
   if (canShoot && d <= range && enemy.ap - tile.cost >= 1 && vcSees(tile, target))
     score += 30;
   score += coverBonus(tile.col, tile.row) * 3;
+  // Tra gli alberi o nelle macerie è mimetizzato (guerrilla.js)
+  if (isConcealingTile(tile.col, tile.row)) score += 4;
   score -= tile.cost * 0.5; // a parità preferisce non muoversi
   return score;
 }
@@ -308,6 +314,13 @@ async function enemyActivation(enemy) {
   const liveUnits = G.units.filter((u) => u.alive);
   if (!liveUnits.length) return;
 
+  // Nei tunnel: riemerge in agguato da un ingresso libero (guerrilla.js)
+  if (enemy.inTunnel) {
+    tunnelEmerge(enemy);
+    render();
+    return;
+  }
+
   const stats = getEnemyStats(enemy);
 
   // Allerta se un'unità US è in vista: entro la distanza d'allerta (ridotta
@@ -324,15 +337,19 @@ async function enemyActivation(enemy) {
   }
 
   if (enemy.routed > 0) {
-    // Morale a pezzi: ripiega senza attaccare
-    await routedActivation(enemy, stats);
+    // Morale a pezzi: ripiega senza attaccare, nei tunnel se ce n'è uno a portata
+    if (!(await tryTunnelDive(enemy, stats))) await routedActivation(enemy, stats);
   } else if (enemy.alerted && enemy.cls === "sniper_vc") {
     await sniperActivation(enemy, stats);
   } else if (enemy.alerted) {
-    // IA tattica: sceglie da dove e a chi sparare, oppure avanza di copertura
-    // in copertura o resta in agguato (vedi sezione IA TATTICA)
-    await tacticalActivation(enemy, stats, liveUnits);
+    // Ferito gravemente: sparisce nei tunnel se può; altrimenti IA tattica
+    // (sceglie da dove e a chi sparare, avanza di copertura in copertura o
+    // resta in agguato: vedi sezione IA TATTICA)
+    if (!(await tryTunnelDive(enemy, stats)))
+      await tacticalActivation(enemy, stats, liveUnits);
   } else {
+    // Guerrigliero in pattuglia: ogni tanto lascia una trappola dove si trova
+    maybePlantTrap(enemy);
     // Pattuglia: comportamento basato sul tipo di missione
     let patrolDest = null;
     const pType = G.missionType;
@@ -419,11 +436,14 @@ function spawnReinforcements(count) {
   const zones = G.mapData.vcSpawnZones;
   let spawned = 0;
   for (let a = 0; a < 200 && spawned < count; a++) {
-    const zone = pick(zones);
-    const col = rnd(zone.colMin, zone.colMax);
-    const row = rnd(zone.rowMin, zone.rowMax);
+    // Metà dei rinforzi può sbucare da un ingresso di tunnel (guerrilla.js)
+    const tn = tunnelForReinforcement();
+    const zone = tn ? null : pick(zones);
+    const col = tn ? tn.col : rnd(zone.colMin, zone.colMax);
+    const row = tn ? tn.row : rnd(zone.rowMin, zone.rowMax);
     if (!isTilePassable(col, row)) continue;
     if (isOccupied(col, row)) continue;
+    if (tn && isTileVisible(col, row)) revealTunnel(tn);
     G.enemies.push({
       id: "r" + Date.now() + spawned,
       name: t("units.vc_reinforcement_name"),

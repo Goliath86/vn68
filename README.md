@@ -133,7 +133,7 @@ La composizione di default è una per classe, ma puoi portare due assalti e ness
 |---|---|---|---|---|---|---|
 | **Assalto** | 10 | 4 | 3 | 1 | 3 | Fuoco Soppressivo · **Granate ×2** (AoE, ATK5, gittata 3) |
 | **Cecchino** | 7 | 3 | 4 | 0 | 6 | Overwatch (attacca nemici in movimento) — **1 sparo per turno**, caricatore da 1 colpo |
-| **Geniere** | 9 | 3 | 2 | 1 | 3 | Demolizione (bunker/ostacoli, dado ≥4) · Incendio (vegetazione, immediato) · Disinnesco trappole |
+| **Geniere** | 9 | 3 | 2 | 1 | 3 | Demolizione (bunker/ostacoli, dado ≥4) · Incendio (vegetazione, immediato) · Disinnesco trappole · Sigilla tunnel |
 | **Medico** | 8 | 3 | 1 | 1 | 1 | Cura (+3 HP a un alleato adiacente) — **ripristina il morale e ferma l'emorragia** |
 
 > ATK e Gittata sono quelli dell'arma principale definita in `config.json` (M16, M14, M1911); se `config.json` non definisce armi per la classe si usano i valori base della classe.
@@ -199,6 +199,11 @@ I VC si muovono e attaccano automaticamente durante la fase nemica. Il loro spos
 - **Avanzata e agguato:** se non possono sparare avanzano di copertura in copertura verso la squadra. Se sono già ben coperti e la squadra è vicina possono **restare in agguato** (il comandante lo fa sempre, i guerriglieri metà delle volte). Gli AP non spesi diventano un **agguato**: nel tuo turno il VC spara una volta al primo soldato che termina un movimento davanti o di lato a lui, in gittata, in vista e individuato. Un VC in agguato visibile ha un **mirino arancione** sulla pedina (e una nota nel tooltip): aggiralo, passa alle sue spalle o fuori dalla sua vista, oppure lascia che il primo movimento "consumi" l'agguato.
 
 Tenersi al riparo non basta: il nemico cercherà le tue spalle e i tuoi fianchi.
+
+**Guerriglia VC:**
+- **Tunnel (🕳):** su ogni mappa ci sono alcuni ingressi nascosti (di default 3, nella vegetazione o tra le macerie, lontano dalla partenza). Un VC ferito (metà degli HP o meno) o in rotta che ne raggiunge uno **sparisce sotto terra**; al suo turno successivo **sbuca da un ingresso libero**, preferibilmente non in vista e a pochi tile dalla squadra, con +2 HP, il morale ritrovato e **in agguato**. Metà dei rinforzi può arrivare dai tunnel. Un soldato adiacente nota l'ingresso (il geniere da 2 tile), come chi vede un VC entrarci o uscirne. Il **geniere** può **sigillare** un ingresso individuato con la sua abilità (1 AP, rumore di un'esplosione); quando tutti gli ingressi sono sigillati, i VC rimasti dentro restano intrappolati.
+- **Trappole piazzate:** un guerrigliero in pattuglia ogni tanto (15% per turno) nasconde una punji o una mina sul tile da cui parte, fino a 3 per missione. Se lo vedi mentre la piazza, la trappola è segnata sulla mappa.
+- **Cecchini mimetizzati:** un cecchino VC tra la vegetazione o le macerie è **invisibile oltre 2 tile** finché non spara: lo sparo lo svela fino al turno VC successivo. Anche overwatch e fuoco soppressivo non lo vedono da lontano. Il cecchino VC cerca apposta queste posizioni.
 
 Dal turno configurato nella mappa possono arrivare **rinforzi VC** periodici — sempre guerriglieri, sempre dallo stesso lato.
 
@@ -784,6 +789,9 @@ Struttura completa con tutti i campi:
 | `traps` | array | Trappole fisse `{col, row, type, dmg?}`; `type` = `"punji"` (2 HP) o `"mine"` (4 HP) |
 | `night` | boolean | Missione sempre notturna (l'opzione nel briefing viene bloccata) |
 | `vcNoise` | boolean | (opzionale) `false` = gli spari dei VC non allertano gli altri VC; default attivo |
+| `tunnels` | array | (opzionale) Ingressi di tunnel VC in posizione fissa: `[{ "col", "row" }]`; se presente sostituisce quelli casuali |
+| `tunnelCount` | number | (opzionale) Numero di ingressi casuali (su tile che nascondono, lontano dalla partenza); default 3, `0` = nessun tunnel |
+| `vcTrapPlantMax` | number | (opzionale) Trappole che i VC in pattuglia possono piazzare durante la missione; default 3, `0` = nessuna |
 | `nightVisionPenalty` | number | Riduzione del raggio visivo di notte; default 2 |
 
 ### Campi del tile type

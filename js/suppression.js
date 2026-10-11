@@ -14,7 +14,7 @@ function checkSuppression(enemy) {
 
     if (
       suppressionCovers(sup, enemy) &&
-      isTileVisibleFromUnit(sup, enemy.col, enemy.row) &&
+      unitSeesEnemy(sup, enemy) &&
       !allyBlockingFire(sup, enemy) &&
       hasRoundLoaded(unitFireWeapon(sup))
     ) {

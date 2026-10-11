@@ -59,6 +59,12 @@ async function handleSpecialAction(col, row) {
       return;
     }
 
+    // Ingresso di tunnel individuato: lo sigilla (guerrilla.js)
+    if (isKnownTunnel(target.col, target.row)) {
+      sealTunnel(u, tunnelAt(target.col, target.row));
+      return;
+    }
+
     const tileType = getTileAt(target.col, target.row);
 
     // Burn tile burnable (non demolishable)

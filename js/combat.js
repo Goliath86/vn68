@@ -290,7 +290,7 @@ async function resolveAoeCombat(
     ...G.enemies.filter(
       (e) =>
         inBlast(e) &&
-        (isEnemyAttacking || hitHidden || isTileVisible(e.col, e.row)),
+        (isEnemyAttacking || hitHidden || isEnemyVisible(e)),
     ),
   ];
 

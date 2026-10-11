@@ -7,7 +7,8 @@ function checkOverwatch(enemy) {
     if (!ow.alive || ow.overwatchFired) continue;
 
     if (facingSector(ow, enemy) !== "front") continue;
-    if (!isTileVisibleFromUnit(ow, enemy.col, enemy.row)) continue;
+    // In vista (un cecchino VC mimetizzato si vede solo da vicino)
+    if (!unitSeesEnemy(ow, enemy)) continue;
     if (allyBlockingFire(ow, enemy)) continue;
     // Serve un colpo in canna: l'overwatch lo consuma
     if (!hasRoundLoaded(unitFireWeapon(ow))) continue;

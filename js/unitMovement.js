@@ -53,6 +53,7 @@ async function moveUnit(unit, toCol, toRow, apCost) {
     }
   }
   revealTrapsAroundEngineers();
+  revealTunnelsNearUnits();
 
   if (G.missionType === "rescue_pilot") {
     const st = G.missionState;
@@ -132,7 +133,7 @@ async function moveUnit(unit, toCol, toRow, apCost) {
 function visibleEnemyIds() {
   return new Set(
     G.enemies
-      .filter((e) => e.alive && isTileVisible(e.col, e.row))
+      .filter((e) => e.alive && isEnemyVisible(e))
       .map((e) => e.id),
   );
 }

@@ -100,7 +100,11 @@
     "avg_turns_kia": "Turni medi · caduti medi",
     "avg_us_acc": "Precisione squadra",
     "avg_vc_acc": "Precisione VC",
-    "avg_ambush": "Spari dall'agguato medi"
+    "avg_ambush": "Spari dall'agguato medi",
+    "sec_guerrilla": "Guerriglia VC",
+    "tunnel_use": "Tunnel: entrate / uscite",
+    "tunnels_sealed": "Tunnel sigillati",
+    "traps_planted": "Trappole piazzate dai VC"
   },
 
   "aim": {
@@ -307,6 +311,12 @@
     "vc_take_cover": "{name} ripiega in copertura",
     "vc_ambush_set": "{name} si apposta in agguato",
     "vc_ambush_fire": "⚠ {name} apre il fuoco dall'agguato su {target}!",
+    "tunnel_found": "🕳 Individuato un ingresso di tunnel VC ({col},{row})",
+    "tunnel_sealed": "💥 {name} fa saltare l'ingresso del tunnel",
+    "vc_tunnel_dive": "🕳 {name} sparisce in un tunnel!",
+    "vc_tunnel_emerge": "⚠ {name} sbuca da un tunnel!",
+    "vc_tunnel_trapped": "{name} resta intrappolato nei tunnel sigillati",
+    "vc_plant_trap": "{name} nasconde una trappola",
     "vc_sniper_reload": "{name} ricarica il fucile",
     "vc_sniper_reposition": "{name} si riposiziona (distanza da {target}: {dist})",
     "attack_prompt": "{attacker} attacca {defender} — LANCIA IL DADO",
@@ -392,6 +402,9 @@
     "rear": " · alle spalle",
     "enemy_routed": " (in rotta)",
     "enemy_ambush": " (in agguato: spara a chi si muove nel suo campo di tiro)",
+    "enemy_camouflaged": " (mimetizzato: visibile solo da vicino finché non spara)",
+    "tunnel": " · 🕳 Ingresso di tunnel (il geniere può sigillarlo)",
+    "tunnel_sealed": " · Tunnel sigillato",
     "trap": " | ⚠ Trappola: {trap}",
     "smoke": " | Fumo ({turns}T)"
   },

@@ -7,9 +7,11 @@ function showTooltip(e, col, row) {
     return;
   }
   const unit = G.units.find((u) => u.alive && u.col === col && u.row === row);
-  const enemy = isTileVisible(col, row)
-    ? G.enemies.find((en) => en.alive && en.col === col && en.row === row)
-    : null;
+  // Solo nemici visibili (FOW, tunnel, cecchini mimetizzati: guerrilla.js)
+  const enemy =
+    G.enemies.find(
+      (en) => en.alive && en.col === col && en.row === row && isEnemyVisible(en),
+    ) ?? null;
   const tileLabel2 = mt(`tileLabels.${def.id}`) ?? def.label;
   let txt = t("tooltip.tile", {
     label: tileLabel2,
@@ -40,6 +42,10 @@ function showTooltip(e, col, row) {
   if (enemy?.ambush) txt += t("tooltip.enemy_ambush");
   const trap = trapAt(col, row);
   if (trap?.revealed) txt += t("tooltip.trap", { trap: trapLabel(trap) });
+  const tunnel = tunnelAt(col, row);
+  if (tunnel?.revealed)
+    txt += t(tunnel.sealed ? "tooltip.tunnel_sealed" : "tooltip.tunnel");
+  if (enemy && isVcCamouflaged(enemy)) txt += t("tooltip.enemy_camouflaged");
   const smoke = (G.missionState?.smokes || []).find(
     (s) => s.col === col && s.row === row,
   );

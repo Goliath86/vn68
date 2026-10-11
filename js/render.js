@@ -126,6 +126,12 @@ function renderMap() {
     ctx.fillText(trap.type === "mine" ? "✸" : "▲", x + ts * 0.5, y + ts * 0.5);
   }
 
+  // Ingressi di tunnel individuati (guerrilla.js); sigillati: macerie e X
+  for (const tn of G.missionState?.tunnels || []) {
+    if (!tn.revealed) continue;
+    drawTunnelEntrance(ctx, tn, ts);
+  }
+
   // Notte: velo scuro su tutta la mappa (prima del FOW)
   if (isNight()) {
     ctx.fillStyle = "rgba(8,12,40,0.38)";
@@ -152,7 +158,8 @@ function renderMap() {
   // Unità nemiche (nascoste nella nebbia)
   for (const e of G.enemies) {
     if (!e.alive) continue;
-    if (!isTileVisible(e.col, e.row)) continue;
+    // FOW, tunnel e cecchini mimetizzati (guerrilla.js)
+    if (!isEnemyVisible(e)) continue;
     const { x, y } = tileToScreen(e.vx ?? e.col, e.vy ?? e.row);
     ctx.fillStyle = "rgba(100,15,15,0.68)";
     ctx.beginPath();
@@ -274,6 +281,43 @@ function renderMap() {
     ctx.fillStyle = hpRatio > 0.5 ? "#44aa22" : "#cc4422";
     ctx.fillRect(x + 2, y + ts - 5, (ts - 4) * hpRatio, 3);
   }
+}
+
+// Ingresso di tunnel: botola scura con bordo di legno; sigillato: macerie e X
+function drawTunnelEntrance(ctx, tn, ts) {
+  const { x, y } = tileToScreen(tn.col, tn.row);
+  const cx = x + ts * 0.5,
+    cy = y + ts * 0.55;
+  const rx = ts * 0.24,
+    ry = ts * 0.15;
+  ctx.save();
+  // Bordo di legno
+  ctx.fillStyle = tn.sealed ? "#5a5246" : "#6b4a26";
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx * 1.3, ry * 1.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Buco
+  ctx.fillStyle = tn.sealed ? "#7a7264" : "#0c0905";
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = tn.sealed ? "rgba(255,255,255,0.7)" : "rgba(255,170,80,0.85)";
+  ctx.lineWidth = Math.max(1.5, ts * 0.03);
+  if (tn.sealed) {
+    // Macerie: X sopra l'ingresso
+    ctx.beginPath();
+    ctx.moveTo(cx - rx, cy - ry);
+    ctx.lineTo(cx + rx, cy + ry);
+    ctx.moveTo(cx + rx, cy - ry);
+    ctx.lineTo(cx - rx, cy + ry);
+    ctx.stroke();
+  } else {
+    // Contorno tratteggiato come le trappole individuate
+    ctx.setLineDash([3, 3]);
+    ctx.strokeRect(x + 3, y + 3, ts - 6, ts - 6);
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
 }
 
 // Mirino dell'agguato VC centrato in (cx, cy)
@@ -544,7 +588,7 @@ function renderOverlay() {
               e.alive &&
               e.col === t.col &&
               e.row === t.row &&
-              isTileVisible(e.col, e.row),
+              isEnemyVisible(e),
           )
         ) {
           const { x, y } = tileToScreen(t.col, t.row);

@@ -303,7 +303,7 @@ function vcDetects(enemy, unit, viewer = enemy) {
     if (seen) {
       unit.exposed = true;
       log(t("log.stance_spotted", { name: unit.name }), "enemy");
-    } else if (isTileVisible(enemy.col, enemy.row)) {
+    } else if (isEnemyVisible(enemy)) {
       log(t("log.stance_unnoticed", { name: unit.name, vc: enemy.name }), "success");
     }
   }
@@ -593,6 +593,25 @@ async function resolveArtillery() {
 const TRAP_TYPES = { punji: { dmg: 2 }, mine: { dmg: 4 } };
 const TRAP_MIN_START_DIST = 4; // distanza minima dalle posizioni di partenza
 
+function makeTrap(col, row, type, dmg, revealed = false) {
+  return {
+    col,
+    row,
+    type: TRAP_TYPES[type] ? type : "punji",
+    dmg: dmg ?? TRAP_TYPES[type]?.dmg ?? TRAP_TYPES.punji.dmg,
+    revealed,
+  };
+}
+
+// Trappola aggiunta durante la partita (VC che la piazzano: guerrilla.js)
+function addTrap(col, row, type, revealed = false) {
+  const st = G.missionState;
+  st.traps = st.traps || [];
+  const trap = makeTrap(col, row, type, undefined, revealed);
+  st.traps.push(trap);
+  return trap;
+}
+
 function initTraps() {
   const md = G.mapData;
   const traps = [];
@@ -600,13 +619,7 @@ function initTraps() {
     isTilePassable(col, row) &&
     !isOccupied(col, row) &&
     !traps.some((t) => t.col === col && t.row === row);
-  const make = (col, row, type, dmg) => ({
-    col,
-    row,
-    type: TRAP_TYPES[type] ? type : "punji",
-    dmg: dmg ?? TRAP_TYPES[type]?.dmg ?? TRAP_TYPES.punji.dmg,
-    revealed: false,
-  });
+  const make = makeTrap;
 
   for (const tr of md.traps || []) {
     if (free(tr.col, tr.row)) traps.push(make(tr.col, tr.row, tr.type, tr.dmg));

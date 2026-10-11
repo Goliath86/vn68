@@ -100,7 +100,11 @@
     "avg_turns_kia": "Avg turns · avg KIA",
     "avg_us_acc": "Squad accuracy",
     "avg_vc_acc": "VC accuracy",
-    "avg_ambush": "Avg ambush shots"
+    "avg_ambush": "Avg ambush shots",
+    "sec_guerrilla": "VC guerrilla",
+    "tunnel_use": "Tunnels: in / out",
+    "tunnels_sealed": "Tunnels sealed",
+    "traps_planted": "Traps planted by VC"
   },
 
   "aim": {
@@ -302,6 +306,12 @@
     "vc_take_cover": "{name} falls back into cover",
     "vc_ambush_set": "{name} lies in ambush",
     "vc_ambush_fire": "⚠ {name} opens fire from ambush on {target}!",
+    "tunnel_found": "🕳 VC tunnel entrance spotted ({col},{row})",
+    "tunnel_sealed": "💥 {name} blows the tunnel entrance",
+    "vc_tunnel_dive": "🕳 {name} vanishes into a tunnel!",
+    "vc_tunnel_emerge": "⚠ {name} pops out of a tunnel!",
+    "vc_tunnel_trapped": "{name} is trapped in the sealed tunnels",
+    "vc_plant_trap": "{name} hides a trap",
     "vc_sniper_reload": "{name} reloads the rifle",
     "vc_sniper_reposition": "{name} repositions (distance from {target}: {dist})",
     "attack_prompt": "{attacker} attacks {defender} — ROLL THE DICE",
@@ -387,6 +397,9 @@
     "rear": " · from behind",
     "enemy_routed": " (routed)",
     "enemy_ambush": " (in ambush: fires at anyone moving into its field of fire)",
+    "enemy_camouflaged": " (camouflaged: visible only up close until it fires)",
+    "tunnel": " · 🕳 Tunnel entrance (the engineer can seal it)",
+    "tunnel_sealed": " · Sealed tunnel",
     "trap": " | ⚠ Trap: {trap}",
     "smoke": " | Smoke ({turns}T)"
   },

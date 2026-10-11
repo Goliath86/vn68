@@ -149,6 +149,8 @@ function startGame(
   initMissionState(missionType);
   initTraps();
   revealTrapsAroundEngineers();
+  initTunnels();
+  revealTunnelsNearUnits();
 
   updateUI();
 

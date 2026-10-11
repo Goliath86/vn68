@@ -133,7 +133,7 @@ The default composition is one of each class, but you can bring two Assaults and
 |---|---|---|---|---|---|---|
 | **Assault** | 10 | 4 | 3 | 1 | 3 | Suppressive Fire · **Grenades ×2** (AoE, ATK5, range 3) |
 | **Sniper** | 7 | 3 | 4 | 0 | 6 | Overwatch (fires at moving enemies) — **1 shot per turn**, 1-round magazine |
-| **Engineer** | 9 | 3 | 2 | 1 | 3 | Demolition (bunkers/obstacles, roll ≥4) · Fire (vegetation, immediate) · Trap disarming |
+| **Engineer** | 9 | 3 | 2 | 1 | 3 | Demolition (bunkers/obstacles, roll ≥4) · Fire (vegetation, immediate) · Trap disarming · Tunnel sealing |
 | **Medic** | 8 | 3 | 1 | 1 | 1 | Heal (+3 HP to an adjacent ally) — **restores morale and stops bleeding** |
 
 > ATK and Range are those of the primary weapon defined in `config.json` (M16, M14, M1911); if `config.json` defines no weapons for the class, the class base values are used.
@@ -200,6 +200,11 @@ VC move and attack automatically during the enemy phase. Their movement is anima
 - **Advance and ambush:** if they can't fire they advance cover to cover toward the squad. If they are already well covered and the squad is close they may **hold in ambush** (the commander always does, guerrillas half the time). Unspent AP become an **ambush**: on your turn the VC fires once at the first soldier who ends a move in front of or beside it, in range, in sight and spotted. A visible VC in ambush shows an **orange crosshair** on its counter (and a note in the tooltip): go around it, get behind it or out of its sight, or let a first move "spring" the ambush.
 
 Staying in cover isn't enough: the enemy will go for your back and flanks.
+
+**VC guerrilla tactics:**
+- **Tunnels (🕳):** every map has a few hidden entrances (3 by default, in vegetation or rubble, away from the start). A wounded VC (half HP or less) or a routed one that can reach an entrance **vanishes underground**; on its next turn it **pops out of a free entrance**, preferably out of sight and a few tiles from the squad, with +2 HP, restored morale and **in ambush**. Half of the reinforcements can arrive through the tunnels. A soldier adjacent to an entrance notices it (the Engineer from 2 tiles), as does anyone who sees a VC go in or come out. The **Engineer** can **seal** a spotted entrance with the special ability (1 AP, explosion noise); once every entrance is sealed, the VC still inside are trapped.
+- **Planted traps:** a patrolling guerrilla now and then (15% per turn) hides a punji or a mine on the tile it leaves, up to 3 per mission. If you see it planting, the trap is marked on the map.
+- **Camouflaged snipers:** a VC sniper in vegetation or rubble is **invisible beyond 2 tiles** until it fires: the shot reveals it until the next VC turn. Overwatch and suppressive fire can't see it from afar either. The VC sniper actively seeks these positions.
 
 Starting from a configured turn, **VC reinforcements** can arrive periodically — always guerrillas, always from the same side.
 
@@ -785,6 +790,9 @@ Full structure with all fields:
 | `traps` | array | Fixed traps `{col, row, type, dmg?}`; `type` = `"punji"` (2 HP) or `"mine"` (4 HP) |
 | `night` | boolean | Mission is always at night (the briefing option is locked) |
 | `vcNoise` | boolean | (optional) `false` = VC gunfire doesn't alert other VC; enabled by default |
+| `tunnels` | array | (optional) Fixed VC tunnel entrances: `[{ "col", "row" }]`; when present it replaces the random ones |
+| `tunnelCount` | number | (optional) Number of random entrances (on concealing tiles, away from the start); default 3, `0` = no tunnels |
+| `vcTrapPlantMax` | number | (optional) Traps patrolling VC can plant during the mission; default 3, `0` = none |
 | `nightVisionPenalty` | number | Vision reduction at night; default 2 |
 
 ### Tile Type Fields
