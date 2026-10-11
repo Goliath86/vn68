@@ -50,7 +50,7 @@ function updateQuickWeaponsBar(u) {
 
   if (G.actionMode === "weapon_select" && u) {
     (u.weapons || []).forEach((w, i) => {
-      const hasAmmo = w.ammo === null || w.ammo > 0;
+      const hasAmmo = weaponUsable(u, w);
       const ammoStr =
         w.ammo === null
           ? t("weapons.ammo_inf")
@@ -140,20 +140,10 @@ function updateActionButtons() {
       }
 
       if (id.includes("attack")) {
-        const hasAmmo =
-          !u?.weapons?.length ||
-          u.weapons.some((w) => w.ammo === null || w.ammo > 0);
         const inPick =
           G.actionMode === "weapon_select" || G.actionMode === "aoe_confirm";
         el.disabled =
-          !(
-            isPlayer &&
-            hasAP &&
-            hasEnemy &&
-            !(u?.cls === "sniper" && u?.hasShot) &&
-            !(u?.cls === "sniper" && u?.needReload) &&
-            hasAmmo
-          ) || inPick;
+          !(isPlayer && hasAP && hasEnemy && canAttack(u)) || inPick;
         el.style.borderColor =
           hasAM || G.actionMode === "weapon_select" ? "var(--highlight)" : "";
       }
@@ -221,7 +211,7 @@ function updateActionButtons() {
     const ws = u.weapons || [];
     let html = `<div style="font-size:10px;color:var(--paper-dark);margin-bottom:3px">${t("weapons.pick_prompt")}</div>`;
     ws.forEach((w, i) => {
-      const hasAmmo = w.ammo === null || w.ammo > 0;
+      const hasAmmo = weaponUsable(u, w);
       const ammoStr =
         w.ammo === null
           ? t("weapons.ammo_inf")

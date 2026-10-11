@@ -67,11 +67,13 @@ async function resolveCombat(
   const dmg = Math.max(0, hit - save);
 
   const sniper = !!attacker.cls?.startsWith("sniper");
+  const melee = !!weapon?.melee;
   // Colpo/mancato/morte (effetti e suoni) partono all'arrivo del tracciante
-  const impact = shotImpactDelay(sniper);
+  // (corpo a corpo: a metà del fendente)
+  const impact = melee ? MELEE_IMPACT_MS : shotImpactDelay(sniper);
   sfxShoot(attacker.cls, weapon);
   addFX(
-    "shot",
+    melee ? "slash" : "shot",
     {
       fromCol: attacker.col,
       fromRow: attacker.row,
@@ -82,7 +84,7 @@ async function resolveCombat(
       sniper,
       rounds: weapon?.rounds,
     },
-    SHOT_FX_MS,
+    melee ? MELEE_FX_MS : SHOT_FX_MS,
   );
 
   const defBreakdown =
@@ -147,7 +149,8 @@ async function resolveCombat(
       }
     }
   } else {
-    sfxAt("miss", impact);
+    // Corpo a corpo mancato: niente rimbalzo del proiettile, il VC schiva
+    if (!melee) sfxAt("miss", impact);
     addFX(
       "miss",
       {
@@ -156,6 +159,7 @@ async function resolveCombat(
         fromCol: attacker.col,
         fromRow: attacker.row,
         enemy: !isEnemy,
+        blast: melee,
       },
       800,
       impact,
@@ -171,7 +175,41 @@ async function resolveCombat(
 
   updateUI();
   render();
+
+  // Assalto all'arma bianca riuscito: l'unità avanza nel tile del VC ucciso
+  if (melee && !isEnemy && !defender.alive)
+    await meleeAdvance(attacker, defender, impact);
+
   return dmg > 0;
+}
+
+const MELEE_FX_MS = 450; // durata del fendente
+const MELEE_IMPACT_MS = 180; // ms tra l'inizio del fendente e il colpo
+const MELEE_ADVANCE_DELAY_MS = 450; // pausa dopo il colpo, mentre il VC cade
+
+// Dopo un'uccisione all'arma bianca l'unità occupa il tile del nemico, senza
+// costo AP. Il movimento non è annullabile. Si salta se nel frattempo
+// l'unità si è mossa o il tile è stato occupato.
+async function meleeAdvance(unit, victim, impact) {
+  const col = victim.col,
+    row = victim.row;
+  const fromCol = unit.col,
+    fromRow = unit.row;
+  await sleep(impact + MELEE_ADVANCE_DELAY_MS);
+  if (
+    G.phase !== "player" ||
+    !unit.alive ||
+    unit.col !== fromCol ||
+    unit.row !== fromRow ||
+    isOccupied(col, row)
+  )
+    return;
+  log(t("log.melee_advance", { name: unit.name }), "combat");
+  await moveUnit(unit, col, row, 0);
+  G.lastMove = null;
+  // Le evidenziazioni di una modalità aperta nel frattempo partono dal tile vecchio
+  if (G.selectedUnit === unit && G.actionMode) setActionMode(null);
+  updateUI();
 }
 
 // Anteprima attacco del giocatore: probabilità di colpire e danno medio, calcolati

@@ -61,6 +61,9 @@ function sfx(type) {
     case "shoot_vc":
       _sfxShoot(ac, out, t0, true);
       break;
+    case "melee":
+      _sfxMelee(ac, out, t0);
+      break;
     case "move":
       _sfxMove(ac, out, t0);
       break;
@@ -160,6 +163,8 @@ function sfxShoot(cls, weapon = null) {
     clone.play().catch(() => sfx(_VC_CLS.has(cls) ? "shoot_vc" : "shoot"));
     return;
   }
+  // Arma bianca senza suono proprio: fendente ("melee" sovrascrivibile da config)
+  if (weapon?.melee) return sfx("melee");
   sfx(_VC_CLS.has(cls) ? "shoot_vc" : "shoot");
 }
 
@@ -208,6 +213,11 @@ function _sfxShoot(ac, out, t, vc) {
   // Crack: filtered noise + low thump
   _noise(ac, "bandpass", vc ? 900 : 1300, out, t, 0.1, 0.45, 0.7);
   _osc(ac, "sine", vc ? 100 : 130, out, t, 0.09, 0.35, vc ? 45 : 55);
+}
+function _sfxMelee(ac, out, t) {
+  // Swish: fruscio acuto e breve della lama che fende l'aria
+  _noise(ac, "bandpass", 2600, out, t, 0.14, 0.22, 1.4);
+  _noise(ac, "highpass", 4200, out, t + 0.03, 0.08, 0.12);
 }
 function _sfxMove(ac, out, t) {
   // Soft thud (footstep on earth)

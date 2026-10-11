@@ -56,6 +56,15 @@
         "aoe": 1,
         "smoke": 2,
         "noise": 1
+      },
+      {
+        "id": "knife",
+        "label": "Coltello",
+        "labelEn": "Knife",
+        "atk": 2,
+        "range": 1,
+        "melee": true,
+        "noise": 0
       }
     ],
     "sniper": [
@@ -68,6 +77,15 @@
         "rangePenalty": true,
         "noise": 7,
         "sound": "assets/sniper_us.mp3"
+      },
+      {
+        "id": "knife",
+        "label": "Coltello",
+        "labelEn": "Knife",
+        "atk": 2,
+        "range": 1,
+        "melee": true,
+        "noise": 0
       }
     ],
     "engineer": [
@@ -93,6 +111,15 @@
         "maxCarriers": 1,
         "noise": 8,
         "sound": "assets/grenade.mp3"
+      },
+      {
+        "id": "knife",
+        "label": "Coltello",
+        "labelEn": "Knife",
+        "atk": 2,
+        "range": 1,
+        "melee": true,
+        "noise": 0
       }
     ],
     "medic": [
@@ -105,6 +132,15 @@
         "rounds": 1,
         "noise": 2,
         "sound": "assets/pistol.mp3"
+      },
+      {
+        "id": "knife",
+        "label": "Coltello",
+        "labelEn": "Knife",
+        "atk": 2,
+        "range": 1,
+        "melee": true,
+        "noise": 0
       }
     ],
     "grunt": [

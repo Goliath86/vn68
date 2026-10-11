@@ -10,13 +10,40 @@ function unitWeapon(unit) {
 }
 
 /**
+ * Arma utilizzabile adesso: servono munizioni; dopo il colpo e durante la
+ * ricarica il cecchino ha bloccate le armi da fuoco, non quelle da mischia
+ * @param {object} unit
+ * @param {object} w
+ * @returns {boolean}
+ */
+function weaponUsable(unit, w) {
+  if (w.ammo != null && w.ammo <= 0) return false;
+  return !!w.melee || !sniperReloading(unit);
+}
+
+function sniperReloading(unit) {
+  return unit?.cls === "sniper" && !!(unit.hasShot || unit.needReload);
+}
+
+/**
+ * L'unità ha almeno un'arma utilizzabile (senza loadout: vale il blocco del cecchino)
+ * @param {object} unit
+ * @returns {boolean}
+ */
+function canAttack(unit) {
+  return unit?.weapons?.length
+    ? unit.weapons.some((w) => weaponUsable(unit, w))
+    : !sniperReloading(unit);
+}
+
+/**
  * Arma di fuoco diretto di un'unità (usata da overwatch e soppressione):
- * prima arma non-AoE del loadout, o null se non configurata
+ * prima arma non-AoE e non da mischia del loadout, o null se non configurata
  * @param {object} unit
  * @returns {object|null}
  */
 function unitFireWeapon(unit) {
-  return unit.weapons?.find((w) => !w.aoe) ?? null;
+  return unit.weapons?.find((w) => !w.aoe && !w.melee) ?? null;
 }
 
 /**

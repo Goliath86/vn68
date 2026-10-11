@@ -107,7 +107,8 @@ document.getElementById("btn-attack").addEventListener("click", () => {
   const u = G.selectedUnit;
   if (!u || u.ap < 1) return;
   sfx("click");
-  const usable = (u.weapons || []).filter((w) => w.ammo === null || w.ammo > 0);
+  if (!canAttack(u)) return;
+  const usable = (u.weapons || []).filter((w) => weaponUsable(u, w));
   if (usable.length > 1) {
     setActionMode("weapon_select");
   } else {
@@ -243,13 +244,7 @@ document.addEventListener("keydown", (e) => {
       if (u && u.alive && u.ap > 0) document.getElementById("btn-move").click();
       break;
     case "a":
-      if (
-        u &&
-        u.alive &&
-        u.ap > 0 &&
-        !(u.cls === "sniper" && u.hasShot) &&
-        !(u.cls === "sniper" && u.needReload)
-      )
+      if (u && u.alive && u.ap > 0 && canAttack(u))
         document.getElementById("btn-attack").click();
       break;
     case "s":

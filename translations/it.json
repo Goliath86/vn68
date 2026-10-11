@@ -184,6 +184,7 @@
     "enemy_deployed": "Truppe nemiche: {count} Vietcong in campo",
     "unit_move": "{name} si muove in ({col},{row}) [-{ap}AP]",
     "unit_move_undone": "{name}: movimento annullato",
+    "melee_advance": "🔪 {name} avanza e prende la posizione del nemico",
     "overwatch_fire": "{name} OVERWATCH: fuoco su {target}!",
     "suppression_set": "{name} in FUOCO SOPPRESSIVO — blocca i VC che entrano nel range",
     "suppression_fire": "{name} SOPPRESSIONE: {target} è bloccato (AP azzerati)!",

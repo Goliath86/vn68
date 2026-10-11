@@ -434,6 +434,11 @@ function _drawEffect(ctx, ts, fx, p) {
       break;
     }
 
+    case "slash": {
+      _drawSlash(ctx, ts, fx, p);
+      break;
+    }
+
     case "hit": {
       _drawHit(ctx, ts, fx, p);
       break;
@@ -513,6 +518,50 @@ function _drawNoise(ctx, ts, d, p) {
     ctx.closePath();
     ctx.stroke();
   }
+}
+
+// ── SLASH — fendente all'arma bianca ────────────────────────────────────
+// Arco luminoso che attraversa il bersaglio di traverso rispetto alla
+// direzione d'attacco: la punta corre lungo l'arco lasciando una scia che
+// si assottiglia e svanisce
+function _drawSlash(ctx, ts, fx, p) {
+  const { fromCol, fromRow, toCol, toRow } = fx.data;
+  const { x, y } = tileToScreen(toCol, toRow);
+  const cx = x + ts * 0.5,
+    cy = y + ts * 0.5;
+  const dir = Math.atan2(toRow - fromRow, toCol - fromCol);
+  const seed = Math.floor(fx.t0) % 997;
+  const side = _hash01(seed) < 0.5 ? -1 : 1;
+  // Centro dell'arco arretrato verso l'attaccante: l'arco taglia il bersaglio
+  const r = ts * 0.55;
+  const ax = cx - Math.cos(dir) * r * 0.75,
+    ay = cy - Math.sin(dir) * r * 0.75;
+  const span = 1.5;
+  const a0 = dir - (side * span) / 2;
+  const sweep = Math.min(1, p / 0.45); // la punta arriva in fondo
+  const fade = p < 0.45 ? 1 : 1 - (p - 0.45) / 0.55;
+  const head = a0 + side * span * (1 - (1 - sweep) ** 2);
+  const tailLen = span * 0.6;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.lineCap = "round";
+  const steps = 10;
+  for (let i = 0; i < steps; i++) {
+    const q0 = i / steps,
+      q1 = (i + 1) / steps;
+    const s0 = head - side * tailLen * (1 - q0),
+      s1 = head - side * tailLen * (1 - q1);
+    // Non oltre l'inizio dell'arco
+    if (side * (s1 - a0) < 0) continue;
+    const from = side * (s0 - a0) < 0 ? a0 : s0;
+    ctx.strokeStyle = `rgba(235,240,255,${(0.9 * q1 * fade).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1, ts * 0.05 * q1 * fade);
+    ctx.beginPath();
+    ctx.arc(ax, ay, r, Math.min(from, s1), Math.max(from, s1));
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 // ── SHOT — colpo singolo: vampata, traccianti, impatto ──────────────────

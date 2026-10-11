@@ -179,6 +179,7 @@
     "enemy_deployed": "Enemy forces: {count} Viet Cong deployed",
     "unit_move": "{name} moves to ({col},{row}) [-{ap}AP]",
     "unit_move_undone": "{name}: move undone",
+    "melee_advance": "🔪 {name} advances and takes the enemy's position",
     "overwatch_fire": "{name} OVERWATCH: fires at {target}!",
     "suppression_set": "{name} in SUPPRESSIVE FIRE — pins any VC entering range",
     "suppression_fire": "{name} SUPPRESSION: {target} is pinned (AP zeroed)!",
