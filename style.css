@@ -1186,7 +1186,7 @@ body {
 #quick-bar {
     display: none;
     position: fixed;
-    z-index: 150;
+    z-index: 90; /* sotto le modali (100), sopra la mappa */
     background: var(--panel-bg);
     align-items: stretch;
     gap: 4px;
@@ -1247,7 +1247,7 @@ body {
 #qb-more-menu {
     display: none;
     position: fixed;
-    z-index: 151;
+    z-index: 91;
     background: var(--panel-bg);
     border-top: 2px solid var(--border);
     gap: 4px;
@@ -1566,7 +1566,7 @@ body {
 #quick-weapons-bar {
     display: none;
     position: fixed;
-    z-index: 150;
+    z-index: 90; /* sotto le modali (100), sopra la mappa */
     background: var(--panel-bg);
     border-top: 2px solid var(--border);
     align-items: stretch;
