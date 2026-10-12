@@ -50,14 +50,22 @@ function setActionMode(mode, weapon = null) {
   }
 
   if (mode === "rotate") {
-    // I 4 tile adiacenti indicano le direzioni (anche se non percorribili)
-    G.reachable = FACING_DIRS.map(([dc, dr]) => ({
+    // I tile adiacenti indicano le direzioni (anche se non percorribili),
+    // esclusa quella già rivolta: toccarla annulla senza consumare la rotazione
+    G.reachable = FACING_DIRS.map(([dc, dr], f) => ({
       col: u.col + dc,
       row: u.row + dr,
-    })).filter(
-      ({ col, row }) =>
-        col >= 0 && row >= 0 && col < G.mapData.cols && row < G.mapData.rows,
-    );
+      f,
+    }))
+      .filter(
+        ({ col, row, f }) =>
+          f !== (u.facing ?? 0) &&
+          col >= 0 &&
+          row >= 0 &&
+          col < G.mapData.cols &&
+          row < G.mapData.rows,
+      )
+      .map(({ col, row }) => ({ col, row }));
   }
 
   if (mode === "special") {
@@ -160,7 +168,7 @@ function changeStance(u, stance) {
 function rotateUnit(u, col, row) {
   if (!u || !u.alive || u.rotated) return;
   const f = facingToward(u, { col, row });
-  if (f === null) return;
+  if (f === null || f === (u.facing ?? 0)) return;
   u.facing = f;
   u.rotated = true;
   tutorialEvent("rotate", { cls: u.cls, facing: f });
