@@ -106,6 +106,7 @@ function checkOverwatch(enemy) {
           );
           if (G.missionType === "search_destroy")
             G.missionState.kills = (G.missionState.kills || 0) + 1;
+          tutorialEvent("kill", { id: enemy.id, how: "overwatch" });
           addFX(
             "death",
             { col: enemy.col, row: enemy.row, cls: enemy.cls, enemy: true },
