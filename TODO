@@ -5,6 +5,12 @@ Sniper: if sniper shoot on one turn, the next turn he can use overwatch or move 
 Bug: on "Resume" card [object Object] text -> DONE
 Bug: on "Resume" game does not appear the name and type of the mission -> DONE
 
-UX: migliorare tile di default per disegno mappa
+UX: migliorare tile di default per disegno mappa -> DONE
 
-Gameplay: generazione missione procedurale con supporto al salvataggio
+Gameplay: generazione missione procedurale con supporto al salvataggio -> DONE
+
+Missione tutorial geniere:
+ * Togliere pedina Assalto inutile.
+ * Fermare passo del tutorial se il muro non cede subito
+ * Selezionare casella superiore all'attuale per scoprire il tunnel altrimenti ci si ferma sopra
+ * Per il geniere, quando si usa la demolizione, fare in modo che la sua direzione venga girata al punto della demolizione
