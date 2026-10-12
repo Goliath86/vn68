@@ -25,34 +25,49 @@ async function resolveCombat(
     ? weaponRangePenalty(attacker, weapon, range)
     : 0;
 
+  // Coltello della squadra: guardia del VC al posto della copertura, colpo
+  // a segno = uccisione, colluttazione se fallisce (mechanics.js:MELEE)
+  const melee = !!weapon?.melee;
+  const knife = melee && !isEnemy;
+  const ms = knife ? meleeStats(attacker, defender, weapon) : null;
+
   // Orientamento del bersaglio: dal lato copertura dimezzata, alle spalle
   // copertura nulla e +1 ATK (vale per entrambe le parti)
   const sector = facingSector(defender, attacker);
   // Postura: bonus ATK di chi spara (US) e DEF di chi è bersagliato (US);
   // ferite: malus ATK di chi spara (US)
-  const atkVal =
-    Math.max(
-      1,
-      (weapon?.atk ?? atkDef.attack) - rangePenalty - woundAttackPenalty(attacker),
-    ) +
-    rearAttackBonus(attacker, defender) +
-    stanceAttackBonus(attacker, weapon);
-  const defCover = effectiveCover(attacker, defender);
-  if (sector !== "front")
+  const atkVal = knife
+    ? ms.atk
+    : Math.max(
+        1,
+        (weapon?.atk ?? atkDef.attack) - rangePenalty - woundAttackPenalty(attacker),
+      ) +
+      rearAttackBonus(attacker, defender) +
+      stanceAttackBonus(attacker, weapon);
+  const defCover = knife ? 0 : effectiveCover(attacker, defender);
+  if (sector !== "front" && !knife)
     log(t(`log.attack_${sector}`, { name: defender.name }), "combat");
-  const defStat = isEnemy
-    ? (UNIT_CLASSES[defender.cls]?.defense ?? 1) +
-      stanceDefenseBonus(defender, attacker)
-    : getEnemyStats(defender).defense;
-  const defVal = defStat + defCover;
+  const defStat = knife
+    ? ms.defStat
+    : isEnemy
+      ? (UNIT_CLASSES[defender.cls]?.defense ?? 1) +
+        stanceDefenseBonus(defender, attacker)
+      : getEnemyStats(defender).defense;
+  const defVal = knife ? ms.def : defStat + defCover;
 
   if (!isEnemy) {
-    if (woundAttackPenalty(attacker) > 0)
+    const woundPen = woundAttackPenalty(attacker) * (knife ? MELEE.woundMult : 1);
+    if (woundPen > 0)
       log(
         t("log.wound_atk_penalty", {
           name: attacker.name,
-          penalty: woundAttackPenalty(attacker),
+          penalty: woundPen,
         }),
+        "combat",
+      );
+    if (knife)
+      log(
+        t(`log.melee_guard_${ms.sector}`, { name: defender.name, guard: ms.guard }),
         "combat",
       );
     if (rangePenalty > 0)
@@ -79,12 +94,12 @@ async function resolveCombat(
   const hit = roll + atkVal;
   const defDice = rollD6();
   const save = defVal + defDice;
-  const dmg = Math.max(0, hit - save);
+  const margin = hit - save;
+  const dmg = knife ? (margin > 0 ? defender.hp : 0) : Math.max(0, margin);
   // Statistiche: precisione reale contro probabilità attesa (stessa formula)
   statAttack(!isEnemy, diceOdds(atkVal, defVal, defender.hp).pHit, dmg, sector);
 
   const sniper = !!attacker.cls?.startsWith("sniper");
-  const melee = !!weapon?.melee;
   // Colpo/mancato/morte (effetti e suoni) partono all'arrivo del tracciante
   // (corpo a corpo: a metà del fendente)
   const impact = melee ? MELEE_IMPACT_MS : shotImpactDelay(sniper);
@@ -105,11 +120,18 @@ async function resolveCombat(
   );
 
   const defBreakdown =
-    defCover > 0
-      ? `${defDice}+${defStat}DEF+${defCover}COV=${save}`
-      : `${defDice}+${defStat}DEF=${save}`;
+    knife && ms.guard > 0
+      ? `${defDice}+${defStat}DEF+${ms.guard}GRD=${save}`
+      : defCover > 0
+        ? `${defDice}+${defStat}DEF+${defCover}COV=${save}`
+        : `${defDice}+${defStat}DEF=${save}`;
 
-  const result = dmg > 0 ? t("log.attack_hit", { dmg }) : t("log.attack_miss");
+  const result =
+    dmg > 0
+      ? knife
+        ? t("log.melee_kill")
+        : t("log.attack_hit", { dmg })
+      : t("log.attack_miss");
 
   log(
     t("log.attack_result", {
@@ -123,46 +145,7 @@ async function resolveCombat(
   );
 
   if (dmg > 0) {
-    sfxAt("hit", impact);
-    addFX(
-      "hit",
-      {
-        col: defender.col,
-        row: defender.row,
-        dmg,
-        fromCol: attacker.col,
-        fromRow: attacker.row,
-        enemy: !isEnemy,
-      },
-      800,
-      impact,
-    );
-    defender.hp -= dmg;
-    if (defender.hp <= 0) {
-      defender.hp = 0;
-      defender.alive = false;
-      sfxAt("death", impact);
-      log(t("log.unit_eliminated", { name: defender.name }), "combat");
-      if (!isEnemy && G.missionType === "search_destroy") {
-        G.missionState.kills = (G.missionState.kills || 0) + 1;
-      }
-      if (!isEnemy && weapon?.melee) statAdd("meleeKills");
-      if (!isEnemy) tutorialEvent("kill", { id: defender.id, how: "attack" });
-      addFX(
-        "death",
-        {
-          col: defender.col,
-          row: defender.row,
-          cls: defender.cls,
-          enemy: !isEnemy,
-        },
-        1400,
-        impact,
-      );
-    } else if (isEnemy) {
-      // Difensore US sopravvissuto: morale (scosso sotto il 30%) ed emorragia
-      afterUnitDamage(defender, dmg);
-    }
+    applyAttackDamage(attacker, defender, dmg, isEnemy, weapon, impact);
   } else {
     // Corpo a corpo mancato: niente rimbalzo del proiettile, il VC schiva
     if (!melee) sfxAt("miss", impact);
@@ -179,6 +162,7 @@ async function resolveCombat(
       800,
       impact,
     );
+    if (knife) meleeStruggle(attacker, defender, margin, weapon, impact);
   }
 
   faceAfterShot(attacker, defender);
@@ -209,6 +193,72 @@ async function resolveCombat(
     await meleeAdvance(attacker, defender, impact);
 
   return dmg > 0;
+}
+
+// Danno di un attacco diretto (o di una colluttazione) a `target`, con
+// effetti, eventuale eliminazione e conseguenze. targetIsUS: il bersaglio è
+// un soldato della squadra. Restituisce true se il bersaglio è morto.
+function applyAttackDamage(attacker, target, dmg, targetIsUS, weapon, impact) {
+  sfxAt("hit", impact);
+  addFX(
+    "hit",
+    {
+      col: target.col,
+      row: target.row,
+      dmg,
+      fromCol: attacker.col,
+      fromRow: attacker.row,
+      enemy: !targetIsUS,
+    },
+    800,
+    impact,
+  );
+  target.hp -= dmg;
+  if (target.hp > 0) {
+    // Difensore US sopravvissuto: morale (scosso sotto il 30%) ed emorragia
+    if (targetIsUS) afterUnitDamage(target, dmg);
+    return false;
+  }
+  target.hp = 0;
+  target.alive = false;
+  sfxAt("death", impact);
+  log(t("log.unit_eliminated", { name: target.name }), "combat");
+  if (!targetIsUS) {
+    if (G.missionType === "search_destroy")
+      G.missionState.kills = (G.missionState.kills || 0) + 1;
+    if (weapon?.melee) statAdd("meleeKills");
+    tutorialEvent("kill", { id: target.id, how: "attack" });
+  }
+  addFX(
+    "death",
+    { col: target.col, row: target.row, cls: target.cls, enemy: !targetIsUS },
+    1400,
+    impact,
+  );
+  return true;
+}
+
+// Coltello fallito: colluttazione. Di poco (margine ≥ MELEE.struggleMargin)
+// il VC resta ferito e a volte anche l'aggressore; altrimenti il VC para e
+// contrattacca. Numeri in mechanics.js:MELEE
+function meleeStruggle(attacker, defender, margin, weapon, impact) {
+  let selfDmg = 0;
+  if (margin >= MELEE.struggleMargin) {
+    log(t("log.melee_struggle", { name: attacker.name, vc: defender.name }), "combat");
+    // Un VC già ferito può morire nella colluttazione (e non contrattacca)
+    if (applyAttackDamage(attacker, defender, MELEE.struggleVcDmg, false, weapon, impact))
+      return;
+    if (Math.random() < MELEE.struggleSelfChance) selfDmg = MELEE.counterDmg;
+  } else {
+    log(t("log.melee_parried", { name: attacker.name, vc: defender.name }), "combat");
+    selfDmg =
+      margin <= MELEE.heavyCounterMargin ? MELEE.heavyCounterDmg : MELEE.counterDmg;
+  }
+  if (!selfDmg) return;
+  statAdd("vcDmg", Math.min(selfDmg, attacker.hp));
+  log(t("log.melee_wounded", { name: attacker.name, dmg: selfDmg }), "combat");
+  if (applyAttackDamage(defender, attacker, selfDmg, true, null, impact))
+    checkGameOver();
 }
 
 const MELEE_FX_MS = 450; // durata del fendente
@@ -243,6 +293,12 @@ async function meleeAdvance(unit, victim, impact) {
 // Anteprima attacco del giocatore: probabilità di colpire e danno medio, calcolati
 // esattamente sulla stessa formula di resolveCombat (2d6+ATK vs DEF+COV+1d6)
 function attackOdds(attacker, defender, weapon) {
+  // Coltello: la probabilità di colpire è quella di uccidere
+  if (weapon?.melee) {
+    const ms = meleeStats(attacker, defender, weapon);
+    const { pHit } = diceOdds(ms.atk, ms.def, defender.hp);
+    return { pHit, expDmg: pHit * defender.hp };
+  }
   const def = UNIT_CLASSES[attacker.cls];
   const range = dist(attacker, defender);
   const atkVal =

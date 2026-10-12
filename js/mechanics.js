@@ -351,6 +351,38 @@ function woundAttackPenalty(unit) {
   return woundLevel(unit);
 }
 
+// ── CORPO A CORPO (coltello US) ────────────────────────────────────────
+// Stesso tiro (2d6 + ATK contro DEF + 1d6) ma: un colpo a segno uccide; al
+// posto della copertura conta la guardia del VC, che dipende da quanto vede
+// l'aggressore (fronte/fianco/spalle); le ferite pesano il doppio. Se il
+// colpo fallisce c'è una colluttazione: di poco (margine ≥ struggleMargin)
+// il VC resta ferito e l'aggressore a volte; altrimenti il VC para e
+// contrattacca (danno doppio se il margine è ≤ heavyCounterMargin).
+const MELEE = {
+  guard: { front: 5, side: 3, rear: 0 },
+  woundMult: 2,
+  struggleMargin: -1,
+  struggleVcDmg: 1,
+  struggleSelfChance: 0.5,
+  counterDmg: 1,
+  heavyCounterMargin: -4,
+  heavyCounterDmg: 2,
+};
+
+// ATK e DEF di un attacco col coltello di `attacker` (US) contro `defender` (VC)
+function meleeStats(attacker, defender, weapon) {
+  const sector = facingSector(defender, attacker);
+  // Il malus delle ferite si applica dopo il minimo di 1, così i due livelli
+  // di ferita restano distinti anche con un'arma da ATK 2
+  const atk =
+    Math.max(1, weapon?.atk ?? 1) -
+    woundAttackPenalty(attacker) * MELEE.woundMult +
+    rearAttackBonus(attacker, defender);
+  const defStat = getEnemyStats(defender).defense;
+  const guard = MELEE.guard[sector] ?? 0;
+  return { atk, def: defStat + guard, defStat, guard, sector };
+}
+
 // AP extra per ogni azione di movimento: postura + ferite
 function moveActionExtra(unit) {
   return (

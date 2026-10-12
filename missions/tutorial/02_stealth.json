@@ -54,7 +54,7 @@
         "vcturn": "**Turno dei VC.** La sentinella continua a guardare a nord…",
         "stand": "Ora serve velocità: **alzati** (postura **In piedi**, di nuovo gratis perché è il primo cambio di questo turno). In piedi il movimento non costa AP extra.",
         "sneak2": "Muoviti fino al **tile indicato**, subito dietro la sentinella: 2 AP, te ne resta 1 per colpire.",
-        "knife": "Ora il **coltello**: scegli la sua **scheda arma** sotto Attacca (o tasto **4**) e clicca sul VC. Alle spalle hai **+1 ATK** e il nemico non ha copertura.\n\nIl coltello è **silenzioso** (rumore 0): nessun altro VC sentirà nulla. Se lo uccidi, **prendi il suo posto** gratis.",
+        "knife": "Ora il **coltello**: scegli la sua **scheda arma** sotto Attacca (o tasto **4**) e clicca sul VC. Un colpo di coltello a segno **uccide**. Alle spalle il VC non può parare (**+1 ATK**, nessuna guardia): quasi certo. Di fronte ti vede arrivare e si difende; se il colpo fallisce c'è una **colluttazione** e puoi restare ferito.\n\nIl coltello è **silenzioso** (rumore 0): nessun altro VC sentirà nulla. Se lo uccidi, **prendi il suo posto** gratis.",
         "noise": "Ogni sparo fa **rumore**: i VC entro il raggio dell'arma si allertano e si girano verso la fonte (M16: 5 tile). In modalità attacco il raggio è il **contorno grigio puntinato** e la scheda arma mostra 🔊.\n\nLa seconda sentinella è nel villaggio a est. Avvicinati nella giungla: **accucciato** (o **sdraiato**) su un tile di vegetazione sei **occultato** (🌿) e un VC ti nota solo se supera un tiro.",
         "finish": "Elimina la **seconda sentinella**. Puoi tentare un altro colpo di coltello alle spalle oppure spararle da una posizione coperta: a te la scelta."
       }
@@ -70,7 +70,7 @@
         "vcturn": "**VC turn.** The sentry keeps looking north…",
         "stand": "Now you need speed: **stand up** (stance **Standing**, free again since it's your first change this turn). Standing, moving costs no extra AP.",
         "sneak2": "Move to the **marked tile**, right behind the sentry: 2 AP, leaving 1 to strike.",
-        "knife": "Now the **knife**: pick its **weapon card** under Attack (or key **4**) and click the VC. From behind you get **+1 ATK** and the enemy has no cover.\n\nThe knife is **silent** (noise 0): no other VC will hear a thing. If you kill the enemy you **take its place** for free.",
+        "knife": "Now the **knife**: pick its **weapon card** under Attack (or key **4**) and click the VC. A knife strike that lands **kills**. From behind the VC can't parry (**+1 ATK**, no guard): almost certain. From the front they see you coming and defend; if the strike fails there's a **struggle** and you may get hurt.\n\nThe knife is **silent** (noise 0): no other VC will hear a thing. If you kill the enemy you **take its place** for free.",
         "noise": "Every shot makes **noise**: VC within the weapon's radius are alerted and turn toward the source (M16: 5 tiles). In attack mode the radius is the **dotted grey outline** and the weapon card shows 🔊.\n\nThe second sentry is in the village to the east. Approach through the jungle: **crouched** (or **prone**) on a vegetation tile you are **concealed** (🌿) and a VC only notices you if it passes a roll.",
         "finish": "Take out the **second sentry**. You can try another knife strike from behind or shoot it from a covered position: your call."
       }
