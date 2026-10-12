@@ -8,6 +8,8 @@ function onMouseUp() {
   G.dragging = false;
 }
 function onCanvasMove(e) {
+  // Nessuna missione caricata (menu iniziale): niente mappa da esplorare
+  if (!G.mapData) return;
   if (G.dragging) {
     G.camX = e.clientX - G.dragStart.x;
     G.camY = e.clientY - G.dragStart.y;
