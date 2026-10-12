@@ -625,7 +625,7 @@ Nella scelta della mappa, la scheda **🎓 Addestramento** apre l'elenco delle l
 | 1 | Primi passi | Assalto | selezione, AP e costo del terreno, annulla, orientamento e rotazione, attacco e dadi, turni |
 | 2 | Ombre nella giungla | Assalto | postura, coni di vista dei VC, attacchi alle spalle, coltello silenzioso, rumore, occultamento |
 | 3 | Occhio di falco | Cecchino | gittata e penalità, un colpo per turno, ricarica, overwatch |
-| 4 | Genio militare | Geniere, Assalto | trappole, disinnesco, artiglieria via radio, demolizione, tunnel VC |
+| 4 | Genio militare | Geniere | trappole, disinnesco, artiglieria via radio, demolizione, tunnel VC |
 | 5 | Sangue e bende | Medico, Assalto, Cecchino | ferite, emorragia, panico, cure, primo soccorso; recupero pilota |
 | 6 | Operazione congiunta | squadra completa | schede armi, linea di tiro, tattiche VC, fuoco soppressivo, granate |
 

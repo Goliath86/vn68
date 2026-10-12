@@ -626,7 +626,7 @@ In the map selection, the **🎓 Training** card opens the list of guided lesson
 | 1 | First steps | Assault | selection, AP and terrain cost, undo, facing and turning, attacking and dice, turns |
 | 2 | Shadows in the jungle | Assault | stance, VC vision cones, rear attacks, the silent knife, noise, concealment |
 | 3 | Hawk eye | Sniper | range and penalty, one shot per turn, reloading, overwatch |
-| 4 | Combat engineers | Engineer, Assault | traps, disarming, radio artillery, demolition, VC tunnels |
+| 4 | Combat engineers | Engineer | traps, disarming, radio artillery, demolition, VC tunnels |
 | 5 | Blood and bandages | Medic, Assault, Sniper | wounds, bleeding, panic, healing, first aid; pilot rescue |
 | 6 | Joint operation | full squad | weapon cards, line of fire, VC tactics, suppressive fire, grenades |
 

@@ -53,6 +53,11 @@ async function handleSpecialAction(col, row) {
     const target = G.reachable.find((r) => r.col === col && r.row === row);
     if (!target) return;
 
+    // Il geniere si gira verso il tile su cui lavora (disinnesco, tunnel,
+    // incendio, demolizione)
+    faceToward(u, target);
+    if (G.fowEnabled) recomputeVisibility();
+
     // Trappola individuata: disinnesco (ha la precedenza su demolizione/incendio)
     const trap = trapAt(target.col, target.row);
     if (trap?.revealed) {
@@ -106,7 +111,8 @@ async function handleSpecialAction(col, row) {
     // Demolition on a demolishable tile
     log(t("log.demolition_start", { name: u.name }), "system");
     const dice = rollDice(1);//await waitForDice(1, "Demolizione");
-    if (diceSum(dice) >= 4) {
+    const demolished = diceSum(dice) >= 4;
+    if (demolished) {
       G.mapData.grid[target.row][target.col] = tileType.demolishResult || "J";
       invalidateTerrainCache();
       u.ap -= 1;
@@ -149,7 +155,13 @@ async function handleSpecialAction(col, row) {
     }
     // La carica esplode comunque, anche se il muro regge
     makeNoise(target, DEMOLITION_NOISE);
-    tutorialEvent("special", { cls: u.cls, kind: "demolish", col: target.col, row: target.row });
+    tutorialEvent("special", {
+      cls: u.cls,
+      kind: "demolish",
+      col: target.col,
+      row: target.row,
+      success: demolished,
+    });
     updateUI();
     render();
   }

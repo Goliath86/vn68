@@ -59,7 +59,7 @@
       "id": "t4_engineer",
       "file": "04_engineer.json",
       "icon": "🧨",
-      "classes": ["engineer", "assault"],
+      "classes": ["engineer"],
       "labels": {
         "it": { "title": "Genio militare", "desc": "Il geniere: trappole, demolizioni, tunnel VC e artiglieria via radio." },
         "en": { "title": "Combat engineers", "desc": "The Engineer: traps, demolitions, VC tunnels and radio artillery." }
