@@ -52,6 +52,7 @@
     "first_aid_used": "🩹 Primo soccorso usato",
     "first_aid_mobile": "Medicarsi",
     "undo_mobile": "Annulla",
+    "more_mobile": "Altro",
     "attack_with": "Attacca · {weapon}"
   },
 

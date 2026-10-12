@@ -274,7 +274,13 @@ function renderTutorialPanel() {
   };
   el.querySelector(".tut-next")?.addEventListener("click", advanceTutorialManually);
   if (!hidden)
-    for (const id of tutorialUiTargets(step.ui)) document.getElementById(id)?.classList.add("tut-pulse");
+    for (const id of tutorialUiTargets(step.ui)) {
+      const target = document.getElementById(id);
+      target?.classList.add("tut-pulse");
+      // Azioni nel menu ⋯ della quick bar: lampeggia anche il bottone che lo apre
+      if (target?.closest("#qb-more-menu"))
+        document.getElementById("qb-more")?.classList.add("tut-pulse");
+    }
 }
 
 // Tile evidenziato dal passo corrente (chiamato da renderOverlay)

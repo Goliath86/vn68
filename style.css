@@ -1191,6 +1191,13 @@ body {
     align-items: stretch;
     gap: 4px;
 }
+/* Id nel selettore: deve vincere sul ".btn" mobile (padding 10px, min-height
+   44px) più in basso nel file, che lascerebbe spazio solo all'icona */
+#quick-bar .qb-btn,
+#qb-more-menu .qb-btn {
+    padding: 2px 1px;
+    min-height: unset;
+}
 .qb-btn {
     flex: 1;
     display: flex;
@@ -1198,19 +1205,57 @@ body {
     align-items: center;
     justify-content: center;
     gap: 1px;
-    padding: 2px 4px;
-    min-height: unset;
     height: 100%;
+    /* Senza questo il flex item non scende sotto la larghezza dell'etichetta
+       e la barra sborda a destra (tagliando "Fine" e ▲) */
+    min-width: 38px;
+    letter-spacing: 0;
 }
 .qb-btn .qb-icon {
     font-size: 19px;
     line-height: 1;
 }
 .qb-btn .qb-label {
-    font-size: 8px;
+    font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0;
     color: var(--paper-dark);
+    max-width: 100%;
+    flex-shrink: 0;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#qb-more {
+    position: relative;
+}
+#qb-more.active {
+    border-color: var(--highlight);
+}
+/* Pallino: c'è un'arma da ricaricare nel menu */
+#qb-more.qb-badge::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--highlight);
+}
+#qb-more-menu {
+    display: none;
+    position: fixed;
+    z-index: 151;
+    background: var(--panel-bg);
+    border-top: 2px solid var(--border);
+    gap: 4px;
+    padding: 4px 6px;
+    height: 52px;
+}
+#qb-more-menu .qb-btn {
+    flex: 0 1 76px;
 }
 #qb-expand {
     flex-shrink: 0;
@@ -1254,6 +1299,22 @@ body {
         height: 56px;
         border-top: 2px solid var(--border);
         padding: 4px 6px;
+        /* Schermi molto stretti: se i bottoni non stanno nemmeno alla larghezza
+           minima, la barra scorre in orizzontale invece di tagliarsi */
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+    }
+    body.sheet-collapsed #quick-bar::-webkit-scrollbar {
+        display: none;
+    }
+    /* Menu ⋯: fila sopra la quick-bar, allineata a destra sotto al bottone */
+    body.sheet-collapsed.qb-more-open:not(.qwb-active) #qb-more-menu {
+        display: flex;
+        justify-content: flex-end;
+        bottom: 56px;
+        left: 0;
+        right: 0;
     }
     body.sheet-collapsed #qb-expand {
         width: 30px;
@@ -1306,6 +1367,20 @@ body {
     body.sheet-collapsed .qb-btn {
         height: unset;
         flex: 1;
+    }
+    /* Menu ⋯: fila in basso, a destra della quick-bar verticale */
+    body.sheet-collapsed.qb-more-open:not(.qwb-active) #qb-more-menu {
+        display: flex;
+        justify-content: flex-start;
+        bottom: 0;
+        left: 56px;
+        right: 0;
+    }
+    body.sheet-collapsed #qb-more-menu .qb-btn {
+        flex: 0 1 76px;
+    }
+    body.sheet-collapsed #qb-more-menu .qb-label {
+        display: inline;
     }
     body.sheet-collapsed .qb-label {
         display: none;

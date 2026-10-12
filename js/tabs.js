@@ -32,17 +32,47 @@ document
   .getElementById("sheet-handle")
   .addEventListener("click", collapseSheet);
 
-// Bottoni quick bar → delegano ai corrispondenti desktop
-["move", "special", "rotate", "stance", "endturn"].forEach((action) => {
-  document.getElementById("qb-" + action).addEventListener("click", () => {
-    document.getElementById("btn-" + action).click();
-  });
+// Bottoni quick bar (e menu ⋯) → delegano ai corrispondenti desktop
+["move", "special", "rotate", "stance", "endturn", "firstaid", "undo"].forEach(
+  (action) => {
+    document.getElementById("qb-" + action).addEventListener("click", () => {
+      document.getElementById("btn-" + action).click();
+    });
+  },
+);
+
+// Menu ⋯: azioni meno frequenti in una fila sopra la quick bar. Si chiude
+// dopo una scelta o toccando altrove
+function setQuickMoreOpen(open) {
+  document.body.classList.toggle("qb-more-open", open);
+  document.getElementById("qb-more").classList.toggle("active", open);
+}
+
+document.getElementById("qb-more").addEventListener("click", () => {
+  sfx("click");
+  setQuickMoreOpen(!document.body.classList.contains("qb-more-open"));
+});
+
+document.getElementById("qb-more-menu").addEventListener("click", (e) => {
+  if (e.target.closest("button")) setQuickMoreOpen(false);
+});
+
+document.addEventListener("click", (e) => {
+  if (!document.body.classList.contains("qb-more-open")) return;
+  if (e.target.closest("#qb-more, #qb-more-menu")) return;
+  setQuickMoreOpen(false);
 });
 
 // Quick bar Attacca: a pannello chiuso le schede armi non si vedono, quindi
-// con più armi utilizzabili si apre il selettore della quick weapons bar
+// con più armi utilizzabili si apre il selettore della quick weapons bar.
+// Se nessuna arma può sparare ma una è da ricaricare, il bottone ricarica
+// (come le schede armi scariche)
 document.getElementById("qb-attack").addEventListener("click", () => {
   const u = G.selectedUnit;
+  if (attackSlotReloads(u)) {
+    reloadWeapon(u);
+    return;
+  }
   if (!u || u.ap < 1 || !canAttack(u)) return;
   sfx("click");
   const usable = (u.weapons || []).filter((w) => weaponUsable(u, w));
@@ -227,6 +257,54 @@ function updateIconActions(u, hasUnit, isPlayer, inPick) {
   });
 }
 
+// Il bottone Attacca della quick bar diventa Ricarica quando l'unità non ha
+// armi che possano sparare ma può ricaricarne una
+function attackSlotReloads(u) {
+  return !!u?.alive && !canAttack(u) && canReload(u);
+}
+
+function updateQuickAttackSlot(u, inPick) {
+  const btn = document.getElementById("qb-attack");
+  if (!btn) return;
+  const reload = attackSlotReloads(u) && !inPick;
+  if (reload) btn.disabled = false;
+  btn.querySelector(".qb-icon").textContent = reload ? "🔄" : "🎯";
+  const label = btn.querySelector(".qb-label");
+  label.dataset.i18n = reload ? "buttons.reload_mobile" : "buttons.attack_mobile";
+  label.textContent = t(label.dataset.i18n);
+}
+
+// Menu ⋯: mostra solo le azioni disponibili; ⋯ disabilitato se non ce n'è
+// nessuna e segnalato da un pallino quando c'è un'arma da ricaricare
+function updateQuickMoreMenu(u, inPick) {
+  const reloadOnAttack = attackSlotReloads(u);
+  const items = [
+    ["stance", canChangeStance(u)],
+    ["reload", !!u && canReload(u) && !reloadOnAttack],
+    ["firstaid", canFirstAid(u)],
+    ["undo", canUndoMove()],
+  ];
+  let any = false;
+  for (const [id, avail] of items) {
+    const el = document.getElementById("qb-" + id);
+    if (!el) continue;
+    el.style.display = avail ? "" : "none";
+    el.disabled = !avail || inPick;
+    if (avail) any = true;
+  }
+  const stanceIcon = document.getElementById("qb-stance-icon");
+  if (stanceIcon) stanceIcon.textContent = STANCE_ICONS[u?.stance || "stand"];
+
+  const more = document.getElementById("qb-more");
+  more.disabled = !any || inPick;
+  more.classList.toggle(
+    "qb-badge",
+    !!u && canReload(u) && !reloadOnAttack && !more.disabled,
+  );
+  // Un selettore (armi, postura, AoE) occupa lo stesso spazio: chiude il menu
+  if (more.disabled || G.actionMode === "stance") setQuickMoreOpen(false);
+}
+
 function updateActionButtons() {
   const u = G.selectedUnit;
   const isPlayer = G.phase === "player";
@@ -316,18 +394,14 @@ function updateActionButtons() {
     ["btn-attack", "qb-attack"],
     ["btn-special", "qb-special"],
     ["btn-rotate", "qb-rotate"],
-    ["btn-stance", "qb-stance"],
     ["btn-endturn", "qb-endturn"],
   ].forEach(([src, dst]) => {
     const s = document.getElementById(src),
       d = document.getElementById(dst);
     if (s && d) d.disabled = s.disabled;
   });
-  const qbReload = document.getElementById("qb-reload");
-  if (qbReload) qbReload.disabled = !canReload(u) || inPick;
-  const qbStanceIcon = document.getElementById("qb-stance-icon");
-  if (qbStanceIcon)
-    qbStanceIcon.textContent = STANCE_ICONS[(hasUnit && u.stance) || "stand"];
+  updateQuickAttackSlot(u, inPick);
+  updateQuickMoreMenu(u, inPick);
 
   updateQuickWeaponsBar(hasUnit ? u : null);
 

@@ -52,6 +52,7 @@
     "first_aid_used": "🩹 First aid used",
     "first_aid_mobile": "Patch up",
     "undo_mobile": "Undo",
+    "more_mobile": "More",
     "attack_with": "Attack · {weapon}"
   },
 
