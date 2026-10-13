@@ -552,6 +552,20 @@ function renderMissionMarkers(ctx, ts) {
   }
 }
 
+// Etichetta di probabilità sopra un tile (bordo nero per leggerla su ogni terreno)
+function drawOddsLabel(ctx, ts, x, y, label, color) {
+  ctx.save();
+  ctx.font = `bold ${Math.max(9, Math.round(ts * 0.22))}px 'Oswald'`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(0,0,0,0.85)";
+  ctx.fillStyle = color;
+  ctx.strokeText(label, x + ts / 2, y - 1);
+  ctx.fillText(label, x + ts / 2, y - 1);
+  ctx.restore();
+}
+
 function renderOverlay() {
   const ctx = G.oCtx;
   const ts = TILE * G.scale;
@@ -639,21 +653,22 @@ function renderOverlay() {
         ctx.lineTo(cx + o2, cy);
         ctx.stroke();
       }
-      // Probabilità di colpire sopra ogni bersaglio (visibile anche su mobile, senza hover)
+      // Probabilità di colpire sopra ogni bersaglio (visibile anche su mobile,
+      // senza hover), colorata per fascia (combat.js:oddsColor)
       if (G.selectedUnit) {
-        ctx.font = `bold ${Math.max(9, Math.round(ts * 0.22))}px 'Oswald'`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "bottom";
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "rgba(0,0,0,0.85)";
-        ctx.fillStyle = "#ffe080";
         for (const e of G.attackable) {
           const { x, y } = tileToScreen(e.col, e.row);
           const { pHit } = attackOdds(G.selectedUnit, e, G.currentWeapon);
-          const label = `${Math.round(pHit * 100)}%`;
-          ctx.strokeText(label, x + ts / 2, y - 1);
-          ctx.fillText(label, x + ts / 2, y - 1);
+          drawOddsLabel(ctx, ts, x, y, `${Math.round(pHit * 100)}%`, oddsColor(pHit));
         }
+      }
+      // Mobile: bersaglio puntato col primo tap (il secondo spara)
+      const aim = G.aimTarget;
+      if (aim && G.attackable.includes(aim)) {
+        const { x, y } = tileToScreen(aim.col, aim.row);
+        ctx.strokeStyle = "#ffe080";
+        ctx.lineWidth = Math.max(2, ts * 0.06);
+        ctx.strokeRect(x + 2, y + 2, ts - 4, ts - 4);
       }
       ctx.restore();
 
@@ -718,6 +733,18 @@ function renderOverlay() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("💥", bx + ts / 2, by + ts / 2);
+    // Probabilità di colpire per ogni bersaglio nel raggio; i soldati della
+    // squadra (fuoco amico) in rosso con bordo
+    for (const o of aoeOdds(w, tc, tr)) {
+      const { x, y } = tileToScreen(o.target.col, o.target.row);
+      if (o.isUS) {
+        ctx.strokeStyle = "rgba(255,70,60,0.95)";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x + 3, y + 3, ts - 6, ts - 6);
+      }
+      const label = `${o.isUS ? "⚠ " : ""}${Math.round(o.pHit * 100)}%`;
+      drawOddsLabel(ctx, ts, x, y, label, o.isUS ? "#ff7a6a" : oddsColor(o.pHit));
+    }
   }
 
   // Speciale: celle target

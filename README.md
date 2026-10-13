@@ -670,7 +670,7 @@ Le scorciatoie da tastiera sono attive solo durante la **fase giocatore** e quan
 
 **Annulla movimento:** si può annullare solo l'ultimo movimento, e solo se non ha rivelato nuovi nemici né cambiato lo stato della missione (pilota raccolto, zona ricognita). Qualsiasi altra azione (attacco, abilità speciale, ricarica, primo soccorso, fine turno) lo rende definitivo; rotazione e cambio postura fatti dopo il movimento vengono annullati insieme a lui.
 
-**Probabilità di colpire:** in modalità attacco, sopra ogni bersaglio compare la percentuale di colpire (stessa formula del combattimento: 2d6+ATK contro DEF+copertura+1d6, penalità gittata, postura e ferite incluse). Su desktop il tooltip del bersaglio mostra anche il danno medio.
+**Probabilità di colpire:** in modalità attacco, sopra ogni bersaglio compare la percentuale di colpire (stessa formula del combattimento: 2d6+ATK contro DEF+copertura+1d6, penalità gittata, postura e ferite incluse). La percentuale è colorata: verde dal 75%, gialla dal 50%, rossa sotto. Su desktop il tooltip del bersaglio mostra anche il danno medio, la probabilità di uccidere e, su una seconda riga, la scomposizione di ATK e DEF (arma, distanza, ferita, postura, spalle, copertura o guardia). Su mobile il **primo tap** su un nemico lo punta e mostra la stessa scomposizione nel pannello, il **secondo tap** (o il bottone 🎯 Fuoco) spara. Per granate e RPG, prima della conferma, ogni bersaglio nel raggio mostra la propria percentuale; i soldati della squadra sono bordati di rosso e il pannello avvisa del fuoco amico.
 
 ### Bottone ⌂ e back button
 

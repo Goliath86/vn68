@@ -418,7 +418,7 @@
     "unit_append": " | {name} HP:{hp}/{maxHp} AP:{ap}",
     "enemy_append": " | {name} HP:{hp}/{maxHp}",
     "enemy_reloading": " (in ricarica)",
-    "hit_odds": " | Colpo: {pct}% · danno medio {dmg}",
+    "hit_odds": " | Colpo: {pct}% · danno medio {dmg} · uccide {kill}%",
     "side": " · sul fianco",
     "rear": " · alle spalle",
     "enemy_routed": " (in rotta)",
@@ -428,6 +428,27 @@
     "tunnel_sealed": " · Tunnel sigillato",
     "trap": " | ⚠ Trappola: {trap}",
     "smoke": " | Fumo ({turns}T)"
+  },
+
+  "odds": {
+    "breakdown": "ATK {atk} ({atkMods})  vs  DEF {def} ({defMods})",
+    "summary": "{pct}% · danno {dmg} · uccide {kill}%",
+    "fire": "🎯 Fuoco",
+    "weapon": "arma",
+    "range": "distanza",
+    "wound": "ferita",
+    "min": "minimo",
+    "rear": "spalle",
+    "stance": "postura",
+    "base": "base",
+    "cover": "copertura",
+    "cover_side": "copertura dal fianco",
+    "cover_rear": "copertura annullata (spalle)",
+    "guard_front": "guardia frontale",
+    "guard_side": "guardia dal fianco",
+    "guard_rear": "guardia alle spalle",
+    "aoe_targets": "VC nel raggio: {n}",
+    "aoe_friendly": "⚠ soldati nel raggio: {n}"
   },
 
   "objective_panel": {

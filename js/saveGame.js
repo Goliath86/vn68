@@ -104,6 +104,7 @@ async function resumeGame(save) {
   G.actionMode = null;
   G.currentWeapon = null;
   G.pendingAoe = null;
+  G.aimTarget = null;
   G.diceQueue = null;
   G.pendingDice = false;
   G.reachable = [];

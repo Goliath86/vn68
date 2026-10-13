@@ -58,13 +58,15 @@ function showTooltip(e, col, row) {
     G.selectedUnit &&
     G.attackable.includes(enemy)
   ) {
-    const { pHit, expDmg } = attackOdds(G.selectedUnit, enemy, G.currentWeapon);
+    const { pHit, expDmg, pKill, b } = attackOdds(G.selectedUnit, enemy, G.currentWeapon);
     txt += t("tooltip.hit_odds", {
       pct: Math.round(pHit * 100),
       dmg: expDmg.toFixed(1),
+      kill: Math.round(pKill * 100),
     });
-    const sector = facingSector(enemy, G.selectedUnit);
-    if (sector !== "front") txt += t(`tooltip.${sector}`);
+    if (b.sector !== "front") txt += t(`tooltip.${b.sector}`);
+    // Seconda riga: da dove vengono ATK e DEF
+    txt += "\n" + oddsBreakdownText(b);
   }
   tt.textContent = txt;
   tt.style.display = "block";

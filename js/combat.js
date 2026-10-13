@@ -20,40 +20,12 @@ async function resolveCombat(
     return false;
   }
 
-  // Penalità gittata (armi con rangePenalty, default cecchino): -1 ATK ogni 2 tile
-  const rangePenalty = !isEnemy
-    ? weaponRangePenalty(attacker, weapon, range)
-    : 0;
-
-  // Coltello della squadra: guardia del VC al posto della copertura, colpo
-  // a segno = uccisione, colluttazione se fallisce (mechanics.js:MELEE)
+  // ATK e DEF con tutti i modificatori (attackBreakdown, condiviso con l'anteprima)
   const melee = !!weapon?.melee;
-  const knife = melee && !isEnemy;
-  const ms = knife ? meleeStats(attacker, defender, weapon) : null;
-
-  // Orientamento del bersaglio: dal lato copertura dimezzata, alle spalle
-  // copertura nulla e +1 ATK (vale per entrambe le parti)
-  const sector = facingSector(defender, attacker);
-  // Postura: bonus ATK di chi spara (US) e DEF di chi è bersagliato (US);
-  // ferite: malus ATK di chi spara (US)
-  const atkVal = knife
-    ? ms.atk
-    : Math.max(
-        1,
-        (weapon?.atk ?? atkDef.attack) - rangePenalty - woundAttackPenalty(attacker),
-      ) +
-      rearAttackBonus(attacker, defender) +
-      stanceAttackBonus(attacker, weapon);
-  const defCover = knife ? 0 : effectiveCover(attacker, defender);
+  const { knife, ms, sector, rangePenalty, atkVal, defStat, defCover, defVal } =
+    attackBreakdown(attacker, defender, weapon, isEnemy);
   if (sector !== "front" && !knife)
     log(t(`log.attack_${sector}`, { name: defender.name }), "combat");
-  const defStat = knife
-    ? ms.defStat
-    : isEnemy
-      ? (UNIT_CLASSES[defender.cls]?.defense ?? 1) +
-        stanceDefenseBonus(defender, attacker)
-      : getEnemyStats(defender).defense;
-  const defVal = knife ? ms.def : defStat + defCover;
 
   if (!isEnemy) {
     const woundPen = woundAttackPenalty(attacker) * (knife ? MELEE.woundMult : 1);
@@ -290,38 +262,130 @@ async function meleeAdvance(unit, victim, impact) {
   updateUI();
 }
 
-// Anteprima attacco del giocatore: probabilità di colpire e danno medio, calcolati
-// esattamente sulla stessa formula di resolveCombat (2d6+ATK vs DEF+COV+1d6)
-function attackOdds(attacker, defender, weapon) {
-  // Coltello: la probabilità di colpire è quella di uccidere
-  if (weapon?.melee) {
+// ATK e DEF di un attacco diretto con le voci che li compongono, usati sia da
+// resolveCombat sia dall'anteprima. isEnemy: attacca un VC. Ogni voce è
+// [chiave odds.*, valore]; le voci a 0 non contano (formatOddsMods le salta).
+//  - orientamento del bersaglio: dal lato copertura dimezzata, alle spalle
+//    copertura nulla e +1 ATK (vale per entrambe le parti)
+//  - postura: bonus ATK di chi spara (US) e DEF di chi è bersagliato (US)
+//  - ferite: malus ATK di chi spara (US), prima del minimo di 1
+//  - gittata: armi con rangePenalty (default cecchino), -1 ATK ogni 2 tile
+//  - coltello della squadra: guardia del VC al posto della copertura, colpo
+//    a segno = uccisione, colluttazione se fallisce (mechanics.js:MELEE)
+function attackBreakdown(attacker, defender, weapon, isEnemy = false) {
+  const knife = !!weapon?.melee && !isEnemy;
+  const sector = facingSector(defender, attacker);
+  const rear = rearAttackBonus(attacker, defender);
+  if (knife) {
     const ms = meleeStats(attacker, defender, weapon);
-    const { pHit } = diceOdds(ms.atk, ms.def, defender.hp);
-    return { pHit, expDmg: pHit * defender.hp };
+    return {
+      knife, ms, sector, rangePenalty: 0,
+      atkVal: ms.atk, defStat: ms.defStat, defCover: 0, defVal: ms.def,
+      atkMods: [
+        ["weapon", Math.max(1, weapon?.atk ?? 1)],
+        ["wound", -woundAttackPenalty(attacker) * MELEE.woundMult],
+        ["rear", rear],
+      ],
+      defMods: [["base", ms.defStat], [`guard_${sector}`, ms.guard]],
+    };
   }
-  const def = UNIT_CLASSES[attacker.cls];
-  const range = dist(attacker, defender);
-  const atkVal =
-    Math.max(
-      1,
-      (weapon?.atk ?? def.attack) -
-        weaponRangePenalty(attacker, weapon, range) -
-        woundAttackPenalty(attacker),
-    ) +
-    rearAttackBonus(attacker, defender) +
-    stanceAttackBonus(attacker, weapon);
-  const defVal =
-    getEnemyStats(defender).defense + effectiveCover(attacker, defender);
-  let hits = 0,
-    dmgSum = 0;
-  for (let a = 1; a <= 6; a++)
-    for (let b = 1; b <= 6; b++)
-      for (let d = 1; d <= 6; d++) {
-        const dmg = Math.max(0, a + b + atkVal - (defVal + d));
-        if (dmg > 0) hits++;
-        dmgSum += dmg;
-      }
-  return { pHit: hits / 216, expDmg: dmgSum / 216 };
+  const atkDef = isEnemy ? getEnemyStats(attacker) : UNIT_CLASSES[attacker.cls];
+  const base = weapon?.atk ?? atkDef.attack;
+  const rangePenalty = isEnemy
+    ? 0
+    : weaponRangePenalty(attacker, weapon, dist(attacker, defender));
+  const wound = woundAttackPenalty(attacker);
+  const raw = base - rangePenalty - wound;
+  const stanceAtk = stanceAttackBonus(attacker, weapon);
+  const atkVal = Math.max(1, raw) + rear + stanceAtk;
+  const defBase = isEnemy
+    ? (UNIT_CLASSES[defender.cls]?.defense ?? 1)
+    : getEnemyStats(defender).defense;
+  const stanceDef = isEnemy ? stanceDefenseBonus(defender, attacker) : 0;
+  const defStat = defBase + stanceDef;
+  const defCover = effectiveCover(attacker, defender);
+  // Copertura del tile annullata alle spalle: la voce resta visibile a 0
+  const tileCover = coverBonus(defender.col, defender.row);
+  return {
+    knife, ms: null, sector, rangePenalty,
+    atkVal, defStat, defCover, defVal: defStat + defCover,
+    atkMods: [
+      ["weapon", base],
+      ["range", -rangePenalty],
+      ["wound", -wound],
+      ["min", Math.max(1, raw) - raw],
+      ["rear", rear],
+      ["stance", stanceAtk],
+    ],
+    defMods: [
+      ["base", defBase],
+      ["stance", stanceDef],
+      sector === "rear" && tileCover > 0
+        ? ["cover_rear", 0]
+        : [sector === "side" ? "cover_side" : "cover", defCover],
+    ],
+  };
+}
+
+// Voci di un attacco in breve, es. "arma 2 · spalle +1": il primo valore
+// (arma/base) senza segno, le voci a 0 saltate (tranne la copertura annullata)
+function formatOddsMods(mods) {
+  return mods
+    .filter(([k, v], i) => i === 0 || v !== 0 || k === "cover_rear")
+    .map(([k, v], i) => {
+      const val = i === 0 || k === "cover_rear" ? `${v}` : v > 0 ? `+${v}` : `−${-v}`;
+      return k === "cover_rear" ? t("odds.cover_rear") : `${t(`odds.${k}`)} ${val}`;
+    })
+    .join(" · ");
+}
+
+// Scomposizione completa su una riga: "ATK 3 (arma 2 · spalle +1) vs DEF 2 (…)"
+function oddsBreakdownText(b) {
+  return t("odds.breakdown", {
+    atk: b.atkVal,
+    atkMods: formatOddsMods(b.atkMods),
+    def: b.defVal,
+    defMods: formatOddsMods(b.defMods),
+  });
+}
+
+// Fascia di colore per una probabilità di colpire (etichette e pannelli)
+const ODDS_GOOD = 0.75;
+const ODDS_FAIR = 0.5;
+function oddsColor(p) {
+  return p >= ODDS_GOOD ? "#7ee07e" : p >= ODDS_FAIR ? "#ffe080" : "#ff7a6a";
+}
+
+// Anteprima attacco del giocatore: probabilità di colpire, danno medio e
+// probabilità di uccidere, sulla stessa formula di resolveCombat
+// (2d6+ATK vs DEF+COV+1d6). b: la scomposizione dei modificatori
+function attackOdds(attacker, defender, weapon) {
+  const b = attackBreakdown(attacker, defender, weapon);
+  const o = diceOdds(b.atkVal, b.defVal, defender.hp);
+  // Coltello: la probabilità di colpire è quella di uccidere
+  if (b.knife) return { pHit: o.pHit, expDmg: o.pHit * defender.hp, pKill: o.pHit, b };
+  return { ...o, b };
+}
+
+// DEF di un bersaglio contro un'esplosione: copertura piena del tile, per
+// gli US anche il bonus di postura contro le esplosioni
+function aoeDefense(def) {
+  const isUS = G.units.includes(def);
+  const defStat = isUS
+    ? (UNIT_CLASSES[def.cls]?.defense ?? 1) + stanceAoeDefenseBonus(def)
+    : getEnemyStats(def).defense;
+  return { isUS, defStat, defCover: coverBonus(def.col, def.row) };
+}
+
+// Anteprima di un'esplosione US in (tc, tr): per ogni bersaglio nel raggio
+// (soldati inclusi, VC solo se visibili) probabilità di colpire e uccidere
+function aoeOdds(weapon, tc, tr) {
+  const inBlast = (x) => x.alive && dist(x, { col: tc, row: tr }) <= weapon.aoe;
+  return [...G.units.filter(inBlast), ...G.enemies.filter((e) => inBlast(e) && isEnemyVisible(e))]
+    .map((target) => {
+      const { isUS, defStat, defCover } = aoeDefense(target);
+      return { target, isUS, ...diceOdds(weapon.atk, defStat + defCover, target.hp) };
+    });
 }
 
 function getEnemyStats(enemy) {
@@ -397,11 +461,7 @@ async function resolveAoeCombat(
 
   let anyKill = false;
   for (const def of defenders) {
-    const isUS = G.units.includes(def);
-    const defCover = coverBonus(def.col, def.row);
-    const defStat = isUS
-      ? (UNIT_CLASSES[def.cls]?.defense ?? 1) + stanceAoeDefenseBonus(def)
-      : getEnemyStats(def).defense;
+    const { isUS, defStat, defCover } = aoeDefense(def);
     const defDice = rollD6();
     const save = defStat + defCover + defDice;
     const dmg = Math.max(0, hit - save);

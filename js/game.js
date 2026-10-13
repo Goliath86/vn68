@@ -356,6 +356,7 @@ function endPlayerTurn() {
   G.actionMode = null;
   G.currentWeapon = null;
   G.pendingAoe = null;
+  G.aimTarget = null;
   G.reachable = [];
   G.attackable = [];
 

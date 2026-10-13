@@ -671,7 +671,7 @@ Keyboard shortcuts are active only during the **player phase** and when no dice 
 
 **Undo move:** only the last move can be undone, and only if it revealed no new enemies and did not change the mission state (pilot picked up, zone scouted). Any other action (attack, special ability, reload, first aid, end turn) makes it final; a turn or stance change made after the move is undone along with it.
 
-**Hit chance:** in attack mode, the hit percentage is shown above each target (same formula as combat: 2d6+ATK vs DEF+cover+1d6, range penalty, stance and wounds included). On desktop the target tooltip also shows the average damage.
+**Hit chance:** in attack mode, the hit percentage is shown above each target (same formula as combat: 2d6+ATK vs DEF+cover+1d6, range penalty, stance and wounds included). The percentage is colored: green from 75%, yellow from 50%, red below. On desktop the target tooltip also shows the average damage, the kill chance and, on a second line, the ATK and DEF breakdown (weapon, range, wound, stance, rear, cover or guard). On mobile the **first tap** on an enemy aims at it and shows the same breakdown in the panel; the **second tap** (or the 🎯 Fire button) shoots. For grenades and RPGs, before confirming, each target in the blast shows its own percentage; squad soldiers are outlined in red and the panel warns about friendly fire.
 
 ### ⌂ Button and Back Button
 

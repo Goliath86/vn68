@@ -413,7 +413,7 @@
     "unit_append": " | {name} HP:{hp}/{maxHp} AP:{ap}",
     "enemy_append": " | {name} HP:{hp}/{maxHp}",
     "enemy_reloading": " (reloading)",
-    "hit_odds": " | Hit: {pct}% · avg dmg {dmg}",
+    "hit_odds": " | Hit: {pct}% · avg dmg {dmg} · kill {kill}%",
     "side": " · from the side",
     "rear": " · from behind",
     "enemy_routed": " (routed)",
@@ -423,6 +423,27 @@
     "tunnel_sealed": " · Sealed tunnel",
     "trap": " | ⚠ Trap: {trap}",
     "smoke": " | Smoke ({turns}T)"
+  },
+
+  "odds": {
+    "breakdown": "ATK {atk} ({atkMods})  vs  DEF {def} ({defMods})",
+    "summary": "{pct}% · dmg {dmg} · kill {kill}%",
+    "fire": "🎯 Fire",
+    "weapon": "weapon",
+    "range": "range",
+    "wound": "wound",
+    "min": "minimum",
+    "rear": "rear",
+    "stance": "stance",
+    "base": "base",
+    "cover": "cover",
+    "cover_side": "cover from the side",
+    "cover_rear": "no cover (from behind)",
+    "guard_front": "front guard",
+    "guard_side": "side guard",
+    "guard_rear": "rear guard",
+    "aoe_targets": "VC in blast: {n}",
+    "aoe_friendly": "⚠ soldiers in blast: {n}"
   },
 
   "objective_panel": {

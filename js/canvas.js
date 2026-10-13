@@ -166,6 +166,18 @@ function setupCanvas() {
   })();
 }
 
+// Attacco diretto dell'unità selezionata, con l'arma corrente, su `target`
+function fireAtTarget(target) {
+  const w = G.currentWeapon;
+  if (!G.selectedUnit || !G.attackable.includes(target)) return;
+  clearLastMove();
+  G.selectedUnit.ap -= 1;
+  consumeShot(w);
+  resolveCombat(G.selectedUnit, target, false, w);
+  setActionMode(null);
+  updateUI();
+}
+
 function onCanvasClick(e) {
   if (G.phase !== "player") return;
 
@@ -216,15 +228,18 @@ function onCanvasClick(e) {
       return;
     }
 
-    // Singolo bersaglio
+    // Singolo bersaglio. Senza hover (touch) il primo tap punta e mostra la
+    // scomposizione nel pannello, il secondo sullo stesso bersaglio spara
     const target = G.attackable.find((e) => e.col === col && e.row === row);
     if (target) {
-      clearLastMove();
-      G.selectedUnit.ap -= 1;
-      consumeShot(w);
-      resolveCombat(G.selectedUnit, target, false, w);
-      setActionMode(null);
-      updateUI();
+      if (!aimRayEnabled() && G.aimTarget !== target) {
+        sfx("click");
+        G.aimTarget = target;
+        render();
+        updateUI();
+        return;
+      }
+      fireAtTarget(target);
       return;
     }
 

@@ -118,7 +118,13 @@ function updateQuickWeaponsBar(u) {
     const w = G.pendingAoe.weapon;
     html = `<button class="btn btn-attack qwb-btn" data-qwb="confirm">
 <span class="qwb-name">${t("weapons.confirm_aoe")}</span>
-<span class="qwb-stats">${w.label} · AoE ${w.aoe}</span>
+<span class="qwb-stats">${w.label} · AoE ${w.aoe} · ${aoeSummaryText()}</span>
+</button>${cancelBtn}`;
+  } else if (aimedOdds(u)) {
+    const o = aimedOdds(u);
+    html = `<button class="btn btn-attack qwb-btn" data-qwb="fire">
+<span class="qwb-name" style="color:${oddsColor(o.pHit)}">${t("odds.fire")} · ${oddsSummaryText(o)}</span>
+<span class="qwb-stats">${oddsBreakdownText(o.b)}</span>
 </button>${cancelBtn}`;
   }
 
@@ -143,6 +149,9 @@ function updateQuickWeaponsBar(u) {
   bar.querySelector('[data-qwb="confirm"]')?.addEventListener("click", () => {
     sfx("click");
     confirmAoeAttack();
+  });
+  bar.querySelector('[data-qwb="fire"]')?.addEventListener("click", () => {
+    if (G.aimTarget) fireAtTarget(G.aimTarget);
   });
   bar.querySelector('[data-qwb="cancel"]')?.addEventListener("click", () => {
     sfx("click");
@@ -453,7 +462,7 @@ function updateActionButtons() {
     });
   } else if (G.actionMode === "aoe_confirm" && G.pendingAoe) {
     const w = G.pendingAoe.weapon;
-    const html = `<div style="font-size:10px;color:#ffaa33;margin-bottom:3px">${w.label} · AoE ${w.aoe}</div>
+    const html = `<div style="font-size:10px;color:#ffaa33;margin-bottom:3px">${w.label} · AoE ${w.aoe} · ${aoeSummaryText()}</div>
 <button class="btn btn-attack" data-aoe="confirm">${t("weapons.confirm_aoe")}</button>
 <button class="btn" data-aoe="cancel">${t("weapons.cancel_aoe")}</button>`;
     [pickerEl, mobPickerEl].forEach((el) => {
@@ -473,6 +482,26 @@ function updateActionButtons() {
         updateUI();
       });
     });
+  } else if (aimedOdds(u)) {
+    // Touch: bersaglio puntato, scomposizione e conferma del tiro
+    const o = aimedOdds(u);
+    const html = `<div style="font-size:11px;color:${oddsColor(o.pHit)};margin-bottom:2px">${G.aimTarget.name} · ${oddsSummaryText(o)}</div>
+<div style="font-size:10px;color:var(--paper-dark);margin-bottom:3px">${oddsBreakdownText(o.b)}</div>
+<button class="btn btn-attack" data-aim="fire">${t("odds.fire")}</button>
+<button class="btn" data-aim="cancel">${t("weapons.cancel_aoe")}</button>`;
+    [pickerEl, mobPickerEl].forEach((el) => {
+      if (!el) return;
+      el.innerHTML = html;
+      el.style.display = "flex";
+      el.querySelector('[data-aim="fire"]')?.addEventListener("click", () => {
+        if (G.aimTarget) fireAtTarget(G.aimTarget);
+      });
+      el.querySelector('[data-aim="cancel"]')?.addEventListener("click", () => {
+        sfx("click");
+        setActionMode(null);
+        updateUI();
+      });
+    });
   } else {
     [pickerEl, mobPickerEl].forEach((el) => {
       if (!el) return;
@@ -480,4 +509,33 @@ function updateActionButtons() {
       el.style.display = "none";
     });
   }
+}
+
+// Probabilità del bersaglio puntato col primo tap (null se non c'è o non è
+// più attaccabile)
+function aimedOdds(u) {
+  const e = G.aimTarget;
+  if (!u?.alive || G.actionMode !== "attack" || !e || !G.attackable.includes(e))
+    return null;
+  return attackOdds(u, e, G.currentWeapon);
+}
+
+// "84% · danno 3.7 · uccide 40%"
+function oddsSummaryText(o) {
+  return t("odds.summary", {
+    pct: Math.round(o.pHit * 100),
+    dmg: o.expDmg.toFixed(1),
+    kill: Math.round(o.pKill * 100),
+  });
+}
+
+// Bersagli dell'esplosione in attesa di conferma, con avviso di fuoco amico
+function aoeSummaryText() {
+  const { col, row, weapon } = G.pendingAoe;
+  const odds = aoeOdds(weapon, col, row);
+  const vc = odds.filter((o) => !o.isUS).length;
+  const us = odds.length - vc;
+  const parts = [t("odds.aoe_targets", { n: vc })];
+  if (us) parts.push(t("odds.aoe_friendly", { n: us }));
+  return parts.join(" · ");
 }

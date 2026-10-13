@@ -1045,7 +1045,8 @@ body {
     pointer-events: none;
     display: none;
     z-index: 50;
-    white-space: nowrap;
+    /* pre: niente a capo automatico, ma "\n" va a capo (scomposizione attacco) */
+    white-space: pre;
 }
 
 /* ── SCROLLBARS ───────────────────────────────────── */

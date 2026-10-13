@@ -2,6 +2,7 @@ function setActionMode(mode, weapon = null) {
   G.actionMode = mode;
   G.currentWeapon = weapon;
   G.pendingAoe = null;
+  G.aimTarget = null;
   G.reachable = [];
   G.attackable = [];
 
