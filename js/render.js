@@ -67,6 +67,8 @@ function getTerrainCache() {
   }
   // Sfumature tra terreni, rive e ombre: richiedono tutti i tile già disegnati
   drawTerrainTransitions(ctx, md, TILE);
+  // Chiome della giungla senza clip: sporgono sui tile vicini
+  drawJungleCanopy(ctx, md, TILE);
   ctx.strokeStyle = "rgba(0,0,0,0.25)";
   ctx.lineWidth = 0.5;
   for (let r = 0; r < md.rows; r++) {

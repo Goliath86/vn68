@@ -282,15 +282,12 @@ function _tdClearing(ctx, x, y, ts, rng) {
   }
 }
 
+// Solo il sottobosco: le chiome sono una passata a parte senza clip
+// (drawJungleCanopy), così sporgono dal tile e la giungla non ha bordi quadrati
 function _tdJungle(ctx, x, y, ts, rng) {
   ctx.fillStyle = _dk(0.25); // sottobosco in ombra
   ctx.fillRect(x, y, ts, ts);
-  const crowns = [];
-  for (let i = 0; i < 7; i++) crowns.push([x + rng() * ts, y + rng() * ts, ts * (0.14 + rng() * 0.1)]);
-  crowns.sort((a, b) => a[1] - b[1]);
-  for (const [cx, cy, r] of crowns) {
-    _foliage(ctx, cx, cy, r, rng, ["rgba(25,60,18,0.9)", "rgba(50,105,30,0.7)", "rgba(140,200,80,0.28)"]);
-  }
+  _grass(ctx, x, y, ts, rng, 10);
 }
 
 function _tdSwamp(ctx, x, y, ts, rng) {
@@ -791,6 +788,51 @@ function drawTerrainTransitions(ctx, md, ts) {
       ctx.restore();
     }
   }
+}
+
+// ── CHIOME DELLA GIUNGLA ───────────────────────────────────────────────
+// Passata finale senza clip (dopo le transizioni): le chiome degli alberi
+// escono dal tile. Verso altra giungla (o il bordo mappa) si fondono
+// liberamente; verso terreni diversi sporgono al massimo di CANOPY_OVERHANG
+// tile, per non far sembrare coperto un tile che non lo è. Tutte le chiome
+// della mappa sono disegnate da nord a sud, così si sovrappongono in modo
+// coerente anche tra tile diversi.
+const CANOPY_OVERHANG = 0.14;
+const CANOPY_COLS = ["rgba(25,60,18,0.92)", "rgba(50,105,30,0.72)", "rgba(140,200,80,0.28)"];
+
+function drawJungleCanopy(ctx, md, ts) {
+  const isJungle = (c, r) =>
+    c < 0 || r < 0 || c >= md.cols || r >= md.rows || md.tileTypes[md.grid[r][c]]?.id === "jungle";
+  // Intervallo del centro di una chioma lungo un asse: fino al bordo verso la
+  // giungla, rientrato di (estensione − sporgenza) verso altri terreni
+  const span = (start, re, openLo, openHi) => {
+    const lo = openLo ? start : start + re - CANOPY_OVERHANG * ts;
+    const hi = openHi ? start + ts : start + ts - re + CANOPY_OVERHANG * ts;
+    return lo <= hi ? [lo, hi] : [start + ts / 2, start + ts / 2];
+  };
+  const crowns = [];
+  for (let r = 0; r < md.rows; r++) {
+    for (let c = 0; c < md.cols; c++) {
+      if (md.tileTypes[md.grid[r][c]]?.id !== "jungle") continue;
+      const rng = _tileRng(c + 0.13, r + 0.29);
+      const n = 6 + Math.floor(rng() * 2);
+      for (let i = 0; i < n; i++) {
+        // ogni tanto un albero emergente, più grande, rompe la griglia
+        const rad = ts * (rng() < 0.12 ? 0.3 + rng() * 0.08 : 0.15 + rng() * 0.12);
+        const re = rad * 1.1; // estensione dei lobi oltre il raggio
+        const [x0, x1] = span(c * ts, re, isJungle(c - 1, r), isJungle(c + 1, r));
+        const [y0, y1] = span(r * ts, re, isJungle(c, r - 1), isJungle(c, r + 1));
+        crowns.push({
+          cx: x0 + rng() * (x1 - x0),
+          cy: y0 + rng() * (y1 - y0),
+          rad,
+          rng: _tileRng(c + i * 0.071, r + 0.53),
+        });
+      }
+    }
+  }
+  crowns.sort((a, b) => a.cy - b.cy);
+  for (const k of crowns) _foliage(ctx, k.cx, k.cy, k.rad, k.rng, CANOPY_COLS);
 }
 
 // ── SPRITES PERSONAGGI ─────────────────────────────────────────────────────
