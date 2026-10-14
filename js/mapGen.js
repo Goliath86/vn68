@@ -6,8 +6,16 @@
 // una voce "generator": "<nome>" al posto di "file".
 // Stesso seed → stessa mappa (PRNG deterministico, tentativi derivati dal seed).
 
-const PROC_COLS = 16;
-const PROC_ROWS = 12;
+// Dimensioni selezionabili. I generatori sono scritti per la mappa piccola
+// (16×12) e scalano posizioni, distanze e quantità in proporzione; `step`
+// aumenta VC, rinforzi e imboscate. La piccola resta identica a prima.
+const PROC_SIZES = {
+  small: { cols: 16, rows: 12, step: 0 },
+  medium: { cols: 22, rows: 16, step: 1 },
+  large: { cols: 28, rows: 20, step: 2 },
+};
+const PROC_BASE = PROC_SIZES.small;
+const MAP_SIZE_KEY = "vn68_map_size";
 
 function _mulberry32(seed) {
   let a = seed >>> 0;
@@ -24,20 +32,34 @@ function newMapSeed() {
   return 10000 + Math.floor(Math.random() * 90000);
 }
 
-function generateProceduralMap(name, seed = newMapSeed()) {
+function generateProceduralMap(name, seed = newMapSeed(), size = "small") {
   const gen = MAP_GENERATORS[name];
   if (!gen) throw new Error(`unknown map generator: ${name}`);
-  return gen(seed);
+  return gen(seed, PROC_SIZES[size] ? size : "small");
 }
 
 // I tentativi scartati (mappa non valida) sono derivati dal seed,
 // quindi lo stesso seed produce sempre la stessa mappa
-function _generateWithRetries(build, seed) {
+function _generateWithRetries(build, seed, size) {
   for (let attempt = 0; attempt < 50; attempt++) {
-    const md = build(seed, attempt);
+    const md = build(seed, attempt, size);
     if (md) return md;
   }
   throw new Error("procedural map generation failed");
+}
+
+// Scala dalle coordinate della mappa piccola a quelle della dimensione scelta
+function _procScale(size) {
+  const { cols: W, rows: H, step } = PROC_SIZES[size];
+  return {
+    W,
+    H,
+    step,
+    sx: (c) => Math.round((c * W) / PROC_BASE.cols),
+    sy: (r) => Math.round((r * H) / PROC_BASE.rows),
+    sd: (d) => Math.round((d * (W + H)) / (PROC_BASE.cols + PROC_BASE.rows)),
+    area: (W * H) / (PROC_BASE.cols * PROC_BASE.rows),
+  };
 }
 
 // Vero se ogni tile percorribile è raggiungibile (4-connesso) da `from`
@@ -140,14 +162,13 @@ const JUNGLE_TEXT = {
   },
 };
 
-function generateJungleMap(seed) {
-  return _generateWithRetries(_buildJungleMap, seed);
+function generateJungleMap(seed, size = "small") {
+  return _generateWithRetries(_buildJungleMap, seed, size);
 }
 
-function _buildJungleMap(seed, attempt) {
+function _buildJungleMap(seed, attempt, size) {
   const rng = _mulberry32(seed * 101 + attempt);
-  const W = PROC_COLS;
-  const H = PROC_ROWS;
+  const { W, H, step, sx, sy, sd, area } = _procScale(size);
   const ri = (min, max) => min + Math.floor(rng() * (max - min + 1));
   const grid = Array.from({ length: H }, () => Array(W).fill("J"));
   const inB = (c, r) => c >= 0 && r >= 0 && c < W && r < H;
@@ -186,32 +207,35 @@ function _buildJungleMap(seed, attempt) {
 
   // 2. Fiume da nord a sud nella fascia centrale, 4-connesso, con due guadi
   const river = [];
-  let rc = ri(6, 9);
+  let rc = ri(sx(6), sx(9));
   for (let r = 0; r < H; r++) {
     const prev = rc;
     if (r > 0) {
       const d = rng();
-      if (d < 0.3 && rc > 5) rc--;
-      else if (d > 0.7 && rc < 10) rc++;
+      if (d < 0.3 && rc > sx(5)) rc--;
+      else if (d > 0.7 && rc < sx(10)) rc++;
     }
     const lo = Math.min(prev, rc);
     const hi = Math.max(prev, rc);
     for (let c = lo; c <= hi; c++) set(c, r, "R");
     river[r] = [lo, hi];
   }
-  const fords = [ri(2, 4), ri(7, 9)].map((r) => {
+  const fordRows = [ri(sy(2), sy(4)), ri(sy(7), sy(9))];
+  // Mappe più grandi: un terzo guado a metà strada tra i due
+  if (step) fordRows.push(Math.round((fordRows[0] + fordRows[1]) / 2));
+  const fords = fordRows.map((r) => {
     for (let c = river[r][0]; c <= river[r][1]; c++) set(c, r, "F");
     return { row: r, west: river[r][0] - 1, east: river[r][1] + 1 };
   });
 
   // 3. Punti chiave: partenza a ovest, obiettivi oltre il fiume
-  const startRow = ri(3, 5);
+  const startRow = ri(sy(3), sy(5));
   const playerStart = [0, 1, 2, 3].map((i) => ({ col: 0, row: startRow + i }));
   const extract = { col: 0, row: startRow + 1 };
-  const villageAt = { col: ri(12, 14), row: ri(2, 9) };
+  const villageAt = { col: ri(sx(12), sx(14)), row: ri(sy(2), sy(9)) };
   const lzAt = {
-    col: ri(12, 14),
-    row: villageAt.row < 6 ? ri(8, 10) : ri(1, 3),
+    col: ri(sx(12), sx(14)),
+    row: villageAt.row < sy(6) ? ri(sy(8), sy(10)) : ri(sy(1), sy(3)),
   };
   const far = (p, others, d) => others.every((o) => dist(p, o) >= d);
   const pickTile = (cMin, cMax, rMin, rMax, ok) => {
@@ -221,18 +245,18 @@ function _buildJungleMap(seed, attempt) {
     }
     return null;
   };
-  const bunkerAt = pickTile(3, 13, 0, H - 1, (p) =>
-    far(p, [...playerStart, villageAt, lzAt], 4),
+  const bunkerAt = pickTile(sx(3), sx(13), 0, H - 1, (p) =>
+    far(p, [...playerStart, villageAt, lzAt], sd(4)),
   );
-  const radioAt = pickTile(9, 14, 1, H - 2, (p) =>
-    far(p, [villageAt, lzAt, bunkerAt || villageAt], 3),
+  const radioAt = pickTile(sx(9), sx(14), 1, H - 2, (p) =>
+    far(p, [villageAt, lzAt, bunkerAt || villageAt], sd(3)),
   );
   if (!bunkerAt || !radioAt) return null;
 
   // 4. Sentieri: partenza → guadi → villaggio / postazione radio / LZ
   const carve = (from, to) => {
     let { col: c, row: r } = from;
-    for (let g = 0; g < 80; g++) {
+    for (let g = 0; g < 4 * (W + H); g++) {
       if (["J", "C", "S"].includes(get(c, r))) set(c, r, "T");
       if (c === to.col && r === to.row) break;
       const dc = Math.sign(to.col - c);
@@ -271,7 +295,14 @@ function _buildJungleMap(seed, attempt) {
   if (bunker2) set(bunker2.col, bunker2.row, "B");
   set(radioAt.col, radioAt.row, "C");
   const keyPoints = [...playerStart, villageAt, lzAt, bunkerAt, radioAt];
-  for (let i = 0, n = ri(2, 4); i < n; i++) {
+  // Mappe più grandi: altri bunker sparsi oltre la partenza
+  for (let i = 0; i < step; i++) {
+    const p = pickTile(sx(5), W - 1, 0, H - 1, (q) =>
+      ["J", "C"].includes(get(q.col, q.row)) && far(q, keyPoints, sd(3)),
+    );
+    if (p) set(p.col, p.row, "B");
+  }
+  for (let i = 0, n = ri(Math.round(2 * area), Math.round(4 * area)); i < n; i++) {
     const p = pickTile(2, W - 1, 0, H - 1, (q) => get(q.col, q.row) === "J" && far(q, keyPoints, 2));
     if (p) set(p.col, p.row, "X");
   }
@@ -285,6 +316,7 @@ function _buildJungleMap(seed, attempt) {
   return {
     procedural: "jungle",
     seed,
+    size,
     name: en.name,
     description: en.description,
     tileSize: TILE,
@@ -295,18 +327,18 @@ function _buildJungleMap(seed, attempt) {
     grid,
     playerStart,
     vcSpawnZones: [
-      { colMin: 10, colMax: W - 1, rowMin: 0, rowMax: 5 },
-      { colMin: 10, colMax: W - 1, rowMin: 6, rowMax: H - 1 },
+      { colMin: sx(10), colMax: W - 1, rowMin: 0, rowMax: H / 2 - 1 },
+      { colMin: sx(10), colMax: W - 1, rowMin: H / 2, rowMax: H - 1 },
     ],
-    vcCount: ri(6, 8),
-    trapCount: 4,
+    vcCount: ri(6, 8) + 3 * step,
+    trapCount: Math.round(4 * area),
     objectives: {
       recon: [
         { ...lzAt, label: it.objectives.recon[0].label },
         { ...villageAt, label: it.objectives.recon[1].label },
         { ...bunkerAt, label: it.objectives.recon[2].label },
       ],
-      search_destroy: { eliminateAll: false, minKills: 4 },
+      search_destroy: { eliminateAll: false, minKills: 4 + 2 * step },
       rescue_pilot: {
         pilotCol: lzAt.col,
         pilotRow: lzAt.row,
@@ -320,12 +352,12 @@ function _buildJungleMap(seed, attempt) {
     ambient: "missions/rung_sat_ambient.mp3",
     ambushChance: 0.15,
     reinforcementTurn: 5,
-    reinforcementCount: 2,
-    vcAmbushTurn: ri(4, 5),
-    vcAmbushCount: ri(2, 3),
+    reinforcementCount: step ? 3 : 2,
+    vcAmbushTurn: ri(4, 5) + step,
+    vcAmbushCount: ri(2, 3) + step,
     vcAmbushZones: [
-      { colMin: 0, colMax: 6, rowMin: 0, rowMax: 1 },
-      { colMin: 0, colMax: 6, rowMin: H - 2, rowMax: H - 1 },
+      { colMin: 0, colMax: sx(6), rowMin: 0, rowMax: 1 },
+      { colMin: 0, colMax: sx(6), rowMin: H - 2, rowMax: H - 1 },
     ],
     translations: { it, en },
   };
@@ -391,14 +423,13 @@ const URBAN_TEXT = {
   },
 };
 
-function generateUrbanMap(seed) {
-  return _generateWithRetries(_buildUrbanMap, seed);
+function generateUrbanMap(seed, size = "small") {
+  return _generateWithRetries(_buildUrbanMap, seed, size);
 }
 
-function _buildUrbanMap(seed, attempt) {
+function _buildUrbanMap(seed, attempt, size) {
   const rng = _mulberry32(seed * 103 + attempt);
-  const W = PROC_COLS;
-  const H = PROC_ROWS;
+  const { W, H, step, sx, sy, area } = _procScale(size);
   const ri = (min, max) => min + Math.floor(rng() * (max - min + 1));
   const rpick = (arr) => arr[Math.floor(rng() * arr.length)];
   const grid = Array.from({ length: H }, () => Array(W).fill("U"));
@@ -409,7 +440,7 @@ function _buildUrbanMap(seed, attempt) {
   };
 
   // 1. Fiume da ovest a est con lievi anse (righe rb..rb+1), 4-connesso
-  const rb = ri(5, 6);
+  const rb = ri(sy(5), sy(6));
   const riverRows = [];
   let rr = rb + ri(0, 1);
   for (let c = 0; c < W; c++) {
@@ -428,9 +459,10 @@ function _buildUrbanMap(seed, attempt) {
   //    con un proprio carattere (densamente edificato, parco, in rovina)
   const avenues = [];
   for (let c = ri(1, 2); c < W; c += ri(3, 4)) avenues.push(c);
+  // Strade trasversali ogni 3 righe dove c'è spazio per gli isolati
   const streetRows = [northRoad, southRoad, H - 1];
-  if (H - 1 - southRoad >= 4) streetRows.push(southRoad + 2);
-  if (wallRow >= 4) streetRows.push(2);
+  for (let r = southRoad + 2; r <= H - 3; r += 3) streetRows.push(r);
+  for (let r = 2; r <= wallRow - 2; r += 3) streetRows.push(r);
   const isStreet = (c, r) => avenues.includes(c) || streetRows.includes(r);
   const BLOCK_KINDS = {
     dense: [["B", 0.7], ["D", 0.1], ["U", 0.1], ["G", 0.1]],
@@ -456,18 +488,24 @@ function _buildUrbanMap(seed, attempt) {
   }
 
   // 3. Due ponti, uno per metà mappa, sui viali (così le strade proseguono)
-  const westAv = avenues.filter((c) => c >= 2 && c <= 6);
-  const eastAv = avenues.filter((c) => c >= 9 && c <= 13);
+  const westAv = avenues.filter((c) => c >= sx(2) && c <= sx(6));
+  const eastAv = avenues.filter((c) => c >= sx(9) && c <= sx(13));
   if (!westAv.length || !eastAv.length) return null;
-  const bridges = [rpick(westAv), rpick(eastAv)].map((c) => {
+  const bridgeCols = [rpick(westAv), rpick(eastAv)];
+  // Mappe più grandi: un terzo ponte su un viale centrale
+  if (step) {
+    const midAv = avenues.filter((c) => c > bridgeCols[0] + 2 && c < bridgeCols[1] - 2);
+    if (midAv.length) bridgeCols.push(rpick(midAv));
+  }
+  const bridges = bridgeCols.map((c) => {
     for (let r = riverRows[c][0]; r <= riverRows[c][1]; r++) set(c, r, "F");
     return { col: c, row: riverRows[c][0] };
   });
 
   // 4. Cittadella murata a nord del fiume: porta sul lato sud, brecce
   //    demolibili, pagode e giardini attorno al comando NVA
-  const cw = ri(7, 9);
-  const cx0 = ri(3, W - cw - 3);
+  const cw = ri(sx(7), sx(9));
+  const cx0 = ri(sx(3), W - cw - sx(3));
   const cx1 = cx0 + cw - 1;
   const inCitadel = (c, r) => c >= cx0 && c <= cx1 && r <= wallRow;
   for (let r = 0; r <= wallRow; r++) {
@@ -488,7 +526,7 @@ function _buildUrbanMap(seed, attempt) {
   }
   const breachCols = [];
   for (let c = cx0 + 1; c < cx1; c++) if (Math.abs(c - gateCol) > 1) breachCols.push(c);
-  for (let i = 0, n = ri(1, 2); i < n && breachCols.length; i++) {
+  for (let i = 0, n = ri(1, 2 + step); i < n && breachCols.length; i++) {
     set(breachCols.splice(Math.floor(rng() * breachCols.length), 1)[0], wallRow, "M");
   }
   if (rng() < 0.5) set(rng() < 0.5 ? cx0 : cx1, ri(0, wallRow - 1), "M");
@@ -517,9 +555,10 @@ function _buildUrbanMap(seed, attempt) {
     if (r <= wallRow && !inCitadel(c, r) && rng() < 0.5) set(c, r, "D");
   }
 
-  // 6. Un cratere d'artiglieria: edifici attorno ridotti in macerie
-  const craterAt = pickTile(0, W - 1, 0, H - 2, (p) => !inCitadel(p.col, p.row));
-  if (craterAt) {
+  // 6. Crateri d'artiglieria (uno per mappa piccola): edifici attorno ridotti in macerie
+  for (let i = 0, n = Math.round(area); i < n; i++) {
+    const craterAt = pickTile(0, W - 1, 0, H - 2, (p) => !inCitadel(p.col, p.row));
+    if (!craterAt) continue;
     for (let dr = -1; dr <= 1; dr++) {
       for (let dc = -1; dc <= 1; dc++) {
         if (get(craterAt.col + dc, craterAt.row + dr) === "B" && rng() < 0.7)
@@ -542,6 +581,7 @@ function _buildUrbanMap(seed, attempt) {
   return {
     procedural: "urban",
     seed,
+    size,
     name: en.name,
     description: en.description,
     tileSize: TILE,
@@ -554,15 +594,15 @@ function _buildUrbanMap(seed, attempt) {
       { colMin: 0, colMax: W - 1, rowMin: 0, rowMax: wallRow },
       { colMin: 0, colMax: W - 1, rowMin: southRoad, rowMax: H - 4 },
     ],
-    vcCount: ri(7, 9),
-    trapCount: 3,
+    vcCount: ri(7, 9) + 3 * step,
+    trapCount: Math.round(3 * area),
     objectives: {
       recon: [
         { ...reconBridge, label: it.objectives.recon[0].label },
         { ...marketAt, label: it.objectives.recon[1].label },
         { ...hqAt, label: it.objectives.recon[2].label },
       ],
-      search_destroy: { eliminateAll: false, minKills: 5 },
+      search_destroy: { eliminateAll: false, minKills: 5 + 2 * step },
       rescue_pilot: {
         pilotCol: crashAt.col,
         pilotRow: crashAt.row,
@@ -576,9 +616,9 @@ function _buildUrbanMap(seed, attempt) {
     ambient: "missions/hue_city_ambient.ogg",
     ambushChance: 0.2,
     reinforcementTurn: 4,
-    reinforcementCount: 2,
-    vcAmbushTurn: ri(3, 4),
-    vcAmbushCount: 2,
+    reinforcementCount: step ? 3 : 2,
+    vcAmbushTurn: ri(3, 4) + step,
+    vcAmbushCount: 2 + step,
     vcAmbushZones: [
       { colMin: 0, colMax: 1, rowMin: southRoad, rowMax: H - 2 },
       { colMin: W - 2, colMax: W - 1, rowMin: southRoad, rowMax: H - 2 },

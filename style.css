@@ -271,6 +271,27 @@ body {
     background: rgba(130, 95, 15, 0.75);
     border-color: #ddbb55;
 }
+/* Dimensione delle mappe procedurali (briefing) */
+#map-size-picker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: var(--paper-dark);
+}
+#map-size-picker .btn {
+    font-size: 11px;
+    padding: 4px 10px;
+    opacity: 0.6;
+}
+#map-size-picker .btn.active {
+    opacity: 1;
+    border-color: var(--highlight);
+    box-shadow: inset 0 0 0 1px var(--highlight);
+}
 /* ── ADDESTRAMENTO ───────────────────────────────── */
 #tutorial-overlay {
     position: fixed;

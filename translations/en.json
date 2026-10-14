@@ -266,7 +266,11 @@
     "resume_title": "MISSION IN PROGRESS",
     "resume_turn": "Turn {turn}",
     "night_mission": "🌙 Night mission (reduced visibility)",
-    "regenerate_map": "🎲 Regenerate map"
+    "regenerate_map": "🎲 Regenerate map",
+    "map_size": "Map size",
+    "size_small": "Small",
+    "size_medium": "Medium",
+    "size_large": "Large"
   },
 
   "traps": {

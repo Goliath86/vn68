@@ -271,7 +271,11 @@
     "resume_title": "PARTITA IN CORSO",
     "resume_turn": "Turno {turn}",
     "night_mission": "🌙 Missione notturna (visibilità ridotta)",
-    "regenerate_map": "🎲 Rigenera mappa"
+    "regenerate_map": "🎲 Rigenera mappa",
+    "map_size": "Dimensione mappa",
+    "size_small": "Piccola",
+    "size_medium": "Media",
+    "size_large": "Grande"
   },
 
   "traps": {

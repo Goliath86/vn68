@@ -19,6 +19,18 @@ function useMission(data) {
   G.scale = Math.min(scX, scY, 1);
   G.camX = 0;
   G.camY = 0;
+  // Mappe grandi su schermi piccoli: non rimpicciolire oltre una soglia
+  // leggibile, e inquadrare la zona di partenza della squadra
+  const MIN_FIT_SCALE = 0.35;
+  if (G.scale < MIN_FIT_SCALE && G.mapData.playerStart?.length) {
+    G.scale = MIN_FIT_SCALE;
+    const ps = G.mapData.playerStart;
+    const midC = ps.reduce((s, p) => s + p.col, 0) / ps.length + 0.5;
+    const midR = ps.reduce((s, p) => s + p.row, 0) / ps.length + 0.5;
+    G.camX = c.clientWidth / 2 - midC * TILE * G.scale;
+    G.camY = c.clientHeight / 2 - midR * TILE * G.scale;
+    if (G.canvas) clampCamera();
+  }
 
   // Carica immagine mappa se presente
   const imgName = G.mapData.image;

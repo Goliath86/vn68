@@ -344,11 +344,19 @@ Il salvataggio viene cancellato automaticamente al termine della partita (vittor
 
 ## Mappa procedurale
 
-I teatri **🎲 Zona Ignota** (giungla) e **🎲 Città Ignota** (urbano) non usano alcun file JSON: la mappa viene generata al momento (16×12).
+I teatri **🎲 Zona Ignota** (giungla) e **🎲 Città Ignota** (urbano) non usano alcun file JSON: la mappa viene generata al momento, nella dimensione scelta nel briefing:
+
+| Dimensione | Tile | VC iniziali (giungla / città) |
+|---|---|---|
+| Piccola | 16×12 | 6–8 / 7–9 |
+| Media | 22×16 | 9–11 / 10–12 |
+| Grande | 28×20 | 12–14 / 13–15 |
+
+Sulle mappe più grandi crescono in proporzione anche trappole, ostacoli e bunker. Aumentano inoltre i rinforzi (3 VC invece di 2) e le imboscate, che scattano più tardi e portano più VC. In giungla c'è un terzo guado, in città un terzo ponte. Per la missione Cerca e distruggi servono più eliminazioni (+2 a dimensione). La dimensione scelta viene ricordata per le partite successive.
 
 **Zona Ignota** — giungla del delta:
 
-- un fiume da nord a sud con **due guadi**, sentieri che collegano partenza, guadi e obiettivi;
+- un fiume da nord a sud con **due guadi** (tre sulle mappe più grandi), sentieri che collegano partenza, guadi e obiettivi;
 - radure, paludi, un villaggio, bunker e ostacoli demolibili;
 - partenza della squadra sul lato ovest, VC oltre il fiume, imboscate ai bordi nord/sud;
 - obiettivi per tutti e 4 i tipi di missione (LZ col pilota, villaggio e bunker da ricognire, postazione radio da tenere).
@@ -356,7 +364,7 @@ I teatri **🎲 Zona Ignota** (giungla) e **🎲 Città Ignota** (urbano) non us
 **Città Ignota** — distretto cittadino durante l'offensiva del Têt:
 
 - una griglia di viali e strade; ogni isolato ha un suo carattere (edifici fitti, parco, rovine) e un colpo d'artiglieria ha ridotto in macerie un gruppo di edifici;
-- un fiume da ovest a est attraversabile **solo sui due ponti**;
+- un fiume da ovest a est attraversabile **solo sui ponti** (due, a volte tre sulle mappe più grandi);
 - a nord del fiume una **cittadella murata** con una porta e 1–3 **muri demolibili** (breccia del geniere), pagode e giardini attorno al **Comando NVA**;
 - partenza della squadra sul bordo sud, VC su entrambe le rive e dentro la cittadella, imboscate sui fianchi;
 - obiettivi per tutti e 4 i tipi di missione (pilota al relitto fuori dalle mura, ponte/mercato/comando da ricognire, comando da tenere).

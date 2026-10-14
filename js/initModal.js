@@ -110,22 +110,49 @@ async function loadMissionStep(map) {
   document.getElementById("mission-list").innerHTML = "";
   const regenBtn = document.getElementById("btn-regen-map");
   regenBtn.style.display = map.generator ? "" : "none";
+  const sizePicker = document.getElementById("map-size-picker");
+  sizePicker.style.display = map.generator ? "" : "none";
 
   const showDescription = (data) => {
+    const dims = data.procedural ? ` (${data.cols}×${data.rows})` : "";
     document.getElementById("map-description").textContent =
-      `${mt("name") ?? data.name ?? "?"} — ${mt("description") ?? data.description ?? ""}`;
+      `${mt("name") ?? data.name ?? "?"}${dims} — ${mt("description") ?? data.description ?? ""}`;
   };
+
+  // Dimensione delle mappe procedurali: ricordata tra una partita e l'altra
+  let mapSize = "small";
+  try {
+    mapSize = localStorage.getItem(MAP_SIZE_KEY) || "small";
+  } catch (e) {}
+  if (!PROC_SIZES[mapSize]) mapSize = "small";
+  const generate = () =>
+    useMission(generateProceduralMap(map.generator, undefined, mapSize));
+  const markSize = () =>
+    sizePicker.querySelectorAll("[data-size]").forEach((b) =>
+      b.classList.toggle("active", b.dataset.size === mapSize),
+    );
 
   try {
     // Mappa procedurale: generata qui, poi salvata per intero con la partita
-    const data = map.generator
-      ? useMission(generateProceduralMap(map.generator))
-      : await loadMission(map.file);
+    const data = map.generator ? generate() : await loadMission(map.file);
     showDescription(data);
     regenBtn.onclick = () => {
-      showDescription(useMission(generateProceduralMap(map.generator)));
+      showDescription(generate());
       sfx("click");
     };
+    markSize();
+    sizePicker.querySelectorAll("[data-size]").forEach((b) => {
+      b.onclick = () => {
+        if (b.dataset.size === mapSize) return;
+        mapSize = b.dataset.size;
+        try {
+          localStorage.setItem(MAP_SIZE_KEY, mapSize);
+        } catch (e) {}
+        markSize();
+        showDescription(generate());
+        sfx("click");
+      };
+    });
 
     const list = document.getElementById("mission-list");
     list.innerHTML = "";

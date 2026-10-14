@@ -345,11 +345,19 @@ The save is automatically cleared when the game ends (victory or defeat).
 
 ## Procedural Map
 
-The **🎲 Uncharted Zone** (jungle) and **🎲 Uncharted City** (urban) theaters use no JSON file: the map is generated on the spot (16×12).
+The **🎲 Uncharted Zone** (jungle) and **🎲 Uncharted City** (urban) theaters use no JSON file: the map is generated on the spot, in the size chosen in the briefing:
+
+| Size | Tiles | Starting VC (jungle / city) |
+|---|---|---|
+| Small | 16×12 | 6–8 / 7–9 |
+| Medium | 22×16 | 9–11 / 10–12 |
+| Large | 28×20 | 12–14 / 13–15 |
+
+On bigger maps, traps, obstacles and bunkers also grow in proportion. Reinforcements grow too (3 VC instead of 2), and so do ambushes, which trigger later and bring more VC. The jungle gets a third ford and the city a third bridge. Search & Destroy needs more kills (+2 per size step). The chosen size is remembered for the next games.
 
 **Uncharted Zone** — delta jungle:
 
-- a north–south river with **two fords**, and trails linking the start, the fords and the objectives;
+- a north–south river with **two fords** (three on bigger maps), and trails linking the start, the fords and the objectives;
 - clearings, swamps, a village, bunkers and demolishable obstacles;
 - the squad starting on the west edge, VC beyond the river, ambushes along the north/south edges;
 - objectives for all 4 mission types (LZ with the pilot, village and bunker to scout, radio post to hold).
@@ -357,7 +365,7 @@ The **🎲 Uncharted Zone** (jungle) and **🎲 Uncharted City** (urban) theater
 **Uncharted City** — a city district during the Tet Offensive:
 
 - a grid of avenues and streets; each block has its own character (dense buildings, park, ruins), and an artillery strike has turned a cluster of buildings to rubble;
-- a west–east river that can be crossed **only on the two bridges**;
+- a west–east river that can be crossed **only on the bridges** (two, sometimes three on bigger maps);
 - north of the river, a **walled citadel** with one gate and 1–3 **breachable walls** (engineer breach), pagodas and gardens around the **NVA Command**;
 - the squad starting on the south edge, VC on both banks and inside the citadel, ambushes on the flanks;
 - objectives for all 4 mission types (pilot at the wreck outside the walls, bridge/market/command to scout, command to hold).
