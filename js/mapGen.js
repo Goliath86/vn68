@@ -646,8 +646,19 @@ const URBAN_TILE_TYPES = {
 const URBAN_TEXT = {
   it: {
     name: "Quartiere {seed}",
-    description:
-      "Distretto cittadino mai cartografato: isolati in rovina, un fiume da attraversare sui ponti e una cittadella murata in mano all'NVA.",
+    // Una descrizione per layout (vedi URBAN_LAYOUTS)
+    description: {
+      river:
+        "Distretto cittadino mai cartografato: isolati in rovina, un fiume da attraversare sui ponti e una cittadella murata in mano all'NVA.",
+      canal:
+        "Distretto cittadino mai cartografato: un canale rettilineo taglia il quartiere ed è scavalcato da molti ponti. Oltre il canale, la cittadella murata dell'NVA.",
+      sidecanal:
+        "Distretto cittadino mai cartografato: un canale corre lungo l'avanzata e isola una striscia di edifici raggiungibile solo dai ponti. La cittadella è in mano all'NVA.",
+      riverside:
+        "Distretto cittadino mai cartografato: il fiume chiude un fianco del quartiere, e gli isolati in rovina arrivano fino alla cittadella murata dell'NVA.",
+      dry:
+        "Distretto cittadino mai cartografato: nessun corso d'acqua, solo isolati in rovina, piazze e pagode fino alla cittadella murata dell'NVA.",
+    },
     tileLabels: {
       wall: "Mura",
       wall_breach: "Muro Demolibile",
@@ -662,13 +673,24 @@ const URBAN_TEXT = {
       objective: "Comando NVA",
     },
     bridge: "Ponte",
+    pagoda: "Pagoda",
     market: "Mercato",
     hq: "Comando NVA",
   },
   en: {
     name: "District {seed}",
-    description:
-      "Uncharted city district: ruined blocks, a river crossed only by bridges and a walled citadel held by the NVA.",
+    description: {
+      river:
+        "Uncharted city district: ruined blocks, a river crossed only by bridges and a walled citadel held by the NVA.",
+      canal:
+        "Uncharted city district: a straight canal cuts through the district and is crossed by many bridges. Beyond the canal stands the NVA's walled citadel.",
+      sidecanal:
+        "Uncharted city district: a canal runs along the line of advance and cuts off a strip of buildings reachable only by bridges. The citadel is held by the NVA.",
+      riverside:
+        "Uncharted city district: the river closes off one flank of the district, and the ruined blocks stretch up to the NVA's walled citadel.",
+      dry:
+        "Uncharted city district: no waterway, only ruined blocks, squares and pagodas up to the NVA's walled citadel.",
+    },
     tileLabels: {
       wall: "Wall",
       wall_breach: "Breachable Wall",
@@ -683,90 +705,165 @@ const URBAN_TEXT = {
       objective: "NVA Command",
     },
     bridge: "Bridge",
+    pagoda: "Pagoda",
     market: "Market",
     hq: "NVA Command",
   },
 };
 
+// Layout dell'acqua, con il loro peso:
+// - river:     fiume con anse perpendicolare all'avanzata, pochi ponti
+// - canal:     canale rettilineo perpendicolare all'avanzata, molti ponti
+// - sidecanal: canale lungo l'avanzata che isola una striscia di isolati
+// - riverside: il fiume chiude un fianco, nessun ponte da attraversare
+// - dry:       nessun corso d'acqua
+const URBAN_LAYOUTS = [
+  ["river", 0.3],
+  ["canal", 0.2],
+  ["sidecanal", 0.2],
+  ["riverside", 0.15],
+  ["dry", 0.15],
+];
+
+// Carattere degli isolati: tile e peso
+const URBAN_BLOCK_KINDS = {
+  dense: [["B", 0.7], ["D", 0.1], ["U", 0.1], ["G", 0.1]],
+  park: [["G", 0.6], ["P", 0.25], ["T", 0.15]],
+  ruined: [["D", 0.5], ["B", 0.3], ["U", 0.2]],
+  temple: [["T", 0.45], ["G", 0.3], ["P", 0.25]],
+  slum: [["B", 0.35], ["D", 0.3], ["U", 0.25], ["G", 0.1]],
+};
+const URBAN_BLOCK_WEIGHTS = [
+  ["dense", 0.45],
+  ["park", 0.12],
+  ["ruined", 0.18],
+  ["temple", 0.1],
+  ["slum", 0.15],
+];
+
 function generateUrbanMap(seed, size = "small") {
   return _generateWithRetries(_buildUrbanMap, seed, size);
 }
 
+// Come la giungla: costruita in un sistema canonico (partenza a sud,
+// cittadella a nord) e poi ruotata/specchiata verso il bordo estratto.
+// Per O/E si genera con righe e colonne scambiate.
 function _buildUrbanMap(seed, attempt, size) {
   const rng = _mulberry32(seed * 103 + attempt);
-  const { W, H, step, sx, sy, area } = _procScale(size);
   const ri = (min, max) => min + Math.floor(rng() * (max - min + 1));
   const rpick = (arr) => arr[Math.floor(rng() * arr.length)];
+  const weighted = (table) => _weighted(rng, table);
+  const layout = weighted(URBAN_LAYOUTS);
+  const edge = ["S", "N", "W", "E"][Math.floor(rng() * 4)];
+  const mirror = rng() < 0.5;
+  const { W, H, step, sx, sy, area } = _procScale(size, edge === "W" || edge === "E");
   const grid = Array.from({ length: H }, () => Array(W).fill("U"));
   const inB = (c, r) => c >= 0 && r >= 0 && c < W && r < H;
   const get = (c, r) => (inB(c, r) ? grid[r][c] : null);
   const set = (c, r, k) => {
     if (inB(c, r)) grid[r][c] = k;
   };
+  const isWater = (c, r) => get(c, r) === "R" || get(c, r) === "F";
 
-  // 1. Fiume da ovest a est con lievi anse (righe rb..rb+1), 4-connesso
-  const rb = ri(sy(5), sy(6));
-  const riverRows = [];
-  let rr = rb + ri(0, 1);
-  for (let c = 0; c < W; c++) {
-    const prev = rr;
-    if (c > 0 && rng() < 0.3) rr = rr === rb ? rb + 1 : rb;
-    const lo = Math.min(prev, rr);
-    const hi = Math.max(prev, rr);
-    for (let r = lo; r <= hi; r++) set(c, r, "R");
-    riverRows[c] = [lo, hi];
-  }
-  const northRoad = rb - 1;
-  const southRoad = rb + 2;
-  const wallRow = rb - 2;
-
-  // 2. Viali nord-sud e strade est-ovest; tra di essi gli isolati, ognuno
-  //    con un proprio carattere (densamente edificato, parco, in rovina)
-  const avenues = [];
+  // 1. Acqua, viali nord-sud e strade est-ovest. `wallRow` è il muro sud
+  //    della cittadella; `colLimit` la prima colonna che la cittadella non
+  //    può occupare (acqua sul fianco)
+  let avenues = [];
   for (let c = ri(1, 2); c < W; c += ri(3, 4)) avenues.push(c);
-  // Strade trasversali ogni 3 righe dove c'è spazio per gli isolati
-  const streetRows = [northRoad, southRoad, H - 1];
-  for (let r = southRoad + 2; r <= H - 3; r += 3) streetRows.push(r);
+  const streetRows = [H - 1];
+  let wallRow;
+  let colLimit = W;
+  let bridgeCands = []; // { col, row, tiles }: punti in cui una strada incontra l'acqua
+  let bridgeCount = 0;
+  if (layout === "river" || layout === "canal") {
+    const wide = layout === "river";
+    const rb = ri(sy(5), sy(6));
+    const spans = [];
+    let rr = rb + (wide ? ri(0, 1) : 0);
+    for (let c = 0; c < W; c++) {
+      const prev = rr;
+      if (wide && c > 0 && rng() < 0.3) rr = rr === rb ? rb + 1 : rb;
+      const lo = Math.min(prev, rr);
+      const hi = Math.max(prev, rr);
+      for (let r = lo; r <= hi; r++) set(c, r, "R");
+      spans[c] = [lo, hi];
+    }
+    const southRoad = rb + (wide ? 2 : 1);
+    wallRow = rb - 2;
+    streetRows.push(rb - 1, southRoad);
+    for (let r = southRoad + 2; r <= H - 3; r += 3) streetRows.push(r);
+    bridgeCands = avenues
+      .filter((c) => c >= 1 && c <= W - 2)
+      .map((c) => {
+        const tiles = [];
+        for (let r = spans[c][0]; r <= spans[c][1]; r++) tiles.push({ col: c, row: r });
+        return { col: c, row: spans[c][0], tiles };
+      });
+    bridgeCount = wide ? 2 + step : 3 + step;
+  } else {
+    wallRow = ri(sy(3), sy(4));
+    streetRows.push(wallRow + 1);
+    for (let r = wallRow + 4; r <= H - 3; r += 3) streetRows.push(r);
+    if (layout === "sidecanal") {
+      // Canale dritto su tutta l'altezza; oltre, una striscia di 3-4 colonne
+      const cc = W - 1 - ri(sx(3), sx(4));
+      for (let r = 0; r < H; r++) set(cc, r, "R");
+      avenues = avenues.filter((c) => c !== cc);
+      colLimit = cc - 1;
+      bridgeCands = streetRows
+        .filter((r) => r >= 1 && r <= H - 3)
+        .map((r) => ({ col: cc, row: r, tiles: [{ col: cc, row: r }] }));
+      bridgeCount = 2 + step;
+    } else if (layout === "riverside") {
+      // Fiume largo 2-3 tile lungo il fianco est
+      let rv = W - ri(2, 3);
+      let minRv = rv;
+      for (let r = 0; r < H; r++) {
+        if (r > 0 && rng() < 0.3) rv = rv === W - 2 ? W - 3 : W - 2;
+        for (let c = rv; c < W; c++) set(c, r, "R");
+        minRv = Math.min(minRv, rv);
+      }
+      avenues = avenues.filter((c) => c < minRv - 1);
+      colLimit = minRv - 1;
+    }
+  }
   for (let r = 2; r <= wallRow - 2; r += 3) streetRows.push(r);
   const isStreet = (c, r) => avenues.includes(c) || streetRows.includes(r);
-  const BLOCK_KINDS = {
-    dense: [["B", 0.7], ["D", 0.1], ["U", 0.1], ["G", 0.1]],
-    park: [["G", 0.6], ["P", 0.25], ["T", 0.15]],
-    ruined: [["D", 0.5], ["B", 0.3], ["U", 0.2]],
-  };
-  const weighted = (table) => _weighted(rng, table);
+
+  // 2. Isolati tra le strade, ognuno con un proprio carattere
   const blockKind = {};
   for (let r = 0; r < H; r++) {
     for (let c = 0; c < W; c++) {
-      if (get(c, r) === "R" || isStreet(c, r)) continue;
+      if (isWater(c, r) || isStreet(c, r)) continue;
       const id = `${avenues.filter((a) => a < c).length},${streetRows.filter((s) => s < r).length}`;
-      if (!blockKind[id]) {
-        const x = rng();
-        blockKind[id] = x < 0.6 ? "dense" : x < 0.75 ? "park" : "ruined";
-      }
-      set(c, r, weighted(BLOCK_KINDS[blockKind[id]]));
+      blockKind[id] ??= weighted(URBAN_BLOCK_WEIGHTS);
+      set(c, r, weighted(URBAN_BLOCK_KINDS[blockKind[id]]));
     }
   }
 
-  // 3. Due ponti, uno per metà mappa, sui viali (così le strade proseguono)
-  const westAv = avenues.filter((c) => c >= sx(2) && c <= sx(6));
-  const eastAv = avenues.filter((c) => c >= sx(9) && c <= sx(13));
-  if (!westAv.length || !eastAv.length) return null;
-  const bridgeCols = [rpick(westAv), rpick(eastAv)];
-  // Mappe più grandi: un terzo ponte su un viale centrale
-  if (step) {
-    const midAv = avenues.filter((c) => c > bridgeCols[0] + 2 && c < bridgeCols[1] - 2);
-    if (midAv.length) bridgeCols.push(rpick(midAv));
+  // 3. Ponti dove le strade incontrano l'acqua, distribuiti lungo il corso
+  const bridges = [];
+  while (bridges.length < bridgeCount && bridgeCands.length) {
+    let idx = Math.floor(rng() * bridgeCands.length);
+    if (bridges.length) {
+      const gap = (p) => Math.min(...bridges.map((b) => dist(b, p)));
+      idx = bridgeCands.reduce((bi, p, i) => (gap(p) + rng() * 2 > gap(bridgeCands[bi]) + rng() * 2 ? i : bi), 0);
+    }
+    const b = bridgeCands.splice(idx, 1)[0];
+    if (bridges.some((o) => dist(o, b) < 3)) continue;
+    for (const p of b.tiles) set(p.col, p.row, "F");
+    bridges.push({ col: b.col, row: b.row });
   }
-  const bridges = bridgeCols.map((c) => {
-    for (let r = riverRows[c][0]; r <= riverRows[c][1]; r++) set(c, r, "F");
-    return { col: c, row: riverRows[c][0] };
-  });
+  if (bridgeCount && bridges.length < 2) return null;
 
-  // 4. Cittadella murata a nord del fiume: porta sul lato sud, brecce
-  //    demolibili, pagode e giardini attorno al comando NVA
-  const cw = ri(sx(7), sx(9));
-  const cx0 = ri(sx(3), W - cw - sx(3));
+  // 4. Cittadella murata contro il bordo nord, in posizione variabile
+  //    (anche d'angolo). Porta principale a sud o su un fianco, sempre un
+  //    secondo ingresso su un altro lato, brecce demolibili, pagode e
+  //    giardini attorno al comando NVA
+  const avail = colLimit - 1;
+  const cw = Math.min(ri(sx(7), sx(9)), avail);
+  if (cw < 6 || wallRow < 3) return null;
+  const cx0 = ri(0, avail - cw);
   const cx1 = cx0 + cw - 1;
   const inCitadel = (c, r) => c >= cx0 && c <= cx1 && r <= wallRow;
   for (let r = 0; r <= wallRow; r++) {
@@ -775,45 +872,88 @@ function _buildUrbanMap(seed, attempt, size) {
       else set(c, r, weighted([["T", 0.4], ["G", 0.35], ["P", 0.15], ["D", 0.1]]));
     }
   }
+  // Lati con un'uscita possibile: un fianco contro il bordo mappa non ne ha
+  const sides = ["S"];
+  if (cx0 > 0) sides.push("W");
+  if (cx1 < W - 1 && !isWater(cx1 + 1, 1)) sides.push("E");
+  const gateOn = (side, avoid) => {
+    if (side === "S") {
+      const cands = [];
+      for (let c = cx0 + 2; c <= cx1 - 2; c++) if (!avoid || Math.abs(c - avoid.col) >= 3) cands.push(c);
+      if (!cands.length) return null;
+      const onAv = cands.filter((c) => avenues.includes(c));
+      const col = rpick(onAv.length ? onAv : cands);
+      return { side, col, row: wallRow, inner: { col, row: wallRow - 1 } };
+    }
+    const col = side === "W" ? cx0 : cx1;
+    const row = ri(1, wallRow - 1);
+    return { side, col, row, inner: { col: col + (side === "W" ? 1 : -1), row } };
+  };
+  const mainSide = rng() < 0.6 || sides.length === 1 ? "S" : rpick(sides.slice(1));
+  const gate = gateOn(mainSide);
+  const otherSides = sides.filter((s) => s !== mainSide);
+  const postern = otherSides.length ? gateOn(rpick(otherSides)) : gateOn("S", gate);
+  if (!gate || !postern) return null;
+  for (const g of [gate, postern]) set(g.col, g.row, "U");
   const hqAt = { col: ri(cx0 + 2, cx1 - 2), row: ri(0, 1) };
+  // Viale lastricato dalla porta principale al comando
+  {
+    let { col: c, row: r } = gate.inner;
+    const horizFirst = gate.side !== "S";
+    for (let g = 0; g < W + H && (c !== hqAt.col || r !== hqAt.row); g++) {
+      set(c, r, "P");
+      if (horizFirst ? c !== hqAt.col : r === hqAt.row) c += Math.sign(hqAt.col - c);
+      else r += Math.sign(hqAt.row - r);
+    }
+  }
   set(hqAt.col, hqAt.row, "O");
-  const gateAv = avenues.filter((c) => c > cx0 + 1 && c < cx1 - 1);
-  const gateCol = gateAv.length ? rpick(gateAv) : ri(cx0 + 2, cx1 - 2);
-  set(gateCol, wallRow, "U");
-  // Viale lastricato dalla porta al comando
-  for (let r = wallRow - 1; r > hqAt.row; r--) set(gateCol, r, "P");
-  for (let c = gateCol; c !== hqAt.col; c += Math.sign(hqAt.col - gateCol)) {
-    set(c, hqAt.row, "P");
+  // Brecce: tratti di muro con terra all'esterno, lontani dagli ingressi
+  const breachCands = [];
+  const nearGate = (c, r) => [gate, postern].some((g) => Math.abs(g.col - c) + Math.abs(g.row - r) <= 1);
+  for (let c = cx0 + 1; c < cx1; c++) {
+    if (!nearGate(c, wallRow) && inB(c, wallRow + 1) && !isWater(c, wallRow + 1)) breachCands.push({ col: c, row: wallRow });
   }
-  const breachCols = [];
-  for (let c = cx0 + 1; c < cx1; c++) if (Math.abs(c - gateCol) > 1) breachCols.push(c);
-  for (let i = 0, n = ri(1, 2 + step); i < n && breachCols.length; i++) {
-    set(breachCols.splice(Math.floor(rng() * breachCols.length), 1)[0], wallRow, "M");
+  for (const [c, out] of [[cx0, cx0 - 1], [cx1, cx1 + 1]]) {
+    for (let r = 1; r < wallRow; r++) {
+      if (!nearGate(c, r) && inB(out, r) && !isWater(out, r)) breachCands.push({ col: c, row: r });
+    }
   }
-  if (rng() < 0.5) set(rng() < 0.5 ? cx0 : cx1, ri(0, wallRow - 1), "M");
+  for (let i = 0, n = ri(1, 2 + step); i < n && breachCands.length; i++) {
+    const b = breachCands.splice(Math.floor(rng() * breachCands.length), 1)[0];
+    set(b.col, b.row, "M");
+  }
 
   const pickTile = (cMin, cMax, rMin, rMax, ok) => {
     for (let a = 0; a < 200; a++) {
       const p = { col: ri(cMin, cMax), row: ri(rMin, rMax) };
-      if (inB(p.col, p.row) && !URBAN_TILE_TYPES[get(p.col, p.row)].impassable && ok(p)) return p;
+      if (inB(p.col, p.row) && !URBAN_TILE_TYPES[get(p.col, p.row)].impassable && !isWater(p.col, p.row) && ok(p))
+        return p;
     }
     return null;
   };
+  const outsideCitadel = (p) => p.col < cx0 - 1 || p.col > cx1 + 1 || p.row > wallRow + 1;
 
-  // 5. Mercato a sud del fiume, relitto dell'elicottero a nord fuori dalle mura
-  const marketAt = pickTile(0, W - 2, southRoad + 1, H - 2, (p) => !isStreet(p.col, p.row));
-  const crashAt = pickTile(0, W - 1, 0, wallRow, (p) => p.col < cx0 - 1 || p.col > cx1 + 1);
+  // 5. Mercato verso la partenza, relitto dell'elicottero vicino alle mura
+  //    ma fuori, pagoda da ricognire se non ci sono ponti
+  const marketAt = pickTile(0, W - 2, Math.floor(H / 2), H - 3, (p) => !isStreet(p.col, p.row));
+  const crashAt = pickTile(0, W - 1, 0, wallRow + 2, outsideCitadel);
   if (!marketAt || !crashAt) return null;
   for (const [dc, dr] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
     const c = marketAt.col + dc;
     const r = marketAt.row + dr;
-    if (r < H - 1 && !avenues.includes(c)) set(c, r, "P");
+    if (r < H - 1 && !avenues.includes(c) && !isWater(c, r)) set(c, r, "P");
   }
   set(crashAt.col, crashAt.row, "P");
   for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
     const c = crashAt.col + dc;
     const r = crashAt.row + dr;
-    if (r <= wallRow && !inCitadel(c, r) && rng() < 0.5) set(c, r, "D");
+    if (inB(c, r) && !isWater(c, r) && !inCitadel(c, r) && rng() < 0.5) set(c, r, "D");
+  }
+  let pagodaAt = null;
+  if (!bridges.length) {
+    pagodaAt = pickTile(0, W - 1, wallRow + 2, H - 3, (p) => !isStreet(p.col, p.row) && dist(p, marketAt) >= 3);
+    if (!pagodaAt) return null;
+    set(pagodaAt.col, pagodaAt.row, "T");
   }
 
   // 6. Crateri d'artiglieria (uno per mappa piccola): edifici attorno ridotti in macerie
@@ -828,50 +968,101 @@ function _buildUrbanMap(seed, attempt, size) {
     }
   }
 
-  // 7. Partenza sul bordo sud (la riga H-1 è sempre strada)
-  const sc = ri(4, W - 8);
+  // 7. Partenza sul bordo sud (la riga H-1 è sempre strada), lontano dall'acqua
+  const startCols = [];
+  for (let c = 1; c + 3 <= W - 2; c++) {
+    let dry = true;
+    for (let i = -1; i <= 4; i++) if (isWater(c + i, H - 1) || isWater(c + i, H - 2)) dry = false;
+    if (dry) startCols.push(c);
+  }
+  if (!startCols.length) return null;
+  const sc = rpick(startCols);
   const playerStart = [0, 1, 2, 3].map((i) => ({ col: sc + i, row: H - 1 }));
   const extract = { col: sc + 1, row: H - 1 };
 
-  // 8. Verifica: ogni tile percorribile raggiungibile dalla partenza
+  // 8. Verifica: ogni tile percorribile raggiungibile dalla partenza, e
+  //    almeno due corridoi distinti verso comando, mercato e relitto
   if (!_allReachable(grid, URBAN_TILE_TYPES, extract)) return null;
+  for (const goal of [hqAt, marketAt, crashAt]) {
+    if (_corridorCount(grid, URBAN_TILE_TYPES, extract, goal, 2) < 2) return null;
+  }
 
-  const { it, en } = _procTranslations(URBAN_TEXT, seed, ["bridge", "market", "hq"], "hq");
-  const reconBridge = rpick(bridges);
+  // 9. Dal sistema canonico al bordo di partenza estratto
+  const toMap = (p) => {
+    const c = mirror ? W - 1 - p.col : p.col;
+    const r = p.row;
+    if (edge === "N") return { col: c, row: H - 1 - r };
+    if (edge === "W") return { col: H - 1 - r, row: c };
+    if (edge === "E") return { col: r, row: c };
+    return { col: c, row: r };
+  };
+  const zone = (colMin, colMax, rowMin, rowMax) => {
+    const a = toMap({ col: colMin, row: rowMin });
+    const b = toMap({ col: colMax, row: rowMax });
+    return {
+      colMin: Math.min(a.col, b.col),
+      colMax: Math.max(a.col, b.col),
+      rowMin: Math.min(a.row, b.row),
+      rowMax: Math.max(a.row, b.row),
+    };
+  };
+  const cols = edge === "W" || edge === "E" ? H : W;
+  const rows = edge === "W" || edge === "E" ? W : H;
+  const mapGrid = Array.from({ length: rows }, () => Array(cols));
+  for (let r = 0; r < H; r++) {
+    for (let c = 0; c < W; c++) {
+      const p = toMap({ col: c, row: r });
+      mapGrid[p.row][p.col] = grid[r][c];
+    }
+  }
+  const hq = toMap(hqAt);
+  const crash = toMap(crashAt);
+  const ex = toMap(extract);
+  const reconFirst = bridges.length ? toMap(rpick(bridges)) : toMap(pagodaAt);
+
+  const { it, en } = _procTranslations(
+    URBAN_TEXT,
+    seed,
+    [bridges.length ? "bridge" : "pagoda", "market", "hq"],
+    "hq",
+    layout,
+  );
 
   return {
     procedural: "urban",
     seed,
     size,
+    layout,
+    startEdge: edge,
     name: en.name,
     description: en.description,
     tileSize: TILE,
-    cols: W,
-    rows: H,
+    cols,
+    rows,
     tileTypes: JSON.parse(JSON.stringify(URBAN_TILE_TYPES)),
-    grid,
-    playerStart,
+    grid: mapGrid,
+    playerStart: playerStart.map(toMap),
     vcSpawnZones: [
-      { colMin: 0, colMax: W - 1, rowMin: 0, rowMax: wallRow },
-      { colMin: 0, colMax: W - 1, rowMin: southRoad, rowMax: H - 4 },
+      zone(0, W - 1, 0, wallRow),
+      zone(0, W - 1, wallRow + 1, H - 4),
     ],
     vcCount: ri(7, 9) + 3 * step,
     trapCount: Math.round(3 * area),
     objectives: {
       recon: [
-        { ...reconBridge, label: it.objectives.recon[0].label },
-        { ...marketAt, label: it.objectives.recon[1].label },
-        { ...hqAt, label: it.objectives.recon[2].label },
+        { ...reconFirst, label: it.objectives.recon[0].label },
+        { ...toMap(marketAt), label: it.objectives.recon[1].label },
+        { ...hq, label: it.objectives.recon[2].label },
       ],
       search_destroy: { eliminateAll: false, minKills: 5 + 2 * step },
       rescue_pilot: {
-        pilotCol: crashAt.col,
-        pilotRow: crashAt.row,
-        extractCol: extract.col,
-        extractRow: extract.row,
-        tileAnimations: [{ col: crashAt.col, row: crashAt.row, type: "smoke" }],
+        pilotCol: crash.col,
+        pilotRow: crash.row,
+        extractCol: ex.col,
+        extractRow: ex.row,
+        tileAnimations: [{ col: crash.col, row: crash.row, type: "smoke" }],
       },
-      capture_objective: [{ ...hqAt, label: it.objectives.capture_objective[0].label, holdTurns: 2 }],
+      capture_objective: [{ ...hq, label: it.objectives.capture_objective[0].label, holdTurns: 2 }],
     },
     supportedMissions: ["recon", "search_destroy", "rescue_pilot", "capture_objective"],
     ambient: "missions/hue_city_ambient.ogg",
@@ -881,8 +1072,8 @@ function _buildUrbanMap(seed, attempt, size) {
     vcAmbushTurn: ri(3, 4) + step,
     vcAmbushCount: 2 + step,
     vcAmbushZones: [
-      { colMin: 0, colMax: 1, rowMin: southRoad, rowMax: H - 2 },
-      { colMin: W - 2, colMax: W - 1, rowMin: southRoad, rowMax: H - 2 },
+      zone(0, 1, Math.floor(H / 2), H - 2),
+      zone(W - 2, W - 1, Math.floor(H / 2), H - 2),
     ],
     translations: { it, en },
   };

@@ -371,11 +371,17 @@ On bigger maps, traps, obstacles and bunkers also grow in proportion. Reinforcem
 
 **Uncharted City** — a city district during the Tet Offensive:
 
-- a grid of avenues and streets; each block has its own character (dense buildings, park, ruins), and an artillery strike has turned a cluster of buildings to rubble;
-- a west–east river that can be crossed **only on the bridges** (two, sometimes three on bigger maps);
-- north of the river, a **walled citadel** with one gate and 1–3 **breachable walls** (engineer breach), pagodas and gardens around the **NVA Command**;
-- the squad starting on the south edge, VC on both banks and inside the citadel, ambushes on the flanks;
-- objectives for all 4 mission types (pilot at the wreck outside the walls, bridge/market/command to scout, command to hold).
+- a grid of avenues and streets. Each block has its own character: dense buildings, park, ruins, temples or slums. An artillery strike has turned a cluster of buildings to rubble;
+- one of five **layouts**, named in the briefing description:
+  - a winding **river**, crossable only on the bridges (2–4);
+  - a straight **canal** crossed by many bridges;
+  - a **side canal** running along the advance, cutting off a strip of blocks reachable by bridges;
+  - a **river on the flank**, closing off one side of the district with no need to cross it;
+  - **no waterway**;
+- on the side opposite the start, a **walled citadel** set against the edge, in a variable position (even in a corner). It has a main gate on the south or on a flank, a **second entrance** on another side and 1–3 **breachable walls** (engineer breach). Inside, pagodas and gardens surround the **NVA Command**;
+- the squad starting on a **random edge**, VC throughout the district and inside the citadel, ambushes on the flanks of the start;
+- there are always at least **two separate routes** to the command, the market and the wreck;
+- objectives for all 4 mission types: pilot at the wreck outside the walls; bridge (or pagoda, if there are no bridges), market and command to scout; command to hold.
 
 The generator guarantees that every passable tile can be reached from the start (the citadel always has a gate: an engineer is not required). The number in the name (**Sector 48213**, **District 48213**) is the seed: the same seed always produces the same map. In the briefing, the **🎲 Regenerate map** button creates a new one before you start.
 

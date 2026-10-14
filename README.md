@@ -370,11 +370,17 @@ Sulle mappe più grandi crescono in proporzione anche trappole, ostacoli e bunke
 
 **Città Ignota** — distretto cittadino durante l'offensiva del Têt:
 
-- una griglia di viali e strade; ogni isolato ha un suo carattere (edifici fitti, parco, rovine) e un colpo d'artiglieria ha ridotto in macerie un gruppo di edifici;
-- un fiume da ovest a est attraversabile **solo sui ponti** (due, a volte tre sulle mappe più grandi);
-- a nord del fiume una **cittadella murata** con una porta e 1–3 **muri demolibili** (breccia del geniere), pagode e giardini attorno al **Comando NVA**;
-- partenza della squadra sul bordo sud, VC su entrambe le rive e dentro la cittadella, imboscate sui fianchi;
-- obiettivi per tutti e 4 i tipi di missione (pilota al relitto fuori dalle mura, ponte/mercato/comando da ricognire, comando da tenere).
+- una griglia di viali e strade. Ogni isolato ha un suo carattere: edifici fitti, parco, rovine, templi o baraccopoli. Un colpo d'artiglieria ha ridotto in macerie un gruppo di edifici;
+- uno di cinque **layout**, indicato nella descrizione del briefing:
+  - **fiume** con anse, attraversabile solo sui ponti (2–4);
+  - **canale** rettilineo scavalcato da molti ponti;
+  - **canale laterale** lungo l'avanzata, che isola una striscia di isolati raggiungibile dai ponti;
+  - **fiume sul fianco**, che chiude un lato del quartiere senza bisogno di attraversarlo;
+  - **nessun corso d'acqua**;
+- dal lato opposto alla partenza, una **cittadella murata** addossata al bordo, in posizione variabile (anche d'angolo). Ha una porta principale a sud o su un fianco, un **secondo ingresso** su un altro lato e 1–3 **muri demolibili** (breccia del geniere). Dentro, pagode e giardini attorno al **Comando NVA**;
+- partenza della squadra su un **bordo casuale**, VC in tutto il quartiere e dentro la cittadella, imboscate ai fianchi della partenza;
+- verso comando, mercato e relitto ci sono sempre almeno **due percorsi distinti**;
+- obiettivi per tutti e 4 i tipi di missione: pilota al relitto fuori dalle mura; ponte (o pagoda, se non ci sono ponti), mercato e comando da ricognire; comando da tenere.
 
 Il generatore garantisce che ogni tile percorribile sia raggiungibile dalla partenza (la cittadella ha sempre una porta: il geniere non è obbligatorio). Il numero nel nome (**Settore 48213**, **Quartiere 48213**) è il seed: lo stesso seed produce sempre la stessa mappa. Nel briefing il bottone **🎲 Rigenera mappa** ne crea una nuova prima di iniziare.
 
