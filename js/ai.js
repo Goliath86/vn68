@@ -39,6 +39,9 @@ async function runEnemyTurn() {
     await sleep(800);
   }
 
+  // Aggiramenti su più turni: ruoli e punti di raccolta
+  planFlanks();
+
   for (const enemy of liveEnemies) {
     await enemyActivation(enemy);
     await sleep(120);
@@ -347,7 +350,11 @@ async function enemyActivation(enemy) {
     // Ferito gravemente: sparisce nei tunnel se può; altrimenti IA tattica
     // (sceglie da dove e a chi sparare, avanza di copertura in copertura o
     // resta in agguato: vedi sezione IA TATTICA)
-    if (!(await tryTunnelDive(enemy, stats)))
+    // Aggiratore: prosegue verso il fianco della squadra (sezione AGGIRAMENTO)
+    if (
+      !(await tryTunnelDive(enemy, stats)) &&
+      !(enemy.flank && (await flankActivation(enemy, stats)))
+    )
       await tacticalActivation(enemy, stats, liveUnits);
   } else {
     // Guerrigliero in pattuglia: ogni tanto lascia una trappola dove si trova
@@ -628,6 +635,21 @@ const VC_TACTICS = {
   holdRange: 4, // agguato se la squadra è entro gittata + holdRange
   holdChance: 0.5, // probabilità di restare in agguato (comandante: sempre)
   scootMinGain: 2, // guadagno minimo per ripiegare dopo lo sparo
+  // Aggiramento su più turni (sezione AGGIRAMENTO)
+  flankMinGroup: 3, // VC allertati idonei necessari per avviare un aggiramento
+  flankShare: 0.34, // quota del gruppo che aggira (max 1 ogni 16×12 tile di mappa)
+  flankMinStartDist: 4, // non aggira chi è già a ridosso della squadra
+  flankMaxStartDist: 10, // né chi è ancora lontano (prima si avvicina)
+  flankRallyMin: 3, // distanza del punto di raccolta dal soldato bersaglio
+  flankRallyMax: 5,
+  flankRearBonus: 6, // punto di raccolta alle spalle del bersaglio
+  flankSideBonus: 3, // punto di raccolta sul fianco
+  flankExposure: 3, // costo extra (AP) di un tile visto dalla squadra
+  flankPathWeight: 0.4, // per AP di percorso fino al punto di raccolta
+  flankApproachWeight: 1.5, // per AP di distanza residua durante l'avvicinamento
+  flankPincerPenalty: 4, // due aggiratori sullo stesso lato del bersaglio
+  flankMaxTurns: 6, // dopo tanti turni senza arrivare rinuncia
+  flankGoldenShot: 20, // tiro abbastanza buono da interrompere l'avvicinamento
 };
 
 const _tkey = (c, r) => `${c},${r}`;
@@ -751,8 +773,9 @@ function vcTileScore(enemy, tile, field = null, farFactor = 1) {
   return s;
 }
 
-// Distanza (in costo di movimento) di ogni tile percorribile da `goal`
-function vcDistanceField(goal) {
+// Distanza (in costo di movimento) di ogni tile percorribile da `goal`;
+// `extra(col, row)` aggiunge un costo per tile (es. tile esposti alla squadra)
+function vcDistanceField(goal, extra = null) {
   const field = new Map([[_tkey(goal.col, goal.row), 0]]);
   const open = [{ col: goal.col, row: goal.row, cost: 0 }];
   while (open.length) {
@@ -763,7 +786,7 @@ function vcDistanceField(goal) {
       const c = cur.col + dc,
         r = cur.row + dr;
       if (!isTilePassable(c, r)) continue;
-      const cost = cur.cost + moveCost(c, r);
+      const cost = cur.cost + moveCost(c, r) + (extra ? extra(c, r) : 0);
       if (cost >= (field.get(_tkey(c, r)) ?? Infinity)) continue;
       field.set(_tkey(c, r), cost);
       open.push({ col: c, row: r, cost });
@@ -873,6 +896,197 @@ async function tacticalActivation(enemy, stats, liveUnits) {
   await vcMoveTo(enemy, dest, goal);
   // Gli AP non spesi diventano un agguato per il turno del giocatore
   setVcAmbush(enemy);
+}
+
+// ── AGGIRAMENTO ────────────────────────────────────────────────────────
+// Con abbastanza VC allertati, una parte del gruppo diventa "aggiratore":
+// sceglie un punto di raccolta sul fianco o alle spalle di un soldato
+// (rispetto al suo orientamento) e ci arriva in più turni lungo un percorso
+// che evita i tile visti dalla squadra, mentre gli altri VC la tengono
+// impegnata con l'IA tattica normale. Arrivato, o appena può colpire il bersaglio dal fianco o dalle spalle,
+// torna all'IA tattica, che premia già quei tiri.
+// Stato: enemy.flank = { targetId, rally, side, turns, hp } (nel salvataggio).
+
+function flankEligible(e) {
+  return (
+    e.alive &&
+    e.alerted &&
+    !e.inTunnel &&
+    !(e.routed > 0) &&
+    e.cls !== "sniper_vc" &&
+    e.cls !== "commander"
+  );
+}
+
+// Tile visti da almeno un soldato: calcolati una volta per turno VC
+function computeVcExposure() {
+  const md = G.mapData;
+  const units = G.units.filter((u) => u.alive);
+  const seen = new Set();
+  for (let r = 0; r < md.rows; r++)
+    for (let c = 0; c < md.cols; c++)
+      if (units.some((u) => isTileVisibleFromUnit(u, c, r))) seen.add(_tkey(c, r));
+  return seen;
+}
+
+// Lato del bersaglio (-1 / 1, 0 se allineato) in cui si trova `tile`
+function flankSide(target, tile) {
+  const [fx, fy] = FACING_DIRS[target.facing ?? 2];
+  return Math.sign((tile.col - target.col) * fy - (tile.row - target.row) * fx);
+}
+
+// Miglior punto di raccolta per aggirare `target`: { tile, side } o null.
+// `takenSides`: lati già scelti da altri aggiratori (meglio la tenaglia)
+function chooseFlankRally(enemy, target, exposure, takenSides) {
+  const T = VC_TACTICS;
+  const stealth = (c, r) => (exposure.has(_tkey(c, r)) ? T.flankExposure : 0);
+  const fromEnemy = vcDistanceField(enemy, stealth);
+  let best = null;
+  for (let r = target.row - T.flankRallyMax; r <= target.row + T.flankRallyMax; r++) {
+    for (let c = target.col - T.flankRallyMax; c <= target.col + T.flankRallyMax; c++) {
+      const tile = { col: c, row: r };
+      const d = dist(target, tile);
+      if (d < T.flankRallyMin || d > T.flankRallyMax) continue;
+      if (!isTilePassable(c, r) || isOccupied(c, r)) continue;
+      const sector = facingSector(target, tile);
+      if (sector === "front") continue;
+      const pathCost = fromEnemy.get(_tkey(c, r));
+      if (pathCost === undefined) continue;
+      let s =
+        (sector === "rear" ? T.flankRearBonus : T.flankSideBonus) +
+        coverBonus(c, r) * T.coverWeight +
+        (isConcealingTile(c, r) ? T.concealWeight : 0) -
+        stealth(c, r) -
+        pathCost * T.flankPathWeight;
+      // Gli altri soldati non devono averlo davanti a sé, in gittata e in vista
+      for (const u of G.units) {
+        if (!u.alive || u === target) continue;
+        if (
+          facingSector(u, tile) === "front" &&
+          dist(u, tile) <= unitFireRange(u) &&
+          isTileVisibleFromUnit(u, c, r)
+        )
+          s -= T.threatPenalty;
+      }
+      const side = flankSide(target, tile);
+      if (side && takenSides.includes(side)) s -= T.flankPincerPenalty;
+      if (!best || s > best.s) best = { tile, side, s };
+    }
+  }
+  return best;
+}
+
+// Inizio turno VC: chiude gli aggiramenti finiti, ne assegna di nuovi e
+// ricalcola i punti di raccolta (la squadra si muove e si gira)
+function planFlanks() {
+  const T = VC_TACTICS;
+  const units = G.units.filter((u) => u.alive);
+  for (const e of G.enemies) {
+    if (!e.flank) continue;
+    const tgt = units.find((u) => u.id === e.flank.targetId);
+    // Bersaglio caduto, troppo tempo, VC colpito durante l'avvicinamento
+    if (!flankEligible(e) || !tgt || e.flank.turns >= T.flankMaxTurns || e.hp < e.flank.hp)
+      e.flank = null;
+  }
+  if (!units.length) return;
+
+  const group = G.enemies.filter(flankEligible);
+  const active = group.filter((e) => e.flank);
+  const md = G.mapData;
+  const maxByMap = Math.max(1, Math.round((md.cols * md.rows) / 192));
+  const wanted =
+    group.length >= T.flankMinGroup
+      ? Math.min(maxByMap, Math.max(1, Math.round(group.length * T.flankShare)))
+      : 0;
+  // Nuovi aggiratori: chi non ha un tiro da dove si trova, né a ridosso
+  // della squadra né ancora lontano; i più vicini prima (arrivano prima)
+  const near = (e) => dist(e, nearestLiveUnit(e));
+  const cands = group
+    .filter(
+      (e) =>
+        !e.flank &&
+        near(e) >= T.flankMinStartDist &&
+        near(e) <= T.flankMaxStartDist &&
+        !vcBestAttackFrom(e, e),
+    )
+    .sort((a, b) => near(a) - near(b));
+  for (const e of cands) {
+    if (active.length >= wanted) break;
+    e.flank = { targetId: null, rally: null, side: 0, turns: 0, hp: e.hp };
+    active.push(e);
+    statAdd("vcFlankers");
+  }
+  if (!active.length) return;
+
+  const exposure = computeVcExposure();
+  G.vcExposure = exposure;
+  const taken = {};
+  for (const e of active) {
+    const tgt =
+      units.find((u) => u.id === e.flank.targetId) ?? nearestDetectedUnit(e) ?? nearestLiveUnit(e);
+    taken[tgt.id] ??= [];
+    const best = chooseFlankRally(e, tgt, exposure, taken[tgt.id]);
+    if (!best) {
+      e.flank = null;
+      continue;
+    }
+    Object.assign(e.flank, { targetId: tgt.id, rally: best.tile, side: best.side });
+    e.flank.turns++;
+    taken[tgt.id].push(best.side);
+  }
+}
+
+// Attivazione di un aggiratore. Restituisce false se il VC deve invece
+// agire con l'IA tattica (arrivato, occasione di tiro, aggiramento finito)
+async function flankActivation(enemy, stats) {
+  const T = VC_TACTICS;
+  const f = enemy.flank;
+  const target = G.units.find((u) => u.alive && u.id === f.targetId);
+  if (!target || !f.rally) {
+    enemy.flank = null;
+    return false;
+  }
+  if (enemy.ap < 1) return true;
+  const tiles = vcReachableTiles(enemy, Math.min(enemy.ap, stats.move));
+  const range = vcEffRange(enemy, stats);
+
+  // Arrivato: sul punto di raccolta, o con un tiro sul fianco/retro del
+  // bersaglio a portata in questo turno
+  const flankShot = tiles.some(
+    (tl) =>
+      enemy.ap - tl.cost >= 1 &&
+      facingSector(target, tl) !== "front" &&
+      dist(tl, target) <= range &&
+      vcSees(tl, target),
+  );
+  if (dist(enemy, f.rally) <= 1 || flankShot) {
+    enemy.flank = null;
+    statAdd("vcFlankArrived");
+    return false;
+  }
+  // Occasione d'oro da dove si trova: spara (l'aggiramento resta in corso)
+  const shot = vcBestAttackFrom(enemy, enemy);
+  if (shot && shot.score >= T.flankGoldenShot) return false;
+
+  // Avvicinamento: il tile raggiungibile più vicino al punto di raccolta
+  // lungo il percorso meno esposto, preferendo copertura e meno minacce
+  const exposure = G.vcExposure ?? new Set();
+  const stealth = (c, r) => (exposure.has(_tkey(c, r)) ? T.flankExposure : 0);
+  const field = vcDistanceField(f.rally, stealth);
+  const score = (tl) =>
+    -(field.get(_tkey(tl.col, tl.row)) ?? 99) * T.flankApproachWeight -
+    stealth(tl.col, tl.row) +
+    vcTileScore(enemy, tl);
+  const here = tiles.find((tl) => tl.cost === 0);
+  const dest = tiles.reduce((b, tl) => (score(tl) > score(b) ? tl : b), here);
+  const wasVisible = isEnemyVisible(enemy);
+  await vcMoveTo(enemy, dest, null);
+  if (!enemy.alive) return true;
+  if (dest.cost > 0 && (wasVisible || isEnemyVisible(enemy)))
+    log(t("log.vc_flanking", { name: enemy.name }), "enemy");
+  faceToward(enemy, target);
+  setVcAmbush(enemy);
+  return true;
 }
 
 // Fuoco dall'agguato: chiamato quando un soldato termina un movimento nel

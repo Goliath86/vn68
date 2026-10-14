@@ -14,7 +14,7 @@ function newMissionStats() {
     artillery: 0, friendlyFire: 0,
     // Fuoco VC
     vcShots: 0, vcHits: 0, vcExpHits: 0, vcDmg: 0, vcFlank: 0, vcRear: 0,
-    vcAmbushFire: 0, aoeVc: 0,
+    vcAmbushFire: 0, aoeVc: 0, vcFlankers: 0, vcFlankArrived: 0,
     // Logistica
     roundsFired: 0, reloads: 0,
     // Ferite e cure
@@ -165,6 +165,7 @@ function summaryRows(s, agg) {
       [t("stats.hits"), acc(s.vcHits, s.vcShots, s.vcExpHits)],
       [t("stats.dmg_taken"), s.vcDmg],
       [t("stats.flank_rear"), `${s.vcFlank} / ${s.vcRear}`],
+      [t("stats.vc_flanking"), `${s.vcFlankers} / ${s.vcFlankArrived}`],
       [t("stats.vc_ambush"), s.vcAmbushFire],
       [t("stats.vc_rpg"), s.aoeVc],
     ]],
