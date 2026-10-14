@@ -356,9 +356,16 @@ Sulle mappe più grandi crescono in proporzione anche trappole, ostacoli e bunke
 
 **Zona Ignota** — giungla del delta:
 
-- un fiume da nord a sud con **due guadi** (tre sulle mappe più grandi), sentieri che collegano partenza, guadi e obiettivi;
+- uno di cinque **layout**, indicato nella descrizione del briefing:
+  - **fiume da attraversare** perpendicolare all'avanzata;
+  - **ansa**: il fiume piega ad angolo e chiude una sacca;
+  - **fiume parallelo** all'avanzata, che divide la zona in due rive;
+  - **confluenza**: due corsi d'acqua dividono la zona in settori;
+  - **palude**: nessun fiume, ma una larga fascia di palude con qualche stagno;
+- i fiumi si attraversano solo ai **guadi**: due o tre, tre o quattro con la confluenza. Sentieri collegano partenza, guadi e obiettivi;
 - radure, paludi, un villaggio, bunker e ostacoli demolibili;
-- partenza della squadra sul lato ovest, VC oltre il fiume, imboscate ai bordi nord/sud;
+- partenza della squadra su un **bordo casuale** (nord, sud, est o ovest), obiettivi e VC verso il lato opposto, imboscate ai fianchi della partenza;
+- verso villaggio, LZ e postazione radio ci sono sempre almeno **due percorsi distinti**: non si resta mai bloccati in un unico imbuto;
 - obiettivi per tutti e 4 i tipi di missione (LZ col pilota, villaggio e bunker da ricognire, postazione radio da tenere).
 
 **Città Ignota** — distretto cittadino durante l'offensiva del Têt:

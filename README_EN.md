@@ -357,9 +357,16 @@ On bigger maps, traps, obstacles and bunkers also grow in proportion. Reinforcem
 
 **Uncharted Zone** — delta jungle:
 
-- a north–south river with **two fords** (three on bigger maps), and trails linking the start, the fords and the objectives;
+- one of five **layouts**, named in the briefing description:
+  - a **river to cross**, perpendicular to the advance;
+  - a **bend**: the river turns at an angle and closes off a pocket;
+  - a river **parallel** to the advance, splitting the zone into two banks;
+  - a **confluence**: two waterways split the zone into sectors;
+  - a **swamp**: no river, but a wide swamp belt with a few ponds;
+- rivers can only be crossed at **fords**: two or three, three or four with the confluence. Trails link the start, the fords and the objectives;
 - clearings, swamps, a village, bunkers and demolishable obstacles;
-- the squad starting on the west edge, VC beyond the river, ambushes along the north/south edges;
+- the squad starting on a **random edge** (north, south, east or west), objectives and VC toward the opposite side, ambushes on the flanks of the start;
+- there are always at least **two separate routes** to the village, the LZ and the radio post, so you are never stuck in a single choke point;
 - objectives for all 4 mission types (LZ with the pilot, village and bunker to scout, radio post to hold).
 
 **Uncharted City** — a city district during the Tet Offensive:
