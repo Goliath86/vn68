@@ -290,6 +290,18 @@ function initMissionState(type) {
   G.missionState = st;
 }
 
+// Recupero pilota: se cade il soldato che lo scorta, il pilota resta a terra
+// sul suo tile e un altro soldato può raccoglierlo (unitMovement.js:moveUnit)
+function dropPilot(unit) {
+  if (!unit.carriesPilot) return;
+  unit.carriesPilot = false;
+  const st = G.missionState;
+  st.pilotFound = false;
+  st.pilotCol = unit.col;
+  st.pilotRow = unit.row;
+  log(t("log.pilot_dropped", { name: unit.name }), "combat");
+}
+
 /**
  * Function to check the victory conditions for every type of mission
  */

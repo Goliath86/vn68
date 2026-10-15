@@ -429,6 +429,7 @@ function tickBleeding() {
     );
     if (u.hp <= 0) {
       u.alive = false;
+      dropPilot(u);
       u.bleeding = false;
       statAdd("bledOut");
       sfx("death");
@@ -751,6 +752,7 @@ function triggerTrap(unit, trap) {
   if (unit.hp <= 0) {
     unit.hp = 0;
     unit.alive = false;
+    dropPilot(unit);
     sfx("death");
     log(t("log.unit_eliminated", { name: unit.name }), "combat");
     addFX(

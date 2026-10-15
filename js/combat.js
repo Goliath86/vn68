@@ -193,6 +193,7 @@ function applyAttackDamage(attacker, target, dmg, targetIsUS, weapon, impact) {
   }
   target.hp = 0;
   target.alive = false;
+  dropPilot(target);
   sfxAt("death", impact);
   log(t("log.unit_eliminated", { name: target.name }), "combat");
   if (!targetIsUS) {
@@ -501,6 +502,7 @@ async function resolveAoeCombat(
       if (def.hp <= 0) {
         def.hp = 0;
         def.alive = false;
+        dropPilot(def);
         sfx("death");
         log(t("log.unit_eliminated", { name: def.name }), "combat");
         if (!isUS && !isEnemyAttacking && G.missionType === "search_destroy")

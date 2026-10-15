@@ -236,6 +236,8 @@ The objective panel reflects the current state:
 - **Found — bring to LZ** — a soldier is escorting him
 - **EXTRACTED** — mission complete
 
+If the soldier escorting the pilot is killed, the pilot **stays on the ground** on that tile (the panel goes back to "To locate"): another soldier can reach him and resume the escort.
+
 If Fog of War is **disabled**, the pilot's position is visible from the start (classic behavior).
 
 ---

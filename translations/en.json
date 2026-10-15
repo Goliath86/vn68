@@ -315,6 +315,7 @@
     "unit_eliminated": "{name} ELIMINATED",
     "pilot_found": "{name} found the PILOT! Bring him to extraction.",
     "pilot_extracted": "PILOT EXTRACTED! Mission complete!",
+    "pilot_dropped": "{name} is down: the PILOT is on the ground. Reach him with another soldier.",
     "zone_scouted": "Zone {label} scouted!",
     "objective_held": "Objective \"{label}\" held for {held}/{total} turns",
     "player_turn_end": "- End of player turn -",

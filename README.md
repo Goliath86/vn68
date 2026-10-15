@@ -235,6 +235,8 @@ Il pannello obiettivo riflette lo stato corrente:
 - **Trovato — porta all'LZ** — un soldato lo sta scortando
 - **ESTRATTO** — missione completata
 
+Se il soldato che scorta il pilota viene eliminato, il pilota **resta a terra** sul suo tile (il pannello torna a "Da localizzare"): un altro soldato può raggiungerlo e riprendere la scorta.
+
 Se la Fog of War è **disattivata**, la posizione del pilota è visibile fin dall'inizio (comportamento identico al classico).
 
 ---

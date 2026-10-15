@@ -320,6 +320,7 @@
     "unit_eliminated": "{name} ELIMINATO",
     "pilot_found": "{name} ha trovato il PILOTA! Portalo all'estrazione.",
     "pilot_extracted": "PILOTA ESTRATTO! Missione completata!",
+    "pilot_dropped": "{name} è caduto: il PILOTA è rimasto a terra. Raggiungilo con un altro soldato.",
     "zone_scouted": "Zona {label} rilevata!",
     "objective_held": "Obiettivo \"{label}\" tenuto per {held}/{total} turni",
     "player_turn_end": "- Fine turno giocatore -",
