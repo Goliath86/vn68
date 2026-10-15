@@ -29,6 +29,7 @@ missions/             una mappa = un JSON + asset opzionali (immagine, musica, s
 missions/catalog.json registro delle mappe disponibili nel menu
 translations/it.json, translations/en.json   stringhe UI (chiavi usate da js/i18n.js)
 assets/               sprite PNG unità, SFX MP3, musica menu
+tools/sim/            simulatore headless di partite (Node, solo sviluppo): env.js carica gli script di index.html in un contesto vm con DOM finto, bot.js gioca la squadra, run.js lancia N partite e confronta varianti A/B (`node tools/sim/run.js --help`)
 ```
 
 ### Nessun modulo ES / nessun bundler
