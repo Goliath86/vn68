@@ -6,6 +6,7 @@
   "rows": 8,
   "sounds": { "move": "assets/footsteps_jungle.mp3" },
   "ambient": "missions/rung_sat_ambient.mp3",
+  "bleedStopChance": 0,
 
   "grid": [
     "JJJJJJJJJJJJ",

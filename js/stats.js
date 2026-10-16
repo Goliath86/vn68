@@ -19,7 +19,7 @@ function newMissionStats() {
     roundsFired: 0, reloads: 0,
     // Ferite e cure
     bleedStarts: 0, bleedDmg: 0, bledOut: 0, firstAid: 0, medicHeal: 0,
-    bleedStopped: 0, traps: 0, trapDmg: 0,
+    bleedStopped: 0, bleedSelfStop: 0, traps: 0, trapDmg: 0,
     // Furtività
     noiseAlerts: 0, vcNoiseAlerts: 0, spotted: 0, unnoticed: 0,
     // Guerriglia VC (guerrilla.js)
@@ -176,7 +176,7 @@ function summaryRows(s, agg) {
       [t("stats.uses_left"), s.usesLeft],
     ]],
     [t("stats.sec_wounds"), [
-      [t("stats.bleeding"), `${s.bleedStarts} · −${s.bleedDmg} HP · ${t("stats.bled_out")} ${s.bledOut}`],
+      [t("stats.bleeding"), `${s.bleedStarts} · −${s.bleedDmg} HP · ${t("stats.bleed_self_stop")} ${s.bleedSelfStop ?? 0} · ${t("stats.bled_out")} ${s.bledOut}`],
       [t("stats.first_aid"), s.firstAid],
       [t("stats.medic"), `+${s.medicHeal} HP · ${t("stats.bleed_stopped")} ${s.bleedStopped}`],
       [t("stats.traps"), `${s.traps} · −${s.trapDmg} HP`],

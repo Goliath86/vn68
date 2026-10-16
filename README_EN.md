@@ -165,7 +165,7 @@ The soldier stays shaken until the **Medic** heals them back above the 30% HP th
 
 The ATK penalty applies to attacks and overwatch (ATK never drops below 1); the movement surcharge stacks with the stance one.
 
-**Bleeding (🩸):** every hit that wounds a soldier may cause bleeding, with a chance that grows with damage (1 damage 35%, 2 → 50%, 3 → 65%, 4+ → 80%); punji traps always cause it. A bleeding soldier loses **1 HP at the start of every turn** and can bleed to death. A pulsing blood drop appears on the counter. **Only the Medic** stops the bleeding, by healing an adjacent teammate (they can't stop their own).
+**Bleeding (🩸):** every hit that wounds a soldier may cause bleeding, with a chance that grows with damage (1 damage 35%, 2 → 50%, 3 → 65%, 4+ → 80%); punji traps always cause it. A bleeding soldier loses **1 HP at the start of every turn** and can bleed to death. A pulsing blood drop appears on the counter. At the start of each turn the bleeding has a **1 in 3 chance of stopping on its own** (no HP lost that turn); to be sure you need the **Medic**, who stops it by healing an adjacent teammate (they can't stop their own).
 
 **First aid (🩹, key H):** once per mission every soldier, medic included, can patch themselves up: **+2 HP** (also lifting panic if back above 30%), but it **doesn't stop the bleeding** and uses **all remaining AP** (at least 1 AP needed): the soldier can't do anything else that turn.
 
@@ -847,6 +847,7 @@ Full structure with all fields:
 | `enemies` | array | (optional) VC at fixed positions instead of random spawning: `[{ "cls", "col", "row", "facing"?, "alerted"?, "hold"?, "hp"? }]`; `hold` = a sentry that doesn't patrol until alerted |
 | `grid` | array | Each row can also be a string (`"JJCCT..."`) instead of an array of characters |
 | `nightVisionPenalty` | number | Soldiers' vision reduction at night; default 1 |
+| `bleedStopChance` | number | Chance (0–1) that bleeding stops on its own at turn start; default 1/3, `0` = only the Medic stops it |
 | `vcNightPenalty` | number | Night reduction of VC alert distance and sight (base 5, minimum 2); default 2 |
 
 ### Tile Type Fields

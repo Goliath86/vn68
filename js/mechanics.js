@@ -335,13 +335,19 @@ function nearestDetectedUnit(enemy) {
 // Ferito (HP ≤ 60%): −1 ATK e +1 AP per ogni azione di movimento.
 // Grave (HP < 30%, coincide con "scosso"): −2 ATK, stesso sovraccosto.
 // Ogni colpo che fa danno può causare un'emorragia (unit.bleeding): a inizio
-// turno l'unità perde 1 HP e può morire dissanguata. Solo il medico la ferma
-// (sugli altri). Primo soccorso: una volta per missione ogni soldato può
-// medicarsi da solo (+2 HP, non ferma l'emorragia) consumando tutti gli AP.
+// turno l'unità perde 1 HP e può morire dissanguata, a meno che l'emorragia
+// non si fermi da sola (BLEED_STOP_CHANCE, campo mappa `bleedStopChance`).
+// Il medico la ferma sempre (sugli altri). Primo soccorso: una volta per
+// missione ogni soldato può medicarsi da solo (+2 HP, non ferma l'emorragia)
+// consumando tutti gli AP.
 const WOUND_THRESHOLD = 0.6;
 const SEVERE_WOUND_THRESHOLD = 0.3;
 const WOUND_MOVE_EXTRA = 1;
 const BLEED_PER_TURN = 1;
+// Probabilità che un'emorragia si fermi da sola a inizio turno (senza danno
+// in quel turno). Senza, chi era lontano dal medico moriva quasi sempre: un
+// terzo dei caduti morti dissanguati (simulatore, 2026-10-16)
+const BLEED_STOP_CHANCE = 1 / 3;
 const FIRST_AID_HEAL = 2;
 
 // Probabilità di emorragia in base al danno: 1→35%, 2→50%, 3→65%, 4+→80%
@@ -426,10 +432,17 @@ function maybeStartBleeding(unit, dmg, alwaysBleed = false) {
   log(t("log.bleeding_start", { name: unit.name }), "combat");
 }
 
-// A inizio turno giocatore le unità sanguinanti perdono HP
+// A inizio turno giocatore le unità sanguinanti perdono HP (o l'emorragia si ferma)
 function tickBleeding() {
+  const stopChance = G.mapData?.bleedStopChance ?? BLEED_STOP_CHANCE;
   for (const u of G.units) {
     if (!u.alive || !u.bleeding) continue;
+    if (Math.random() < stopChance) {
+      u.bleeding = false;
+      statAdd("bleedSelfStop");
+      log(t("log.bleeding_self_stop", { name: u.name }), "success");
+      continue;
+    }
     statAdd("bleedDmg", Math.min(u.hp, BLEED_PER_TURN));
     u.hp = Math.max(0, u.hp - BLEED_PER_TURN);
     addFX(

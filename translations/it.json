@@ -102,6 +102,7 @@
     "sec_wounds": "Ferite e cure",
     "bleeding": "Emorragie",
     "bled_out": "morti",
+    "bleed_self_stop": "fermate da sole",
     "first_aid": "Primo soccorso",
     "medic": "Medico",
     "bleed_stopped": "emorragie fermate",
@@ -228,7 +229,7 @@
       "out_of_ammo": "✕ Munizioni esaurite",
       "wounded": "🤕 Ferito: −{atk} ATK, movimento +{ap} AP",
       "wounded_severe": "🤕 Ferito gravemente: −{atk} ATK, movimento +{ap} AP",
-      "bleeding": "🩸 Sanguina: −{n} HP a inizio turno (serve il medico)"
+      "bleeding": "🩸 Sanguina: −{n} HP a inizio turno (il medico la ferma; a volte si ferma da sola)"
     },
     "chips": {
       "special_used": "usata",
@@ -385,6 +386,7 @@
     "stance_change": "{name}: postura {stance}",
     "bleeding_start": "🩸 {name} è ferito e sanguina!",
     "bleeding_tick": "🩸 {name} perde sangue: −{dmg} HP ({hp}/{max})",
+    "bleeding_self_stop": "🩹 L'emorragia di {name} si è fermata",
     "bled_out": "🩸 {name} è morto dissanguato",
     "bleeding_stopped": "🩹 {name} ferma l'emorragia di {target}",
     "first_aid": "🩹 {name} si medica da solo: +{healed} HP ({current}/{max})",

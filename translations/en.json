@@ -102,6 +102,7 @@
     "sec_wounds": "Wounds and care",
     "bleeding": "Bleeding",
     "bled_out": "deaths",
+    "bleed_self_stop": "stopped on their own",
     "first_aid": "First aid",
     "medic": "Medic",
     "bleed_stopped": "bleeding stopped",
@@ -223,7 +224,7 @@
       "out_of_ammo": "✕ Out of ammo",
       "wounded": "🤕 Wounded: −{atk} ATK, movement +{ap} AP",
       "wounded_severe": "🤕 Badly wounded: −{atk} ATK, movement +{ap} AP",
-      "bleeding": "🩸 Bleeding: −{n} HP at turn start (needs the medic)"
+      "bleeding": "🩸 Bleeding: −{n} HP at turn start (the medic stops it; sometimes it stops on its own)"
     },
     "chips": {
       "special_used": "used",
@@ -380,6 +381,7 @@
     "stance_change": "{name}: stance {stance}",
     "bleeding_start": "🩸 {name} is wounded and bleeding!",
     "bleeding_tick": "🩸 {name} loses blood: −{dmg} HP ({hp}/{max})",
+    "bleeding_self_stop": "🩹 {name}'s bleeding has stopped",
     "bled_out": "🩸 {name} bled to death",
     "bleeding_stopped": "🩹 {name} stops {target}'s bleeding",
     "first_aid": "🩹 {name} patches themselves up: +{healed} HP ({current}/{max})",

@@ -164,7 +164,7 @@ Il soldato rimane scosso finché il **medico** non lo cura riportandolo sopra la
 
 Il malus ATK vale per attacchi e overwatch (l'ATK non scende mai sotto 1); il sovraccosto di movimento si somma a quello della postura.
 
-**Emorragia (🩸):** ogni colpo che ferisce un soldato può causare un'emorragia, con probabilità crescente col danno (1 danno 35%, 2 → 50%, 3 → 65%, 4+ → 80%); le punji la causano sempre. Un soldato che sanguina perde **1 HP all'inizio di ogni turno** e può morire dissanguato. Sulla pedina compare una goccia di sangue pulsante. **Solo il medico** ferma l'emorragia, curando un compagno adiacente (non può fermare la propria).
+**Emorragia (🩸):** ogni colpo che ferisce un soldato può causare un'emorragia, con probabilità crescente col danno (1 danno 35%, 2 → 50%, 3 → 65%, 4+ → 80%); le punji la causano sempre. Un soldato che sanguina perde **1 HP all'inizio di ogni turno** e può morire dissanguato. Sulla pedina compare una goccia di sangue pulsante. A inizio turno l'emorragia ha **1 probabilità su 3 di fermarsi da sola** (in quel turno non toglie HP); per esserne sicuri serve il **medico**, che la ferma curando un compagno adiacente (non può fermare la propria).
 
 **Primo soccorso (🩹, tasto H):** una sola volta per missione ogni soldato, medico compreso, può medicarsi da solo: **+2 HP** (anche fuori dal panico se supera il 30%), ma **non ferma l'emorragia** e consuma **tutti gli AP rimasti** (serve almeno 1 AP): per quel turno il soldato non può fare altro.
 
@@ -846,6 +846,7 @@ Struttura completa con tutti i campi:
 | `enemies` | array | (opzionale) VC in posizione fissa al posto dello spawn casuale: `[{ "cls", "col", "row", "facing"?, "alerted"?, "hold"?, "hp"? }]`; `hold` = sentinella che non pattuglia finché non è allertata |
 | `grid` | array | Ogni riga può essere anche una stringa (`"JJCCT..."`) invece di un array di caratteri |
 | `nightVisionPenalty` | number | Riduzione del raggio visivo dei soldati di notte; default 1 |
+| `bleedStopChance` | number | Probabilità (0–1) che un'emorragia si fermi da sola a inizio turno; default 1/3, `0` = solo il medico la ferma |
 | `vcNightPenalty` | number | Riduzione di notte della distanza d'allerta e della vista dei VC (base 5, minimo 2); default 2 |
 
 ### Campi del tile type
