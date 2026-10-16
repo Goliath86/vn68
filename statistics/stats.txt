@@ -52,3 +52,59 @@ Precisione VC: 100% (attesa 84%)
 Spari dall'agguato medi: 0.0
 
 raw: {"date":"2026-10-11 14:28","map":"Settore 31716","mission":"search_destroy","night":false,"win":true,"turns":9,"squad":["assault","sniper","engineer","medic"],"survivors":4,"kia":0,"vcKilled":5,"vcTotal":10,"hpLeftPct":100,"spareMags":18,"emptyGuns":0,"usesLeft":4,"usShots":6,"usHits":6,"usExpHits":5.62962962962963,"usDmg":46,"usFlank":3,"usRear":0,"meleeKills":0,"owShots":0,"owHits":0,"suppressions":0,"aoeUs":0,"artillery":0,"friendlyFire":0,"vcShots":1,"vcHits":1,"vcExpHits":0.8379629629629629,"vcDmg":1,"vcFlank":0,"vcRear":0,"vcAmbushFire":0,"aoeVc":0,"roundsFired":6,"reloads":2,"bleedStarts":1,"bleedDmg":0,"bledOut":0,"firstAid":0,"medicHeal":3,"bleedStopped":1,"traps":1,"trapDmg":2,"noiseAlerts":0,"vcNoiseAlerts":2,"spotted":0,"unnoticed":0,"tunnelDives":1,"tunnelEmerges":1,"tunnelsSealed":1,"trapsPlanted":3}
+
+VIETNAM '68 — Settore 69222 · search_destroy · LOSS · 2026-10-16 18:41
+
+[Missione]
+Turni: 16
+Sopravvissuti: 0/4
+VC eliminati: 2/22
+HP rimasti (sopravvissuti): —
+
+[Fuoco della squadra]
+Colpi a segno: 6/6 (100% · attesa 75%)
+Danni inflitti: 22
+Dal fianco / alle spalle: 0 / 0
+Uccisioni col coltello: 0
+Overwatch a segno: 0/0
+Soppressioni: 0
+Esplosivi: 0 · artiglieria 0
+Fuoco amico (HP): 0
+
+[Fuoco dei VC]
+Colpi a segno: 8/9 (89% · attesa 90%)
+Danni subiti: 26
+Dal fianco / alle spalle: 2 / 0
+Aggiramenti (avviati / arrivati): 6 / 3
+Spari dall'agguato: 1
+RPG lanciati: 0
+
+[Munizioni]
+Colpi sparati: 6
+Ricariche: 0
+Caricatori di riserva rimasti: 0
+Granate/fumogeni/radio rimasti: 0
+
+[Ferite e cure]
+Emorragie: 4 · −10 HP · morti 4
+Primo soccorso: 1
+Medico: +0 HP · emorragie fermate 0
+Trappole: 0 · −0 HP
+
+[Furtività]
+VC allertati dal rumore: 0 · dagli spari VC 4
+Avvistato / passato inosservato: 0 / 0
+
+[Guerriglia VC]
+Tunnel: entrate / uscite: 0 / 0
+Tunnel sigillati: 0
+Trappole piazzate dai VC: 3
+
+[Ultime 3 missioni]
+Vittorie: 1/3
+Turni medi · caduti medi: 11.7 · 2.7
+Precisione squadra: 100% (attesa 85%)
+Precisione VC: 93% (attesa 92%)
+Spari dall'agguato medi: 0.3
+
+raw: {"date":"2026-10-16 18:41","map":"Settore 69222","mission":"search_destroy","night":false,"win":false,"turns":16,"squad":["assault","sniper","engineer","medic"],"survivors":0,"kia":4,"vcKilled":2,"vcTotal":22,"hpLeftPct":null,"spareMags":0,"emptyGuns":0,"usesLeft":0,"usShots":6,"usHits":6,"usExpHits":4.527777777777778,"usDmg":22,"usFlank":0,"usRear":0,"meleeKills":0,"owShots":0,"owHits":0,"suppressions":0,"aoeUs":0,"artillery":0,"friendlyFire":0,"vcShots":9,"vcHits":8,"vcExpHits":8.125,"vcDmg":26,"vcFlank":2,"vcRear":0,"vcAmbushFire":1,"aoeVc":0,"vcFlankers":6,"vcFlankArrived":3,"roundsFired":6,"reloads":0,"bleedStarts":4,"bleedDmg":10,"bledOut":4,"firstAid":1,"medicHeal":0,"bleedStopped":0,"traps":0,"trapDmg":0,"noiseAlerts":0,"vcNoiseAlerts":4,"spotted":0,"unnoticed":0,"tunnelDives":0,"tunnelEmerges":0,"tunnelsSealed":0,"trapsPlanted":3}
