@@ -349,11 +349,11 @@
       "minKills": 4
     },
     "rescue_pilot": {
-      "pilotCol": 10,
-      "pilotRow": 2,
+      "pilotCol": 6,
+      "pilotRow": 3,
       "extractCol": 0,
       "extractRow": 5,
-      "tileAnimations": [{ "col": 10, "row": 2, "type": "smoke" }]
+      "tileAnimations": [{ "col": 6, "row": 3, "type": "smoke" }]
     },
     "capture_objective": [
       { "col": 9, "row": 5, "label": "Postazione Radio", "holdTurns": 2 }

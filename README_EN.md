@@ -331,7 +331,7 @@ Practical examples:
 - **Smoke grenades:** the Assault carries one smoke grenade (×1) creating a radius-1 screen for 2 turns. Smoke blocks line of sight: anyone inside sees and is seen only from distance 1. This applies to VC as well, who cannot fire through smoke.
 - **VC line of sight:** VC follow the same sight rules as soldiers. Their sight is their alert distance (5, 3 at night); every intermediate tile of vegetation or rubble reduces it by 1, walls, bunkers and buildings block it, and so does smoke. A patrolling VC gets alerted only if it sees a soldier; an alerted VC fires only at someone in range **and** in sight, otherwise it advances to get a line of fire (it still knows where non-concealed soldiers are). This also applies to the VC sniper, who looks for positions with a view of the target, and to the random ambush. At distance 1 there is always line of sight.
 - **Artillery support:** the Engineer carries the radio (one per squad, 1 use). The strike is called like an area weapon (range 10) but **lands at the start of the next turn**, after the VC move, on anyone in the area — US soldiers included, and VC hidden in the fog too. The incoming impact area is marked in red on the map.
-- **Night missions:** enabled from the briefing (or forced by the map with `"night": true`). Each soldier's vision drops by 2 (minimum 1) and VC notice the squad from 3 tiles instead of 5. Since firing requires line of sight, at night even the Sniper can only hit within its reduced vision.
+- **Night missions:** enabled from the briefing (or forced by the map with `"night": true`). Each soldier's vision drops by 1 (minimum 1), while the VC, who know the terrain, notice the squad from 3 tiles instead of 5. Since firing requires line of sight, at night even the Sniper can only hit within its reduced vision.
 - **VC morale:** a VC below 30% HP (once per unit) and every VC within 4 tiles of a fallen commander become **routed** for 2 activations: they fall back away from the squad looking for cover and do not attack (white flag ⚐ on the map).
 
 ---
@@ -370,7 +370,7 @@ On bigger maps, traps, obstacles and bunkers also grow in proportion. Reinforcem
 - clearings, swamps, a village, bunkers and demolishable obstacles;
 - the squad starting on a **random edge** (north, south, east or west), objectives and VC toward the opposite side, ambushes on the flanks of the start;
 - there are always at least **two separate routes** to the village, the LZ and the radio post, so you are never stuck in a single choke point;
-- objectives for all 4 mission types (LZ with the pilot, village and bunker to scout, radio post to hold).
+- objectives for all 4 mission types (LZ, village and bunker to scout, radio post to hold; the pilot has moved away from the LZ and waits about 60% of the way from the extraction point, marked by smoke).
 
 **Uncharted City** — a city district during the Tet Offensive:
 
@@ -384,7 +384,7 @@ On bigger maps, traps, obstacles and bunkers also grow in proportion. Reinforcem
 - on the side opposite the start, a **walled citadel** set against the edge, in a variable position (even in a corner). It has a main gate on the south or on a flank, a **second entrance** on another side and 1–3 **breachable walls** (engineer breach). Inside, pagodas and gardens surround the **NVA Command**;
 - the squad starting on a **random edge**, VC throughout the district and inside the citadel, ambushes on the flanks of the start;
 - there are always at least **two separate routes** to the command, the market and the wreck;
-- objectives for all 4 mission types: pilot at the wreck outside the walls; bridge (or pagoda, if there are no bridges), market and command to scout; command to hold.
+- objectives for all 4 mission types: pilot about 60% of the way from the extraction point to the wreck (outside the walls), marked by smoke; bridge (or pagoda, if there are no bridges), market and command to scout; command to hold.
 
 The generator guarantees that every passable tile can be reached from the start (the citadel always has a gate: an engineer is not required). The number in the name (**Sector 48213**, **District 48213**) is the seed: the same seed always produces the same map. In the briefing, the **🎲 Regenerate map** button creates a new one before you start.
 
@@ -777,7 +777,8 @@ Full structure with all fields:
   "trapZones": [{"colMin": 4, "colMax": 12, "rowMin": 0, "rowMax": 11}],
   "traps": [{"col": 6, "row": 5, "type": "mine"}],
   "night": false,
-  "nightVisionPenalty": 2,
+  "nightVisionPenalty": 1,
+  "vcNightPenalty": 2,
 
   "supportedMissions": ["recon", "search_destroy", "rescue_pilot", "capture_objective"],
 
@@ -845,7 +846,8 @@ Full structure with all fields:
 | `squad` | array | (optional) Fixed squad instead of the briefing choice: `[{ "cls", "col", "row", "facing"?, "hp"?, "bleeding"?, "stance"? }]` |
 | `enemies` | array | (optional) VC at fixed positions instead of random spawning: `[{ "cls", "col", "row", "facing"?, "alerted"?, "hold"?, "hp"? }]`; `hold` = a sentry that doesn't patrol until alerted |
 | `grid` | array | Each row can also be a string (`"JJCCT..."`) instead of an array of characters |
-| `nightVisionPenalty` | number | Vision reduction at night; default 2 |
+| `nightVisionPenalty` | number | Soldiers' vision reduction at night; default 1 |
+| `vcNightPenalty` | number | Night reduction of VC alert distance and sight (base 5, minimum 2); default 2 |
 
 ### Tile Type Fields
 

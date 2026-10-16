@@ -145,7 +145,7 @@
     },
     "rescue_pilot": {
       "pilotCol": 7,
-      "pilotRow": 2,
+      "pilotRow": 5,
       "extractCol": 7,
       "extractRow": 11
     },

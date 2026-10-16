@@ -127,6 +127,30 @@ function _corridorCount(grid, tileTypes, from, to, max = 3) {
   return count;
 }
 
+// Recupero pilota: il pilota si è allontanato dal relitto verso le linee
+// amiche e aspetta al PILOT_ROUTE_SHARE del tragitto estrazione→relitto (sul
+// tile percorribile più vicino, non sull'acqua). Col pilota in fondo alla
+// mappa la missione era quasi impossibile oltre la mappa piccola (simulatore).
+// RNG proprio: il resto della mappa resta identico a parità di seed.
+const PILOT_ROUTE_SHARE = 0.6;
+
+function _pilotSite(grid, tileTypes, from, wreck, seed, isWater) {
+  const rng = _mulberry32(seed * 107 + 7);
+  const tc = from.col + (wreck.col - from.col) * PILOT_ROUTE_SHARE;
+  const tr = from.row + (wreck.row - from.row) * PILOT_ROUTE_SHARE;
+  let best = [];
+  let bestD = Infinity;
+  for (let r = 0; r < grid.length; r++) {
+    for (let c = 0; c < grid[0].length; c++) {
+      if (tileTypes[grid[r][c]].impassable || isWater(c, r)) continue;
+      const d = Math.round(Math.abs(c - tc) + Math.abs(r - tr));
+      if (d < bestD) [best, bestD] = [[], d];
+      if (d === bestD) best.push({ col: c, row: r });
+    }
+  }
+  return best.length ? best[Math.floor(rng() * best.length)] : wreck;
+}
+
 // Scelta pesata da una tabella [[valore, peso], ...]
 function _weighted(rng, table) {
   let x = rng();
@@ -573,6 +597,7 @@ function _buildJungleMap(seed, attempt, size) {
   }
   const lz = toMap(lzAt);
   const ex = toMap(extract);
+  const pilot = toMap(_pilotSite(grid, JUNGLE_TILE_TYPES, extract, lzAt, seed, isWater));
 
   const { it, en } = _procTranslations(JUNGLE_TEXT, seed, ["lz", "village", "bunker"], "radio", layout);
 
@@ -605,11 +630,11 @@ function _buildJungleMap(seed, attempt, size) {
       ],
       search_destroy: { eliminateAll: false, minKills: 4 + 2 * step },
       rescue_pilot: {
-        pilotCol: lz.col,
-        pilotRow: lz.row,
+        pilotCol: pilot.col,
+        pilotRow: pilot.row,
         extractCol: ex.col,
         extractRow: ex.row,
-        tileAnimations: [{ col: lz.col, row: lz.row, type: "smoke" }],
+        tileAnimations: [{ col: pilot.col, row: pilot.row, type: "smoke" }],
       },
       capture_objective: [{ ...toMap(radioAt), label: it.objectives.capture_objective[0].label, holdTurns: 2 }],
     },
@@ -1018,6 +1043,7 @@ function _buildUrbanMap(seed, attempt, size) {
   const hq = toMap(hqAt);
   const crash = toMap(crashAt);
   const ex = toMap(extract);
+  const pilot = toMap(_pilotSite(grid, URBAN_TILE_TYPES, extract, crashAt, seed, isWater));
   const reconFirst = bridges.length ? toMap(rpick(bridges)) : toMap(pagodaAt);
 
   const { it, en } = _procTranslations(
@@ -1056,11 +1082,11 @@ function _buildUrbanMap(seed, attempt, size) {
       ],
       search_destroy: { eliminateAll: false, minKills: 5 + 2 * step },
       rescue_pilot: {
-        pilotCol: crash.col,
-        pilotRow: crash.row,
+        pilotCol: pilot.col,
+        pilotRow: pilot.row,
         extractCol: ex.col,
         extractRow: ex.row,
-        tileAnimations: [{ col: crash.col, row: crash.row, type: "smoke" }],
+        tileAnimations: [{ col: pilot.col, row: pilot.row, type: "smoke" }],
       },
       capture_objective: [{ ...hq, label: it.objectives.capture_objective[0].label, holdTurns: 2 }],
     },

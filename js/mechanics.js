@@ -139,17 +139,27 @@ function makeVcNoise(shooter, target, weapon) {
 }
 
 // ── MISSIONI NOTTURNE ──────────────────────────────────────────────────
-const NIGHT_VISION_PENALTY = 2;
+// Penalità separate: i VC conoscono il terreno e sparano corto (gittata 2),
+// quindi la vista ridotta li limita poco; con 2 anche per i soldati la
+// squadra restava cieca (simulatore: 3–8% di vittorie contro 18–24% di giorno)
+const NIGHT_VISION_PENALTY = 1;
+const VC_NIGHT_PENALTY = 2;
 const VC_ALERT_DISTANCE = 5;
 
 function isNight() {
   return !!(G.missionState?.night || G.mapData?.night);
 }
 
+// Riduzione notturna della visione dei soldati
 function nightPenalty() {
   return isNight()
     ? (G.mapData?.nightVisionPenalty ?? NIGHT_VISION_PENALTY)
     : 0;
+}
+
+// Riduzione notturna di allerta e vista dei VC
+function vcNightPenalty() {
+  return isNight() ? (G.mapData?.vcNightPenalty ?? VC_NIGHT_PENALTY) : 0;
 }
 
 // Raggio visivo di un'unità US (ridotto di notte e dalla postura, minimo 1)
@@ -175,7 +185,7 @@ function unitVisionToward(unit, to, facing = unit.facing) {
 
 // Distanza a cui un VC in pattuglia si accorge della squadra
 function vcAlertDistance() {
-  return Math.max(2, VC_ALERT_DISTANCE - nightPenalty());
+  return Math.max(2, VC_ALERT_DISTANCE - vcNightPenalty());
 }
 
 // Come sopra, ma secondo il lato da cui arriva l'unità US: piena davanti,

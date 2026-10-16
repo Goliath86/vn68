@@ -330,7 +330,7 @@ Esempi pratici:
 - **Fumogeni:** l'Assalto ha un fumogeno (×1) che crea una cortina di raggio 1 per 2 turni. Il fumo blocca la linea di vista: chi è dentro vede ed è visto solo da distanza 1. Vale anche per i VC, che non possono sparare attraverso il fumo.
 - **Linea di vista dei VC:** i VC seguono le stesse regole di vista dei soldati. La loro vista è la distanza d'allerta (5, di notte 3); ogni tile intermedio di vegetazione o macerie la riduce di 1, muri, bunker ed edifici la bloccano, il fumo pure. Un VC in pattuglia si allerta solo se vede un soldato; un VC in allerta spara solo a chi è in gittata **e** in vista, altrimenti avanza per prendere la linea di tiro (sa comunque dove sono i soldati non occultati). Vale anche per il cecchino VC, che cerca posizioni da cui vede il bersaglio, e per l'imboscata casuale. A distanza 1 la vista c'è sempre.
 - **Supporto d'artiglieria:** il geniere porta la radio (una sola per squadra, 1 uso). Il colpo si richiede come un'arma ad area (gittata 10) ma **cade all'inizio del turno successivo**, dopo la mossa dei VC, su chiunque si trovi nell'area — soldati US compresi, e anche i VC nascosti nella nebbia. L'area d'impatto in arrivo è segnata in rosso sulla mappa.
-- **Missioni notturne:** attivabili dal briefing (o imposte dalla mappa con `"night": true`). Il raggio visivo di ogni soldato cala di 2 (minimo 1) e i VC si accorgono della squadra da 3 caselle invece di 5. Poiché per sparare serve la linea di vista, di notte anche il cecchino colpisce solo entro la propria visione ridotta.
+- **Missioni notturne:** attivabili dal briefing (o imposte dalla mappa con `"night": true`). Il raggio visivo di ogni soldato cala di 1 (minimo 1) e i VC, che conoscono il terreno, si accorgono della squadra da 3 caselle invece di 5. Poiché per sparare serve la linea di vista, di notte anche il cecchino colpisce solo entro la propria visione ridotta.
 - **Morale VC:** un VC sotto il 30% degli HP (una volta per unità) e tutti i VC entro 4 caselle da un comandante caduto vanno **in rotta** per 2 attivazioni: ripiegano lontano dalla squadra cercando copertura e non attaccano (bandiera bianca ⚐ sulla mappa).
 
 ---
@@ -369,7 +369,7 @@ Sulle mappe più grandi crescono in proporzione anche trappole, ostacoli e bunke
 - radure, paludi, un villaggio, bunker e ostacoli demolibili;
 - partenza della squadra su un **bordo casuale** (nord, sud, est o ovest), obiettivi e VC verso il lato opposto, imboscate ai fianchi della partenza;
 - verso villaggio, LZ e postazione radio ci sono sempre almeno **due percorsi distinti**: non si resta mai bloccati in un unico imbuto;
-- obiettivi per tutti e 4 i tipi di missione (LZ col pilota, villaggio e bunker da ricognire, postazione radio da tenere).
+- obiettivi per tutti e 4 i tipi di missione (LZ, villaggio e bunker da ricognire, postazione radio da tenere; il pilota si è allontanato dalla LZ e aspetta a circa il 60% della strada dall'estrazione, segnalato dal fumo).
 
 **Città Ignota** — distretto cittadino durante l'offensiva del Têt:
 
@@ -383,7 +383,7 @@ Sulle mappe più grandi crescono in proporzione anche trappole, ostacoli e bunke
 - dal lato opposto alla partenza, una **cittadella murata** addossata al bordo, in posizione variabile (anche d'angolo). Ha una porta principale a sud o su un fianco, un **secondo ingresso** su un altro lato e 1–3 **muri demolibili** (breccia del geniere). Dentro, pagode e giardini attorno al **Comando NVA**;
 - partenza della squadra su un **bordo casuale**, VC in tutto il quartiere e dentro la cittadella, imboscate ai fianchi della partenza;
 - verso comando, mercato e relitto ci sono sempre almeno **due percorsi distinti**;
-- obiettivi per tutti e 4 i tipi di missione: pilota al relitto fuori dalle mura; ponte (o pagoda, se non ci sono ponti), mercato e comando da ricognire; comando da tenere.
+- obiettivi per tutti e 4 i tipi di missione: pilota a circa il 60% della strada tra l'estrazione e il relitto (fuori dalle mura), segnalato dal fumo; ponte (o pagoda, se non ci sono ponti), mercato e comando da ricognire; comando da tenere.
 
 Il generatore garantisce che ogni tile percorribile sia raggiungibile dalla partenza (la cittadella ha sempre una porta: il geniere non è obbligatorio). Il numero nel nome (**Settore 48213**, **Quartiere 48213**) è il seed: lo stesso seed produce sempre la stessa mappa. Nel briefing il bottone **🎲 Rigenera mappa** ne crea una nuova prima di iniziare.
 
@@ -776,7 +776,8 @@ Struttura completa con tutti i campi:
   "trapZones": [{"colMin": 4, "colMax": 12, "rowMin": 0, "rowMax": 11}],
   "traps": [{"col": 6, "row": 5, "type": "mine"}],
   "night": false,
-  "nightVisionPenalty": 2,
+  "nightVisionPenalty": 1,
+  "vcNightPenalty": 2,
 
   "supportedMissions": ["recon", "search_destroy", "rescue_pilot", "capture_objective"],
 
@@ -844,7 +845,8 @@ Struttura completa con tutti i campi:
 | `squad` | array | (opzionale) Squadra fissa al posto della scelta nel briefing: `[{ "cls", "col", "row", "facing"?, "hp"?, "bleeding"?, "stance"? }]` |
 | `enemies` | array | (opzionale) VC in posizione fissa al posto dello spawn casuale: `[{ "cls", "col", "row", "facing"?, "alerted"?, "hold"?, "hp"? }]`; `hold` = sentinella che non pattuglia finché non è allertata |
 | `grid` | array | Ogni riga può essere anche una stringa (`"JJCCT..."`) invece di un array di caratteri |
-| `nightVisionPenalty` | number | Riduzione del raggio visivo di notte; default 2 |
+| `nightVisionPenalty` | number | Riduzione del raggio visivo dei soldati di notte; default 1 |
+| `vcNightPenalty` | number | Riduzione di notte della distanza d'allerta e della vista dei VC (base 5, minimo 2); default 2 |
 
 ### Campi del tile type
 
