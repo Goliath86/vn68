@@ -647,6 +647,7 @@ const VC_TACTICS = {
   flankExposure: 3, // costo extra (AP) di un tile visto dalla squadra
   flankPathWeight: 0.4, // per AP di percorso fino al punto di raccolta
   flankApproachWeight: 1.5, // per AP di distanza residua durante l'avvicinamento
+  flankRallyKeep: 3, // punto di raccolta vicino a quello del turno prima (stabilità)
   flankPincerPenalty: 4, // due aggiratori sullo stesso lato del bersaglio
   flankMaxTurns: 6, // dopo tanti turni senza arrivare rinuncia
   flankGoldenShot: 20, // tiro abbastanza buono da interrompere l'avvicinamento
@@ -936,8 +937,10 @@ function flankSide(target, tile) {
 }
 
 // Miglior punto di raccolta per aggirare `target`: { tile, side } o null.
-// `takenSides`: lati già scelti da altri aggiratori (meglio la tenaglia)
-function chooseFlankRally(enemy, target, exposure, takenSides) {
+// `takenSides`: lati già scelti da altri aggiratori (meglio la tenaglia);
+// `prev`: punto del turno prima, preferito se ancora buono (non lo insegue
+// a ogni passo o rotazione della squadra)
+function chooseFlankRally(enemy, target, exposure, takenSides, prev = null) {
   const T = VC_TACTICS;
   const stealth = (c, r) => (exposure.has(_tkey(c, r)) ? T.flankExposure : 0);
   const fromEnemy = vcDistanceField(enemy, stealth);
@@ -970,6 +973,7 @@ function chooseFlankRally(enemy, target, exposure, takenSides) {
       }
       const side = flankSide(target, tile);
       if (side && takenSides.includes(side)) s -= T.flankPincerPenalty;
+      if (prev && dist(prev, tile) <= 1) s += T.flankRallyKeep;
       if (!best || s > best.s) best = { tile, side, s };
     }
   }
@@ -983,10 +987,16 @@ function planFlanks() {
   const units = G.units.filter((u) => u.alive);
   for (const e of G.enemies) {
     if (!e.flank) continue;
-    const tgt = units.find((u) => u.id === e.flank.targetId);
-    // Bersaglio caduto, troppo tempo, VC colpito durante l'avvicinamento
-    if (!flankEligible(e) || !tgt || e.flank.turns >= T.flankMaxTurns || e.hp < e.flank.hp)
+    // Troppo tempo, VC colpito durante l'avvicinamento
+    if (!flankEligible(e) || e.flank.turns >= T.flankMaxTurns || e.hp < e.flank.hp) {
       e.flank = null;
+      continue;
+    }
+    // Bersaglio caduto: l'aggiramento prosegue su un altro soldato
+    if (!units.some((u) => u.id === e.flank.targetId)) {
+      e.flank.targetId = null;
+      e.flank.rally = null;
+    }
   }
   if (!units.length) return;
 
@@ -1025,7 +1035,7 @@ function planFlanks() {
     const tgt =
       units.find((u) => u.id === e.flank.targetId) ?? nearestDetectedUnit(e) ?? nearestLiveUnit(e);
     taken[tgt.id] ??= [];
-    const best = chooseFlankRally(e, tgt, exposure, taken[tgt.id]);
+    const best = chooseFlankRally(e, tgt, exposure, taken[tgt.id], e.flank.rally);
     if (!best) {
       e.flank = null;
       continue;
@@ -1042,8 +1052,15 @@ async function flankActivation(enemy, stats) {
   const T = VC_TACTICS;
   const f = enemy.flank;
   const target = G.units.find((u) => u.alive && u.id === f.targetId);
-  if (!target || !f.rally) {
+  if (!f.rally) {
     enemy.flank = null;
+    return false;
+  }
+  // Bersaglio caduto in questo turno: per ora IA tattica, al prossimo
+  // planFlanks sceglie un nuovo soldato da aggirare
+  if (!target) {
+    f.targetId = null;
+    f.rally = null;
     return false;
   }
   if (enemy.ap < 1) return true;
