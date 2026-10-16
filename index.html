@@ -655,6 +655,18 @@
             </div>
         </div>
 
+        <!-- LOADING: copre tutto finché immagini e audio non sono scaricati (init.js) -->
+        <div id="loading-overlay">
+            <div id="loading-box">
+                <h2 data-i18n="loading.title">CARICAMENTO</h2>
+                <div id="loading-bar"><div id="loading-fill"></div></div>
+                <p id="loading-text">Scaricamento risorse… 0%</p>
+                <button class="btn hidden" id="loading-continue" data-i18n="loading.continue">
+                    ▶ CONTINUA
+                </button>
+            </div>
+        </div>
+
         <!-- CONFIRM RETURN TO MENU -->
         <div id="confirm-overlay" class="hidden">
             <div id="confirm-box">

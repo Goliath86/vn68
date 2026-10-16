@@ -54,7 +54,7 @@ Altre costanti in `constants.js`: `TILE=64`, `AP_PER_TURN=3`, `SAVE_KEY`, `UNIT_
 
 | File | Responsabilità |
 |---|---|
-| `config.js` | `buildWeapons()` — merge tra armi di default della classe e override da `config.json`/missione |
+| `config.js` | `buildWeapons()` — merge tra armi di default della classe e override da `config.json`/missione; precaricamento asset: `preloadAssets()` scarica i file come blob (`ASSET_BLOBS`), **ogni `new Image`/`new Audio` di un asset passa da `assetUrl(path)`**; `configAssetPaths()` + `maps.js:catalogAssetPaths()` (immagine/ambient/SFX delle mappe del catalogo) danno l'elenco, `buildAssetCaches()` crea sprite e SFX dopo il download |
 | `constants.js` | stato globale `G`, costanti, definizioni classi e tipi missione |
 | `canvas.js` | setup canvas, resize, gestione click sulla mappa (`onCanvasClick`) |
 | `sounds.js` | tutto l'audio: musica ambientale/menu, SFX sintetizzati via Web Audio API come fallback, caricamento SFX custom da config/missione, mute |
@@ -88,7 +88,7 @@ Altre costanti in `constants.js`: `TILE=64`, `AP_PER_TURN=3`, `SAVE_KEY`, `UNIT_
 | `tooltip.js` | tooltip al hover su tile (rispetta FOW) |
 | `ui.js` | `updateUI()`, pannello obiettivo (`objPanelHTML`) |
 | `selectedUnit.js` | pannello dettaglio unità selezionata: statistiche + chip di stato (`unitStatusChips`/`statusChip`: etichetta breve da `units.chips.*`, spiegazione completa nel tooltip da `units.status.*`) |
-| `init.js` | bootstrap iniziale della pagina |
+| `init.js` | bootstrap iniziale della pagina: schermata di caricamento (`#loading-overlay`) finché gli asset non sono scaricati, poi musica del menu; se l'autoplay è bloccato resta il pulsante CONTINUA (il click sblocca l'audio), che compare comunque dopo `LOADING_SKIP_MS` su reti lente |
 | `unitList.js` | render delle card unità nel pannello squadra |
 | `unitMovement.js` | esecuzione movimento (consumo AP, animazione, aggiornamento visibilità) |
 | `plchldSprites.js` | sprite disegnati proceduralmente su canvas, usati come fallback se `config.json.unitImages` non fornisce un'immagine |

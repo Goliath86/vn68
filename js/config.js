@@ -11,35 +11,117 @@ async function loadConfig() {
     if (!resp.ok) return;
     CONFIG = await resp.json();
     WEAPONS_CONFIG = CONFIG.weapons || {};
-    for (const [cls, path] of Object.entries(CONFIG.unitImages || {})) {
-      if (!path) continue;
-      const img = new Image();
-      img.src = path;
-      UNIT_IMG_CACHE[cls] = img;
-    }
-    for (const [key, path] of Object.entries(CONFIG.sounds || {})) {
-      if (!path) continue;
-      const a = new Audio(path);
-      a.onerror = () => {
-        delete SFX_CACHE[key];
-      };
-      SFX_CACHE[key] = a;
-    }
-    const _seenSnd = new Set();
-    for (const weapons of Object.values(WEAPONS_CONFIG)) {
-      for (const w of weapons) {
-        if (!w.sound || _seenSnd.has(w.sound)) continue;
-        _seenSnd.add(w.sound);
-        const a = new Audio(w.sound);
-        a.onerror = () => {
-          delete WEAPON_SND_CACHE[w.sound];
-        };
-        WEAPON_SND_CACHE[w.sound] = a;
-      }
-    }
   } catch (e) {
     // config.json assente o non valido — nessun effetto, si usano gli sprite canvas
   }
+}
+
+// File da scaricare prima del menu: musica, sprite, SFX e suoni delle armi
+function configAssetPaths() {
+  const weaponSounds = Object.values(WEAPONS_CONFIG).flatMap((ws) => ws.map((w) => w.sound));
+  return [
+    CONFIG.menuMusic,
+    ...Object.values(CONFIG.unitImages || {}),
+    ...Object.values(CONFIG.sounds || {}),
+    ...weaponSounds,
+  ].filter(Boolean);
+}
+
+// Crea le cache di sprite e suoni dai file già scaricati; attende che gli
+// sprite siano decodificati, così la prima partita non mostra i segnaposto
+async function buildAssetCaches() {
+  const decoding = [];
+  for (const [cls, path] of Object.entries(CONFIG.unitImages || {})) {
+    if (!path) continue;
+    const img = new Image();
+    decoding.push(new Promise((r) => (img.onload = img.onerror = r)));
+    img.src = assetUrl(path);
+    UNIT_IMG_CACHE[cls] = img;
+  }
+  for (const [key, path] of Object.entries(CONFIG.sounds || {})) {
+    if (!path) continue;
+    const a = new Audio(assetUrl(path));
+    a.onerror = () => {
+      delete SFX_CACHE[key];
+    };
+    SFX_CACHE[key] = a;
+  }
+  for (const weapons of Object.values(WEAPONS_CONFIG)) {
+    for (const w of weapons) {
+      if (!w.sound || WEAPON_SND_CACHE[w.sound]) continue;
+      const a = new Audio(assetUrl(w.sound));
+      a.onerror = () => {
+        delete WEAPON_SND_CACHE[w.sound];
+      };
+      WEAPON_SND_CACHE[w.sound] = a;
+    }
+  }
+  await Promise.all(decoding);
+}
+
+// ── PRECARICAMENTO ASSET ───────────────────────────────────────────────
+// La schermata di caricamento (init.js) scarica immagini e audio prima di
+// aprire il menu: ogni file diventa un blob locale (object URL), quindi
+// musica e sprite sono pronti da subito anche dove il browser non
+// precarica l'audio (iOS). Un file mancante si salta: resta il percorso
+// originale e quindi il fallback (sprite canvas, SFX sintetizzati).
+const ASSET_BLOBS = {}; // percorso → object URL
+
+function assetUrl(path) {
+  return ASSET_BLOBS[path] || path;
+}
+
+// Scarica un file; onBytes(ricevuti, totale|0) durante il download
+async function _fetchAsset(path, onBytes) {
+  const resp = await fetch(path);
+  if (!resp.ok) throw new Error(`${path}: ${resp.status}`);
+  const total = +resp.headers.get("Content-Length") || 0;
+  const type = resp.headers.get("Content-Type") || "";
+  if (!resp.body) return resp.blob();
+  const reader = resp.body.getReader();
+  const chunks = [];
+  let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    got += value.length;
+    onBytes(got, total);
+  }
+  return new Blob(chunks, { type });
+}
+
+// Scarica `paths` in parallelo; onProgress(frazione 0..1) pesata sui byte
+// (i file di cui non si conosce ancora la dimensione valgono la media)
+async function preloadAssets(paths, onProgress = () => {}) {
+  const list = [...new Set(paths)].filter((p) => p && !ASSET_BLOBS[p]);
+  const got = list.map(() => 0);
+  const size = list.map(() => 0);
+  const report = () => {
+    const known = size.filter((s) => s > 0);
+    const avg = known.length ? known.reduce((s, x) => s + x, 0) / known.length : 1;
+    const total = size.reduce((s, x) => s + (x || avg), 0);
+    const done = got.reduce((s, x, i) => s + Math.min(x, size[i] || avg), 0);
+    onProgress(list.length ? Math.min(1, done / total) : 1);
+  };
+  report();
+  await Promise.all(
+    list.map(async (path, i) => {
+      try {
+        const blob = await _fetchAsset(path, (g, total) => {
+          got[i] = g;
+          size[i] = Math.max(total, g);
+          report();
+        });
+        ASSET_BLOBS[path] = URL.createObjectURL(blob);
+      } catch (e) {
+        console.warn("[assets] non scaricato:", path);
+      }
+      size[i] = size[i] || got[i] || 1;
+      got[i] = size[i];
+      report();
+    }),
+  );
 }
 
 // Armi con caricatore (`mag`): parte carica; `mags` = caricatori di riserva

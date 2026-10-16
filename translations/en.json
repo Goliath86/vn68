@@ -147,6 +147,13 @@
     "3": "west"
   },
 
+  "loading": {
+    "title": "LOADING",
+    "progress": "Downloading assets… {pct}%",
+    "ready": "Ready.",
+    "continue": "▶ CONTINUE"
+  },
+
   "confirm": {
     "abort_mission": "Are you sure you want to abort the mission and return to the menu?",
     "end_turn_ap": "{n} unit(s) still have AP left. End the turn anyway?",

@@ -147,6 +147,13 @@
     "3": "ovest"
   },
 
+  "loading": {
+    "title": "CARICAMENTO",
+    "progress": "Scaricamento risorse… {pct}%",
+    "ready": "Pronto.",
+    "continue": "▶ CONTINUA"
+  },
+
   "confirm": {
     "abort_mission": "Sei sicuro di voler abbandonare la missione e tornare al menu?",
     "end_turn_ap": "{n} unità hanno ancora AP disponibili. Terminare comunque il turno?",

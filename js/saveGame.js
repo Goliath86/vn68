@@ -63,7 +63,7 @@ async function resumeGame(save) {
     await new Promise((r) => {
       G.tileImg.onload = r;
       G.tileImg.onerror = r;
-      G.tileImg.src = "missions/" + G.mapData.image;
+      G.tileImg.src = assetUrl("missions/" + G.mapData.image);
     });
     if (!G.tileImg.naturalWidth) G.tileImg = null;
   } else {

@@ -1,13 +1,13 @@
 {
   "menuMusic": "assets/fumo_su_saigon.mp3",
   "unitImages": {
-    "assault": "assets/assault_us.png",
-    "sniper": "assets/sniper_us.png",
-    "engineer": "assets/engineer_us.png",
-    "medic": "assets/medic_us.png",
-    "grunt": "assets/vietcong_vc.png",
-    "sniper_vc": "assets/sniper_vc.png",
-    "commander": "assets/commander_vc.png"
+    "assault": "assets/assault_us.webp",
+    "sniper": "assets/sniper_us.webp",
+    "engineer": "assets/engineer_us.webp",
+    "medic": "assets/medic_us.webp",
+    "grunt": "assets/vietcong_vc.webp",
+    "sniper_vc": "assets/sniper_vc.webp",
+    "commander": "assets/commander_vc.webp"
   },
   "sounds": {
     "move": "",

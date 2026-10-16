@@ -3,28 +3,80 @@ setupCanvas();
 
 audioInit();
 
-// Carica traduzioni + catalogo mappe in parallelo, poi inizializza
-Promise.all([loadLang("it"), loadCatalog(), loadConfig()]).then(() => {
-  rebuildMapsFromCatalog();
-  applyTranslationsToData();
-  applyTranslationsToDOM();
-  initModal();
+// ── SCHERMATA DI CARICAMENTO ───────────────────────────────────────────
+// Copre il menu finché sprite, musica e suoni non sono scaricati
+// (config.js:preloadAssets): niente segnaposto al posto delle pedine né
+// musica del menu che parte a partita iniziata.
+let _loadingPct = 0;
 
-  if (CONFIG.menuMusic) {
-    const menuUrl = CONFIG.menuMusic;
-    ambientStop();
-    const a = new Audio(menuUrl);
-    a.loop = true;
-    a.volume = AUDIO.musicVol;
-    AUDIO.ambient = a;
-    a.play().catch(() => {
-      // Autoplay blocked (HTTPS autoplay policy) — retry on first user gesture
-      const resume = () => ambientPlay(menuUrl);
+function setLoadingProgress(frac) {
+  _loadingPct = Math.round(frac * 100);
+  document.getElementById("loading-fill").style.width = `${_loadingPct}%`;
+  document.getElementById("loading-text").textContent = t("loading.progress", { pct: _loadingPct });
+}
 
-      document.addEventListener("click", resume, { once: true });
-    });
-  }
-});
+function hideLoadingScreen() {
+  document.getElementById("loading-overlay").classList.add("hidden");
+}
+
+// Avvia la musica del menu; se il browser blocca l'autoplay (nessun gesto
+// dell'utente finora) la schermata resta con il pulsante CONTINUA, il cui
+// click sblocca l'audio
+function finishLoading() {
+  document.getElementById("loading-text").textContent = t("loading.ready");
+  // Saltato con CONTINUA durante un download lento: la musica del menu
+  // parte solo se il giocatore è ancora nel menu
+  const inMenu =
+    document.getElementById("modal-overlay").style.display !== "none" ||
+    !document.getElementById("tutorial-overlay").classList.contains("hidden");
+  if (_loadingSkipped && !inMenu) return;
+  if (!CONFIG.menuMusic || AUDIO.muted) return hideLoadingScreen();
+  ambientPlay(CONFIG.menuMusic);
+  const a = AUDIO.ambient;
+  if (!a) return hideLoadingScreen();
+  // Se play() non si risolve né rifiuta (nessuna uscita audio) non si resta bloccati
+  const stall = new Promise((r) => setTimeout(r, MUSIC_START_WAIT_MS));
+  Promise.race([a.play(), stall]).then(hideLoadingScreen, showLoadingContinue);
+}
+
+const MUSIC_START_WAIT_MS = 3000;
+
+// Pulsante CONTINUA: sblocca l'audio del menu (se già pronto) e chiude la schermata
+function showLoadingContinue() {
+  const btn = document.getElementById("loading-continue");
+  btn.classList.remove("hidden");
+  btn.onclick = () => {
+    if (AUDIO.ambient) AUDIO.ambient.play().catch(() => {});
+    else _loadingSkipped = true;
+    hideLoadingScreen();
+  };
+}
+
+// Rete lenta o bloccata: dopo LOADING_SKIP_MS si può entrare comunque
+// (gli asset arrivano in background, con i fallback nel frattempo)
+const LOADING_SKIP_MS = 20000;
+let _loadingSkipped = false;
+const _loadingSkipTimer = setTimeout(showLoadingContinue, LOADING_SKIP_MS);
+
+// Carica traduzioni + catalogo mappe + config in parallelo, poi scarica gli
+// asset e solo allora apre il menu
+Promise.all([loadLang("it"), loadCatalog(), loadConfig()])
+  .then(async () => {
+    rebuildMapsFromCatalog();
+    applyTranslationsToData();
+    applyTranslationsToDOM();
+    setLoadingProgress(_loadingPct / 100);
+    initModal();
+
+    const paths = [...configAssetPaths(), ...(await catalogAssetPaths())];
+    await preloadAssets(paths, setLoadingProgress);
+    await buildAssetCaches();
+  })
+  .catch((e) => console.error("[loading]", e))
+  .finally(() => {
+    clearTimeout(_loadingSkipTimer);
+    finishLoading();
+  });
 
 // Language switcher
 document.querySelectorAll(".lang-btn").forEach((btn) => {

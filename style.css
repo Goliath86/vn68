@@ -1015,6 +1015,62 @@ body {
 }
 
 /* ── CONFIRM OVERLAY ─────────────────────────────── */
+/* ── CARICAMENTO INIZIALE ──────────────────────────── */
+#loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--green-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+}
+#loading-overlay.hidden {
+    display: none;
+}
+#loading-box {
+    background: var(--panel-bg);
+    border: 2px solid var(--tan-dark);
+    border-radius: 4px;
+    padding: 28px 32px;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+}
+#loading-box h2 {
+    font-family: var(--stamp-font);
+    font-size: 26px;
+    color: var(--tan);
+    margin-bottom: 16px;
+    letter-spacing: 2px;
+}
+#loading-bar {
+    height: 10px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+#loading-fill {
+    height: 100%;
+    width: 0;
+    background: var(--green-light);
+    transition: width 0.2s;
+}
+#loading-text {
+    font-size: 12px;
+    color: var(--paper-dark);
+}
+#loading-continue {
+    margin-top: 16px;
+    font-size: 15px;
+    padding: 10px 30px;
+}
+#loading-continue.hidden {
+    display: none;
+}
+
 #confirm-overlay,
 #endturn-overlay {
     position: fixed;

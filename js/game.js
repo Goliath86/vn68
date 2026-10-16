@@ -40,7 +40,7 @@ function useMission(data) {
     return G.mapData;
   }
   const img = new Image();
-  img.src = "missions/" + imgName;
+  img.src = assetUrl("missions/" + imgName);
   img.onload = () => {
     G.tileImg = img;
     render();

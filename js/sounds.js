@@ -2,7 +2,7 @@ function loadMissionSounds(mapData) {
   for (const k of Object.keys(MISSION_SFX_CACHE)) delete MISSION_SFX_CACHE[k];
   for (const [key, path] of Object.entries(mapData.sounds || {})) {
     if (!path) continue;
-    const a = new Audio(path);
+    const a = new Audio(assetUrl(path));
     a.onerror = () => {
       delete MISSION_SFX_CACHE[key];
     };
@@ -115,7 +115,7 @@ function sfx(type) {
 function ambientPlay(url) {
   ambientStop();
   if (!url || AUDIO.muted) return;
-  const a = new Audio(url);
+  const a = new Audio(assetUrl(url));
   a.loop = true;
   a.volume = AUDIO.musicVol;
   a.play().catch(() => {});
