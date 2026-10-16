@@ -14,8 +14,10 @@ async function loadCatalog() {
   }
 }
 
-// File delle mappe del catalogo da scaricare all'avvio: immagine di sfondo,
-// musica d'ambiente e SFX propri. Le mappe procedurali riusano gli stessi file.
+// File delle mappe del catalogo: immagine di sfondo e SFX (`files`, attesi
+// dalla schermata di caricamento) e musica d'ambiente (`ambient`, scaricata
+// in background a menu aperto: serve solo in missione ed è il file più
+// pesante). Le mappe procedurali riusano gli stessi file.
 async function catalogAssetPaths() {
   const files = CATALOG.filter((e) => e.file).map((e) => `missions/${e.file}`);
   const maps = await Promise.all(
@@ -25,11 +27,13 @@ async function catalogAssetPaths() {
         .catch(() => null),
     ),
   );
-  return maps.filter(Boolean).flatMap((md) => [
-    md.image && "missions/" + md.image,
-    md.ambient,
-    ...Object.values(md.sounds || {}),
-  ]).filter(Boolean);
+  const list = maps.filter(Boolean);
+  return {
+    files: list
+      .flatMap((md) => [md.image && "missions/" + md.image, ...Object.values(md.sounds || {})])
+      .filter(Boolean),
+    ambient: list.map((md) => md.ambient).filter(Boolean),
+  };
 }
 
 function rebuildMapsFromCatalog() {

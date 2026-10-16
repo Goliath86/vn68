@@ -54,7 +54,7 @@ Altre costanti in `constants.js`: `TILE=64`, `AP_PER_TURN=3`, `SAVE_KEY`, `UNIT_
 
 | File | Responsabilità |
 |---|---|
-| `config.js` | `buildWeapons()` — merge tra armi di default della classe e override da `config.json`/missione; precaricamento asset: `preloadAssets()` scarica i file come blob (`ASSET_BLOBS`), **ogni `new Image`/`new Audio` di un asset passa da `assetUrl(path)`**; `configAssetPaths()` + `maps.js:catalogAssetPaths()` (immagine/ambient/SFX delle mappe del catalogo) danno l'elenco, `buildAssetCaches()` crea sprite e SFX dopo il download |
+| `config.js` | `buildWeapons()` — merge tra armi di default della classe e override da `config.json`/missione; precaricamento asset: `preloadAssets()` scarica i file come blob (`ASSET_BLOBS`), **ogni `new Image`/`new Audio` di un asset passa da `assetUrl(path)`**; `configAssetPaths()` + `maps.js:catalogAssetPaths()` (`files`: immagine/SFX delle mappe del catalogo, attesi; `ambient`: musiche d'ambiente, scaricate in background dopo l'apertura del menu) danno l'elenco, `buildAssetCaches()` crea sprite e SFX dopo il download |
 | `constants.js` | stato globale `G`, costanti, definizioni classi e tipi missione |
 | `canvas.js` | setup canvas, resize, gestione click sulla mappa (`onCanvasClick`) |
 | `sounds.js` | tutto l'audio: musica ambientale/menu, SFX sintetizzati via Web Audio API come fallback, caricamento SFX custom da config/missione, mute |

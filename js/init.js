@@ -59,7 +59,10 @@ let _loadingSkipped = false;
 const _loadingSkipTimer = setTimeout(showLoadingContinue, LOADING_SKIP_MS);
 
 // Carica traduzioni + catalogo mappe + config in parallelo, poi scarica gli
-// asset e solo allora apre il menu
+// asset e solo allora apre il menu; le musiche d'ambiente delle missioni
+// arrivano dopo, in background (se una missione parte prima, ambientPlay
+// usa il percorso originale in streaming)
+let _ambientPaths = [];
 Promise.all([loadLang("it"), loadCatalog(), loadConfig()])
   .then(async () => {
     rebuildMapsFromCatalog();
@@ -68,14 +71,16 @@ Promise.all([loadLang("it"), loadCatalog(), loadConfig()])
     setLoadingProgress(_loadingPct / 100);
     initModal();
 
-    const paths = [...configAssetPaths(), ...(await catalogAssetPaths())];
-    await preloadAssets(paths, setLoadingProgress);
+    const maps = await catalogAssetPaths();
+    _ambientPaths = maps.ambient;
+    await preloadAssets([...configAssetPaths(), ...maps.files], setLoadingProgress);
     await buildAssetCaches();
   })
   .catch((e) => console.error("[loading]", e))
   .finally(() => {
     clearTimeout(_loadingSkipTimer);
     finishLoading();
+    preloadAssets(_ambientPaths);
   });
 
 // Language switcher
