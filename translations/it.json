@@ -35,6 +35,8 @@
     "next": "AVANTI ▶",
     "change_theater": "← Cambia teatro",
     "menu": "⌂",
+    "wind_on": "Vento: attivo",
+    "wind_off": "Vento: spento",
     "move_mobile": "Muovi",
     "attack_mobile": "Attacca",
     "special_mobile": "Spec.",

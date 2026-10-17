@@ -57,6 +57,13 @@ function _crack(ctx, x, y, ts, rng, a) {
   ctx.stroke();
 }
 
+const GRASS_LIGHT = "rgba(150,200,90,0.35)";
+const GRASS_DARK = _dk(0.22);
+// Se impostato (render.js:getTerrainCache con il vento attivo), i fili d'erba
+// non vengono disegnati ma raccolti qui, per animarli a ogni fotogramma
+// (animations.js:renderWindGrass). Stessa sequenza di rng in entrambi i casi.
+let _grassSink = null;
+
 function _grass(ctx, x, y, ts, rng, n) {
   ctx.lineWidth = 0.8;
   ctx.lineCap = "round";
@@ -64,10 +71,16 @@ function _grass(ctx, x, y, ts, rng, n) {
     const gx = x + rng() * ts;
     const gy = y + rng() * ts;
     const l = ts * (0.05 + rng() * 0.06);
-    ctx.strokeStyle = rng() < 0.6 ? "rgba(150,200,90,0.35)" : _dk(0.22);
+    const light = rng() < 0.6;
+    const lean = (rng() - 0.5) * l * 0.8;
+    if (_grassSink) {
+      _grassSink.push({ x: gx, y: gy, l, lean, light });
+      continue;
+    }
+    ctx.strokeStyle = light ? GRASS_LIGHT : GRASS_DARK;
     ctx.beginPath();
     ctx.moveTo(gx, gy);
-    ctx.lineTo(gx + (rng() - 0.5) * l * 0.8, gy - l);
+    ctx.lineTo(gx + lean, gy - l);
     ctx.stroke();
   }
 }

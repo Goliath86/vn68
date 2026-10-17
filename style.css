@@ -1612,7 +1612,8 @@ body {
 }
 #btn-menu,
 #btn-mute,
-#btn-fow {
+#btn-fow,
+#btn-wind {
     background: none;
     border: 1px solid var(--border);
     border-radius: 2px;
@@ -1627,10 +1628,12 @@ body {
 }
 #btn-menu:hover,
 #btn-mute:hover,
-#btn-fow:hover {
+#btn-fow:hover,
+#btn-wind:hover {
     border-color: var(--tan);
 }
-#btn-fow.fow-on {
+#btn-fow.fow-on,
+#btn-wind.wind-on {
     border-color: var(--highlight);
     color: var(--highlight);
 }

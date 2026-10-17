@@ -66,6 +66,7 @@ function applyTranslationsToDOM() {
     const val = t(key);
     if (val !== key) el.textContent = val;
   });
+  updateWindButton();
 
   // Placeholder dinamici quando il gioco non è ancora avviato
   if (!G.missionType) {

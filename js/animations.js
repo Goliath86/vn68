@@ -48,13 +48,18 @@ function _unitsPulsing() {
   return G.units.some((u) => u.alive && (u.shaken || u.bleeding));
 }
 
-function _needsAnimLoop() {
+// Animazioni che vogliono la frequenza piena (fuoco, fumo, pulsazioni)
+function _needsFastAnim() {
   return (
     _getTileAnims().length > 0 ||
     _unitsPulsing() ||
     // Tile evidenziato dall'istruttore del tutorial (lampeggia)
     (tutorialActive() && !!currentTutorialStep()?.highlight)
   );
+}
+
+function _needsAnimLoop() {
+  return _needsFastAnim() || windActive();
 }
 
 function _startTileAnimLoop() {
@@ -66,15 +71,119 @@ function _startTileAnimLoop() {
 }
 
 function _tileAnimTick(now) {
-  _tileAnimDt = _tileAnimLastTime ? Math.min(now - _tileAnimLastTime, 64) : 16;
-  _tileAnimLastTime = now;
   if (G.phase === "gameover" || !_needsAnimLoop()) {
     _tileAnimLoopActive = false;
     _tileAnimLastTime = 0;
     return;
   }
-  renderMap();
+  // Solo il vento: un fotogramma ogni WIND_FRAME_MS basta
+  if (_tileAnimLastTime && now - _tileAnimLastTime < WIND_FRAME_MS && !_needsFastAnim()) {
+    requestAnimationFrame(_tileAnimTick);
+    return;
+  }
+  _tileAnimDt = _tileAnimLastTime ? Math.min(now - _tileAnimLastTime, 64) : 16;
+  _tileAnimLastTime = now;
+  renderMap(true);
   requestAnimationFrame(_tileAnimTick);
+}
+
+// ── VENTO ──────────────────────────────────────────────────────────────
+// Erba (e poi chiome) mossa da un unico campo di vento: una leggera
+// oscillazione continua più raffiche che attraversano la mappa nella
+// direzione del vento, così piante vicine si muovono insieme. Solo terreno
+// procedurale (le mappe con immagine di sfondo non hanno piante disegnate).
+// Preferenza in localStorage[WIND_PREF_KEY]; di default spento su mobile e
+// con "riduci movimento" di sistema.
+const WIND_PREF_KEY = "vn68_wind";
+const WIND_FRAME_MS = 33; // ~30 fps
+const WIND_GRASS_IDS = new Set(["clearing", "garden", "village", "trail"]);
+const WIND = {
+  dirX: 0.8, // direzione (normalizzata) verso cui soffia
+  dirY: 0.6,
+  gustSpeed: 90, // velocità delle raffiche (unità mondo/s, TILE = 64)
+  gustLen: 480, // lunghezza d'onda delle raffiche
+  base: 0.25, // piega costante sottovento
+  sway: 0.2, // ampiezza dell'oscillazione continua
+};
+
+G.windEnabled = (() => {
+  try {
+    const v = localStorage.getItem(WIND_PREF_KEY);
+    if (v !== null) return v === "1";
+  } catch {}
+  return !isMobile() && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+})();
+
+function windActive() {
+  return G.windEnabled && !!G.mapData && !G.tileImg;
+}
+
+function toggleWind() {
+  G.windEnabled = !G.windEnabled;
+  try {
+    localStorage.setItem(WIND_PREF_KEY, G.windEnabled ? "1" : "0");
+  } catch {}
+  updateWindButton();
+  // l'erba passa dalla cache del terreno al disegno per fotogramma e viceversa
+  invalidateTerrainCache();
+  render();
+}
+
+function updateWindButton() {
+  const btn = document.getElementById("btn-wind");
+  if (!btn) return;
+  btn.classList.toggle("wind-on", G.windEnabled);
+  btn.title = t(G.windEnabled ? "buttons.wind_on" : "buttons.wind_off");
+}
+
+// Piega in un punto del mondo all'istante t (s): ~0 calma, ~2 raffica piena
+function windAt(wx, wy, t) {
+  const p = wx * WIND.dirX + wy * WIND.dirY;
+  const k = (Math.PI * 2) / WIND.gustLen;
+  const g1 = Math.sin(p * k - t * WIND.gustSpeed * k);
+  const g2 = Math.sin(p * k * 0.37 + wy * 0.004 - t * WIND.gustSpeed * k * 0.6 + 1.7);
+  const gust = Math.max(0, (g1 + g2) * 0.6) ** 2;
+  return WIND.base + Math.sin(t * 1.7 + p * 0.03) * WIND.sway + gust;
+}
+
+// Fili d'erba raccolti da getTerrainCache, solo sui tile inquadrati; due
+// tracciati (chiaro/scuro) per tutti i fili, quindi due soli stroke
+function renderWindGrass(ctx, grass) {
+  if (!grass || !windActive()) return;
+  const s = TILE * G.scale;
+  const c0 = Math.max(0, Math.floor(-G.camX / s));
+  const c1 = Math.min(grass.cols - 1, Math.floor((G.canvas.width - G.camX) / s));
+  const r0 = Math.max(0, Math.floor(-G.camY / s));
+  const r1 = Math.min(grass.rows - 1, Math.floor((G.canvas.height - G.camY) / s));
+  const t = performance.now() / 1000;
+  const light = new Path2D();
+  const dark = new Path2D();
+  for (let r = r0; r <= r1; r++) {
+    for (let c = c0; c <= c1; c++) {
+      const blades = grass.tiles[r * grass.cols + c];
+      if (!blades) continue;
+      for (const b of blades) {
+        const w = windAt(b.x, b.y, t);
+        const flutter = Math.sin(t * 6 + b.x * 1.3 + b.y * 0.7) * 0.06 * w;
+        const path = b.light ? light : dark;
+        path.moveTo(b.x, b.y);
+        path.lineTo(
+          b.x + b.lean + b.l * (WIND.dirX * w * 0.55 + flutter),
+          b.y - b.l * (1 - Math.min(0.35, w * w * 0.08)) + b.l * WIND.dirY * w * 0.15,
+        );
+      }
+    }
+  }
+  ctx.save();
+  ctx.translate(G.camX, G.camY);
+  ctx.scale(G.scale, G.scale);
+  ctx.lineWidth = 0.8;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = GRASS_LIGHT;
+  ctx.stroke(light);
+  ctx.strokeStyle = GRASS_DARK;
+  ctx.stroke(dark);
+  ctx.restore();
 }
 
 function renderTileAnimations(ctx, ts) {

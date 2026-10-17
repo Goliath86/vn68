@@ -28,7 +28,7 @@ function screenToTile(sx, sy) {
 const TERRAIN_CACHE_DENSITY = 2.5;
 const TERRAIN_CACHE_MAX_PX = 16e6;
 const TERRAIN_CACHE_MAX_SIDE = 8192;
-let _terrainCache = null; // { canvas, mapData }
+let _terrainCache = null; // { canvas, mapData, grass }
 
 function invalidateTerrainCache() {
   _terrainCache = null;
@@ -52,6 +52,10 @@ function getTerrainCache() {
   // Coordinate in unità "scala 1": spessori linee identici al rendering diretto
   ctx.scale(canvas.width / w, canvas.height / h);
 
+  // Col vento attivo l'erba dei tile in WIND_GRASS_IDS resta fuori dalla
+  // cache: i fili, per tile, sono ridisegnati a ogni fotogramma
+  const wind = windActive();
+  const grass = wind ? { cols: md.cols, rows: md.rows, tiles: [] } : null;
   for (let r = 0; r < md.rows; r++) {
     for (let c = 0; c < md.cols; c++) {
       const tileDef = md.tileTypes[md.grid[r][c]];
@@ -62,7 +66,10 @@ function getTerrainCache() {
       ctx.fillStyle = tileDef.color || "#2d5a1b";
       ctx.fillRect(x, y, TILE, TILE);
       ctx.globalAlpha = 1;
+      if (wind && WIND_GRASS_IDS.has(tileDef.id)) _grassSink = [];
       drawTileDetails(ctx, tileDef, x, y, TILE, c, r);
+      if (_grassSink) grass.tiles[r * md.cols + c] = _grassSink;
+      _grassSink = null;
     }
   }
   // Sfumature tra terreni, rive e ombre: richiedono tutti i tile già disegnati
@@ -77,12 +84,14 @@ function getTerrainCache() {
     }
   }
 
-  _terrainCache = { canvas, mapData: md };
+  _terrainCache = { canvas, mapData: md, grass };
   return canvas;
 }
 
-function renderMap() {
-  if (G.fowEnabled) recomputeVisibility();
+// animFrame: ridisegno del ciclo d'animazione (animations.js), lo stato di
+// gioco non è cambiato e la visibilità non va ricalcolata
+function renderMap(animFrame = false) {
+  if (G.fowEnabled && !animFrame) recomputeVisibility();
   const ctx = G.ctx;
   const md = G.mapData;
   const ts = TILE * G.scale;
@@ -107,6 +116,7 @@ function renderMap() {
   } else {
     // Griglia tile procedurale, pre-renderizzata in cache offscreen
     ctx.drawImage(getTerrainCache(), G.camX, G.camY, md.cols * ts, md.rows * ts);
+    renderWindGrass(ctx, _terrainCache.grass);
   }
 
   // Indicatori missione
