@@ -127,6 +127,8 @@ function renderMap(animFrame = false) {
     // Onde animate su fiume e guado (animations.js:renderWaterWaves)
     renderWaterWaves(ctx, ts);
     renderWindGrass(ctx, _terrainCache.grass);
+    // Foglie sollevate dalle raffiche sulle radure (animations.js)
+    renderWindLeaves(ctx);
     if (_terrainCache.canopy) {
       renderWindCanopy(ctx, _terrainCache.canopy);
       ctx.save();

@@ -187,6 +187,142 @@ function renderWindCanopy(ctx, canopy) {
   ctx.restore();
 }
 
+// ── FOGLIE NELLE RAFFICHE ──────────────────────────────────────────────
+// Sui tile di radura, quando il fronte di una raffica (windGust) arriva sul
+// tile, ogni tanto un mucchietto di foglie secche si solleva: le foglie
+// partono raccolte, accelerano sottovento con la raffica del punto in cui
+// si trovano, salgono, frullano e svaniscono. Solo col vento attivo.
+const LEAF_GUST = {
+  tileIds: new Set(["clearing"]),
+  threshold: 0.5, // raffica che fa partire un mucchietto (fronte in salita)
+  chance: 0.08, // probabilità per tile a ogni fronte di raffica
+  leaves: [5, 8], // foglie per mucchietto
+  life: [1.6, 2.6], // durata in s
+  fade: 0.4, // ultima frazione della vita in dissolvenza
+  speed: 70, // unità mondo/s a raffica piena (TILE = 64)
+  max: 160, // tetto di foglie in volo
+  colors: ["#8a6a2a", "#a8823a", "#6b5a22", "#b59a4a", "#7a5530"],
+};
+let _leafTiles = null; // { mapData, tiles: [{ x, y, last }] } (centro del tile, mondo)
+let _leaves = [];
+let _leafLast = 0;
+
+function leafTiles() {
+  const md = G.mapData;
+  if (_leafTiles && _leafTiles.mapData === md) return _leafTiles.tiles;
+  const tiles = [];
+  for (let r = 0; r < md.rows; r++)
+    for (let c = 0; c < md.cols; c++)
+      if (LEAF_GUST.tileIds.has(md.tileTypes[md.grid[r][c]]?.id))
+        tiles.push({ x: (c + 0.5) * TILE, y: (r + 0.5) * TILE, last: 0 });
+  _leafTiles = { mapData: md, tiles };
+  _leaves = [];
+  return tiles;
+}
+
+const _rndIn = ([a, b]) => a + Math.random() * (b - a);
+
+function _spawnLeafPile(tile) {
+  const L = LEAF_GUST;
+  const px = tile.x + (Math.random() - 0.5) * TILE * 0.6;
+  const py = tile.y + (Math.random() - 0.5) * TILE * 0.6;
+  const n = Math.round(_rndIn(L.leaves));
+  for (let i = 0; i < n && _leaves.length < L.max; i++) {
+    // Età negativa = ferma nel mucchietto; partenze sfalsate: si sfalda
+    const age = -0.2 - Math.random() * 0.25;
+    _leaves.push({
+      born: age, // età alla comparsa (per la dissolvenza in entrata)
+      x: px + (Math.random() - 0.5) * 6,
+      y: py + (Math.random() - 0.5) * 4,
+      z: 0, // altezza da terra
+      vz: 6 + Math.random() * 14,
+      age,
+      life: _rndIn(L.life),
+      spread: (Math.random() - 0.5) * 0.6, // deviazione dalla direzione del vento
+      gain: 0.7 + Math.random() * 0.6,
+      spin: Math.random() * 6.28,
+      spinV: (Math.random() < 0.5 ? -1 : 1) * (5 + Math.random() * 7),
+      size: 2.2 + Math.random() * 1.4,
+      col: L.colors[Math.floor(Math.random() * L.colors.length)],
+    });
+  }
+}
+
+function renderWindLeaves(ctx) {
+  if (!windActive()) {
+    _leaves = [];
+    _leafLast = 0;
+    return;
+  }
+  const now = performance.now();
+  const dt = _leafLast ? Math.min(now - _leafLast, 100) / 1000 : 0;
+  _leafLast = now;
+  const t = now / 1000;
+  const L = LEAF_GUST;
+
+  // Fronti di raffica sui tile inquadrati
+  const m = TILE;
+  const x0 = -G.camX / G.scale - m;
+  const y0 = -G.camY / G.scale - m;
+  const x1 = (G.canvas.width - G.camX) / G.scale + m;
+  const y1 = (G.canvas.height - G.camY) / G.scale + m;
+  for (const tile of leafTiles()) {
+    if (tile.x < x0 || tile.x > x1 || tile.y < y0 || tile.y > y1) continue;
+    const g = windGust(tile.x, tile.y, t);
+    if (tile.last < L.threshold && g >= L.threshold && Math.random() < L.chance) _spawnLeafPile(tile);
+    tile.last = g;
+  }
+  if (!_leaves.length) return;
+
+  ctx.save();
+  ctx.translate(G.camX, G.camY);
+  ctx.scale(G.scale, G.scale);
+  _leaves = _leaves.filter((f) => {
+    f.age += dt;
+    if (f.age >= f.life) return false;
+    if (f.age < 0) return true; // ancora nel mucchietto
+    // Spinta della raffica nel punto della foglia, partenza progressiva
+    const push = Math.min(1, f.age / 0.35) * (0.25 + windGust(f.x, f.y, t)) * f.gain;
+    const v = L.speed * push * dt;
+    const dx = WIND.dirX - WIND.dirY * f.spread;
+    const dy = WIND.dirY + WIND.dirX * f.spread;
+    f.x += dx * v;
+    f.y += dy * v;
+    f.vz -= 9 * dt; // ricade piano
+    f.z = Math.max(0, f.z + f.vz * dt);
+    f.spin += f.spinV * dt * (0.4 + push);
+    return true;
+  });
+  // Comparsa rapida del mucchietto, dissolvenza nell'ultima parte del volo
+  const alpha = (f) => {
+    const k = f.age / f.life;
+    const fadeIn = Math.min(1, (f.age - f.born) / 0.15);
+    return fadeIn * (k > 1 - L.fade ? (1 - k) / L.fade : 1);
+  };
+  // Ombre a terra, sempre più tenui man mano che la foglia sale
+  ctx.fillStyle = "#000";
+  for (const f of _leaves) {
+    if (f.z <= 1) continue;
+    ctx.globalAlpha = alpha(f) * 0.25 * Math.max(0, 1 - f.z / 40);
+    ctx.beginPath();
+    ctx.ellipse(f.x, f.y, f.size * 0.8, f.size * 0.35, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (const f of _leaves) {
+    const flip = Math.cos(f.spin * 0.7); // la foglia si gira: si assottiglia
+    ctx.globalAlpha = alpha(f) * 0.9;
+    ctx.save();
+    ctx.translate(f.x, f.y - f.z);
+    ctx.rotate(f.spin);
+    ctx.fillStyle = f.col;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, f.size, f.size * 0.5 * Math.max(0.15, Math.abs(flip)), 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
 // Fili d'erba raccolti da getTerrainCache, solo sui tile inquadrati; due
 // tracciati (chiaro/scuro) per tutti i fili, quindi due soli stroke
 function renderWindGrass(ctx, grass) {
