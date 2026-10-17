@@ -614,35 +614,59 @@ const TILE_DETAILS = {
   bunker: _tdBunker,
 };
 
+function _paintDetails(ctx, draw, x, y, ts, rng) {
+  // lieve variazione di luminosità per tile: rompe l'uniformità della griglia
+  ctx.fillStyle = _tint(rng() - 0.5, 0.1, 0.05);
+  ctx.fillRect(x, y, ts, ts);
+  // id sconosciuto (nuove mappe config-driven): grana generica
+  if (draw) draw(ctx, x, y, ts, rng);
+  else _grain(ctx, x, y, ts, rng, 16, 0.09);
+}
+
 function drawTileDetails(ctx, tileDef, x, y, ts, col = 0, row = 0) {
-  const rng = _tileRng(col, row);
   ctx.save();
   ctx.beginPath();
   ctx.rect(x, y, ts, ts);
   ctx.clip();
-  // lieve variazione di luminosità per tile: rompe l'uniformità della griglia
-  ctx.fillStyle = _tint(rng() - 0.5, 0.1, 0.05);
-  ctx.fillRect(x, y, ts, ts);
-  const draw = TILE_DETAILS[tileDef.id];
-  // id sconosciuto (nuove mappe config-driven): grana generica
-  if (draw) draw(ctx, x, y, ts, rng);
-  else _grain(ctx, x, y, ts, rng, 16, 0.09);
+  _paintDetails(ctx, TILE_DETAILS[tileDef.id], x, y, ts, _tileRng(col, row));
   ctx.restore();
 }
 
 // ── TRANSIZIONI E OMBRE TRA TILE ───────────────────────────────────────
 // Passata eseguita dopo aver disegnato tutti i tile; ogni effetto è disegnato
-// nel tile che lo "riceve": sfumature tra terreni diversi (vince la priorità
-// più alta), rive del fiume, ombre a sud-est dei tile alti (luce da nord-ovest,
-// coerente con i disegni dei tile). Id sconosciuti: altezza da losBlock "full".
+// nel tile che lo "riceve": fusioni tra terreni diversi, rive del fiume, ombre
+// a sud-est dei tile alti (luce da nord-ovest, coerente con i disegni dei
+// tile). Id sconosciuti: altezza da losBlock "full", priorità 0.
+//
+// Fusione: tra due terreni "a terra" vicini, quello a priorità più alta (a
+// parità decide l'id, così ne invade sempre uno solo) entra nell'altro. Nel
+// tile che riceve si ridisegna la texture del vicino e la si mostra attraverso
+// una maschera alfa piena sul lato di contatto e sfumata verso l'interno, con
+// frangia irregolare; gli angoli toccati solo in diagonale ricevono uno spicchio.
 const TILE_BLEED_PRIORITY = {
-  jungle: 6,
-  garden: 5,
-  clearing: 4,
-  swamp: 4,
-  village: 3,
-  debris: 3,
-  trail: 2,
+  jungle: 9,
+  swamp: 8,
+  garden: 7,
+  clearing: 6,
+  village: 5,
+  debris: 4,
+  trail: 3,
+  street: 2,
+  plaza: 1,
+  objective: 0,
+};
+// Profondità della fusione (frazione di tile) per terreno che invade;
+// i lastricati entrano poco, la giungla ha già le chiome che sporgono
+const TILE_BLEND_DEPTH = { jungle: 0.3, swamp: 0.55, debris: 0.28, street: 0.22, plaza: 0.2, objective: 0.2 };
+const TILE_BLEND_DEPTH_DEFAULT = 0.4;
+// Tetto per terreno che riceve: il tracciato del sentiero resta leggibile
+const TILE_BLEND_MAX_IN = { trail: 0.38 };
+// Texture usata quando il terreno invade un vicino: solo il fondo, senza gli
+// elementi che non devono comparire a metà nel tile accanto (capanne, tracciato)
+const TILE_SURFACE = {
+  village: (ctx, x, y, ts, rng) => _grass(ctx, x, y, ts, rng, 10),
+  trail: (ctx, x, y, ts, rng) => _grain(ctx, x, y, ts, rng, 14, 0.1),
+  objective: (ctx, x, y, ts, rng) => _tdPavers(ctx, x, y, ts, rng, 4),
 };
 const TILE_HEIGHT = {
   wall: 0.32,
@@ -669,14 +693,6 @@ function _isGround(def) {
   return !!def && !_tileHeight(def) && !WATER_IDS.has(def.id) && def.id !== "bridge";
 }
 
-function _hexRgb(color) {
-  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color || "");
-  if (!m) return null;
-  const h = m[1].length === 3 ? m[1].replace(/./g, "$&$&") : m[1];
-  const n = parseInt(h, 16);
-  return `${n >> 16},${(n >> 8) & 255},${n & 255}`;
-}
-
 // Gradiente dal lato `d` del tile verso l'interno, profondo `len`
 function _edgeGradient(ctx, x, y, ts, d, len, stops) {
   const [dx, dy] = _DIRS[d];
@@ -700,17 +716,99 @@ function _edgePoint(x, y, ts, d, s, depth) {
   ];
 }
 
-function _drawBleed(ctx, x, y, ts, d, rgb, rng) {
-  const len = ts * 0.22;
+function _outranks(a, b) {
+  const pa = TILE_BLEED_PRIORITY[a.id] || 0;
+  const pb = TILE_BLEED_PRIORITY[b.id] || 0;
+  return pa !== pb ? pa > pb : a.id > b.id;
+}
+
+// Chiazza morbida per la maschera (alfa al centro → 0 sul bordo)
+function _softBlob(ctx, cx, cy, r, a) {
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g.addColorStop(0, `rgba(0,0,0,${a})`);
+  g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+}
+
+// Maschera del lato `d`: gradiente + frangia di chiazze. Le chiazze stanno su
+// una griglia di mondo lungo il lato, così la frangia prosegue senza salti nei
+// tile che condividono la stessa linea di contatto
+function _maskEdge(ctx, x, y, ts, d, len) {
   _edgeGradient(ctx, x, y, ts, d, len, [
-    [0, `rgba(${rgb},0.75)`],
-    [0.55, `rgba(${rgb},0.3)`],
-    [1, `rgba(${rgb},0)`],
+    [0, "rgba(0,0,0,0.9)"],
+    [0.6, "rgba(0,0,0,0.3)"],
+    [1, "rgba(0,0,0,0)"],
   ]);
-  // bordo irregolare: chiazze del terreno vicino a cavallo del lato
-  for (let i = 0; i < 5; i++) {
-    const [px, py] = _edgePoint(x, y, ts, d, ((i + 0.2 + rng() * 0.6) / 5) * ts, rng() * len * 0.5);
-    _disc(ctx, px, py, ts * (0.04 + rng() * 0.05), `rgba(${rgb},0.55)`);
+  const [dx, dy] = _DIRS[d];
+  const along = dx ? y : x;
+  const line = dx ? x + (dx > 0 ? ts : 0) : y + (dy > 0 ? ts : 0);
+  const step = ts / 6;
+  const k0 = Math.round(along / step);
+  for (let k = k0 - 1; k <= k0 + 6; k++) {
+    const h1 = _hash01(k * 12.99 + line * 0.783 + d * 3.1);
+    const h2 = _hash01(k * 7.31 + line * 0.517 + d * 5.7);
+    const [px, py] = _edgePoint(x, y, ts, d, (k + 0.5) * step - along, len * (0.1 + h1 * 0.4));
+    _softBlob(ctx, px, py, len * (0.35 + h2 * 0.45), 0.8);
+  }
+}
+
+// Tele di appoggio riusate: texture del vicino e maschera (ridimensionare
+// azzera anche lo stato del contesto)
+let _blendTex = null;
+let _blendMask = null;
+function _blendCanvas(c, px) {
+  c = c || document.createElement("canvas");
+  c.width = px;
+  c.height = px;
+  return c;
+}
+
+function _drawSoftEdges(ctx, defAt, def, c, r, ts) {
+  const invaders = new Map(); // id → { def, sides, corners }
+  const take = (n) => {
+    if (!_isGround(n) || n.id === def.id || !_outranks(n, def)) return null;
+    if (!invaders.has(n.id)) invaders.set(n.id, { def: n, sides: [], corners: [] });
+    return invaders.get(n.id);
+  };
+  _DIRS.forEach(([dx, dy], d) => take(defAt(c + dx, r + dy))?.sides.push(d));
+  // angolo toccato solo in diagonale (i due lati adiacenti sono altro terreno)
+  for (const [dx, dy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+    const n = defAt(c + dx, r + dy);
+    const a = defAt(c + dx, r);
+    const b = defAt(c, r + dy);
+    if (!n || !_isGround(a) || !_isGround(b) || a.id === n.id || b.id === n.id) continue;
+    take(n)?.corners.push([dx, dy]);
+  }
+  if (!invaders.size) return;
+
+  const k = ctx.getTransform().a; // densità della cache del terreno
+  const px = Math.ceil(ts * k);
+  const x = c * ts;
+  const y = r * ts;
+  const cap = TILE_BLEND_MAX_IN[def.id] ?? 1;
+  // dal più debole al più forte: il terreno dominante resta sopra
+  const list = [...invaders.values()].sort((p, q) => (_outranks(p.def, q.def) ? 1 : -1));
+  for (const { def: n, sides, corners } of list) {
+    _blendTex = _blendCanvas(_blendTex, px);
+    _blendMask = _blendCanvas(_blendMask, px);
+    const tg = _blendTex.getContext("2d");
+    const mg = _blendMask.getContext("2d");
+    // coordinate di mondo: i pattern allineati al mondo restano continui
+    tg.setTransform(k, 0, 0, k, -x * k, -y * k);
+    mg.setTransform(k, 0, 0, k, -x * k, -y * k);
+    tg.globalAlpha = 0.85; // come il fondo dei tile in getTerrainCache
+    tg.fillStyle = n.color || "#2d5a1b";
+    tg.fillRect(x, y, ts, ts);
+    tg.globalAlpha = 1;
+    _paintDetails(tg, TILE_SURFACE[n.id] || TILE_DETAILS[n.id], x, y, ts, _tileRng(c + 0.71, r + 0.43));
+    const len = ts * Math.min(cap, TILE_BLEND_DEPTH[n.id] ?? TILE_BLEND_DEPTH_DEFAULT);
+    for (const d of sides) _maskEdge(mg, x, y, ts, d, len);
+    for (const [dx, dy] of corners) _softBlob(mg, dx > 0 ? x + ts : x, dy > 0 ? y + ts : y, len * 1.2, 0.9);
+    tg.setTransform(1, 0, 0, 1, 0, 0);
+    tg.globalCompositeOperation = "destination-in";
+    tg.drawImage(_blendMask, 0, 0);
+    ctx.drawImage(_blendTex, 0, 0, ts * k, ts * k, x, y, ts, ts);
   }
 }
 
@@ -767,15 +865,7 @@ function drawTerrainTransitions(ctx, md, ts) {
           if (n && !WATER_IDS.has(n.id) && n.id !== "bridge") _drawShore(ctx, x, y, ts, d);
         });
       } else if (_isGround(def)) {
-        const p = TILE_BLEED_PRIORITY[def.id] || 0;
-        const rng = _tileRng(c + 0.37, r + 0.61);
-        _DIRS.forEach(([dx, dy], d) => {
-          const n = defAt(c + dx, r + dy);
-          if (!_isGround(n) || n.id === def.id) return;
-          if ((TILE_BLEED_PRIORITY[n.id] || 0) <= p) return;
-          const rgb = _hexRgb(n.color);
-          if (rgb) _drawBleed(ctx, x, y, ts, d, rgb, rng);
-        });
+        _drawSoftEdges(ctx, defAt, def, c, r, ts);
       }
       if (!_tileHeight(def)) {
         _drawCastShadow(
