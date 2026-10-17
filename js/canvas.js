@@ -179,7 +179,7 @@ function fireAtTarget(target) {
 }
 
 function onCanvasClick(e) {
-  if (G.phase !== "player") return;
+  if (G.phase !== "player" || G.throwing) return;
 
   const { col, row } = screenToTile(e.clientX, e.clientY);
   if (col < 0 || row < 0 || col >= G.mapData.cols || row >= G.mapData.rows)

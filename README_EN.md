@@ -117,6 +117,8 @@ Some units carry **multiple weapons**. Pressing "Attack" opens a picker showing 
 
 AoE weapons resolve with a single automatic dice roll applied to all targets in the area. The explosion hits both VC and US soldiers within its radius.
 
+**Hand grenades:** throws aren't precise. Half the time the grenade lands on one of the 8 tiles around the chosen one (dashed 3×3 square in the preview): branches, short or long throws, rolling. It never lands off the map or against walls, buildings or bunkers. You see the grenade fly in an arc and bounce to where it lands, then it explodes. Beware of friendly fire: with the target 2 tiles away the grenade may end up next to the thrower.
+
 **Ammo:** weapons with limited ammo show the remaining count (e.g. `×2`). When ammo is depleted, the weapon no longer appears in the picker.
 
 ---
@@ -601,6 +603,9 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | `rounds` | number | (optional, visual only) Tracers shown per attack (1–5); when absent 1 for snipers, 3 for other weapons |
 | `smoke` | number | (optional, AoE weapons only) Smoke grenade: no damage, creates smoke within `aoe` for N turns |
 | `artillery` | boolean | (optional, AoE weapons only) Artillery call: the strike lands at the start of the next turn and also hits hidden VC |
+| `thrown` | boolean | (optional, US AoE weapons only) Hand-thrown: arc animation with bounces before the explosion |
+| `scatter` | number | (optional, US AoE weapons only) Throw deviation: radius in tiles of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: "full"` |
+| `scatterChance` | number | (optional, with `scatter`) Probability (0–1) that the throw deviates to another tile of the square; default 0.5 |
 
 **Behavior:**
 

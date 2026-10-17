@@ -46,6 +46,9 @@
         "range": 3,
         "ammo": 2,
         "aoe": 1,
+        "thrown": true,
+        "scatter": 1,
+        "scatterChance": 0.5,
         "noise": 6,
         "sound": "assets/grenade.mp3"
       },

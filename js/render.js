@@ -763,6 +763,16 @@ function renderOverlay() {
     }
     // Tile bersaglio: bordo più marcato
     const { x: bx, y: by } = tileToScreen(tc, tr);
+    // Granate: quadrato tratteggiato in cui il lancio può deviare (combat.js:throwLanding)
+    if (w.scatter) {
+      const s = w.scatter;
+      ctx.save();
+      ctx.setLineDash([ts * 0.12, ts * 0.08]);
+      ctx.strokeStyle = "rgba(255,235,160,0.85)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(bx - s * ts + 1, by - s * ts + 1, (2 * s + 1) * ts - 2, (2 * s + 1) * ts - 2);
+      ctx.restore();
+    }
     // Raggio del rumore dell'esplosione, dal punto d'impatto
     if (G.selectedUnit)
       strokeNoiseOutline(ctx, bx, by, ts, weaponNoise(G.selectedUnit, w));

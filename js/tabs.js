@@ -384,7 +384,7 @@ function updateActionButtons() {
 
       if (id.includes("endturn")) {
         el.disabled =
-          !isPlayer || !!G.pendingDice || G.actionMode === "aoe_confirm";
+          !isPlayer || !!G.pendingDice || G.throwing || G.actionMode === "aoe_confirm";
       }
 
       if (id.includes("dice")) {

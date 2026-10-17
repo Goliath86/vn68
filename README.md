@@ -117,6 +117,8 @@ Alcune unità dispongono di **più armi**. Premendo "Attacca" compare un seletto
 
 Le armi AoE si risolvono con un singolo tiro di dado automatico applicato a tutti i bersagli nell'area — non è richiesto il dado manuale. L'esplosione colpisce sia VC che soldati US che si trovano nel raggio.
 
+**Granate a mano:** il lancio non è preciso. Una volta su due la granata finisce su uno degli 8 tile attorno a quello scelto (quadrato 3×3 tratteggiato nell'anteprima): rami, lancio corto o lungo, rotolamenti. Non finisce mai fuori mappa né contro muri, edifici o bunker. Si vede la granata volare ad arco e rimbalzare fino al punto di caduta, poi esplode. Attenzione al fuoco amico: con il bersaglio a 2 tile la granata può finire accanto a chi l'ha lanciata.
+
 **Munizioni:** le armi con munizioni limitate mostrano il numero rimanente (es. `×2`). Quando le munizioni si esauriscono, l'arma non appare più nel selettore.
 
 ---
@@ -600,6 +602,9 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | `rounds` | number | (opzionale, solo grafica) Traccianti mostrati per attacco (1–5); se assente 1 per i cecchini, 3 per le altre armi |
 | `smoke` | number | (opzionale, solo armi AoE) Fumogeno: nessun danno, crea fumo nel raggio `aoe` per N turni |
 | `artillery` | boolean | (opzionale, solo armi AoE) Richiesta d'artiglieria: il colpo cade all'inizio del turno successivo e colpisce anche i VC nascosti |
+| `thrown` | boolean | (opzionale, solo armi AoE US) Lancio a mano: animazione ad arco con rimbalzi prima dell'esplosione |
+| `scatter` | number | (opzionale, solo armi AoE US) Deviazione del lancio: raggio in tile del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: "full"` |
+| `scatterChance` | number | (opzionale, con `scatter`) Probabilità (0–1) che il lancio devii su un altro tile del quadrato; default 0.5 |
 
 **Comportamento:**
 

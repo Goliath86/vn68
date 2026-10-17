@@ -230,7 +230,10 @@ async function simThrow(u, aoe) {
   clearLastMove();
   u.ap -= 1;
   consumeShot(aoe.w);
-  await resolveAoeCombat(u, aoe.w, aoe.tile.col, aoe.tile.row, false);
+  // Stessa deviazione del lancio del giocatore, senza animazione
+  const land = throwLanding(aoe.w, aoe.tile.col, aoe.tile.row);
+  if (land.col !== aoe.tile.col || land.row !== aoe.tile.row) statAdd("grenadeScatter");
+  await resolveAoeCombat(u, aoe.w, land.col, land.row, false);
   setActionMode(null);
   return true;
 }

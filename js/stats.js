@@ -10,7 +10,7 @@ function newMissionStats() {
   return {
     // Fuoco US (attacchi diretti; usExpHits = somma delle probabilità di colpire)
     usShots: 0, usHits: 0, usExpHits: 0, usDmg: 0, usFlank: 0, usRear: 0,
-    meleeKills: 0, owShots: 0, owHits: 0, suppressions: 0, aoeUs: 0,
+    meleeKills: 0, owShots: 0, owHits: 0, suppressions: 0, aoeUs: 0, grenadeScatter: 0,
     artillery: 0, friendlyFire: 0,
     // Fuoco VC
     vcShots: 0, vcHits: 0, vcExpHits: 0, vcDmg: 0, vcFlank: 0, vcRear: 0,
@@ -158,7 +158,7 @@ function summaryRows(s, agg) {
       [t("stats.melee_kills"), s.meleeKills],
       [t("stats.overwatch"), `${s.owHits}/${s.owShots}`],
       [t("stats.suppressions"), s.suppressions],
-      [t("stats.explosives"), `${s.aoeUs} · ${t("stats.artillery")} ${s.artillery}`],
+      [t("stats.explosives"), `${s.aoeUs} (${t("stats.scattered")} ${s.grenadeScatter || 0}) · ${t("stats.artillery")} ${s.artillery}`],
       [t("stats.friendly_fire"), s.friendlyFire],
     ]],
     [t("stats.sec_vc_fire"), [

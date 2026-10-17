@@ -19,6 +19,7 @@ const G = {
   actionMode: null, // 'move' | 'attack' | 'weapon_select' | 'aoe_confirm' | 'special' | 'rotate' | 'stance'
   currentWeapon: null, // arma attiva durante l'azione corrente
   pendingAoe: null, // { col, row, weapon } — AoE in attesa di conferma
+  throwing: false, // granata in volo (combat.js:throwAoe): azioni bloccate
   aimTarget: null, // touch: VC puntato col primo tap, il secondo spara (canvas.js)
   lastMove: null, // { unit, fromCol, fromRow, prevAp } — ultimo movimento annullabile
   reachable: [], // celle raggiungibili

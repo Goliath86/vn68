@@ -258,7 +258,7 @@ document.getElementById("btn-undo").addEventListener("click", () => {
 const endTurnOverlay = document.getElementById("endturn-overlay");
 
 function requestEndTurn() {
-  if (G.phase !== "player" || G.pendingDice) return;
+  if (G.phase !== "player" || G.pendingDice || G.throwing) return;
   const withAp = G.units.filter((u) => u.alive && u.ap > 0).length;
   if (withAp > 0) {
     document.getElementById("endturn-msg").textContent = t(
@@ -310,7 +310,7 @@ document.addEventListener("keydown", (e) => {
     }
     return;
   }
-  if (!G.mapData || G.phase !== "player" || G.pendingDice) return;
+  if (!G.mapData || G.phase !== "player" || G.pendingDice || G.throwing) return;
   const u = G.selectedUnit;
   if (e.key === "Tab") {
     e.preventDefault();

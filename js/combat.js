@@ -397,6 +397,48 @@ function getEnemyStats(enemy) {
   return { attack: 2, range: 2, defense: 0, move: 3 };
 }
 
+// ── LANCIO A MANO (granate) ────────────────────────────────────────────
+// Campo arma "scatter": raggio in tile del quadrato in cui la granata può
+// finire al posto del tile scelto (1 = quadrato 3×3 centrato sul bersaglio:
+// rami, lancio impreciso, rotolamenti); "scatterChance": probabilità di
+// deviare, verso uno degli altri tile del quadrato a caso (default 0.5).
+// Mai fuori mappa né su tile che bloccano la vista (muri, edifici, bunker:
+// la granata ci rimbalza contro).
+const SCATTER_CHANCE = 0.5;
+
+function throwLanding(weapon, tc, tr) {
+  const s = weapon.scatter || 0;
+  if (!s || Math.random() >= (weapon.scatterChance ?? SCATTER_CHANCE)) return { col: tc, row: tr };
+  const options = [];
+  for (let dr = -s; dr <= s; dr++)
+    for (let dc = -s; dc <= s; dc++) {
+      if (!dc && !dr) continue;
+      const tile = getTileAt(tc + dc, tr + dr);
+      if (tile && tile.losBlock !== "full") options.push({ col: tc + dc, row: tr + dr });
+    }
+  return options.length ? pick(options) : { col: tc, row: tr };
+}
+
+// Lancio del giocatore: punto di caduta (con deviazione), animazione ad
+// arco con rimbalzi (animations.js:_drawGrenadeThrow), poi l'esplosione.
+// Durante il volo G.throwing blocca le altre azioni.
+async function throwAoe(attacker, weapon, tc, tr) {
+  const land = throwLanding(weapon, tc, tr);
+  if (weapon.thrown) {
+    G.throwing = true;
+    updateUI();
+    const plan = planGrenadeThrow(attacker, { col: tc, row: tr }, land);
+    addFX("grenade", plan, plan.ms);
+    await sleep(plan.ms);
+    G.throwing = false;
+  }
+  if (land.col !== tc || land.row !== tr) {
+    statAdd("grenadeScatter");
+    log(t("log.grenade_scatter", { name: attacker.name, weapon: weapon.label }), "combat");
+  }
+  await resolveAoeCombat(attacker, weapon, land.col, land.row, false);
+}
+
 // Risolve un attacco AoE (granata/RPG): dado attacco auto, ogni bersaglio tira difesa singolarmente.
 // hitHidden: colpisce anche i VC nascosti nel FOW (artiglieria)
 async function resolveAoeCombat(

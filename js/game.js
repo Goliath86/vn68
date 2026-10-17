@@ -68,6 +68,7 @@ function startGame(
   G.enemies = [];
   G.selectedUnit = null;
   G.actionMode = null;
+  G.throwing = false;
   G.overwatchList = [];
   G.suppressList = [];
   G.activeFires = [];
@@ -375,7 +376,7 @@ function showGameOver(win) {
 
 function endPlayerTurn() {
   if (G.phase !== "player") return;
-  if (G.pendingDice) return;
+  if (G.pendingDice || G.throwing) return;
   clearLastMove();
   tutorialEvent("endTurn", { turn: G.turn });
   // Cancella qualsiasi modalità azione in corso (incluso weapon_select e aoe_confirm)

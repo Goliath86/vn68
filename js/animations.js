@@ -1155,8 +1155,132 @@ function _drawEffect(ctx, ts, fx, p) {
       _drawNoise(ctx, ts, fx.data, p);
       break;
     }
+
+    case "grenade": {
+      _drawGrenadeThrow(ctx, ts, fx.data, p);
+      break;
+    }
   }
   ctx.restore();
+}
+
+// ── GRENADE — lancio a mano con rimbalzi ───────────────────────────────
+// Volo ad arco dal lanciatore al tile mirato, poi rimbalzi sempre più bassi
+// (e rotolamento) fino al punto di caduta reale (combat.js:throwLanding),
+// una breve pausa a terra e l'esplosione. Traiettoria pianificata una volta
+// (planGrenadeThrow) in coordinate tile: { ms, segs, rest, spin }.
+const GRENADE_THROW = {
+  flightMs: 420, // volo base
+  flightMsPerTile: 90,
+  peak: 0.55, // altezza dell'arco (tile), più alta per i lanci lunghi
+  peakPerTile: 0.12,
+  bounces: [0.28, 0.11, 0.04], // altezze dei rimbalzi (tile)
+  bounceMs: 270, // durata del primo rimbalzo, i successivi in proporzione
+  restMs: 160, // ferma a terra prima di esplodere
+};
+
+function planGrenadeThrow(from, aim, land) {
+  const G_ = GRENADE_THROW;
+  const jit = () => (Math.random() - 0.5) * 0.3;
+  const sx = from.col + 0.5,
+    sy = from.row + 0.5;
+  // Primo impatto sul tile mirato, fine corsa sul tile reale
+  const ix = aim.col + 0.5 + jit(),
+    iy = aim.row + 0.5 + jit();
+  let fx = land.col + 0.5 + jit(),
+    fy = land.row + 0.5 + jit();
+  const moved = land.col !== aim.col || land.row !== aim.row;
+  if (!moved) {
+    // Stesso tile: piccolo rotolamento in avanti, senza uscire dal tile
+    const d = Math.hypot(ix - sx, iy - sy) || 1;
+    fx = clamp(ix + ((ix - sx) / d) * 0.25, land.col + 0.15, land.col + 0.85);
+    fy = clamp(iy + ((iy - sy) / d) * 0.25, land.row + 0.15, land.row + 0.85);
+  }
+  const range = Math.hypot(ix - sx, iy - sy);
+  const segs = [];
+  let t = G_.flightMs + G_.flightMsPerTile * range;
+  segs.push({ x0: sx, y0: sy, x1: ix, y1: iy, h: G_.peak + G_.peakPerTile * range, t0: 0, t1: t, z0: 0.35 });
+  // Rimbalzi: durata ∝ √altezza; il tragitto I→F si copre in proporzione
+  const hs = moved ? G_.bounces : G_.bounces.slice(0, 2);
+  const durs = hs.map((h) => G_.bounceMs * Math.sqrt(h / G_.bounces[0]));
+  const total = durs.reduce((a, b) => a + b, 0);
+  let done = 0;
+  hs.forEach((h, i) => {
+    const a = done / total;
+    done += durs[i];
+    const b = done / total;
+    segs.push({
+      x0: ix + (fx - ix) * a, y0: iy + (fy - iy) * a,
+      x1: ix + (fx - ix) * b, y1: iy + (fy - iy) * b,
+      h, t0: t, t1: t + durs[i], z0: 0,
+    });
+    t += durs[i];
+  });
+  return { segs, rest: { x: fx, y: fy }, ms: t + G_.restMs, spin: Math.random() < 0.5 ? -1 : 1 };
+}
+
+function _drawGrenadeThrow(ctx, ts, d, p) {
+  const now = p * d.ms;
+  let gx = d.rest.x,
+    gy = d.rest.y,
+    z = 0;
+  for (const s of d.segs) {
+    if (now < s.t0 || now >= s.t1) continue;
+    const u = (now - s.t0) / (s.t1 - s.t0);
+    gx = s.x0 + (s.x1 - s.x0) * u;
+    gy = s.y0 + (s.y1 - s.y0) * u;
+    // Parabola; nel volo parte dall'altezza della mano (z0) e arriva a terra
+    z = 4 * s.h * u * (1 - u) + s.z0 * (1 - u);
+    break;
+  }
+  const { x: ox, y: oy } = tileToScreen(0, 0);
+  const px = ox + gx * ts,
+    py = oy + gy * ts;
+  const r = ts * 0.075;
+
+  // Ombra a terra: più piccola e tenue quando la granata è in alto
+  const sh = 1 / (1 + z * 1.5);
+  ctx.fillStyle = `rgba(0,0,0,${(0.35 * sh).toFixed(3)})`;
+  ctx.beginPath();
+  ctx.ellipse(px, py + r * 0.6, r * 1.1 * sh, r * 0.45 * sh, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Corpo: verde oliva con riflesso, leva (cucchiaio) che gira con la rotazione
+  const bx = px,
+    by = py - z * ts;
+  // Rotazione: veloce in volo, più lenta nei rimbalzi, ferma a terra
+  const flightEnd = d.segs[0].t1;
+  const bounceEnd = d.segs[d.segs.length - 1].t1;
+  const ang =
+    d.spin *
+    (Math.min(now, flightEnd) * 0.018 + Math.max(0, Math.min(now, bounceEnd) - flightEnd) * 0.008);
+  ctx.save();
+  ctx.translate(bx, by);
+  ctx.rotate(ang);
+  ctx.fillStyle = "#3d4a26";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r, r * 0.9, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.6)";
+  ctx.lineWidth = Math.max(1, ts * 0.012);
+  ctx.stroke();
+  ctx.fillStyle = "#8a8f7a"; // spoletta e leva
+  ctx.fillRect(-r * 0.3, -r * 1.25, r * 0.6, r * 0.45);
+  ctx.fillRect(r * 0.15, -r * 1.1, r * 0.25, r * 1.4);
+  ctx.fillStyle = "rgba(220,230,190,0.35)";
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.35, -r * 0.3, r * 0.35, r * 0.25, -0.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // A terra in attesa dell'esplosione: la spoletta sfrigola
+  if (now >= d.segs[d.segs.length - 1].t1) {
+    const k = (now / 60) % 1;
+    ctx.fillStyle = `rgba(255,200,90,${(0.8 * (1 - k)).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.arc(bx + (k - 0.5) * r, by - r * (1.4 + k), r * 0.22 * (1 - k * 0.5), 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 // ── NOISE — onda sonora di uno sparo/esplosione ─────────────────────────

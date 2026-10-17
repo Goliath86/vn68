@@ -167,15 +167,16 @@ async function handleSpecialAction(col, row) {
   }
 }
 
-function confirmAoeAttack() {
-  if (!G.pendingAoe || !G.selectedUnit) return;
+async function confirmAoeAttack() {
+  if (!G.pendingAoe || !G.selectedUnit || G.throwing) return;
   const u = G.selectedUnit;
   const { col: tc, row: tr, weapon: w } = G.pendingAoe;
   clearLastMove();
   u.ap -= 1;
   consumeShot(w);
   tutorialEvent("aoe", { cls: u.cls, weapon: w.id });
-  resolveAoeCombat(u, w, tc, tr, false);
   setActionMode(null);
   updateUI();
+  // Granate: deviazione e volo animato prima dell'esplosione (combat.js)
+  await throwAoe(u, w, tc, tr);
 }
