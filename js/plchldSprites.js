@@ -805,12 +805,17 @@ const TILE_SURFACE = {
 const TILE_HEIGHT = {
   wall: 0.32,
   wall_breach: 0.32,
-  obstacle: 0.12, // massi/tronchi bassi, non coprono tutto il tile
+  // Massi/tronchi bassi su erba: hanno già le loro ombre, il tile no
+  // (0 esplicito: altrimenti varrebbe il default di losBlock "full")
+  obstacle: 0,
   building: 0.3,
   temple: 0.34,
   bunker: 0.12,
 };
 const WATER_IDS = new Set(["river", "ford"]);
+// Tile bassi che restano fuori dalle fusioni tra terreni (i massi e i
+// tronchi arrivano vicino ai bordi e verrebbero coperti)
+const NO_BLEND_IDS = new Set(["obstacle"]);
 const _DIRS = [
   [0, -1],
   [1, 0],
@@ -824,7 +829,9 @@ function _tileHeight(def) {
 }
 
 function _isGround(def) {
-  return !!def && !_tileHeight(def) && !WATER_IDS.has(def.id) && def.id !== "bridge";
+  return (
+    !!def && !_tileHeight(def) && !WATER_IDS.has(def.id) && !NO_BLEND_IDS.has(def.id) && def.id !== "bridge"
+  );
 }
 
 // Gradiente dal lato `d` del tile verso l'interno, profondo `len`
