@@ -124,6 +124,8 @@ function renderMap(animFrame = false) {
   } else {
     // Griglia tile procedurale, pre-renderizzata in cache offscreen
     ctx.drawImage(getTerrainCache(), G.camX, G.camY, md.cols * ts, md.rows * ts);
+    // Onde animate su fiume e guado (animations.js:renderWaterWaves)
+    renderWaterWaves(ctx, ts);
     renderWindGrass(ctx, _terrainCache.grass);
     if (_terrainCache.canopy) {
       renderWindCanopy(ctx, _terrainCache.canopy);

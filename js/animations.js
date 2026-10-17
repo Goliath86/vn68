@@ -59,7 +59,7 @@ function _needsFastAnim() {
 }
 
 function _needsAnimLoop() {
-  return _needsFastAnim() || windActive() || weatherActive();
+  return _needsFastAnim() || windActive() || weatherActive() || waterTiles().length > 0;
 }
 
 function _startTileAnimLoop() {
@@ -246,6 +246,130 @@ function weatherActive() {
     (isRaining() || _rainLevel > 0 || mistTiles().length > 0 ||
       cloudShadowsWanted() || _cloudShadowLevel > 0)
   );
+}
+
+// ── ONDE SUL FIUME E SUL GUADO ────────────────────────────────────────
+// Sopra la texture ferma della cache (plchldSprites.js:_tdRiver): creste
+// chiare e cavi scuri che scorrono nel verso della corrente, più riflessi
+// che luccicano. La corrente è orizzontale se il tile ha acqua (o un ponte)
+// a est/ovest, altrimenti verticale. Fase in coordinate mondo, così le
+// creste proseguono senza salti tra tile vicini. Solo terreno procedurale
+// (le mappe con immagine hanno il fiume già dipinto).
+const WATER_WAVES = {
+  lines: 3, // file di creste per tile
+  speed: 2.2, // rad/s: scorrimento delle creste (~4 s per tile)
+  crest: 0.55, // soglia del seno oltre cui si disegna una cresta
+  amp: 0.03, // ondeggiamento trasversale (frazione di tile)
+  glints: 2, // riflessi per tile
+  fordAlpha: 0.6, // il guado è acqua bassa: onde più tenui
+};
+let _waterCache = null; // { mapData, tiles: [{ c, r, horiz, ford }] }
+
+function waterTiles() {
+  const md = G.mapData;
+  if (!md || G.tileImg) return [];
+  if (_waterCache && _waterCache.mapData === md) return _waterCache.tiles;
+  const idAt = (c, r) =>
+    c < 0 || r < 0 || c >= md.cols || r >= md.rows ? null : md.tileTypes[md.grid[r][c]]?.id;
+  const wet = (c, r) => {
+    const id = idAt(c, r);
+    return id === "river" || id === "ford" || id === "bridge";
+  };
+  const tiles = [];
+  for (let r = 0; r < md.rows; r++)
+    for (let c = 0; c < md.cols; c++) {
+      const id = idAt(c, r);
+      if (id !== "river" && id !== "ford") continue;
+      const h = wet(c - 1, r) + wet(c + 1, r);
+      const v = wet(c, r - 1) + wet(c, r + 1);
+      tiles.push({ c, r, horiz: h >= v, ford: id === "ford" });
+    }
+  _waterCache = { mapData: md, tiles };
+  return tiles;
+}
+
+function renderWaterWaves(ctx, ts) {
+  const tiles = waterTiles();
+  if (!tiles.length) return;
+  const W = WATER_WAVES;
+  const t = performance.now() / 1000;
+  const k = ts / TILE;
+  const step = 3; // unità mondo tra i punti delle creste
+  const paths = { light: new Path2D(), dark: new Path2D(), fordLight: new Path2D(), fordDark: new Path2D() };
+  const glints = [];
+  const c0 = Math.floor(-G.camX / ts) - 1;
+  const c1 = Math.floor((G.canvas.width - G.camX) / ts) + 1;
+  const r0 = Math.floor(-G.camY / ts) - 1;
+  const r1 = Math.floor((G.canvas.height - G.camY) / ts) + 1;
+
+  for (const w of tiles) {
+    if (w.c < c0 || w.c > c1 || w.r < r0 || w.r > r1) continue;
+    const { x, y } = tileToScreen(w.c, w.r);
+    const along0 = (w.horiz ? w.c : w.r) * TILE; // inizio del tile lungo la corrente (mondo)
+    const lineBase = (w.horiz ? w.r : w.c) * W.lines;
+    const light = w.ford ? paths.fordLight : paths.light;
+    const dark = w.ford ? paths.fordDark : paths.dark;
+    // Punto del tile a distanza s lungo la corrente e `a` (0–1) di traverso
+    const pt = (s, a) => (w.horiz ? [x + s * k, y + a * ts] : [x + a * ts, y + s * k]);
+
+    for (let i = 0; i < W.lines; i++) {
+      const id = lineBase + i;
+      const ph = _hash01(id * 3.7) * 6.28;
+      const freq = 6.28 / (TILE * (0.45 + 0.35 * _hash01(id * 5.1 + 1)));
+      const across = (i + 0.3 + 0.4 * _hash01(id * 9.3 + 2)) / W.lines;
+      let lightOn = false;
+      let darkOn = false;
+      for (let s = 0; s <= TILE; s += step) {
+        const wa = along0 + s;
+        const wave = Math.sin(wa * freq - t * W.speed + ph);
+        const a = across + Math.sin(wa * freq * 0.5 + t * 0.7 + ph) * W.amp;
+        const [px, py] = pt(s, a);
+        if (wave > W.crest) {
+          lightOn ? light.lineTo(px, py) : light.moveTo(px, py);
+          lightOn = true;
+        } else lightOn = false;
+        // cavo: mezza fila più in là, in controfase
+        const [qx, qy] = pt(s, a + 0.5 / W.lines);
+        if (wave < -W.crest - 0.15 && a + 0.5 / W.lines < 0.97) {
+          darkOn ? dark.lineTo(qx, qy) : dark.moveTo(qx, qy);
+          darkOn = true;
+        } else darkOn = false;
+      }
+    }
+
+    for (let g = 0; g < W.glints; g++) {
+      const h = _hash01(w.c * 31.1 + w.r * 17.3 + g * 5.9);
+      const lum = Math.max(0, Math.sin(t * (1.5 + h) + h * 40));
+      const a = lum ** 6 * (w.ford ? W.fordAlpha : 1);
+      if (a < 0.03) continue;
+      const [gx, gy] = pt(TILE * (0.15 + 0.7 * _hash01(h * 91)), 0.15 + 0.7 * _hash01(h * 57));
+      glints.push({ gx, gy, a, horiz: w.horiz });
+    }
+  }
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineWidth = Math.max(1, 1.2 * k);
+  ctx.strokeStyle = "rgba(195,232,255,0.38)";
+  ctx.stroke(paths.light);
+  ctx.strokeStyle = "rgba(0,22,44,0.22)";
+  ctx.stroke(paths.dark);
+  ctx.globalAlpha = W.fordAlpha;
+  ctx.strokeStyle = "rgba(195,232,255,0.38)";
+  ctx.stroke(paths.fordLight);
+  ctx.strokeStyle = "rgba(0,22,44,0.22)";
+  ctx.stroke(paths.fordDark);
+  ctx.lineWidth = Math.max(1, 1.5 * k);
+  const len = 4 * k;
+  for (const { gx, gy, a, horiz } of glints) {
+    ctx.globalAlpha = a * 0.8;
+    ctx.strokeStyle = "#f4fbff";
+    ctx.beginPath();
+    ctx.moveTo(gx - (horiz ? len : 0), gy - (horiz ? 0 : len));
+    ctx.lineTo(gx + (horiz ? len : 0), gy + (horiz ? 0 : len));
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 // ── OMBRE DELLE NUVOLE ────────────────────────────────────────────────
