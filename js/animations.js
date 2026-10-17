@@ -6,6 +6,8 @@ let _fxLoopActive = false;
 // delay (ms, opzionale): l'effetto parte più tardi, es. all'arrivo del tracciante
 function addFX(type, data, duration, delay = 0) {
   G.effects.push({ type, data, duration, t0: performance.now() + delay });
+  // Ogni esplosione (granate, RPG, artiglieria, mine) scuote gli alberi vicini
+  if (type === "explosion") addBlastShake(data.col, data.row, data.aoe ?? 0, delay);
   if (!_fxLoopActive) {
     _fxLoopActive = true;
     requestAnimationFrame(_fxTick);
@@ -151,6 +153,58 @@ function windAt(wx, wy, t) {
   return WIND.base + Math.sin(t * 1.7 + p * 0.03) * WIND.sway + windGust(wx, wy, t);
 }
 
+// ── SCOSSONE DELLE ESPLOSIONI SUGLI ALBERI ─────────────────────────────
+// L'onda d'urto spinge di colpo le chiome vicine lontano dal punto
+// d'esplosione, poi le chiome tornano indietro con un'oscillazione smorzata
+// (molla). L'onda viaggia: gli alberi più lontani si muovono un attimo dopo
+// e meno. Usa le chiome animate dal vento (renderWindCanopy): col vento
+// spento le chiome sono nella cache del terreno e restano ferme.
+const BLAST_SHAKE = {
+  reach: 1.6, // tile oltre il raggio dell'esplosione
+  push: 0.5, // spostamento massimo, in raggi della chioma
+  shockSpeed: 10, // tile/s dell'onda d'urto
+  decay: 0.35, // s: smorzamento dell'oscillazione
+  freq: 3.2, // oscillazioni/s del ritorno
+  duration: 1.8, // s, poi lo scossone si dimentica
+};
+let _blasts = []; // { x, y, reach, t0 } in coordinate mondo, t0 in s
+
+function addBlastShake(col, row, aoe, delayMs = 0) {
+  if (!windActive()) return;
+  _blasts.push({
+    x: (col + 0.5) * TILE,
+    y: (row + 0.5) * TILE,
+    reach: (aoe + BLAST_SHAKE.reach) * TILE,
+    t0: (performance.now() + delayMs) / 1000,
+  });
+  _startTileAnimLoop();
+}
+
+// Spostamento (in raggi della chioma) e intensità dello scossone in un punto
+function blastShakeAt(wx, wy, t) {
+  let dx = 0,
+    dy = 0,
+    k = 0;
+  for (const b of _blasts) {
+    const ox = wx - b.x,
+      oy = wy - b.y;
+    const d = Math.hypot(ox, oy);
+    if (d > b.reach) continue;
+    const local = t - b.t0 - d / (BLAST_SHAKE.shockSpeed * TILE);
+    if (local < 0) continue;
+    const fall = (1 - d / b.reach) ** 1.5;
+    // Parte dal massimo (colpo secco), poi molla smorzata
+    const env = Math.exp(-local / BLAST_SHAKE.decay) * Math.cos(Math.PI * 2 * BLAST_SHAKE.freq * local);
+    const amount = BLAST_SHAKE.push * fall * env;
+    if (d > 1) {
+      dx += (ox / d) * amount;
+      dy += (oy / d) * amount;
+    }
+    k = Math.max(k, Math.abs(env) * fall);
+  }
+  return { dx, dy, k };
+}
+
 // Chiome (plchldSprites.js:windCanopy): sprite della variante spostato
 // sottovento in proporzione alla piega, con un dondolio trasversale e un
 // lieve "respiro"; dove passa la raffica si sovrappone la sagoma chiara
@@ -165,6 +219,7 @@ function renderWindCanopy(ctx, canopy) {
   const x1 = (G.canvas.width - G.camX) / G.scale + m;
   const y1 = (G.canvas.height - G.camY) / G.scale + m;
   const half = CANOPY_SPRITE_R * CANOPY_SPRITE_EXT;
+  _blasts = _blasts.filter((b) => t - b.t0 < BLAST_SHAKE.duration);
   ctx.save();
   ctx.translate(G.camX, G.camY);
   ctx.scale(G.scale, G.scale);
@@ -172,14 +227,18 @@ function renderWindCanopy(ctx, canopy) {
     if (k.cx < x0 || k.cx > x1 || k.cy < y0 || k.cy > y1) continue;
     const w = windAt(k.cx, k.cy, t);
     const wob = Math.sin(t * 2.3 + k.ph) * k.rad * 0.025 * (0.5 + w);
-    const s = (k.rad / CANOPY_SPRITE_R) * (1 + Math.sin(t * 1.9 + k.ph) * 0.015);
-    const cx = k.cx + WIND.dirX * w * k.rad * 0.07 - WIND.dirY * wob;
-    const cy = k.cy + WIND.dirY * w * k.rad * 0.07 + WIND.dirX * wob;
+    // Scossone delle esplosioni: spinta via dal centro, chioma che si schiaccia
+    const bs = _blasts.length ? blastShakeAt(k.cx, k.cy, t) : null;
+    const s =
+      (k.rad / CANOPY_SPRITE_R) * (1 + Math.sin(t * 1.9 + k.ph) * 0.015) * (1 - (bs ? bs.k * 0.08 : 0));
+    const cx = k.cx + WIND.dirX * w * k.rad * 0.07 - WIND.dirY * wob + (bs ? bs.dx * k.rad : 0);
+    const cy = k.cy + WIND.dirY * w * k.rad * 0.07 + WIND.dirX * wob + (bs ? bs.dy * k.rad : 0);
     const sp = sprites[k.v];
     ctx.drawImage(sp.base, cx - half * s, cy - half * s, half * 2 * s, half * 2 * s);
-    const g = windGust(k.cx, k.cy, t);
+    // Foglie rovesciate (sagoma chiara) dove passa la raffica o l'onda d'urto
+    const g = Math.max(windGust(k.cx, k.cy, t), bs ? bs.k * 1.6 : 0);
     if (g > 0.05) {
-      ctx.globalAlpha = Math.min(0.3, g * 0.22);
+      ctx.globalAlpha = Math.min(0.35, g * 0.22);
       ctx.drawImage(sp.light, cx - half * s, cy - half * s, half * 2 * s, half * 2 * s);
       ctx.globalAlpha = 1;
     }
