@@ -1373,8 +1373,102 @@ function _drawEffect(ctx, ts, fx, p) {
       _drawGrenadeThrow(ctx, ts, fx.data, p);
       break;
     }
+
+    case "birds": {
+      _drawBirds(ctx, ts, fx.data, p);
+      break;
+    }
   }
   ctx.restore();
+}
+
+// ── BIRDS — stormo che si alza dalla giungla ───────────────────────────
+// Quando un'unità (US o VC) attraversa la giungla, con probabilità bassa un
+// piccolo stormo si alza da uno dei tile giungla del percorso e vola via,
+// allontanandosi dalla direzione da cui arriva l'intruso. Gli uccelli
+// salgono sopra le chiome, quindi si vedono anche sopra la Fog of War: un
+// indizio di movimento nemico nascosto (showInFog: false per toglierlo).
+const BIRDS = {
+  tileIds: new Set(["jungle"]),
+  chance: 0.08, // per movimento che attraversa almeno un tile giungla
+  count: [5, 9],
+  ms: 2600,
+  distance: 5, // tile percorsi dallo stormo
+  showInFog: true,
+};
+
+// Indice del passo del percorso in cui si alza lo stormo, -1 = nessuno
+function birdFlushStep(path) {
+  const idx = [];
+  for (let i = 1; i < path.length; i++) {
+    if (BIRDS.tileIds.has(getTileAt(path[i].col, path[i].row)?.id)) idx.push(i);
+  }
+  if (!idx.length || Math.random() >= BIRDS.chance) return -1;
+  return pick(idx);
+}
+
+function flushBirds(at, from) {
+  if (!BIRDS.showInFog && !isTileVisible(at.col, at.row)) return;
+  // Via dall'intruso: direzione del passo, con una deviazione casuale
+  const base = from ? Math.atan2(at.row - from.row, at.col - from.col) : Math.random() * Math.PI * 2;
+  const dir = base + (Math.random() - 0.5) * 2;
+  const n = Math.round(BIRDS.count[0] + Math.random() * (BIRDS.count[1] - BIRDS.count[0]));
+  const birds = [];
+  for (let i = 0; i < n; i++) {
+    birds.push({
+      ox: (Math.random() - 0.5) * 0.5, // partenza sparsa nel tile
+      oy: (Math.random() - 0.5) * 0.5,
+      delay: Math.random() * 0.2, // frazione della durata
+      dev: (Math.random() - 0.5) * 0.7, // deviazione dalla rotta dello stormo
+      speed: 0.85 + Math.random() * 0.3,
+      flap: 14 + Math.random() * 6, // battiti (rad/s)
+      ph: Math.random() * 6.28,
+      size: 0.075 + Math.random() * 0.03, // in tile
+    });
+  }
+  addFX("birds", { col: at.col, row: at.row, dir, birds }, BIRDS.ms);
+}
+
+function _drawBirds(ctx, ts, d, p) {
+  const { x, y } = tileToScreen(d.col, d.row);
+  const cx = x + ts / 2,
+    cy = y + ts / 2;
+  const t = (p * BIRDS.ms) / 1000;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  for (const b of d.birds) {
+    const q = (p - b.delay) / (1 - b.delay);
+    if (q <= 0) continue;
+    const heading = d.dir + b.dev * Math.min(1, q * 2);
+    // Partenza lenta (decollo), poi volo spedito; leggero ondeggiamento
+    const dist = BIRDS.distance * b.speed * q ** 1.6;
+    const wob = Math.sin(t * 3 + b.ph) * 0.12 * q;
+    const bx = cx + (b.ox + Math.cos(heading) * dist - Math.sin(heading) * wob) * ts;
+    const by = cy + (b.oy + Math.sin(heading) * dist + Math.cos(heading) * wob) * ts;
+    // Salendo verso la camera sembrano più grandi; svaniscono sul finale
+    const s = ts * b.size * (0.7 + 0.6 * Math.min(1, q / 0.35));
+    const alpha = Math.min(1, q / 0.1) * (q > 0.7 ? (1 - q) / 0.3 : 1);
+    // Ali viste dall'alto: apertura che cambia col battito
+    const flap = Math.sin(t * b.flap + b.ph);
+    const span = s * (0.55 + 0.45 * Math.abs(flap));
+    const sweep = s * (0.15 + 0.25 * (flap * 0.5 + 0.5));
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.rotate(heading);
+    ctx.globalAlpha = alpha * 0.9;
+    ctx.strokeStyle = "rgb(22,22,18)";
+    ctx.lineWidth = Math.max(1, s * 0.28);
+    ctx.beginPath();
+    ctx.moveTo(-sweep, -span);
+    ctx.quadraticCurveTo(s * 0.1, -span * 0.25, s * 0.25, 0);
+    ctx.quadraticCurveTo(s * 0.1, span * 0.25, -sweep, span);
+    ctx.stroke();
+    ctx.fillStyle = "rgb(22,22,18)";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s * 0.32, s * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 }
 
 // ── GRENADE — lancio a mano con rimbalzi ───────────────────────────────

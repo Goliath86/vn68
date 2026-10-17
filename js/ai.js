@@ -561,6 +561,11 @@ function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
   const duration = Math.min(segs * MOVE_STEP_MS, MOVE_MAX_MS);
   const t0 = performance.now();
   let lastIdx = 0;
+  // Stormo di uccelli che si alza da un tile giungla del percorso (animations.js)
+  const birdIdx = birdFlushStep(path);
+  const enter = (i) => {
+    if (i === birdIdx) flushBirds(path[i], path[i - 1]);
+  };
   enemy.vx = fromCol;
   enemy.vy = fromRow;
   _moveDust(fromCol, fromRow, false);
@@ -582,6 +587,7 @@ function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
       while (lastIdx < reached && lastIdx < segs - 1) {
         lastIdx++;
         _moveDust(path[lastIdx].col, path[lastIdx].row, false);
+        enter(lastIdx);
       }
       render();
       if (p < 1) requestAnimationFrame(frame);
@@ -589,6 +595,7 @@ function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
         enemy.vx = toCol;
         enemy.vy = toRow;
         _moveDust(toCol, toRow, true);
+        enter(segs);
         render();
         resolve();
       }
