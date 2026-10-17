@@ -160,6 +160,9 @@ function renderMap(animFrame = false) {
     drawTunnelEntrance(ctx, tn, ts);
   }
 
+  // Ombre delle nuvole di giorno (animations.js:renderCloudShadows)
+  renderCloudShadows(ctx, ts);
+
   // Nebbiolina sulla palude (animations.js:renderMist), coperta da notte e FOW
   renderMist(ctx, ts);
 

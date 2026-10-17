@@ -241,7 +241,105 @@ let _mistCache = null; // { mapData, grid, tiles: [{c, r, ph}], density }
 let _mistSprite = null;
 
 function weatherActive() {
-  return !!G.mapData && (isRaining() || _rainLevel > 0 || mistTiles().length > 0);
+  return (
+    !!G.mapData &&
+    (isRaining() || _rainLevel > 0 || mistTiles().length > 0 ||
+      cloudShadowsWanted() || _cloudShadowLevel > 0)
+  );
+}
+
+// ── OMBRE DELLE NUVOLE ────────────────────────────────────────────────
+// Di giorno con cielo nuvoloso (mechanics.js:currentWeather) e senza
+// pioggia: macchie scure morbide che attraversano la mappa sottovento,
+// in coordinate mondo (seguono pan e zoom). Dissolvenza come la pioggia.
+const CLOUD_SHADOW = {
+  fadeMs: 4000,
+  tilesPerCloud: 60, // una nuvola ogni ~60 tile di mappa
+  minClouds: 3,
+  maxClouds: 10,
+  speed: 22, // unità mondo/s (TILE = 64): ~3 s per tile
+  alpha: 0.6,
+  variants: 3,
+};
+let _cloudShadowLevel = 0;
+let _cloudShadowLast = 0;
+let _cloudSprites = null;
+
+function cloudShadowsWanted() {
+  const w = G.missionState?.weather;
+  return !!w?.cloudy && !isNight() && !isRaining();
+}
+
+// Sagome di nuvola: grappoli di sbuffi scuri a gradiente, disegnati una volta
+function _getCloudSprites() {
+  if (_cloudSprites) return _cloudSprites;
+  _cloudSprites = [];
+  const W = 256;
+  const H = 160;
+  for (let v = 0; v < CLOUD_SHADOW.variants; v++) {
+    const cv = document.createElement("canvas");
+    cv.width = W;
+    cv.height = H;
+    const g = cv.getContext("2d");
+    const puffs = 6 + v * 2;
+    for (let i = 0; i < puffs; i++) {
+      const cx = W * (0.22 + 0.56 * _hash01(v * 31 + i * 7));
+      const cy = H * (0.35 + 0.3 * _hash01(v * 17 + i * 13));
+      const r = H * (0.22 + 0.16 * _hash01(v * 11 + i * 5));
+      const grad = g.createRadialGradient(cx, cy, 0, cx, cy, r);
+      grad.addColorStop(0, "rgba(6,14,8,0.7)");
+      grad.addColorStop(0.6, "rgba(6,14,8,0.4)");
+      grad.addColorStop(1, "rgba(6,14,8,0)");
+      g.fillStyle = grad;
+      g.fillRect(0, 0, W, H);
+    }
+    _cloudSprites.push(cv);
+  }
+  return _cloudSprites;
+}
+
+function renderCloudShadows(ctx, ts) {
+  const now = performance.now();
+  const dt = _cloudShadowLast ? Math.min(now - _cloudShadowLast, 100) : 16;
+  _cloudShadowLast = now;
+  const target = cloudShadowsWanted() ? 1 : 0;
+  _cloudShadowLevel += Math.sign(target - _cloudShadowLevel) * (dt / CLOUD_SHADOW.fadeMs);
+  _cloudShadowLevel = clamp(_cloudShadowLevel, 0, 1);
+  if (_cloudShadowLevel <= 0) return;
+
+  const md = G.mapData;
+  const sprites = _getCloudSprites();
+  const k = ts / TILE; // mondo → schermo
+  const t = now / 1000;
+  const n = clamp(
+    Math.round((md.cols * md.rows) / CLOUD_SHADOW.tilesPerCloud),
+    CLOUD_SHADOW.minClouds,
+    CLOUD_SHADOW.maxClouds,
+  );
+  // Le nuvole girano su un'area più grande della mappa, così entrano ed
+  // escono dal bordo invece di comparire di colpo
+  const margin = TILE * 6;
+  const spanX = md.cols * TILE + margin * 2;
+  const spanY = md.rows * TILE + margin * 2;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(G.camX, G.camY, md.cols * ts, md.rows * ts);
+  ctx.clip();
+  ctx.globalAlpha = CLOUD_SHADOW.alpha * _cloudShadowLevel;
+  for (let i = 0; i < n; i++) {
+    const sp = CLOUD_SHADOW.speed * (0.8 + 0.4 * _hash01(i * 5 + 2));
+    let wx = (_hash01(i * 3 + 1) * spanX + t * sp * WIND.dirX) % spanX;
+    let wy = (_hash01(i * 9 + 4) * spanY + t * sp * WIND.dirY) % spanY;
+    if (wx < 0) wx += spanX;
+    if (wy < 0) wy += spanY;
+    const w = TILE * (4 + 3 * _hash01(i * 7 + 3));
+    const h = w * 0.62;
+    const sx = G.camX + (wx - margin) * k;
+    const sy = G.camY + (wy - margin) * k;
+    ctx.drawImage(sprites[i % sprites.length], sx - (w * k) / 2, sy - (h * k) / 2, w * k, h * k);
+  }
+  ctx.restore();
 }
 
 function mistTiles() {
