@@ -6,8 +6,12 @@ let _fxLoopActive = false;
 // delay (ms, opzionale): l'effetto parte più tardi, es. all'arrivo del tracciante
 function addFX(type, data, duration, delay = 0) {
   G.effects.push({ type, data, duration, t0: performance.now() + delay });
-  // Ogni esplosione (granate, RPG, artiglieria, mine) scuote gli alberi vicini
-  if (type === "explosion") addBlastShake(data.col, data.row, data.aoe ?? 0, delay);
+  // Ogni esplosione (granate, RPG, artiglieria, mine) scuote gli alberi
+  // vicini e lascia un cratere
+  if (type === "explosion") {
+    addBlastShake(data.col, data.row, data.aoe ?? 0, delay);
+    addCrater(data.col, data.row, !!data.big, delay);
+  }
   if (!_fxLoopActive) {
     _fxLoopActive = true;
     requestAnimationFrame(_fxTick);
@@ -61,7 +65,9 @@ function _needsFastAnim() {
 }
 
 function _needsAnimLoop() {
-  return _needsFastAnim() || windActive() || weatherActive() || waterTiles().length > 0;
+  return (
+    _needsFastAnim() || windActive() || weatherActive() || waterTiles().length > 0 || cratersFading()
+  );
 }
 
 function _startTileAnimLoop() {
@@ -151,6 +157,154 @@ function windGust(wx, wy, t) {
 function windAt(wx, wy, t) {
   const p = wx * WIND.dirX + wy * WIND.dirY;
   return WIND.base + Math.sin(t * 1.7 + p * 0.03) * WIND.sway + windGust(wx, wy, t);
+}
+
+// ── CRATERI ────────────────────────────────────────────────────────────
+// Buca annerita con bordo di zolle sul tile dell'esplosione, per il resto
+// della missione: G.missionState.craters [{ col, row, seed, big }] (salvato).
+// Uno per tile (un'esplosione più grande lo allarga); niente crateri su
+// acqua, ponti e tile alti (muri, edifici, bunker, ostacoli). Sprite
+// disegnato una volta per cratere; compare in dissolvenza sotto il fumo.
+// Disegnato sopra le chiome: l'esplosione apre un varco nella vegetazione.
+const CRATER = {
+  radius: 0.2, // raggio della buca in tile (granata, mina, RPG)
+  bigRadius: 0.3, // artiglieria
+  fadeInMs: 500,
+};
+const _craterSprites = new Map(); // "col,row" → { canvas, big, seed }
+const _craterBorn = new Map(); // "col,row" → istante di comparsa (solo runtime)
+
+function _craterAllowed(col, row) {
+  const tile = getTileAt(col, row);
+  return (
+    !!tile &&
+    !tile.impassable &&
+    tile.losBlock !== "full" &&
+    !WATER_IDS.has(tile.id) &&
+    tile.id !== "bridge"
+  );
+}
+
+function addCrater(col, row, big, delayMs = 0) {
+  if (!G.missionState || !_craterAllowed(col, row)) return;
+  const list = (G.missionState.craters ||= []);
+  const old = list.find((c) => c.col === col && c.row === row);
+  if (old) {
+    if (big && !old.big) old.big = true;
+    return;
+  }
+  list.push({ col, row, seed: Math.floor(Math.random() * 1e6), big });
+  const born = performance.now() + delayMs;
+  _craterBorn.set(col + "," + row, born);
+  // Ridisegno della mappa finché la dissolvenza non è finita
+  _craterFadeUntil = Math.max(_craterFadeUntil, born + CRATER.fadeInMs);
+  _startTileAnimLoop();
+}
+
+let _craterFadeUntil = 0;
+function cratersFading() {
+  return performance.now() < _craterFadeUntil;
+}
+
+function _craterSprite(cr) {
+  const key = cr.col + "," + cr.row;
+  const cached = _craterSprites.get(key);
+  if (cached && cached.big === cr.big && cached.seed === cr.seed) return cached.canvas;
+  const r = TILE * (cr.big ? CRATER.bigRadius : CRATER.radius);
+  const ext = r * 2.2; // ingombro con bruciatura e detriti
+  const dens = 2;
+  const cv = document.createElement("canvas");
+  cv.width = cv.height = Math.ceil(ext * 2 * dens);
+  const g = cv.getContext("2d");
+  g.scale(dens, dens);
+  g.translate(ext, ext);
+  let n = cr.seed;
+  const rng = () => _hash01(n++ * 1.618);
+
+  // 1) Bruciatura irregolare attorno alla buca
+  for (let i = 0; i < 7; i++) {
+    const a = rng() * Math.PI * 2;
+    const d = r * (0.2 + rng() * 0.5);
+    const rr = r * (1.1 + rng() * 0.6);
+    const grad = g.createRadialGradient(Math.cos(a) * d, Math.sin(a) * d, 0, Math.cos(a) * d, Math.sin(a) * d, rr);
+    grad.addColorStop(0, "rgba(18,12,6,0.32)");
+    grad.addColorStop(1, "rgba(18,12,6,0)");
+    g.fillStyle = grad;
+    g.fillRect(-ext, -ext, ext * 2, ext * 2);
+  }
+  // 2) Detriti sparsi
+  for (let i = 0; i < 16; i++) {
+    const a = rng() * Math.PI * 2;
+    const d = r * (1.1 + rng() * 0.9);
+    g.fillStyle = rng() < 0.5 ? "rgba(95,75,48,0.75)" : "rgba(40,30,20,0.7)";
+    g.beginPath();
+    g.ellipse(Math.cos(a) * d, Math.sin(a) * d * 0.85, r * (0.04 + rng() * 0.05), r * (0.03 + rng() * 0.04), rng() * 3, 0, Math.PI * 2);
+    g.fill();
+  }
+  // 3) Bordo di zolle sollevate
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2 + rng() * 0.3;
+    const d = r * (0.9 + rng() * 0.18);
+    const x = Math.cos(a) * d,
+      y = Math.sin(a) * d * 0.85;
+    const rr = r * (0.13 + rng() * 0.1);
+    g.fillStyle = "rgba(30,22,12,0.5)"; // ombra della zolla (luce da nord-ovest)
+    g.beginPath();
+    g.ellipse(x + rr * 0.3, y + rr * 0.35, rr, rr * 0.75, 0, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = rng() < 0.5 ? "rgb(112,88,56)" : "rgb(96,76,48)";
+    g.beginPath();
+    g.ellipse(x, y, rr, rr * 0.75, 0, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = "rgba(170,145,105,0.35)";
+    g.beginPath();
+    g.ellipse(x - rr * 0.3, y - rr * 0.3, rr * 0.45, rr * 0.3, 0, 0, Math.PI * 2);
+    g.fill();
+  }
+  // 4) Buca: fondo scuro, parete a nord-ovest in ombra, a sud-est illuminata
+  g.save();
+  g.beginPath();
+  g.ellipse(0, 0, r * 0.82, r * 0.68, 0, 0, Math.PI * 2);
+  g.clip();
+  const pit = g.createRadialGradient(r * 0.1, r * 0.1, 0, 0, 0, r * 0.85);
+  pit.addColorStop(0, "rgb(28,20,12)");
+  pit.addColorStop(0.7, "rgb(52,38,24)");
+  pit.addColorStop(1, "rgb(78,60,38)");
+  g.fillStyle = pit;
+  g.fillRect(-r, -r, r * 2, r * 2);
+  const wall = g.createLinearGradient(-r * 0.8, -r * 0.7, r * 0.8, r * 0.7);
+  wall.addColorStop(0, "rgba(0,0,0,0.45)");
+  wall.addColorStop(0.45, "rgba(0,0,0,0)");
+  wall.addColorStop(0.8, "rgba(150,120,80,0)");
+  wall.addColorStop(1, "rgba(150,120,80,0.35)");
+  g.fillStyle = wall;
+  g.fillRect(-r, -r, r * 2, r * 2);
+  g.restore();
+
+  _craterSprites.set(key, { canvas: cv, big: cr.big, seed: cr.seed });
+  return cv;
+}
+
+function renderCraters(ctx) {
+  const list = G.missionState?.craters;
+  if (!list?.length) return;
+  const now = performance.now();
+  ctx.save();
+  ctx.translate(G.camX, G.camY);
+  ctx.scale(G.scale, G.scale);
+  for (const cr of list) {
+    const born = _craterBorn.get(cr.col + "," + cr.row);
+    if (born !== undefined && now < born) continue; // esplosione non ancora avvenuta
+    const a = born === undefined ? 1 : Math.min(1, (now - born) / CRATER.fadeInMs);
+    const cv = _craterSprite(cr);
+    const ext = cv.width / 4; // metà dell'ingombro in unità mondo (densità 2)
+    // Leggero scarto dal centro, fisso per cratere
+    const ox = (_hash01(cr.seed * 0.37) - 0.5) * TILE * 0.15;
+    const oy = (_hash01(cr.seed * 0.73) - 0.5) * TILE * 0.15;
+    ctx.globalAlpha = a;
+    ctx.drawImage(cv, (cr.col + 0.5) * TILE + ox - ext, (cr.row + 0.5) * TILE + oy - ext, ext * 2, ext * 2);
+  }
+  ctx.restore();
 }
 
 // ── SCOSSONE DELLE ESPLOSIONI SUGLI ALBERI ─────────────────────────────

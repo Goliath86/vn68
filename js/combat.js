@@ -470,7 +470,8 @@ async function resolveAoeCombat(
   ];
 
   sfxShoot(attacker.cls, weapon);
-  addFX("explosion", { col: tc, row: tr, aoe: weapon.aoe }, 1300);
+  // big: cratere più largo per l'artiglieria (animations.js:addCrater)
+  addFX("explosion", { col: tc, row: tr, aoe: weapon.aoe, big: hitHidden }, 1300);
   // Statistiche: artiglieria (hitHidden), esplosivi US, RPG VC
   statAdd(isEnemyAttacking ? "aoeVc" : hitHidden ? "artillery" : "aoeUs");
   // Esplosione US: il rumore parte dal punto d'impatto (e il lancio svela chi lancia)

@@ -139,6 +139,9 @@ function renderMap(animFrame = false) {
     }
   }
 
+  // Crateri delle esplosioni (animations.js:renderCraters), sopra le chiome
+  renderCraters(ctx);
+
   // Indicatori missione
   renderMissionMarkers(ctx, ts);
 
