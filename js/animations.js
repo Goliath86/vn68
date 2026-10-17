@@ -136,14 +136,55 @@ function updateWindButton() {
   btn.title = t(G.windEnabled ? "buttons.wind_on" : "buttons.wind_off");
 }
 
-// Piega in un punto del mondo all'istante t (s): ~0 calma, ~2 raffica piena
-function windAt(wx, wy, t) {
+// Raffica in un punto del mondo all'istante t (s): 0 calma … ~1.4 piena
+function windGust(wx, wy, t) {
   const p = wx * WIND.dirX + wy * WIND.dirY;
   const k = (Math.PI * 2) / WIND.gustLen;
   const g1 = Math.sin(p * k - t * WIND.gustSpeed * k);
   const g2 = Math.sin(p * k * 0.37 + wy * 0.004 - t * WIND.gustSpeed * k * 0.6 + 1.7);
-  const gust = Math.max(0, (g1 + g2) * 0.6) ** 2;
-  return WIND.base + Math.sin(t * 1.7 + p * 0.03) * WIND.sway + gust;
+  return Math.max(0, (g1 + g2) * 0.6) ** 2;
+}
+
+// Piega totale: ~0 calma, ~2 raffica piena
+function windAt(wx, wy, t) {
+  const p = wx * WIND.dirX + wy * WIND.dirY;
+  return WIND.base + Math.sin(t * 1.7 + p * 0.03) * WIND.sway + windGust(wx, wy, t);
+}
+
+// Chiome (plchldSprites.js:windCanopy): sprite della variante spostato
+// sottovento in proporzione alla piega, con un dondolio trasversale e un
+// lieve "respiro"; dove passa la raffica si sovrappone la sagoma chiara
+function renderWindCanopy(ctx, canopy) {
+  if (!canopy?.length || !windActive()) return;
+  const sprites = canopySprites();
+  const t = performance.now() / 1000;
+  // area inquadrata in coordinate di mondo, con margine per le chiome
+  const m = TILE * 0.6;
+  const x0 = -G.camX / G.scale - m;
+  const y0 = -G.camY / G.scale - m;
+  const x1 = (G.canvas.width - G.camX) / G.scale + m;
+  const y1 = (G.canvas.height - G.camY) / G.scale + m;
+  const half = CANOPY_SPRITE_R * CANOPY_SPRITE_EXT;
+  ctx.save();
+  ctx.translate(G.camX, G.camY);
+  ctx.scale(G.scale, G.scale);
+  for (const k of canopy) {
+    if (k.cx < x0 || k.cx > x1 || k.cy < y0 || k.cy > y1) continue;
+    const w = windAt(k.cx, k.cy, t);
+    const wob = Math.sin(t * 2.3 + k.ph) * k.rad * 0.025 * (0.5 + w);
+    const s = (k.rad / CANOPY_SPRITE_R) * (1 + Math.sin(t * 1.9 + k.ph) * 0.015);
+    const cx = k.cx + WIND.dirX * w * k.rad * 0.07 - WIND.dirY * wob;
+    const cy = k.cy + WIND.dirY * w * k.rad * 0.07 + WIND.dirX * wob;
+    const sp = sprites[k.v];
+    ctx.drawImage(sp.base, cx - half * s, cy - half * s, half * 2 * s, half * 2 * s);
+    const g = windGust(k.cx, k.cy, t);
+    if (g > 0.05) {
+      ctx.globalAlpha = Math.min(0.3, g * 0.22);
+      ctx.drawImage(sp.light, cx - half * s, cy - half * s, half * 2 * s, half * 2 * s);
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.restore();
 }
 
 // Fili d'erba raccolti da getTerrainCache, solo sui tile inquadrati; due

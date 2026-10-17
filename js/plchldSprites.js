@@ -86,8 +86,8 @@ function _grass(ctx, x, y, ts, rng, n) {
 }
 
 // Chioma/cespuglio a strati: ombra → base → lobi → luce
-function _foliage(ctx, cx, cy, r, rng, cols) {
-  _disc(ctx, cx + r * 0.25, cy + r * 0.35, r * 1.05, _dk(0.32));
+function _foliage(ctx, cx, cy, r, rng, cols, shadow = true) {
+  if (shadow) _disc(ctx, cx + r * 0.25, cy + r * 0.35, r * 1.05, _dk(0.32));
   _disc(ctx, cx, cy, r, cols[0]);
   for (let i = 0; i < 5; i++) {
     const a = rng() * Math.PI * 2;
@@ -1024,7 +1024,8 @@ function drawTerrainTransitions(ctx, md, ts) {
 const CANOPY_OVERHANG = 0.14;
 const CANOPY_COLS = ["rgba(25,60,18,0.92)", "rgba(50,105,30,0.72)", "rgba(140,200,80,0.28)"];
 
-function drawJungleCanopy(ctx, md, ts) {
+// Chiome ordinate da nord a sud: { cx, cy, rad, c, r, i } (i = indice nel tile)
+function jungleCrowns(md, ts) {
   const isJungle = (c, r) =>
     c < 0 || r < 0 || c >= md.cols || r >= md.rows || md.tileTypes[md.grid[r][c]]?.id === "jungle";
   // Intervallo del centro di una chioma lungo un asse: fino al bordo verso la
@@ -1046,17 +1047,66 @@ function drawJungleCanopy(ctx, md, ts) {
         const re = rad * 1.1; // estensione dei lobi oltre il raggio
         const [x0, x1] = span(c * ts, re, isJungle(c - 1, r), isJungle(c + 1, r));
         const [y0, y1] = span(r * ts, re, isJungle(c, r - 1), isJungle(c, r + 1));
-        crowns.push({
-          cx: x0 + rng() * (x1 - x0),
-          cy: y0 + rng() * (y1 - y0),
-          rad,
-          rng: _tileRng(c + i * 0.071, r + 0.53),
-        });
+        crowns.push({ cx: x0 + rng() * (x1 - x0), cy: y0 + rng() * (y1 - y0), rad, c, r, i });
       }
     }
   }
-  crowns.sort((a, b) => a.cy - b.cy);
-  for (const k of crowns) _foliage(ctx, k.cx, k.cy, k.rad, k.rng, CANOPY_COLS);
+  return crowns.sort((a, b) => a.cy - b.cy);
+}
+
+function drawJungleCanopy(ctx, md, ts) {
+  for (const k of jungleCrowns(md, ts)) {
+    _foliage(ctx, k.cx, k.cy, k.rad, _tileRng(k.c + k.i * 0.071, k.r + 0.53), CANOPY_COLS);
+  }
+}
+
+// ── CHIOME AL VENTO ────────────────────────────────────────────────────
+// Col vento le chiome non stanno nella cache del terreno: ridisegnarne
+// migliaia di cerchi a ogni fotogramma costerebbe troppo, quindi si
+// preparano una volta CANOPY_VARIANTS chiome tipo (raggio CANOPY_SPRITE_R) e
+// ogni chioma ne usa una, scalata al suo raggio. Niente rotazioni: luce e
+// ombra devono restare a nord-ovest/sud-est. Ogni variante ha una sagoma
+// chiara gemella, sovrapposta dove passa la raffica (foglie rovesciate).
+const CANOPY_VARIANTS = 48;
+const CANOPY_SPRITE_R = 24;
+const CANOPY_SPRITE_EXT = 1.45; // ingombro (ombra compresa) in raggi
+const CANOPY_SPRITE_DENSITY = 2.5;
+const CANOPY_GUST_TINT = "rgb(215,235,160)";
+let _canopySprites = null;
+
+function canopySprites() {
+  if (_canopySprites) return _canopySprites;
+  const R = CANOPY_SPRITE_R;
+  const half = R * CANOPY_SPRITE_EXT;
+  const px = Math.ceil(half * 2 * CANOPY_SPRITE_DENSITY);
+  const make = (v, light) => {
+    const cv = document.createElement("canvas");
+    cv.width = px;
+    cv.height = px;
+    const g = cv.getContext("2d");
+    g.scale(CANOPY_SPRITE_DENSITY, CANOPY_SPRITE_DENSITY);
+    _foliage(g, half, half, R, _tileRng(v * 1.37, 7.7), CANOPY_COLS, !light);
+    if (light) {
+      g.globalCompositeOperation = "source-atop";
+      g.fillStyle = CANOPY_GUST_TINT;
+      g.fillRect(0, 0, half * 2, half * 2);
+    }
+    return cv;
+  };
+  _canopySprites = [];
+  for (let v = 0; v < CANOPY_VARIANTS; v++) _canopySprites.push({ base: make(v, false), light: make(v, true) });
+  return _canopySprites;
+}
+
+// Dati per l'animazione: variante e fase di ogni chioma, in ordine di disegno
+function windCanopy(md, ts) {
+  return jungleCrowns(md, ts).map((k) => ({
+    cx: k.cx,
+    cy: k.cy,
+    rad: k.rad,
+    v: Math.floor(_hash01(k.c * 3.7 + k.r * 5.1 + k.i * 1.3) * CANOPY_VARIANTS),
+    ph: _hash01(k.c * 1.9 + k.r * 2.3 + k.i * 0.7) * Math.PI * 2,
+  }));
 }
 
 // ── SPRITES PERSONAGGI ─────────────────────────────────────────────────────

@@ -28,7 +28,7 @@ function screenToTile(sx, sy) {
 const TERRAIN_CACHE_DENSITY = 2.5;
 const TERRAIN_CACHE_MAX_PX = 16e6;
 const TERRAIN_CACHE_MAX_SIDE = 8192;
-let _terrainCache = null; // { canvas, mapData, grass }
+let _terrainCache = null; // { canvas, mapData, grass, canopy }
 
 function invalidateTerrainCache() {
   _terrainCache = null;
@@ -74,8 +74,19 @@ function getTerrainCache() {
   }
   // Sfumature tra terreni, rive e ombre: richiedono tutti i tile già disegnati
   drawTerrainTransitions(ctx, md, TILE);
-  // Chiome della giungla senza clip: sporgono sui tile vicini
-  drawJungleCanopy(ctx, md, TILE);
+  // Chiome della giungla senza clip: sporgono sui tile vicini. Col vento sono
+  // disegnate a ogni fotogramma (animations.js:renderWindCanopy)
+  const canopy = wind ? windCanopy(md, TILE) : null;
+  if (!wind) drawJungleCanopy(ctx, md, TILE);
+  // Col vento la griglia va sopra le chiome animate: la disegna renderMap
+  if (!wind) drawTerrainGrid(ctx, md);
+
+  _terrainCache = { canvas, mapData: md, grass, canopy };
+  return canvas;
+}
+
+// Bordi dei tile in coordinate di mondo (ctx già trasformato)
+function drawTerrainGrid(ctx, md) {
   ctx.strokeStyle = "rgba(0,0,0,0.25)";
   ctx.lineWidth = 0.5;
   for (let r = 0; r < md.rows; r++) {
@@ -83,9 +94,6 @@ function getTerrainCache() {
       if (md.tileTypes[md.grid[r][c]]) ctx.strokeRect(c * TILE, r * TILE, TILE, TILE);
     }
   }
-
-  _terrainCache = { canvas, mapData: md, grass };
-  return canvas;
 }
 
 // animFrame: ridisegno del ciclo d'animazione (animations.js), lo stato di
@@ -117,6 +125,14 @@ function renderMap(animFrame = false) {
     // Griglia tile procedurale, pre-renderizzata in cache offscreen
     ctx.drawImage(getTerrainCache(), G.camX, G.camY, md.cols * ts, md.rows * ts);
     renderWindGrass(ctx, _terrainCache.grass);
+    if (_terrainCache.canopy) {
+      renderWindCanopy(ctx, _terrainCache.canopy);
+      ctx.save();
+      ctx.translate(G.camX, G.camY);
+      ctx.scale(G.scale, G.scale);
+      drawTerrainGrid(ctx, md);
+      ctx.restore();
+    }
   }
 
   // Indicatori missione
