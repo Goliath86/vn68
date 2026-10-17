@@ -253,6 +253,127 @@ function _tdTemple(ctx, x, y, ts, rng) {
   _disc(ctx, cx - ts * 0.01, cy - ts * 0.01, ts * 0.012, _lt(0.5));
 }
 
+// Masso irregolare: ombra a terra, corpo, faccia in luce a nord-ovest, muschio
+function _rock(ctx, cx, cy, r, rng) {
+  const a0 = rng() * Math.PI * 2;
+  const pts = [];
+  for (let k = 0; k < 8; k++) {
+    const a = a0 + (k / 8) * Math.PI * 2;
+    const rr = r * (0.75 + rng() * 0.3);
+    pts.push([Math.cos(a) * rr, Math.sin(a) * rr * 0.8]);
+  }
+  const at = (s, ox, oy) => pts.map(([px, py]) => [cx + px * s + ox, cy + py * s + oy]);
+  ctx.fillStyle = _dk(0.4);
+  _poly(ctx, at(1, r * 0.25, r * 0.3));
+  ctx.fill();
+  const g = Math.round(105 + rng() * 30);
+  ctx.fillStyle = `rgb(${g},${g - 4},${g - 14})`;
+  _poly(ctx, at(1, 0, 0));
+  ctx.fill();
+  ctx.fillStyle = _dk(0.22); // lato in ombra
+  _poly(ctx, at(0.75, r * 0.2, r * 0.18));
+  ctx.fill();
+  ctx.fillStyle = _lt(0.18); // faccia in luce
+  _poly(ctx, at(0.55, -r * 0.22, -r * 0.2));
+  ctx.fill();
+  if (rng() < 0.7) _oval(ctx, cx - r * 0.15, cy - r * 0.35, r * 0.35, r * 0.18, "rgba(80,120,40,0.55)");
+  if (rng() < 0.5) {
+    ctx.strokeStyle = _dk(0.4);
+    ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.1, cy - r * 0.5);
+    ctx.lineTo(cx + r * 0.05, cy - r * 0.05);
+    ctx.lineTo(cx - r * 0.05, cy + r * 0.4);
+    ctx.stroke();
+  }
+}
+
+// Tronco abbattuto: ombra, corteccia, riflesso, nervature, sezione con anelli
+function _log(ctx, x1, y1, x2, y2, w, rng) {
+  const ang = Math.atan2(y2 - y1, x2 - x1);
+  const line = (ox, oy) => {
+    ctx.beginPath();
+    ctx.moveTo(x1 + ox, y1 + oy);
+    ctx.lineTo(x2 + ox, y2 + oy);
+    ctx.stroke();
+  };
+  ctx.lineCap = "round";
+  ctx.strokeStyle = _dk(0.4);
+  ctx.lineWidth = w;
+  line(w * 0.25, w * 0.35);
+  ctx.strokeStyle = `rgb(${88 + Math.round(rng() * 20)},64,40)`;
+  line(0, 0);
+  ctx.strokeStyle = _dk(0.25); // metà in ombra
+  ctx.lineWidth = w * 0.45;
+  line(Math.sin(ang) * -w * 0.22, Math.cos(ang) * w * 0.22);
+  ctx.strokeStyle = _lt(0.14);
+  ctx.lineWidth = w * 0.18;
+  line(Math.sin(ang) * w * 0.22, -Math.cos(ang) * w * 0.22);
+  // nervature della corteccia
+  ctx.strokeStyle = _dk(0.35);
+  ctx.lineWidth = 0.7;
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  for (let i = 0; i < 7; i++) {
+    const t = 0.1 + rng() * 0.8;
+    const o = (rng() - 0.5) * w * 0.7;
+    const px = x1 + (x2 - x1) * t + Math.sin(ang) * -o;
+    const py = y1 + (y2 - y1) * t + Math.cos(ang) * o;
+    const l = len * (0.05 + rng() * 0.08);
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px + Math.cos(ang) * l, py + Math.sin(ang) * l);
+    ctx.stroke();
+  }
+  // sezione del taglio all'estremità
+  ctx.save();
+  ctx.translate(x2, y2);
+  ctx.rotate(ang);
+  _oval(ctx, 0, 0, w * 0.22, w * 0.5, "rgb(185,150,100)");
+  ctx.strokeStyle = "rgba(120,85,50,0.7)";
+  ctx.lineWidth = 0.6;
+  for (const s of [0.3, 0.6]) {
+    ctx.beginPath();
+    ctx.ellipse(0, 0, w * 0.22 * s, w * 0.5 * s, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+  if (rng() < 0.6) {
+    const t = 0.2 + rng() * 0.5;
+    _oval(ctx, x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, w * 0.35, w * 0.22, "rgba(80,120,40,0.55)"); // muschio
+  }
+}
+
+// Ostacolo naturale (diventa radura se demolito): sottobosco + massi o tronchi
+function _tdObstacle(ctx, x, y, ts, rng) {
+  ctx.fillStyle = "rgb(78,92,45)";
+  ctx.fillRect(x, y, ts, ts);
+  _grain(ctx, x, y, ts, rng, 14, 0.12);
+  _grass(ctx, x, y, ts, rng, 16);
+  if (rng() < 0.5) {
+    const rocks = [[x + ts * (0.42 + rng() * 0.16), y + ts * (0.42 + rng() * 0.16), ts * (0.24 + rng() * 0.06)]];
+    const n = 2 + Math.floor(rng() * 3);
+    for (let i = 0; i < n; i++) {
+      const a = rng() * Math.PI * 2;
+      const d = ts * (0.24 + rng() * 0.1);
+      rocks.push([rocks[0][0] + Math.cos(a) * d, rocks[0][1] + Math.sin(a) * d, ts * (0.07 + rng() * 0.08)]);
+    }
+    rocks.sort((p, q) => p[1] - q[1]);
+    for (const [cx, cy, r] of rocks) _rock(ctx, cx, cy, r, rng);
+  } else {
+    const a = rng() * Math.PI;
+    const cx = x + ts / 2;
+    const cy = y + ts / 2;
+    const l = ts * 0.38;
+    _log(ctx, cx - Math.cos(a) * l, cy - Math.sin(a) * l, cx + Math.cos(a) * l, cy + Math.sin(a) * l, ts * 0.17, rng);
+    // secondo tronco accatastato di traverso, più corto
+    const b = a + Math.PI / 2 + (rng() - 0.5) * 0.8;
+    const l2 = ts * 0.28;
+    const ox = (rng() - 0.5) * ts * 0.2;
+    _log(ctx, cx + ox - Math.cos(b) * l2, cy - Math.sin(b) * l2, cx + ox + Math.cos(b) * l2, cy + Math.sin(b) * l2, ts * 0.13, rng);
+    if (rng() < 0.6) _rock(ctx, x + ts * (0.15 + rng() * 0.7), y + ts * (0.75 + rng() * 0.1), ts * 0.08, rng);
+  }
+}
+
 function _tdGarden(ctx, x, y, ts, rng) {
   _grass(ctx, x, y, ts, rng, 30);
   const n = 1 + Math.floor(rng() * 3);
@@ -593,7 +714,7 @@ function _tdBunker(ctx, x, y, ts, rng) {
 
 const TILE_DETAILS = {
   wall: (ctx, x, y, ts, rng) => _tdBricks(ctx, x, y, ts, rng, false),
-  obstacle: (ctx, x, y, ts, rng) => _tdBricks(ctx, x, y, ts, rng, false),
+  obstacle: _tdObstacle,
   wall_breach: (ctx, x, y, ts, rng) => _tdBricks(ctx, x, y, ts, rng, true),
   building: _tdBuilding,
   temple: _tdTemple,
@@ -671,7 +792,7 @@ const TILE_SURFACE = {
 const TILE_HEIGHT = {
   wall: 0.32,
   wall_breach: 0.32,
-  obstacle: 0.25,
+  obstacle: 0.12, // massi/tronchi bassi, non coprono tutto il tile
   building: 0.3,
   temple: 0.34,
   bunker: 0.12,
