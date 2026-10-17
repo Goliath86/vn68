@@ -623,6 +623,33 @@ body {
 }
 
 /* Objective display */
+/* Pannello meteo (ui.js:updateWeatherPanel) */
+.weather-panel {
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.2);
+}
+.wx-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.wx-icon {
+    flex-shrink: 0;
+}
+.wx-temp {
+    font-family: var(--ui-font);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--tan);
+    line-height: 1.1;
+}
+.wx-label,
+.wx-empty {
+    font-size: 10px;
+    color: var(--paper-dark);
+}
 #obj-panel {
     flex-shrink: 0;
     padding: 8px 10px;

@@ -14,6 +14,7 @@
   },
 
   "panels": {
+    "weather": "◈ WEATHER",
     "squad": "◈ SQUAD",
     "selected_unit": "◈ SELECTED UNIT",
     "actions": "◈ ACTIONS",
@@ -395,6 +396,8 @@
     "noise_alert": "The noise alerts {count} VC in sight",
     "vc_noise_alert": "The gunfire draws {count} VC in sight",
     "night_mission": "Night mission: reduced visibility for both sides",
+    "rain_start": "🌧 It starts raining",
+    "rain_stop": "🌤 The rain stops",
     "trap_triggered": "{name} triggers a trap ({trap})! -{dmg}HP",
     "trap_revealed": "{name} spots a trap ({trap}) at ({col},{row})",
     "trap_disarmed": "{name} disarms the trap ({trap})",
@@ -462,6 +465,16 @@
     "guard_rear": "rear guard",
     "aoe_targets": "VC in blast: {n}",
     "aoe_friendly": "⚠ soldiers in blast: {n}"
+  },
+
+  "weather": {
+    "clear_day": "Clear",
+    "clear_night": "Clear",
+    "cloudy": "Cloudy",
+    "rain": "Rain",
+    "day": "Day",
+    "night": "Night",
+    "tooltip": "Weather conditions in the area of operations"
   },
 
   "objective_panel": {

@@ -640,6 +640,9 @@ function _buildJungleMap(seed, attempt, size) {
     },
     supportedMissions: ["recon", "search_destroy", "rescue_pilot", "capture_objective"],
     ambient: "missions/rung_sat_ambient.mp3",
+    // Meteo (solo visivo): acquazzoni casuali, nebbiolina sul delta paludoso
+    rain: { chance: 0.2, minTurns: 2, maxTurns: 4 },
+    mist: layout === "swamp",
     ambushChance: 0.15,
     reinforcementTurn: 5,
     reinforcementCount: step ? 3 : 2,
@@ -1092,6 +1095,8 @@ function _buildUrbanMap(seed, attempt, size) {
     },
     supportedMissions: ["recon", "search_destroy", "rescue_pilot", "capture_objective"],
     ambient: "missions/hue_city_ambient.ogg",
+    // Meteo (solo visivo): acquazzoni casuali
+    rain: { chance: 0.2, minTurns: 2, maxTurns: 4 },
     ambushChance: 0.2,
     reinforcementTurn: 4,
     reinforcementCount: step ? 3 : 2,

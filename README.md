@@ -848,6 +848,10 @@ Struttura completa con tutti i campi:
 | `nightVisionPenalty` | number | Riduzione del raggio visivo dei soldati di notte; default 1 |
 | `bleedStopChance` | number | Probabilità (0–1) che un'emorragia si fermi da sola a inizio turno; default 1/3, `0` = solo il medico la ferma |
 | `vcNightPenalty` | number | Riduzione di notte della distanza d'allerta e della vista dei VC (base 5, minimo 2); default 2 |
+| `rain` | boolean / object | (opzionale, solo visivo) `true` = piove per tutta la missione; `{ "chance", "minTurns", "maxTurns", "fromStart" }` = acquazzoni casuali: a inizio di ogni turno giocatore, se non piove, comincia con probabilità `chance` (default 0.2) e dura da `minTurns` a `maxTurns` turni (default 2–4); `fromStart: true` = il primo acquazzone è già in corso a inizio missione |
+| `mist` | boolean / object | (opzionale, solo visivo) Banchi di nebbiolina che derivano lenti: `true` = sui tile palude (`id` `"swamp"`); `{ "tiles": ["swamp", "river"], "density": 1 }` per scegliere gli id dei tile e lo spessore (0.5 = rada, 2 = fitta) |
+| `temperature` | object | (opzionale, solo informativo) Intervallo di temperatura in °C mostrato nel pannello meteo: `{ "day": [min, max], "night": [min, max] }`; default giorno 27–34, notte 21–26 (pianura del Sud). La pioggia la abbassa di 3°, il cielo coperto di 1° |
+| `cloudy` | number | (opzionale, solo informativo) Probabilità (0–1) di cielo coperto a inizio missione; default 0.35. A ogni turno il cielo cambia con probabilità 20% |
 
 ### Campi del tile type
 

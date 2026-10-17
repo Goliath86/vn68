@@ -91,6 +91,10 @@ async function runEnemyTurn() {
   });
   G.vcSpotRolls = {};
 
+  // Meteo: acquazzoni casuali, nuvole e temperatura (mechanics.js)
+  tickRain();
+  tickWeather();
+
   // Emorragie: le unità sanguinanti perdono HP a inizio turno
   tickBleeding();
   if (G.phase === "gameover") return;

@@ -101,11 +101,55 @@ function updateObjectivePanel() {
   document.getElementById("mob-obj-panel").innerHTML = html;
 }
 
+// ── PANNELLO METEO ─────────────────────────────────────────────────────
+// Icone SVG 40×40: sole, luna, nuvola (con sole/luna dietro), pioggia
+const WX_SUN = `<g fill="#f0c030" stroke="#f0c030" stroke-width="2.5" stroke-linecap="round"><circle cx="20" cy="20" r="7" stroke="none"/><path d="M20 4v5M20 31v5M4 20h5M31 20h5M8.7 8.7l3.5 3.5M27.8 27.8l3.5 3.5M8.7 31.3l3.5-3.5M27.8 12.2l3.5-3.5"/></g>`;
+const WX_MOON = `<mask id="wx-moon-cut"><rect width="40" height="40" fill="#fff"/><circle cx="27" cy="14" r="11" fill="#000"/></mask><circle cx="19" cy="21" r="13" fill="#e8e0c0" mask="url(#wx-moon-cut)"/><circle cx="31" cy="30" r="1" fill="#e8e0c0"/><circle cx="35" cy="22" r="0.8" fill="#e8e0c0"/>`;
+const wxCloud = (fill) =>
+  `<g fill="${fill}"><circle cx="15" cy="24" r="7"/><circle cx="23" cy="19" r="9"/><circle cx="30" cy="25" r="6"/><rect x="8" y="24" width="28" height="7" rx="3.5"/></g>`;
+
+function weatherIconSVG(sky, night) {
+  let body;
+  if (sky === "day") body = WX_SUN;
+  else if (sky === "night") body = WX_MOON;
+  else if (sky === "cloudy") {
+    const behind = night
+      ? `<g transform="translate(14 -2) scale(0.55)">${WX_MOON}</g>`
+      : `<g transform="translate(13 -3) scale(0.6)">${WX_SUN}</g>`;
+    body = behind + wxCloud(night ? "#7a8288" : "#b8c0c4");
+  } else {
+    body =
+      `<g transform="translate(0 -4)">${wxCloud(night ? "#5a6268" : "#8a9296")}</g>` +
+      `<path d="M14 31l-2 5M21 31l-2 5M28 31l-2 5" stroke="#6aa8e0" stroke-width="2" stroke-linecap="round"/>`;
+  }
+  return `<svg class="wx-icon" viewBox="0 0 40 40" width="40" height="40" aria-hidden="true">${body}</svg>`;
+}
+
+function weatherPanelHTML() {
+  const w = G.mapData && G.missionType ? currentWeather() : null;
+  if (!w) return `<div class="wx-empty">—</div>`;
+  const label = t("weather." + (w.sky === "night" || w.sky === "day" ? "clear_" + w.sky : w.sky));
+  return (
+    `<div class="wx-row" title="${t("weather.tooltip")}">${weatherIconSVG(w.sky, w.night)}` +
+    `<div class="wx-text"><div class="wx-temp">${w.temp}°C</div>` +
+    `<div class="wx-label">${label} · ${t(w.night ? "weather.night" : "weather.day")}</div></div></div>`
+  );
+}
+
+function updateWeatherPanel() {
+  const html = weatherPanelHTML();
+  for (const id of ["weather-panel", "mob-weather-panel"]) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  }
+}
+
 function updateUI() {
   updateUnitList();
   updateSelInfo();
   updateActionButtons();
   updateObjectivePanel();
+  updateWeatherPanel();
 }
 
 // ── PLAYER ACTION HANDLERS ─────────────────────────────────────────────

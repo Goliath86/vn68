@@ -162,6 +162,98 @@ function vcNightPenalty() {
   return isNight() ? (G.mapData?.vcNightPenalty ?? VC_NIGHT_PENALTY) : 0;
 }
 
+// ── PIOGGIA ────────────────────────────────────────────────────────────
+// Solo effetto visivo. Campo mappa "rain": true = piove per tutta la
+// missione; { chance, minTurns, maxTurns, fromStart } = acquazzoni casuali
+// tirati a inizio turno giocatore. Stato in G.missionState.rain (salvato).
+const RAIN_DEFAULTS = { chance: 0.2, minTurns: 2, maxTurns: 4, fromStart: false };
+
+function rainConfig() {
+  const r = G.mapData?.rain;
+  if (!r) return null;
+  if (r === true) return { always: true };
+  return { ...RAIN_DEFAULTS, ...r };
+}
+
+function isRaining() {
+  return !!(G.missionState?.rain?.active || rainConfig()?.always);
+}
+
+function initRain() {
+  const cfg = rainConfig();
+  if (!cfg) return;
+  const start = !!(cfg.always || cfg.fromStart);
+  G.missionState.rain = {
+    active: start,
+    turnsLeft: start && !cfg.always ? rnd(cfg.minTurns, cfg.maxTurns) : 0,
+  };
+  if (start) log(t("log.rain_start"), "system");
+}
+
+// Inizio turno giocatore: l'acquazzone in corso cala, oppure ne parte uno
+function tickRain() {
+  const cfg = rainConfig();
+  if (!cfg || cfg.always) return;
+  const st = (G.missionState.rain ||= { active: false, turnsLeft: 0 });
+  if (st.active) {
+    if (--st.turnsLeft <= 0) {
+      st.active = false;
+      log(t("log.rain_stop"), "system");
+    }
+  } else if (Math.random() < cfg.chance) {
+    st.active = true;
+    st.turnsLeft = rnd(cfg.minTurns, cfg.maxTurns);
+    log(t("log.rain_start"), "system");
+  }
+}
+
+// ── METEO (pannello) ───────────────────────────────────────────────────
+// Solo informativo: cielo coperto e temperatura, mostrati nel pannello
+// meteo (ui.js:updateWeatherPanel). Campi mappa opzionali "temperature":
+// { day: [min, max], night: [min, max] } in °C e "cloudy" (probabilità 0–1
+// di cielo coperto). Stato in G.missionState.weather (salvato).
+// Default: pianura del Sud Vietnam, stagione secca
+const WEATHER_TEMPS = { day: [27, 34], night: [21, 26] };
+const CLOUDY_CHANCE = 0.35;
+const CLOUDY_SWITCH_CHANCE = 0.2;
+const RAIN_COOLING = 3;
+const CLOUD_COOLING = 1;
+
+function weatherTempRange() {
+  const key = isNight() ? "night" : "day";
+  return G.mapData?.temperature?.[key] || WEATHER_TEMPS[key];
+}
+
+function initWeather() {
+  const [lo, hi] = weatherTempRange();
+  G.missionState.weather = {
+    cloudy: Math.random() < (G.mapData?.cloudy ?? CLOUDY_CHANCE),
+    temp: rnd(lo, hi),
+  };
+  return G.missionState.weather;
+}
+
+// Inizio turno giocatore (ai.js, dopo tickRain): le nuvole vanno e vengono,
+// la temperatura oscilla di un grado entro l'intervallo
+function tickWeather() {
+  const w = G.missionState.weather || initWeather();
+  if (!isRaining() && Math.random() < CLOUDY_SWITCH_CHANCE) w.cloudy = !w.cloudy;
+  const [lo, hi] = weatherTempRange();
+  w.temp = clamp(w.temp + rnd(-1, 1), lo, hi);
+}
+
+// { sky: "rain" | "cloudy" | "night" | "day", night, temp }; pioggia e nuvole
+// abbassano la temperatura mostrata
+function currentWeather() {
+  if (!G.missionState) return null;
+  const w = G.missionState.weather || initWeather();
+  const night = isNight();
+  const rain = isRaining();
+  const sky = rain ? "rain" : w.cloudy ? "cloudy" : night ? "night" : "day";
+  const temp = w.temp - (rain ? RAIN_COOLING : w.cloudy ? CLOUD_COOLING : 0);
+  return { sky, night, temp };
+}
+
 // Raggio visivo di un'unità US (ridotto di notte e dalla postura, minimo 1)
 function unitVision(unit) {
   return Math.max(

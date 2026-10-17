@@ -76,6 +76,13 @@
         <div id="app">
             <!-- LEFT PANEL (desktop) -->
             <div id="left-panel">
+                <div class="panel-title" data-i18n="panels.weather">
+                    ◈ METEO
+                </div>
+
+                <!-- Cielo e temperatura (ui.js:updateWeatherPanel) -->
+                <div id="weather-panel" class="weather-panel"></div>
+
                 <div class="panel-title" data-i18n="panels.squad">
                     ◈ SQUADRA
                 </div>
@@ -435,6 +442,7 @@
 
                 <!-- Tab: Obiettivo -->
                 <div class="tab-pane" id="tab-obj">
+                    <div id="mob-weather-panel" class="weather-panel"></div>
                     <div id="mob-obj-panel" style="padding: 10px 12px">
                         <div
                             style="font-size: 11px; color: var(--paper-dark)"

@@ -12,6 +12,8 @@
   "tileSize": 64,
   "cols": 15,
   "rows": 12,
+  "temperature": { "day": [16, 21], "night": [12, 16] },
+  "cloudy": 0.8,
 
   "tileTypes": {
     "W": {

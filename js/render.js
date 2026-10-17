@@ -160,6 +160,9 @@ function renderMap(animFrame = false) {
     drawTunnelEntrance(ctx, tn, ts);
   }
 
+  // Nebbiolina sulla palude (animations.js:renderMist), coperta da notte e FOW
+  renderMist(ctx, ts);
+
   // Notte: velo scuro su tutta la mappa (prima del FOW)
   if (isNight()) {
     ctx.fillStyle = "rgba(8,12,40,0.38)";
@@ -312,6 +315,9 @@ function renderMap(animFrame = false) {
 
   // Tutorial: tile indicato dall'istruttore (tutorial.js)
   drawTutorialMarker(ctx, ts);
+
+  // Pioggia sopra a tutto (animations.js:renderRain)
+  renderRain(ctx, ts);
 }
 
 // Ingresso di tunnel: botola scura con bordo di legno; sigillato: macerie e X

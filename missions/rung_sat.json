@@ -12,6 +12,9 @@
     "move": "assets/footsteps_jungle.mp3"
   },
 
+  "rain": { "chance": 0.2, "minTurns": 2, "maxTurns": 4 },
+  "mist": true,
+
   "tileTypes": {
     "J": {
       "id": "jungle",

@@ -59,7 +59,7 @@ function _needsFastAnim() {
 }
 
 function _needsAnimLoop() {
-  return _needsFastAnim() || windActive();
+  return _needsFastAnim() || windActive() || weatherActive();
 }
 
 function _startTileAnimLoop() {
@@ -76,7 +76,7 @@ function _tileAnimTick(now) {
     _tileAnimLastTime = 0;
     return;
   }
-  // Solo il vento: un fotogramma ogni WIND_FRAME_MS basta
+  // Solo vento/meteo: un fotogramma ogni WIND_FRAME_MS basta
   if (_tileAnimLastTime && now - _tileAnimLastTime < WIND_FRAME_MS && !_needsFastAnim()) {
     requestAnimationFrame(_tileAnimTick);
     return;
@@ -224,6 +224,145 @@ function renderWindGrass(ctx, grass) {
   ctx.stroke(light);
   ctx.strokeStyle = GRASS_DARK;
   ctx.stroke(dark);
+  ctx.restore();
+}
+
+// ── METEO: PIOGGIA E NEBBIOLINA ────────────────────────────────────────
+// Pioggia (mechanics.js:isRaining): gocce e schizzi in coordinate schermo,
+// sopra a tutto, con un velo grigio-azzurro; entra ed esce in dissolvenza.
+// Nebbiolina: campo mappa "mist": true (tile palude) oppure
+// { tiles: ["swamp", ...], density: 0–1+ }; banchi morbidi che sconfinano
+// sui tile vicini, disegnati prima del FOW così l'oscurità li copre.
+const RAIN_FADE_MS = 2500;
+const MIST_DEFAULT_TILES = ["swamp"];
+let _rainLevel = 0;
+let _rainLast = 0;
+let _mistCache = null; // { mapData, grid, tiles: [{c, r, ph}], density }
+let _mistSprite = null;
+
+function weatherActive() {
+  return !!G.mapData && (isRaining() || _rainLevel > 0 || mistTiles().length > 0);
+}
+
+function mistTiles() {
+  const md = G.mapData;
+  if (!md?.mist) return [];
+  if (_mistCache && _mistCache.mapData === md) return _mistCache.tiles;
+  const cfg = md.mist === true ? {} : md.mist;
+  const ids = new Set(cfg.tiles || MIST_DEFAULT_TILES);
+  const tiles = [];
+  for (let r = 0; r < md.rows; r++)
+    for (let c = 0; c < md.cols; c++)
+      if (ids.has(md.tileTypes[md.grid[r][c]]?.id)) tiles.push({ c, r, ph: _hash01(c * 37 + r * 91) * 6.28 });
+  _mistCache = { mapData: md, tiles, density: cfg.density ?? 1 };
+  return tiles;
+}
+
+// Sbuffo bianco a gradiente radiale, disegnato una volta e poi scalato
+function _getMistSprite() {
+  if (_mistSprite) return _mistSprite;
+  const s = 128;
+  _mistSprite = document.createElement("canvas");
+  _mistSprite.width = _mistSprite.height = s;
+  const g = _mistSprite.getContext("2d");
+  const grad = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  grad.addColorStop(0, "rgba(220,228,226,1)");
+  grad.addColorStop(0.5, "rgba(214,222,220,0.55)");
+  grad.addColorStop(1, "rgba(210,218,216,0)");
+  g.fillStyle = grad;
+  g.fillRect(0, 0, s, s);
+  return _mistSprite;
+}
+
+function renderMist(ctx, ts) {
+  const tiles = mistTiles();
+  if (!tiles.length) return;
+  const sprite = _getMistSprite();
+  const t = performance.now() / 1000;
+  const dens = _mistCache.density;
+  // Tile inquadrati, con un margine per gli sbuffi che sconfinano
+  const c0 = Math.floor(-G.camX / ts) - 1;
+  const c1 = Math.floor((G.canvas.width - G.camX) / ts) + 1;
+  const r0 = Math.floor(-G.camY / ts) - 1;
+  const r1 = Math.floor((G.canvas.height - G.camY) / ts) + 1;
+  ctx.save();
+  for (const m of tiles) {
+    if (m.c < c0 || m.c > c1 || m.r < r0 || m.r > r1) continue;
+    const { x, y } = tileToScreen(m.c, m.r);
+    for (let i = 0; i < 2; i++) {
+      const ph = m.ph + i * 2.4;
+      // Deriva lenta avanti e indietro lungo il vento, banchi che "respirano"
+      const drift = Math.sin(t * 0.12 + ph) * ts * 0.3;
+      const side = Math.sin(t * 0.09 + ph * 1.7) * ts * 0.12;
+      const cx = x + ts * (0.35 + 0.3 * i) + WIND.dirX * drift - WIND.dirY * side;
+      const cy = y + ts * (0.4 + 0.2 * _hash01(ph)) + WIND.dirY * drift + WIND.dirX * side;
+      const size = ts * (1.5 + 0.3 * Math.sin(t * 0.2 + ph));
+      const a = (0.16 + 0.1 * Math.sin(t * 0.25 + ph * 1.3)) * dens;
+      if (a <= 0.01) continue;
+      ctx.globalAlpha = Math.min(1, a);
+      ctx.drawImage(sprite, cx - size / 2, cy - size * 0.35, size, size * 0.7);
+    }
+  }
+  ctx.restore();
+}
+
+function renderRain(ctx, ts) {
+  const now = performance.now();
+  const dt = _rainLast ? Math.min(now - _rainLast, 100) : 16;
+  _rainLast = now;
+  const target = isRaining() ? 1 : 0;
+  _rainLevel += Math.sign(target - _rainLevel) * (dt / RAIN_FADE_MS);
+  _rainLevel = clamp(_rainLevel, 0, 1);
+  if (_rainLevel <= 0) return;
+
+  const md = G.mapData;
+  const W = G.canvas.width;
+  const H = G.canvas.height;
+  const lv = _rainLevel;
+  const t = now / 1000;
+  ctx.save();
+  // Solo sopra la mappa
+  ctx.beginPath();
+  ctx.rect(G.camX, G.camY, md.cols * ts, md.rows * ts);
+  ctx.clip();
+
+  // Velo: cielo coperto
+  ctx.fillStyle = `rgba(28,38,52,${(0.2 * lv).toFixed(3)})`;
+  ctx.fillRect(0, 0, W, H);
+
+  // Gocce: inclinate nella direzione del vento, una sola stroke
+  const drops = Math.round(Math.min(450, (W * H) / 5000) * lv);
+  const slant = WIND.dirX * 0.22;
+  const span = H + 60;
+  const path = new Path2D();
+  for (let i = 0; i < drops; i++) {
+    const speed = 700 + _hash01(i * 3 + 1) * 400; // px/s
+    const len = 12 + _hash01(i * 3 + 2) * 12;
+    const y = ((_hash01(i * 3) * span + t * speed) % span) - 30;
+    let x = (_hash01(i * 7 + 5) * W + y * slant) % W;
+    if (x < 0) x += W;
+    path.moveTo(x, y);
+    path.lineTo(x + len * slant, y + len);
+  }
+  ctx.strokeStyle = "rgba(190,205,222,0.42)";
+  ctx.lineWidth = 1;
+  ctx.stroke(path);
+
+  // Schizzi a terra: anelli che si allargano e svaniscono
+  ctx.strokeStyle = "rgba(200,214,228,0.5)";
+  const splashes = Math.round(drops / 5);
+  const period = 0.55;
+  for (let i = 0; i < splashes; i++) {
+    const p = t / period + _hash01(i * 11 + 3);
+    const k = Math.floor(p);
+    const f = p - k;
+    const sx = _hash01(i * 13 + k * 7.1) * W;
+    const sy = _hash01(i * 17 + k * 3.3) * H;
+    ctx.globalAlpha = (1 - f) * lv;
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, 1 + f * 5, 0.5 + f * 2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
   ctx.restore();
 }
 

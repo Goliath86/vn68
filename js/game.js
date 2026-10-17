@@ -240,6 +240,8 @@ function startGame(
   log(t("log.enemy_deployed", { count: spawned }), "enemy");
 
   if (isNight()) log(t("log.night_mission"), "system");
+  initRain();
+  initWeather();
 
   ambientPlay(G.mapData.ambient);
 

@@ -849,6 +849,10 @@ Full structure with all fields:
 | `nightVisionPenalty` | number | Soldiers' vision reduction at night; default 1 |
 | `bleedStopChance` | number | Chance (0–1) that bleeding stops on its own at turn start; default 1/3, `0` = only the Medic stops it |
 | `vcNightPenalty` | number | Night reduction of VC alert distance and sight (base 5, minimum 2); default 2 |
+| `rain` | boolean / object | (optional, visual only) `true` = it rains for the whole mission; `{ "chance", "minTurns", "maxTurns", "fromStart" }` = random showers: at the start of each player turn, if it isn't raining, it starts with probability `chance` (default 0.2) and lasts `minTurns`–`maxTurns` turns (default 2–4); `fromStart: true` = the first shower is already under way at mission start |
+| `mist` | boolean / object | (optional, visual only) Drifting mist banks: `true` = on swamp tiles (`id` `"swamp"`); `{ "tiles": ["swamp", "river"], "density": 1 }` to pick the tile ids and the thickness (0.5 = thin, 2 = thick) |
+| `temperature` | object | (optional, informational only) Temperature range in °C shown in the weather panel: `{ "day": [min, max], "night": [min, max] }`; default day 27–34, night 21–26 (southern lowlands). Rain lowers it by 3°, overcast sky by 1° |
+| `cloudy` | number | (optional, informational only) Probability (0–1) of overcast sky at mission start; default 0.35. Each turn the sky has a 20% chance to change |
 
 ### Tile Type Fields
 

@@ -14,6 +14,7 @@
   },
 
   "panels": {
+    "weather": "◈ METEO",
     "squad": "◈ SQUADRA",
     "selected_unit": "◈ UNITÀ SELEZIONATA",
     "actions": "◈ AZIONI",
@@ -400,6 +401,8 @@
     "noise_alert": "Il rumore allerta {count} VC in vista",
     "vc_noise_alert": "Gli spari richiamano {count} VC in vista",
     "night_mission": "Missione notturna: visibilità ridotta per entrambe le parti",
+    "rain_start": "🌧 Comincia a piovere",
+    "rain_stop": "🌤 Smette di piovere",
     "trap_triggered": "{name} finisce in una trappola ({trap})! -{dmg}HP",
     "trap_revealed": "{name} individua una trappola ({trap}) in ({col},{row})",
     "trap_disarmed": "{name} disinnesca la trappola ({trap})",
@@ -467,6 +470,16 @@
     "guard_rear": "guardia alle spalle",
     "aoe_targets": "VC nel raggio: {n}",
     "aoe_friendly": "⚠ soldati nel raggio: {n}"
+  },
+
+  "weather": {
+    "clear_day": "Sereno",
+    "clear_night": "Sereno",
+    "cloudy": "Nuvoloso",
+    "rain": "Pioggia",
+    "day": "Giorno",
+    "night": "Notte",
+    "tooltip": "Condizioni meteo nella zona d'operazioni"
   },
 
   "objective_panel": {
