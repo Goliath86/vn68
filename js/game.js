@@ -60,6 +60,7 @@ function startGame(
   options = {},
 ) {
   history.pushState({ game: true }, "");
+  clearLog();
 
   G.missionType = missionType;
   G.turn = 1;

@@ -31,3 +31,11 @@ function log(msg, type) {
     }
   }
 }
+
+// Svuota il log (desktop + mobile) all'inizio di ogni partita
+function clearLog() {
+  for (const id of ["log-list", "mob-log-list"]) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = "";
+  }
+}
