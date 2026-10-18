@@ -60,6 +60,17 @@ body {
     text-transform: uppercase;
     font-weight: bold;
 }
+/* Versione del gioco accanto al titolo (index.html) */
+#header .game-version {
+    font-family: var(--mono-font);
+    font-size: 10px;
+    font-weight: normal;
+    letter-spacing: 1px;
+    text-transform: none;
+    color: var(--paper-dark);
+    margin-left: 6px;
+    vertical-align: super;
+}
 #header .subtitle {
     font-family: var(--mono-font);
     font-size: 11px;
