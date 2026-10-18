@@ -11,6 +11,18 @@ async function loadConfig() {
     if (!resp.ok) return;
     CONFIG = await resp.json();
     WEAPONS_CONFIG = CONFIG.weapons || {};
+    // Classi US modificate o nuove (le nuove partono dalle statistiche
+    // dell'assalto, col nome della chiave finché "labels" non ne dà uno)
+    for (const [cls, def] of Object.entries(CONFIG.unitClasses || {})) {
+      if (ENEMY_CLASSES[cls]) console.warn(`[config] unitClasses.${cls}: nome già usato da una classe VC`);
+      const base = UNIT_CLASSES[cls] || {
+        ...UNIT_CLASSES.assault,
+        name: cls,
+        desc: "",
+        symbol: cls.charAt(0).toUpperCase(),
+      };
+      UNIT_CLASSES[cls] = deepMerge(deepMerge({}, base), def);
+    }
     // Classi VC modificate o nuove (le nuove partono dal guerrigliero) e
     // composizione di default
     for (const [cls, def] of Object.entries(CONFIG.enemyClasses || {})) {

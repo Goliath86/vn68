@@ -630,6 +630,33 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | Cecchino VC | Mosin (ATK3, RNG4, ∞) | — |
 | Comandante VC | TT-33 (ATK3, RNG2, ∞) | — |
 
+### Classi della squadra
+
+Le classi US si cambiano con `unitClasses` in `config.json`; con un nome nuovo si aggiunge una classe (parte dalle statistiche dell'assalto) che compare subito tra le scelte del briefing. Le sue armi vanno in `weapons` sotto lo stesso nome, l'immagine in `unitImages`.
+
+```json
+"unitClasses": {
+  "medic": { "hp": 9 },
+  "machinegunner": {
+    "labels": { "it": { "name": "Mitragliere", "desc": "Fuoco pesante, lento" },
+                "en": { "name": "Machine gunner", "desc": "Heavy fire, slow" } },
+    "symbol": "MG", "color": "#6a6a6a", "hp": 11, "move": 2, "attack": 3, "defense": 1,
+    "range": 3, "vision": 4, "special": "suppression", "sprite": "assault"
+  }
+},
+"weapons": { "machinegunner": [{ "id": "m60", "label": "M60", "atk": 4, "range": 4, "mag": 2, "mags": 2, "noise": 7 }] }
+```
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `labels` | object | `{ "it": { "name", "desc", "special"? }, "en": … }`: nome, descrizione e (facoltativa) etichetta dell'abilità; senza la lingua corrente si usa l'italiano. Le classi base prendono i testi dalle traduzioni |
+| `symbol`, `color` | string | Lettera e colore del distintivo |
+| `hp`, `move`, `attack`, `defense`, `range`, `vision` | number | Statistiche (ATK e gittata valgono senza armi) |
+| `special` | string / null | Abilità: `"suppression"` (fuoco soppressivo), `"overwatch"`, `"demolition"` (demolizione, incendio, disinnesco, sigillo dei tunnel), `"heal"` (cura); `null` = nessuna |
+| `marksman` | boolean | Tiratore scelto: penalità di gittata per le armi senza `rangePenalty`, tracciante singolo |
+| `trapSense` | boolean | Individua le trappole a 1 tile e gli ingressi dei tunnel a 2 |
+| `sprite` | string | Classe US di cui usare lo sprite disegnato se `unitImages` non ha un'immagine per questa classe |
+
 ### Classi nemiche
 
 Le statistiche dei VC si cambiano con `enemyClasses` in `config.json`; con un nome nuovo si aggiunge una classe (parte dai valori del guerrigliero). Le sue armi vanno in `weapons` sotto lo stesso nome, e l'immagine in `unitImages`. Per farla comparire in partita va inserita in una composizione: `vcMix` in `config.json` (default per tutte le mappe) oppure `vcMix`/`ambushMix`/`reinforcementMix` nella mappa.

@@ -179,27 +179,29 @@
       "assault": {
         "name": "Assalto",
         "symbol": "A",
-        "desc": "Forte in attacco ravvicinato, mediocre copertura",
-        "special_label": "Fuoco Soppressivo"
+        "desc": "Forte in attacco ravvicinato, mediocre copertura"
       },
       "sniper": {
         "name": "Cecchino",
         "symbol": "S",
-        "desc": "Gittata massima, fragile a corto raggio",
-        "special_label": "Overwatch"
+        "desc": "Gittata massima, fragile a corto raggio"
       },
       "engineer": {
         "name": "Geniere",
         "symbol": "G",
-        "desc": "Può rimuovere bunker e aprire passaggi",
-        "special_label": "Demolizione"
+        "desc": "Può rimuovere bunker e aprire passaggi"
       },
       "medic": {
         "name": "Medico",
         "symbol": "M",
-        "desc": "Cura alleati, debole in combattimento",
-        "special_label": "Primo Soccorso"
+        "desc": "Cura alleati, debole in combattimento"
       }
+    },
+    "specials": {
+      "suppression": "Fuoco Soppressivo",
+      "overwatch": "Overwatch",
+      "demolition": "Demolizione",
+      "heal": "Primo Soccorso"
     },
     "soldier_names": [
       "Cpl. Hayes",

@@ -62,7 +62,7 @@ function checkOverwatch(enemy) {
       statAttack(true, diceOdds(owAtk, owDefVal, enemy.hp).pHit, dmg, facingSector(enemy, ow));
       statAdd("owShots");
       if (dmg > 0) statAdd("owHits");
-      const owSniper = ow.cls === "sniper";
+      const owSniper = isMarksman(ow);
       // Colpo/morte partono all'arrivo del tracciante dell'overwatch
       const impact = shotImpactDelay(owSniper, OW_SHOT_MS);
       // FX dopo i dadi: il tracciante deve sapere se il colpo va a segno

@@ -631,6 +631,33 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | VC Sniper | Mosin (ATK3, RNG4, ∞) | — |
 | VC Commander | TT-33 (ATK3, RNG2, ∞) | — |
 
+### Squad classes
+
+US classes are changed with `unitClasses` in `config.json`; a new name adds a class (it starts from the Assault's stats) that shows up right away among the briefing choices. Its weapons go in `weapons` under the same name, its picture in `unitImages`.
+
+```json
+"unitClasses": {
+  "medic": { "hp": 9 },
+  "machinegunner": {
+    "labels": { "it": { "name": "Mitragliere", "desc": "Fuoco pesante, lento" },
+                "en": { "name": "Machine gunner", "desc": "Heavy fire, slow" } },
+    "symbol": "MG", "color": "#6a6a6a", "hp": 11, "move": 2, "attack": 3, "defense": 1,
+    "range": 3, "vision": 4, "special": "suppression", "sprite": "assault"
+  }
+},
+"weapons": { "machinegunner": [{ "id": "m60", "label": "M60", "atk": 4, "range": 4, "mag": 2, "mags": 2, "noise": 7 }] }
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `labels` | object | `{ "it": { "name", "desc", "special"? }, "en": … }`: name, description and (optional) ability label; without the current language, Italian is used. The base classes take their texts from the translations |
+| `symbol`, `color` | string | Badge letter and colour |
+| `hp`, `move`, `attack`, `defense`, `range`, `vision` | number | Stats (ATK and range apply without weapons) |
+| `special` | string / null | Ability: `"suppression"` (suppressive fire), `"overwatch"`, `"demolition"` (demolition, burning, disarming, sealing tunnels), `"heal"`; `null` = none |
+| `marksman` | boolean | Marksman: range penalty for weapons without `rangePenalty`, single tracer |
+| `trapSense` | boolean | Spots traps 1 tile away and tunnel entrances 2 tiles away |
+| `sprite` | string | US class whose drawn sprite is used when `unitImages` has no picture for this class |
+
 ### Enemy classes
 
 VC stats are changed with `enemyClasses` in `config.json`; a new name adds a class (it starts from the guerrilla's values). Its weapons go in `weapons` under the same name, its picture in `unitImages`. To make it appear in game, put it in a composition: `vcMix` in `config.json` (default for every map) or `vcMix`/`ambushMix`/`reinforcementMix` in the map.

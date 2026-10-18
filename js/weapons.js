@@ -128,7 +128,7 @@ function weaponAmmoLabel(w) {
 // Overwatch e fuoco soppressivo si attivano solo con un colpo in canna
 function specialBlockedByAmmo(unit) {
   return (
-    (unit?.cls === "sniper" || unit?.cls === "assault") &&
+    ["overwatch", "suppression"].includes(unitSpecial(unit)) &&
     !hasRoundLoaded(unitFireWeapon(unit))
   );
 }
@@ -159,14 +159,14 @@ function unitFireRange(unit) {
 
 /**
  * Penalità gittata (-1 ATK ogni 2 tile): campo `rangePenalty` dell'arma,
- * fallback sulla classe cecchino se l'arma non lo specifica
+ * fallback sulle classi `marksman` (cecchino) se l'arma non lo specifica
  * @param {object} unit
  * @param {object|null} weapon
  * @param {number} range distanza dal bersaglio
  * @returns {number}
  */
 function weaponRangePenalty(unit, weapon, range) {
-  const applies = weapon?.rangePenalty ?? unit.cls === "sniper";
+  const applies = weapon?.rangePenalty ?? !!UNIT_CLASSES[unit.cls]?.marksman;
   return applies ? Math.floor((range - 1) / 2) : 0;
 }
 

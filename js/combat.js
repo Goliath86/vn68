@@ -71,7 +71,7 @@ async function resolveCombat(
   // Statistiche: precisione reale contro probabilità attesa (stessa formula)
   statAttack(!isEnemy, diceOdds(atkVal, defVal, defender.hp).pHit, dmg, sector);
 
-  const sniper = !!attacker.cls?.startsWith("sniper");
+  const sniper = isMarksman(attacker);
   // Colpo/mancato/morte (effetti e suoni) partono all'arrivo del tracciante
   // (corpo a corpo: a metà del fendente)
   const impact = melee ? MELEE_IMPACT_MS : shotImpactDelay(sniper);
@@ -410,6 +410,13 @@ function getEnemyStats(enemy) {
 // Comportamento della classe: "rifleman" | "sniper" | "commander"
 function enemyRole(enemy) {
   return enemyClass(enemy.cls).role || "rifleman";
+}
+
+// Tiratore scelto (un solo tracciante, più veloce): classe US "marksman" o
+// VC di ruolo "sniper"
+function isMarksman(unit) {
+  if (ENEMY_CLASSES[unit?.cls]) return enemyRole(unit) === "sniper";
+  return !!UNIT_CLASSES[unit?.cls]?.marksman;
 }
 
 function enemyName(cls) {

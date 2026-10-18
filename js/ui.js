@@ -216,12 +216,13 @@ document.getElementById("btn-special").addEventListener("click", () => {
     G.selectedUnit.ap < 1 ||
     G.selectedUnit.specialUsed ||
     G.selectedUnit.shaken ||
+    !unitSpecial(G.selectedUnit) ||
     specialBlockedByAmmo(G.selectedUnit)
   )
     return;
 
   const u = G.selectedUnit;
-  if (u.cls === "assault") {
+  if (unitSpecial(u) === "suppression") {
     // Fuoco Soppressivo immediato
     clearLastMove();
     u.suppression = true;
@@ -236,7 +237,7 @@ document.getElementById("btn-special").addEventListener("click", () => {
     return;
   }
 
-  if (u.cls === "sniper") {
+  if (unitSpecial(u) === "overwatch") {
     // Overwatch immediato
     clearLastMove();
     u.overwatch = true;
@@ -426,7 +427,7 @@ document.addEventListener("keydown", (e) => {
         document.getElementById("btn-attack").click();
       break;
     case "s":
-      if (u && u.alive && u.ap > 0 && !u.specialUsed)
+      if (u && u.alive && u.ap > 0 && !u.specialUsed && unitSpecial(u))
         document.getElementById("btn-special").click();
       break;
     case "r":

@@ -53,6 +53,18 @@ const G = {
 // ── SAVE / LOAD ────────────────────────────────────────────────────────
 
 // ── DEFINIZIONI CLASSI ─────────────────────────────────────────────────
+// Classi della squadra US. config.json "unitClasses" modifica queste classi o
+// ne aggiunge di nuove (config.js:loadConfig; le nuove partono dall'assalto).
+// Il comportamento dipende dai campi, mai dal nome della classe:
+//   special    abilità speciale: "suppression" | "overwatch" | "demolition" |
+//              "heal" | null (nessuna); etichetta da translations units.specials
+//   marksman   tiratore scelto: penalità di gittata per le armi senza
+//              "rangePenalty", un solo tracciante in overwatch
+//   trapSense  individua le trappole a 1 tile e i tunnel a 2
+//   sprite     classe US di cui usare lo sprite disegnato se unitImages non
+//              ha un'immagine per questa classe
+//   labels     (classi da config.json) { "it": { name, desc, special? }, "en": … }
+// name/desc/specialLabel vengono dalle traduzioni (i18n.js:applyTranslationsToData)
 const UNIT_CLASSES = {
   assault: {
     name: "Assalto",
@@ -80,6 +92,7 @@ const UNIT_CLASSES = {
     vision: 6,
     special: "overwatch", // overwatch: attacca nemici che si muovono
     specialLabel: "Overwatch",
+    marksman: true,
     desc: "Gittata massima, fragile a corto raggio",
   },
   engineer: {
@@ -94,6 +107,7 @@ const UNIT_CLASSES = {
     vision: 4,
     special: "demolition", // demolisce bunker/ostacoli
     specialLabel: "Demolizione",
+    trapSense: true,
     desc: "Può rimuovere bunker e aprire passaggi",
   },
   medic: {
@@ -111,6 +125,11 @@ const UNIT_CLASSES = {
     desc: "Cura alleati, debole in combattimento",
   },
 };
+
+// Abilità speciale dell'unità (null = nessuna)
+function unitSpecial(u) {
+  return (u && UNIT_CLASSES[u.cls]?.special) || null;
+}
 
 // Nomi soldati americani casuali
 const SOLDIER_NAMES = [

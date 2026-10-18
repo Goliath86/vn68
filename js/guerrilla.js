@@ -77,11 +77,11 @@ function revealTunnel(tn) {
   log(t("log.tunnel_found", { col: tn.col, row: tn.row }), "success");
 }
 
-// I soldati notano gli ingressi adiacenti (il geniere fino a 2 tile)
+// I soldati notano gli ingressi adiacenti (il geniere, trapSense, fino a 2 tile)
 function revealTunnelsNearUnits() {
   for (const u of G.units) {
     if (!u.alive) continue;
-    const range = u.cls === "engineer" ? 2 : 1;
+    const range = UNIT_CLASSES[u.cls]?.trapSense ? 2 : 1;
     for (const tn of G.missionState?.tunnels || []) {
       if (!tn.revealed && dist(u, tn) <= range) revealTunnel(tn);
     }

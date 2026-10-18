@@ -1092,9 +1092,9 @@ function removeTrap(trap) {
   G.missionState.traps = G.missionState.traps.filter((t) => t !== trap);
 }
 
-// I genieri vivi individuano le trappole a distanza 1
+// I genieri vivi (classi con trapSense) individuano le trappole a distanza 1
 function revealTrapsAroundEngineers() {
-  for (const eng of G.units.filter((u) => u.alive && u.cls === "engineer")) {
+  for (const eng of G.units.filter((u) => u.alive && UNIT_CLASSES[u.cls]?.trapSense)) {
     for (const trap of G.missionState.traps || []) {
       if (trap.revealed || dist(eng, trap) > 1) continue;
       trap.revealed = true;

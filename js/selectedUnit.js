@@ -42,12 +42,13 @@ function statusChip(icon, label, tone, title = "") {
 function unitStatusChips(u, def) {
   const c = [];
   const stance = u.stance || "stand";
-  // Abilità speciale
-  c.push(
-    u.specialUsed
-      ? statusChip("⚡", t("units.chips.special_used"), "neutral", t("units.status.special_used"))
-      : statusChip("⚡", def.specialLabel, "gold", t("units.status.special_available", { label: def.specialLabel })),
-  );
+  // Abilità speciale (le classi senza non hanno il chip)
+  if (unitSpecial(u))
+    c.push(
+      u.specialUsed
+        ? statusChip("⚡", t("units.chips.special_used"), "neutral", t("units.status.special_used"))
+        : statusChip("⚡", def.specialLabel, "gold", t("units.status.special_available", { label: def.specialLabel })),
+    );
   // Postura e occultamento
   c.push(statusChip(STANCE_ICONS[stance], t(`stances.${stance}`), "neutral", stanceSummary(stance)));
   if (isConcealed(u))

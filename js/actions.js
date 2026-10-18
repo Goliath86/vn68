@@ -71,17 +71,16 @@ function setActionMode(mode, weapon = null) {
   }
 
   if (mode === "special") {
-    // Medico: adiacenti alleati
-    if (u.cls === "medic") {
+    // Cura: alleati adiacenti
+    if (unitSpecial(u) === "heal") {
       G.reachable = G.units.filter(
         (t) => t.alive && t.id !== u.id && dist(u, t) <= 1,
       );
     }
 
-    // Cecchino: overwatch
-    //
-    // Geniere: demolisce tile demolishable OPPURE incendia tile burnable adiacenti
-    if (u.cls === "engineer") {
+    // Demolizione (geniere): demolisce tile demolishable, incendia tile
+    // burnable, disinnesca trappole e sigilla tunnel adiacenti
+    if (unitSpecial(u) === "demolition") {
       const DIRS = [
         [0, -1],
         [0, 1],

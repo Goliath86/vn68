@@ -36,12 +36,15 @@ function missionObjLabel(type, index) {
 }
 
 function applyTranslationsToData() {
-  for (const [k, d] of Object.entries(T.units?.classes || {})) {
-    if (UNIT_CLASSES[k]) {
-      UNIT_CLASSES[k].name = d.name;
-      UNIT_CLASSES[k].desc = d.desc;
-      UNIT_CLASSES[k].specialLabel = d.special_label;
-    }
+  // Classi US: nome e descrizione dalle traduzioni o, per le classi di
+  // config.json, dal loro "labels"; etichetta dell'abilità dal suo tipo
+  for (const [k, def] of Object.entries(UNIT_CLASSES)) {
+    const d = T.units?.classes?.[k];
+    const l = def.labels?.[LANG] || def.labels?.it;
+    def.name = l?.name ?? d?.name ?? def.name;
+    def.desc = l?.desc ?? d?.desc ?? def.desc;
+    def.specialLabel =
+      l?.special ?? (def.special ? T.units?.specials?.[def.special] ?? def.specialLabel : "—");
   }
 
   for (const [k, d] of Object.entries(T.missions || {})) {

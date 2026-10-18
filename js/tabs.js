@@ -323,7 +323,7 @@ function updateActionButtons() {
   const hasAP = hasUnit && u.ap > 0;
   const hasEnemy = G.enemies.some((e) => e.alive);
 
-  const specLabel = hasUnit
+  const specLabel = hasUnit && unitSpecial(u)
     ? t("buttons.special_with_label", {
         label: UNIT_CLASSES[u.cls].specialLabel,
       })
@@ -378,6 +378,7 @@ function updateActionButtons() {
           hasAP &&
           !u?.specialUsed &&
           !u?.shaken &&
+          unitSpecial(u) &&
           !specialBlockedByAmmo(u)
         );
         el.style.borderColor = hasSM ? "var(--highlight)" : "";

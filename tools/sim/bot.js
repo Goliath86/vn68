@@ -239,7 +239,7 @@ async function simThrow(u, aoe) {
 }
 
 async function simHeal(u) {
-  if (u.cls !== "medic" || u.specialUsed || u.shaken || u.ap < 1) return false;
+  if (unitSpecial(u) !== "heal" || u.specialUsed || u.shaken || u.ap < 1) return false;
   const ally = G.units
     .filter((a) => a.alive && a !== u && dist(a, u) <= 1 && (a.bleeding || a.maxHp - a.hp >= 2))
     .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
@@ -254,7 +254,7 @@ async function simHeal(u) {
 
 // Geniere: disinnesca una trappola individuata o sigilla un tunnel adiacente
 async function simEngineerWork(u) {
-  if (u.cls !== "engineer" || u.specialUsed || u.shaken || u.ap < 1) return false;
+  if (unitSpecial(u) !== "demolition" || u.specialUsed || u.shaken || u.ap < 1) return false;
   const tile = FACING_DIRS.map(([dc, dr]) => ({ col: u.col + dc, row: u.row + dr })).find(
     (p) => isKnownTrap(p.col, p.row) || isKnownTunnel(p.col, p.row),
   );
@@ -309,7 +309,7 @@ function simChooseMove(u, goal, runner) {
       const near = Math.min(...others.map((o) => dist(o, tile)));
       if (near > T.cohesionDist) s -= (near - T.cohesionDist) * T.cohesionPenalty;
       // Il medico non fa da apripista: resta dietro al più avanzato
-      if (u.cls === "medic" && !isRunner && fd < Math.min(...others.map((o) => _simFd(field, o))))
+      if (unitSpecial(u) === "heal" && !isRunner && fd < Math.min(...others.map((o) => _simFd(field, o))))
         s -= T.medicLeadPenalty;
     }
     s -= cost * 0.05; // a parità, risparmia AP
@@ -385,11 +385,12 @@ async function simUnitTurn(u, goal, runner) {
   const near = known.some((p) => dist(p, u) <= 6);
   // Reazioni: overwatch (cecchino) e soppressione (assalto) con l'AP residuo
   const canSpecial = u.ap >= 1 && !u.specialUsed && !u.shaken && !specialBlockedByAmmo(u);
-  if (canSpecial && known.length && (u.cls === "sniper" || (u.cls === "assault" && near))) {
+  const sp = unitSpecial(u);
+  if (canSpecial && known.length && (sp === "overwatch" || (sp === "suppression" && near))) {
     clearLastMove();
     u.ap -= 1;
     u.specialUsed = true;
-    if (u.cls === "sniper") {
+    if (sp === "overwatch") {
       u.overwatch = true;
       if (!G.overwatchList.includes(u)) G.overwatchList.push(u);
     } else {
@@ -401,7 +402,7 @@ async function simUnitTurn(u, goal, runner) {
   if (near && u.stance === "stand" && canChangeStance(u) && u.ap >= stanceChangeCost(u))
     changeStance(u, "crouch");
   // Ferito e sanguinante senza medico: primo soccorso
-  if (u.bleeding && !G.units.some((m) => m.alive && m.cls === "medic") && canFirstAid(u))
+  if (u.bleeding && !G.units.some((m) => m.alive && unitSpecial(m) === "heal") && canFirstAid(u))
     firstAid(u);
 }
 

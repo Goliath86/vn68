@@ -179,27 +179,29 @@
       "assault": {
         "name": "Assault",
         "symbol": "A",
-        "desc": "Strong in close combat, poor cover usage",
-        "special_label": "Suppressive Fire"
+        "desc": "Strong in close combat, poor cover usage"
       },
       "sniper": {
         "name": "Sniper",
         "symbol": "S",
-        "desc": "Maximum range, fragile at close range",
-        "special_label": "Overwatch"
+        "desc": "Maximum range, fragile at close range"
       },
       "engineer": {
         "name": "Engineer",
         "symbol": "G",
-        "desc": "Can remove bunkers and clear passages",
-        "special_label": "Demolition"
+        "desc": "Can remove bunkers and clear passages"
       },
       "medic": {
         "name": "Medic",
         "symbol": "M",
-        "desc": "Heals allies, weak in combat",
-        "special_label": "First Aid"
+        "desc": "Heals allies, weak in combat"
       }
+    },
+    "specials": {
+      "suppression": "Suppressive Fire",
+      "overwatch": "Overwatch",
+      "demolition": "Demolition",
+      "heal": "First Aid"
     },
     "soldier_names": [
       "Cpl. Hayes",

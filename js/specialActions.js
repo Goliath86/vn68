@@ -2,7 +2,7 @@ async function handleSpecialAction(col, row) {
   const u = G.selectedUnit;
   if (!u) return;
 
-  if (u.cls === "medic") {
+  if (unitSpecial(u) === "heal") {
     const ally = G.reachable.find((t) => t.col === col && t.row === row);
     if (ally) {
       const healed = Math.min(3, ally.maxHp - ally.hp);
@@ -49,7 +49,7 @@ async function handleSpecialAction(col, row) {
     return;
   }
 
-  if (u.cls === "engineer") {
+  if (unitSpecial(u) === "demolition") {
     const target = G.reachable.find((r) => r.col === col && r.row === row);
     if (!target) return;
 
