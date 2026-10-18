@@ -666,6 +666,11 @@
                     </button>
                 </div>
 
+                <!-- Riepilogo comandi, angolo in basso a sinistra (ui.js:openKeysHelp) -->
+                <button class="modal-keys-btn" id="btn-keys-help" data-i18n="keys.button">
+                    ⌨ Comandi
+                </button>
+
                 <!-- Versione del gioco, angolo in basso a destra (init.js) -->
                 <div class="game-version modal-version"></div>
             </div>
@@ -696,6 +701,15 @@
                 <button class="btn" id="confirm-no" data-i18n="confirm.no">
                     ✕ NO
                 </button>
+            </div>
+        </div>
+
+        <!-- RIEPILOGO COMANDI (ui.js:openKeysHelp) -->
+        <div id="keys-overlay" class="hidden">
+            <div id="keys-box">
+                <h2 data-i18n="keys.title">COMANDI</h2>
+                <div id="keys-list"></div>
+                <button class="btn" id="keys-close" data-i18n="keys.close">✕ CHIUDI</button>
             </div>
         </div>
 

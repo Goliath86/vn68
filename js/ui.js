@@ -326,8 +326,74 @@ function selectNextUnit(dir) {
 }
 
 // ── HOTKEYS DESKTOP ────────────────────────────────────────────────────
+// Riepilogo mostrato dal menu (openKeysHelp): tenerlo allineato con lo
+// switch qui sotto. Ogni voce: tasti ("+" = combinazione), chiave keys.*
+const HOTKEY_HELP = [
+  ["keyboard", [
+    [["Tab"], "next_unit"],
+    [["Shift+Tab"], "prev_unit"],
+    [["M"], "move"],
+    [["A"], "attack"],
+    [["1", "9"], "weapon"],
+    [["S"], "special"],
+    [["R"], "rotate"],
+    [["C"], "stance"],
+    [["L"], "reload"],
+    [["H"], "first_aid"],
+    [["U", "Ctrl+Z"], "undo"],
+    [["Esc"], "cancel"],
+    [["Enter"], "end_turn"],
+  ]],
+  ["mouse", [
+    [["mouse_left"], "click"],
+    [["mouse_right"], "pan"],
+    [["mouse_wheel"], "zoom"],
+  ]],
+];
+
+const keysOverlay = document.getElementById("keys-overlay");
+
+function openKeysHelp() {
+  // Tasti del mouse tradotti, gli altri scritti così come sono
+  const kbd = (k) =>
+    k.startsWith("mouse_")
+      ? `<kbd>${t(`keys.${k}`)}</kbd>`
+      : k.split("+").map((p) => `<kbd>${p}</kbd>`).join("+");
+  document.getElementById("keys-list").innerHTML = HOTKEY_HELP.map(
+    ([section, rows]) => `
+      <h3>${t(`keys.${section}`)}</h3>
+      <table>${rows
+        .map(([keys, label]) => {
+          // 1–9: intervallo; altrimenti alternative separate da "/"
+          const k = label === "weapon" ? keys.map(kbd).join("–") : keys.map(kbd).join(" / ");
+          return `<tr><td>${k}</td><td>${t(`keys.${label}`)}</td></tr>`;
+        })
+        .join("")}</table>`,
+  ).join("");
+  keysOverlay.classList.remove("hidden");
+  sfx("click");
+}
+
+function closeKeysHelp() {
+  keysOverlay.classList.add("hidden");
+}
+
+document.getElementById("btn-keys-help").addEventListener("click", openKeysHelp);
+document.getElementById("keys-close").addEventListener("click", closeKeysHelp);
+keysOverlay.addEventListener("click", (e) => {
+  if (e.target === keysOverlay) closeKeysHelp();
+});
+
 document.addEventListener("keydown", (e) => {
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  // Riepilogo comandi aperto: Esc/Invio lo chiudono, altri tasti ignorati
+  if (!keysOverlay.classList.contains("hidden")) {
+    if (e.key === "Escape" || e.key === "Enter") {
+      e.preventDefault();
+      closeKeysHelp();
+    }
+    return;
+  }
   // Conferma fine turno aperta: Invio = sì, Esc = no, altri tasti ignorati
   if (!endTurnOverlay.classList.contains("hidden")) {
     if (e.key === "Enter" || e.key === "Escape") {

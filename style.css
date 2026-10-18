@@ -1204,6 +1204,101 @@ body {
     display: none;
 }
 
+/* ── RIEPILOGO COMANDI (ui.js:openKeysHelp) ─────────── */
+#modal-box .modal-keys-btn {
+    position: absolute;
+    left: 10px;
+    bottom: 4px;
+    background: none;
+    border: none;
+    color: var(--paper-dark);
+    font-family: var(--mono-font);
+    font-size: 11px;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+#modal-box .modal-keys-btn:hover {
+    color: var(--tan);
+    opacity: 1;
+}
+/* Niente tastiera sui dispositivi touch */
+@media (hover: none) {
+    #modal-box .modal-keys-btn {
+        display: none;
+    }
+}
+#keys-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+}
+#keys-overlay.hidden {
+    display: none;
+}
+#keys-box {
+    background: var(--panel-bg);
+    border: 2px solid var(--tan-dark);
+    border-radius: 4px;
+    padding: 22px 28px;
+    max-width: 440px;
+    width: 90%;
+    max-height: 90dvh;
+    overflow-y: auto;
+    text-align: center;
+}
+#keys-box h2 {
+    font-family: var(--stamp-font);
+    font-size: 22px;
+    color: var(--tan);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+#keys-box h3 {
+    font-family: var(--ui-font);
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--green-light);
+    text-transform: uppercase;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0 4px;
+    margin-bottom: 6px;
+}
+#keys-box table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    color: var(--paper-dark);
+    text-align: left;
+}
+#keys-box td {
+    padding: 3px 0;
+    vertical-align: top;
+}
+#keys-box td:first-child {
+    width: 40%;
+    padding-right: 10px;
+    white-space: nowrap;
+}
+#keys-box kbd {
+    font-family: var(--mono-font);
+    font-size: 11px;
+    color: var(--tan);
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 0 5px;
+    background: rgba(0, 0, 0, 0.3);
+}
+#keys-close {
+    margin-top: 14px;
+}
+
 /* ── TOOLTIP ─────────────────────────────────────── */
 #tile-tooltip {
     position: absolute;

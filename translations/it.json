@@ -276,6 +276,32 @@
     }
   },
 
+  "keys": {
+    "button": "⌨ Comandi",
+    "title": "COMANDI",
+    "close": "✕ CHIUDI",
+    "keyboard": "Tastiera",
+    "mouse": "Mouse",
+    "next_unit": "Unità successiva",
+    "prev_unit": "Unità precedente",
+    "move": "Muovi",
+    "attack": "Attacca",
+    "weapon": "Scheda arma corrispondente",
+    "special": "Abilità speciale",
+    "rotate": "Ruota l'unità",
+    "stance": "Cambia postura",
+    "reload": "Ricarica",
+    "first_aid": "Primo soccorso",
+    "undo": "Annulla l'ultimo movimento",
+    "cancel": "Annulla l'azione in corso",
+    "end_turn": "Fine turno (nella conferma: Invio sì, Esc no)",
+    "mouse_left": "Click sinistro",
+    "mouse_right": "Trascina destro/centrale",
+    "mouse_wheel": "Rotellina",
+    "click": "Seleziona unità, muovi, scegli il bersaglio",
+    "pan": "Sposta la mappa",
+    "zoom": "Zoom"
+  },
   "modal": {
     "select_theater_title": "SELEZIONA TEATRO",
     "select_theater_desc": "Scegli il campo operativo per questa missione",
