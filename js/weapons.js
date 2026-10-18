@@ -9,6 +9,24 @@ function unitWeapon(unit) {
     : null;
 }
 
+/**
+ * Nome dell'arma nella lingua corrente: "label" + lingua ("labelEn"),
+ * altrimenti "label" (l'italiano)
+ * @param {object} w
+ * @returns {string}
+ */
+function weaponLabel(w) {
+  if (!w) return "";
+  const key = "label" + LANG.charAt(0).toUpperCase() + LANG.slice(1);
+  return (LANG !== "it" && w[key]) || w.label || w.id || "";
+}
+
+// Tutti i nomi dell'arma (label, labelEn, …): per gli attacchi che si
+// risolvono dopo (artiglieria, napalm) e restano traducibili
+function weaponLabelFields(w) {
+  return Object.fromEntries(Object.entries(w || {}).filter(([k]) => k.startsWith("label")));
+}
+
 // ── MUNIZIONI ──────────────────────────────────────────────────────────
 // `ammo`: usi totali (granate, fumogeni, radio), null = illimitati.
 // `mag`: colpi per caricatore (ogni attacco ne consuma 1), `loaded` quelli

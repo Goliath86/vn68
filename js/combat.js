@@ -507,7 +507,7 @@ async function throwAoe(attacker, weapon, tc, tr) {
   }
   if (land.col !== tc || land.row !== tr) {
     statAdd("grenadeScatter");
-    log(t("log.grenade_scatter", { name: attacker.name, weapon: weapon.label }), "combat");
+    log(t("log.grenade_scatter", { name: attacker.name, weapon: weaponLabel(weapon) }), "combat");
   }
   await resolveAoeCombat(attacker, weapon, land.col, land.row, false);
 }
@@ -564,7 +564,7 @@ async function resolveAoeCombat(
     if (!hitHidden) log(
       t("log.aoe_no_targets", {
         name: attacker.name,
-        weapon: weapon.label,
+        weapon: weaponLabel(weapon),
       }),
       "combat",
     );
@@ -576,7 +576,7 @@ async function resolveAoeCombat(
   log(
     t("log.aoe_attack", {
       name: attacker.name,
-      weapon: weapon.label,
+      weapon: weaponLabel(weapon),
       targets: defenders.length,
     }),
     "combat",

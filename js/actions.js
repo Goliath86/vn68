@@ -133,7 +133,7 @@ function reloadWeapon(u, w = reloadableWeapon(u)) {
   log(
     t("log.reload", {
       name: u.name,
-      weapon: w.label,
+      weapon: weaponLabel(w),
       mags: w.mags == null ? t("weapons.ammo_inf") : w.mags,
     }),
   );

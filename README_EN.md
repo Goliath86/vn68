@@ -587,7 +587,7 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | Field | Type | Description |
 |---|---|---|
 | `id` | string | Internal identifier |
-| `label` / `labelEn` | string | Display name in Italian / English |
+| `label` / `labelEn` | string | Display name in Italian / English; without `labelEn`, `label` is shown in English too |
 | `atk` | number | Weapon ATK value (overrides class default) |
 | `range` | number | Maximum range in tiles |
 | `ammo` | number or null | Total uses available (grenades, smoke, radio); `null` = unlimited |

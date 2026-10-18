@@ -100,7 +100,7 @@ function updateQuickWeaponsBar(u) {
       const ammoStr = weaponAmmoLabel(w);
       const aoeStr = weaponAreaTag(w);
       html += `<button class="btn qwb-btn" ${!hasAmmo ? "disabled" : ""} data-widx="${i}">
-<span class="qwb-name">${w.label} ${ammoStr}</span>
+<span class="qwb-name">${weaponLabel(w)} ${ammoStr}</span>
 <span class="qwb-stats">ATK${w.atk} · RNG${w.range}${aoeStr} · 🔊${weaponNoise(u, w)}</span>
 </button>`;
     });
@@ -118,7 +118,7 @@ function updateQuickWeaponsBar(u) {
     const w = G.pendingAoe.weapon;
     html = `<button class="btn btn-attack qwb-btn" data-qwb="confirm">
 <span class="qwb-name">${t("weapons.confirm_aoe")}</span>
-<span class="qwb-stats">${w.label}${weaponAreaTag(w)} · ${aoeSummaryText()}</span>
+<span class="qwb-stats">${weaponLabel(w)}${weaponAreaTag(w)} · ${aoeSummaryText()}</span>
 </button>${cancelBtn}`;
   } else if (G.actionMode === "attack" && G.currentWeapon?.napalm) {
     html = `<span class="qwb-stats" style="align-self:center">${napalmPromptText()}</span>${cancelBtn}`;
@@ -207,7 +207,7 @@ function weaponBarHTML(u, withKeys) {
       const cls = `btn weapon-card${active ? " active" : ""}${empty ? " empty" : ""}`;
       const key = withKeys && i < 9 ? ` data-key="${i + 1}"` : "";
       return `<button class="${cls}" data-wcard="${i}"${key} ${enabled ? "" : "disabled"}>
-<span class="wc-top"><span class="wc-name">${w.label}</span><span class="wc-ammo">${weaponAmmoLabel(w)}</span></span>
+<span class="wc-top"><span class="wc-name">${weaponLabel(w)}</span><span class="wc-ammo">${weaponAmmoLabel(w)}</span></span>
 <span class="wc-stats">${stats}</span>
 </button>`;
     })
@@ -368,7 +368,7 @@ function updateActionButtons() {
             ? "var(--highlight)"
             : "";
         el.textContent = atkWeapon
-          ? t("buttons.attack_with", { weapon: atkWeapon.label })
+          ? t("buttons.attack_with", { weapon: weaponLabel(atkWeapon) })
           : t("buttons.attack");
       }
 
@@ -428,7 +428,7 @@ function updateActionButtons() {
       const hasAmmo = weaponUsable(u, w);
       const ammoStr = weaponAmmoLabel(w);
       const aoeStr = weaponAreaTag(w);
-      html += `<button class="btn btn-weapon" ${!hasAmmo ? "disabled" : ""} data-widx="${i}">${w.label} ${ammoStr} · ATK${w.atk} · RNG${w.range}${aoeStr} · 🔊${weaponNoise(u, w)}</button>`;
+      html += `<button class="btn btn-weapon" ${!hasAmmo ? "disabled" : ""} data-widx="${i}">${weaponLabel(w)} ${ammoStr} · ATK${w.atk} · RNG${w.range}${aoeStr} · 🔊${weaponNoise(u, w)}</button>`;
     });
     [pickerEl, mobPickerEl].forEach((el) => {
       if (!el) return;
@@ -464,7 +464,7 @@ function updateActionButtons() {
     });
   } else if (G.actionMode === "aoe_confirm" && G.pendingAoe) {
     const w = G.pendingAoe.weapon;
-    const html = `<div style="font-size:10px;color:#ffaa33;margin-bottom:3px">${w.label}${weaponAreaTag(w)} · ${aoeSummaryText()}</div>
+    const html = `<div style="font-size:10px;color:#ffaa33;margin-bottom:3px">${weaponLabel(w)}${weaponAreaTag(w)} · ${aoeSummaryText()}</div>
 <button class="btn btn-attack" data-aoe="confirm">${t("weapons.confirm_aoe")}</button>
 <button class="btn" data-aoe="cancel">${t("weapons.cancel_aoe")}</button>`;
     [pickerEl, mobPickerEl].forEach((el) => {
@@ -531,7 +531,7 @@ function napalmPromptText() {
   const w = G.currentWeapon;
   return G.pendingAoe
     ? t("weapons.napalm_pick_end", { n: napalmLength(w) })
-    : t("weapons.napalm_pick_start", { weapon: w.label });
+    : t("weapons.napalm_pick_start", { weapon: weaponLabel(w) });
 }
 
 // Probabilità del bersaglio puntato col primo tap (null se non c'è o non è

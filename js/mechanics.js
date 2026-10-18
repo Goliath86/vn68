@@ -675,7 +675,7 @@ function deploySmoke(thrower, weapon, tc, tr) {
   log(
     t("log.smoke_deployed", {
       name: thrower.name,
-      weapon: weapon.label,
+      weapon: weaponLabel(weapon),
       turns: weapon.smoke,
     }),
     "system",
@@ -770,7 +770,7 @@ function scheduleArtillery(caller, weapon, tc, tr) {
     aoe: weapon.aoe,
     shells: artilleryShells(weapon),
     scatter: artilleryScatter(weapon),
-    label: weapon.label,
+    ...weaponLabelFields(weapon),
     sound: weapon.sound,
     noise: weaponNoise(caller, weapon),
     callerCls: caller.cls,
@@ -803,7 +803,7 @@ async function resolveArtillery() {
       blastTile(land.col, land.row);
       await resolveAoeCombat(
         { cls: s.callerCls, name: s.callerName },
-        { atk: s.atk, aoe: s.aoe, label: s.label, sound: s.sound, noise: s.noise },
+        { atk: s.atk, aoe: s.aoe, ...weaponLabelFields(s), sound: s.sound, noise: s.noise },
         land.col,
         land.row,
         false,
@@ -964,7 +964,7 @@ function scheduleNapalm(caller, weapon, line) {
   (st.napalm ||= []).push({
     line,
     atk: weapon.atk,
-    label: weapon.label,
+    ...weaponLabelFields(weapon),
     noise: weaponNoise(caller, weapon),
     callerCls: caller.cls,
     callerName: caller.name,
@@ -1008,7 +1008,7 @@ async function resolveNapalm() {
       napalmTile(col, row);
       await resolveAoeCombat(
         { cls: s.callerCls, name: s.callerName },
-        { atk: s.atk, aoe: 0, napalm: true, label: s.label, noise: s.noise },
+        { atk: s.atk, aoe: 0, napalm: true, ...weaponLabelFields(s), noise: s.noise },
         col,
         row,
         false,

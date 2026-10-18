@@ -586,7 +586,7 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | Campo | Tipo | Descrizione |
 |---|---|---|
 | `id` | string | Identificatore interno |
-| `label` / `labelEn` | string | Nome visualizzato in italiano / inglese |
+| `label` / `labelEn` | string | Nome visualizzato in italiano / inglese; senza `labelEn` anche in inglese si usa `label` |
 | `atk` | number | Valore ATK dell'arma (sovrascrive quello della classe) |
 | `range` | number | Gittata massima in tile |
 | `ammo` | number o null | Usi totali disponibili (granate, fumogeni, radio); `null` = illimitati |
