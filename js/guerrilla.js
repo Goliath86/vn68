@@ -204,7 +204,7 @@ const VC_TRAP_PLANT_CHANCE = 0.15;
 const VC_TRAP_PLANT_MAX = 3;
 
 function maybePlantTrap(enemy) {
-  if (enemy.cls !== "grunt") return;
+  if (enemyRole(enemy) !== "rifleman") return;
   const st = G.missionState;
   const max = G.mapData.vcTrapPlantMax ?? VC_TRAP_PLANT_MAX;
   if ((st.trapsPlanted || 0) >= max || Math.random() >= VC_TRAP_PLANT_CHANCE) return;
@@ -225,7 +225,7 @@ const CAMO_SPOT_DIST = 2;
 
 function isVcCamouflaged(e) {
   return (
-    e.cls === "sniper_vc" && !e.exposed && !e.inTunnel && isConcealingTile(e.col, e.row)
+    enemyRole(e) === "sniper" && !e.exposed && !e.inTunnel && isConcealingTile(e.col, e.row)
   );
 }
 

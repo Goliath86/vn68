@@ -397,12 +397,76 @@ function aoeOdds(weapon, tc, tr, line = null) {
     });
 }
 
+// ── CLASSI VC (constants.js:ENEMY_CLASSES) ─────────────────────────────
+// Classe sconosciuta (es. salvataggio di una mod rimossa): guerrigliero
+function enemyClass(cls) {
+  return ENEMY_CLASSES[cls] || ENEMY_CLASSES.grunt;
+}
+
 function getEnemyStats(enemy) {
-  if (enemy.cls === "sniper_vc")
-    return { attack: 3, range: 4, defense: 0, move: 2 };
-  if (enemy.cls === "commander")
-    return { attack: 3, range: 2, defense: 1, move: 3 };
-  return { attack: 2, range: 2, defense: 0, move: 3 };
+  return enemyClass(enemy.cls);
+}
+
+// Comportamento della classe: "rifleman" | "sniper" | "commander"
+function enemyRole(enemy) {
+  return enemyClass(enemy.cls).role || "rifleman";
+}
+
+function enemyName(cls) {
+  const n = enemyClass(cls).name;
+  if (typeof n === "number") return VC_NAMES[n] ?? VC_NAMES[0];
+  if (n && typeof n === "object") return n[LANG] ?? n.it ?? VC_NAMES[0];
+  return n || VC_NAMES[0];
+}
+
+// Pesi della composizione VC per la mappa corrente: "spawn" | "ambush" |
+// "reinforcement" (constants.js:VC_MIX; le imboscate usano "vcMix" della
+// mappa se manca "ambushMix")
+function vcMix(kind) {
+  const md = G.mapData || {};
+  if (kind === "spawn") return md.vcMix || VC_MIX.spawn;
+  if (kind === "ambush") return md.ambushMix || md.vcMix || VC_MIX.ambush;
+  return md.reinforcementMix || VC_MIX.reinforcement;
+}
+
+// Classe estratta in proporzione ai pesi; con una sola classe non consuma
+// numeri casuali
+function pickEnemyClass(mix) {
+  const entries = Object.entries(mix || {}).filter(([c, w]) => w > 0 && ENEMY_CLASSES[c]);
+  if (!entries.length) return "grunt";
+  if (entries.length === 1) return entries[0][0];
+  let r = Math.random() * entries.reduce((s, [, w]) => s + w, 0);
+  for (const [c, w] of entries) {
+    if (r < w) return c;
+    r -= w;
+  }
+  return entries[entries.length - 1][0];
+}
+
+// Nuovo VC della classe `cls`. o: name, hp, facing (default casuale),
+// alerted, hold
+function makeEnemy(id, cls, col, row, o = {}) {
+  const def = enemyClass(cls);
+  return {
+    id,
+    name: o.name ?? enemyName(cls),
+    cls,
+    col,
+    row,
+    hp: Math.min(def.hp, o.hp ?? def.hp),
+    maxHp: def.hp,
+    ap: def.ap,
+    maxAp: def.ap,
+    alive: true,
+    alerted: !!o.alerted,
+    hold: !!o.hold,
+    facing: o.facing ?? rnd(0, 3),
+    suppressed: false,
+    vx: col,
+    vy: row,
+    weapons: buildWeapons(cls, G.missionState.vcCarrierCounts),
+    weaponIdx: 0,
+  };
 }
 
 // ── LANCIO A MANO (granate) ────────────────────────────────────────────

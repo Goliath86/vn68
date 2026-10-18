@@ -8,6 +8,15 @@ function loadMissionSounds(mapData) {
     };
     MISSION_SFX_CACHE[key] = a;
   }
+  // Suoni delle armi definite dalla mappa ("weapons", config.js:classWeapons)
+  for (const path of missionWeaponSounds(mapData)) {
+    if (WEAPON_SND_CACHE[path]) continue;
+    const a = new Audio(assetUrl(path));
+    a.onerror = () => {
+      delete WEAPON_SND_CACHE[path];
+    };
+    WEAPON_SND_CACHE[path] = a;
+  }
 }
 
 const AUDIO = {
@@ -164,7 +173,7 @@ function audioToggleMute() {
   if (AUDIO.ambient) AUDIO.ambient.volume = AUDIO.muted ? 0 : AUDIO.musicVol;
   document.getElementById("btn-mute").textContent = AUDIO.muted ? "🔇" : "🔊";
 }
-const _VC_CLS = new Set(["grunt", "sniper_vc", "commander"]);
+const _isVcCls = (cls) => !!ENEMY_CLASSES[cls];
 function sfxShoot(cls, weapon = null) {
   if (AUDIO.muted) return;
   const path = weapon?.sound;
@@ -172,12 +181,12 @@ function sfxShoot(cls, weapon = null) {
   if (a) {
     const clone = a.cloneNode();
     clone.volume = AUDIO.sfxVol;
-    clone.play().catch(() => sfx(_VC_CLS.has(cls) ? "shoot_vc" : "shoot"));
+    clone.play().catch(() => sfx(_isVcCls(cls) ? "shoot_vc" : "shoot"));
     return;
   }
   // Arma bianca senza suono proprio: fendente ("melee" sovrascrivibile da config)
   if (weapon?.melee) return sfx("melee");
-  sfx(_VC_CLS.has(cls) ? "shoot_vc" : "shoot");
+  sfx(_isVcCls(cls) ? "shoot_vc" : "shoot");
 }
 
 // ── Noise buffer helper

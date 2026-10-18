@@ -209,7 +209,7 @@ Staying in cover isn't enough: the enemy will go for your back and flanks.
 - **Planted traps:** a patrolling guerrilla now and then (15% per turn) hides a punji or a mine on the tile it leaves, up to 3 per mission. If you see it planting, the trap is marked on the map.
 - **Camouflaged snipers:** a VC sniper in vegetation or rubble is **invisible beyond 2 tiles** until it fires: the shot reveals it until the next VC turn. Overwatch and suppressive fire can't see it from afar either. The VC sniper actively seeks these positions.
 
-Starting from a configured turn, **VC reinforcements** can arrive periodically — always guerrillas, always from the same side.
+Starting from a configured turn, **VC reinforcements** can arrive periodically — guerrillas by default (the map can change them with `reinforcementMix`), always from the same side.
 
 In addition, each map has a **surprise ambush**: at a precise turn (and only once), a group of VC emerges from an unexpected direction — flank or rear relative to the objective — with elite units already in an alerted state. The exact turn is not communicated to the player in advance.
 
@@ -631,6 +631,30 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | VC Sniper | Mosin (ATK3, RNG4, ∞) | — |
 | VC Commander | TT-33 (ATK3, RNG2, ∞) | — |
 
+### Enemy classes
+
+VC stats are changed with `enemyClasses` in `config.json`; a new name adds a class (it starts from the guerrilla's values). Its weapons go in `weapons` under the same name, its picture in `unitImages`. To make it appear in game, put it in a composition: `vcMix` in `config.json` (default for every map) or `vcMix`/`ambushMix`/`reinforcementMix` in the map.
+
+```json
+"enemyClasses": {
+  "commander": { "hp": 9 },
+  "nva": { "name": { "it": "Regolare NVA", "en": "NVA Regular" }, "role": "rifleman",
+           "hp": 7, "attack": 3, "defense": 1, "sprite": "grunt" }
+},
+"vcMix": { "spawn": { "grunt": 3, "sniper_vc": 1, "commander": 1, "nva": 1 } },
+"weapons": { "nva": [{ "id": "ak47", "label": "AK-47", "atk": 3, "range": 3, "noise": 5, "sound": "assets/ak47.mp3" }] }
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `name` | number / object | Index into the translated VC names (0 Guerrilla, 1 VC Sniper, 3 VC Commander) or `{ "it", "en" }` |
+| `role` | string | Behaviour: `"rifleman"` (patrols, plants traps, flanks), `"sniper"` (camouflaged, skips a turn after firing, keeps its distance), `"commander"` (always holds in ambush, its death makes nearby VC fall back) |
+| `hp`, `ap` | number | Hit points and AP per turn |
+| `attack`, `range`, `defense`, `move` | number | ATK and range without weapons, DEF, movement |
+| `sprite` | string | VC class whose drawn sprite is used when `unitImages` has no picture for this class |
+
+In `config.json`, `vcMix` holds three compositions: `spawn` (initial deployment), `ambush`, `reinforcement`.
+
 ---
 
 ## Controls
@@ -862,6 +886,32 @@ Full structure with all fields:
 | `mist` | boolean / object | (optional, visual only) Drifting mist banks: `true` = on swamp tiles (`id` `"swamp"`); `{ "tiles": ["swamp", "river"], "density": 1 }` to pick the tile ids and the thickness (0.5 = thin, 2 = thick) |
 | `temperature` | object | (optional, informational only) Temperature range in °C shown in the weather panel: `{ "day": [min, max], "night": [min, max] }`; default day 27–34, night 21–26 (southern lowlands). Rain lowers it by 3°, overcast sky by 1° |
 | `cloudy` | number | (optional, informational only) Probability (0–1) of overcast sky at mission start; default 0.35. Each turn the sky has a 20% chance to change |
+
+### Optional fields: weapons, enemies and balance
+
+They apply only to this map's mission: the next mission goes back to the `config.json` and game values.
+
+| Field | Type | Description |
+|---|---|---|
+| `weapons` | object | Weapons per class (US or VC). An **array** replaces the class's whole loadout (same format as `config.json`). An **object** changes single weapons by `id`: fields are merged into the weapon, `null` removes it, a new `id` adds the weapon at the end |
+| `vcMix` | object | VC composition: weights per class, e.g. `{ "grunt": 3, "nva": 2 }`. Used for the initial deployment and, without `ambushMix`, for the ambush. Default `{ "grunt": 3, "sniper_vc": 1, "commander": 1 }` |
+| `ambushMix` | object | Ambush composition; default `{ "grunt": 2, "sniper_vc": 1, "commander": 1 }` |
+| `reinforcementMix` | object | Reinforcement composition; default `{ "grunt": 1 }` |
+| `tuning` | object | Balance parameters, deep-merged into the game values (numbers and arrays replaced, objects merged). Editable groups: `VC_TACTICS` (tactical AI, `js/ai.js`), `STANCES`, `MELEE` (knife), `ARTILLERY`, `NAPALM` (`js/mechanics.js`), `ENEMY_CLASSES` (VC stats), `VC_MIX` (default compositions). An unknown group is ignored with a console warning |
+
+```json
+"weapons": {
+  "assault": { "grenade": { "ammo": 4 }, "smoke": null },
+  "medic": [{ "id": "shotgun", "label": "Ithaca 37", "atk": 3, "range": 1, "noise": 4 }]
+},
+"vcMix": { "grunt": 2, "nva": 3, "commander": 1 },
+"reinforcementMix": { "nva": 1 },
+"tuning": {
+  "VC_TACTICS": { "holdChance": 0.8 },
+  "ENEMY_CLASSES": { "commander": { "hp": 10 } },
+  "STANCES": { "prone": { "def": 3 } }
+}
+```
 
 ### Tile Type Fields
 

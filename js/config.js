@@ -11,6 +11,12 @@ async function loadConfig() {
     if (!resp.ok) return;
     CONFIG = await resp.json();
     WEAPONS_CONFIG = CONFIG.weapons || {};
+    // Classi VC modificate o nuove (le nuove partono dal guerrigliero) e
+    // composizione di default
+    for (const [cls, def] of Object.entries(CONFIG.enemyClasses || {})) {
+      ENEMY_CLASSES[cls] = deepMerge(deepMerge({}, ENEMY_CLASSES[cls] || ENEMY_CLASSES.grunt), def);
+    }
+    deepMerge(VC_MIX, CONFIG.vcMix);
   } catch (e) {
     // config.json assente o non valido — nessun effetto, si usano gli sprite canvas
   }
@@ -134,9 +140,35 @@ function initWeaponMag(w) {
   return w;
 }
 
+// Armi di una classe nella missione corrente. Il JSON della mappa può
+// sostituire il loadout ("weapons": { "assault": [ … ] }) oppure cambiarne
+// singole armi per id ("weapons": { "assault": { "grenade": { "ammo": 4 },
+// "smoke": null } }: campi uniti all'arma, null la toglie, un id nuovo
+// aggiunge l'arma in fondo)
+function classWeapons(cls, md = G.mapData) {
+  const base = WEAPONS_CONFIG[cls] || [];
+  const ov = md?.weapons?.[cls];
+  if (!ov) return base;
+  if (Array.isArray(ov)) return ov;
+  const out = base
+    .filter((w) => ov[w.id] !== null)
+    .map((w) => (ov[w.id] ? { ...w, ...ov[w.id] } : w));
+  for (const [id, w] of Object.entries(ov)) {
+    if (w && !base.some((b) => b.id === id)) out.push({ id, ...w });
+  }
+  return out;
+}
+
+// Suoni delle armi definite da una mappa (da precaricare come quelli di config.json)
+function missionWeaponSounds(md) {
+  return Object.keys(md?.weapons || {})
+    .flatMap((cls) => classWeapons(cls, md).map((w) => w.sound))
+    .filter(Boolean);
+}
+
 // Crea l'array di armi per un'unità rispettando il limite maxCarriers per missione
 function buildWeapons(cls, carrierCounts) {
-  return (WEAPONS_CONFIG[cls] || []).reduce((acc, w) => {
+  return classWeapons(cls).reduce((acc, w) => {
     if (w.maxCarriers != null) {
       const key = cls + ":" + w.id;
       if ((carrierCounts[key] || 0) >= w.maxCarriers) return acc;

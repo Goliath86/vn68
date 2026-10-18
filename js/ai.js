@@ -176,7 +176,7 @@ function vcEffRange(enemy, stats) {
 
 // Il cecchino VC dopo aver sparato salta un turno di fuoco (ricarica)
 function vcCanShoot(enemy) {
-  return !(enemy.cls === "sniper_vc" && (enemy.hasShot || enemy.needReload));
+  return !(enemyRole(enemy) === "sniper" && (enemy.hasShot || enemy.needReload));
 }
 
 // Esegue un attacco VC contro il bersaglio (consuma AP e munizioni); l'arma
@@ -351,7 +351,7 @@ async function enemyActivation(enemy) {
   if (enemy.routed > 0) {
     // Morale a pezzi: ripiega senza attaccare, nei tunnel se ce n'è uno a portata
     if (!(await tryTunnelDive(enemy, stats))) await routedActivation(enemy, stats);
-  } else if (enemy.alerted && enemy.cls === "sniper_vc") {
+  } else if (enemy.alerted && enemyRole(enemy) === "sniper") {
     await sniperActivation(enemy, stats);
   } else if (enemy.alerted) {
     // Ferito gravemente: sparisce nei tunnel se può; altrimenti IA tattica
@@ -462,24 +462,13 @@ function spawnReinforcements(count) {
     if (!isTilePassable(col, row)) continue;
     if (isOccupied(col, row)) continue;
     if (tn && isTileVisible(col, row)) revealTunnel(tn);
-    G.enemies.push({
-      id: "r" + Date.now() + spawned,
-      name: t("units.vc_reinforcement_name"),
-      cls: "grunt",
-      col,
-      row,
-      hp: 5,
-      maxHp: 5,
-      ap: 2,
-      maxAp: 2,
-      alive: true,
-      alerted: true,
-      facing: facingToward({ col, row }, nearestLiveUnit({ col, row }) ?? { col, row }) ?? 2,
-      vx: col,
-      vy: row,
-      weapons: buildWeapons("grunt", G.missionState.vcCarrierCounts),
-      weaponIdx: 0,
-    });
+    G.enemies.push(
+      makeEnemy("r" + Date.now() + spawned, pickEnemyClass(vcMix("reinforcement")), col, row, {
+        name: t("units.vc_reinforcement_name"),
+        alerted: true,
+        facing: facingToward({ col, row }, nearestLiveUnit({ col, row }) ?? { col, row }) ?? 2,
+      }),
+    );
     addFX("spawn", { col, row }, 1300);
     spawned++;
   }
@@ -498,32 +487,12 @@ function spawnAmbush(count, zones) {
     const row = rnd(zone.rowMin, zone.rowMax);
     if (!isTilePassable(col, row)) continue;
     if (isOccupied(col, row)) continue;
-    const cls = pick(["grunt", "grunt", "sniper_vc", "commander"]);
-    const vcName =
-      cls === "sniper_vc"
-        ? VC_NAMES[1]
-        : cls === "commander"
-          ? VC_NAMES[3]
-          : VC_NAMES[0];
-    G.enemies.push({
-      id: "amb" + Date.now() + spawned,
-      name: vcName,
-      cls,
-      col,
-      row,
-      hp: cls === "commander" ? 8 : cls === "sniper_vc" ? 6 : 5,
-      maxHp: cls === "commander" ? 8 : cls === "sniper_vc" ? 6 : 5,
-      ap: 2,
-      maxAp: 2,
-      alive: true,
-      alerted: true,
-      facing: facingToward({ col, row }, nearestLiveUnit({ col, row }) ?? { col, row }) ?? 2,
-      suppressed: false,
-      vx: col,
-      vy: row,
-      weapons: buildWeapons(cls, G.missionState.vcCarrierCounts),
-      weaponIdx: 0,
-    });
+    G.enemies.push(
+      makeEnemy("amb" + Date.now() + spawned, pickEnemyClass(vcMix("ambush")), col, row, {
+        alerted: true,
+        facing: facingToward({ col, row }, nearestLiveUnit({ col, row }) ?? { col, row }) ?? 2,
+      }),
+    );
     addFX("spawn", { col, row, ambush: true }, 1400);
     spawned++;
   }
@@ -891,7 +860,7 @@ async function tacticalActivation(enemy, stats, liveUnits) {
   const goodCover =
     coverBonus(enemy.col, enemy.row) >= 1 || isConcealingTile(enemy.col, enemy.row);
   const near = dist(enemy, goal) <= effRange + VC_TACTICS.holdRange;
-  const holdChance = enemy.cls === "commander" ? 1 : VC_TACTICS.holdChance;
+  const holdChance = enemyRole(enemy) === "commander" ? 1 : VC_TACTICS.holdChance;
   if (goodCover && near && Math.random() < holdChance) {
     checkOverwatch(enemy);
     checkSuppression(enemy);
@@ -928,8 +897,7 @@ function flankEligible(e) {
     e.alerted &&
     !e.inTunnel &&
     !(e.routed > 0) &&
-    e.cls !== "sniper_vc" &&
-    e.cls !== "commander"
+    enemyRole(e) === "rifleman"
   );
 }
 

@@ -208,7 +208,7 @@ Tenersi al riparo non basta: il nemico cercherà le tue spalle e i tuoi fianchi.
 - **Trappole piazzate:** un guerrigliero in pattuglia ogni tanto (15% per turno) nasconde una punji o una mina sul tile da cui parte, fino a 3 per missione. Se lo vedi mentre la piazza, la trappola è segnata sulla mappa.
 - **Cecchini mimetizzati:** un cecchino VC tra la vegetazione o le macerie è **invisibile oltre 2 tile** finché non spara: lo sparo lo svela fino al turno VC successivo. Anche overwatch e fuoco soppressivo non lo vedono da lontano. Il cecchino VC cerca apposta queste posizioni.
 
-Dal turno configurato nella mappa possono arrivare **rinforzi VC** periodici — sempre guerriglieri, sempre dallo stesso lato.
+Dal turno configurato nella mappa possono arrivare **rinforzi VC** periodici — di default guerriglieri (la mappa può cambiarli con `reinforcementMix`), sempre dallo stesso lato.
 
 In aggiunta, ogni mappa ha un'**imboscata a sorpresa**: a un turno preciso (e una sola volta), un gruppo di VC emerge da una direzione inattesa — fianco o retro rispetto all'obiettivo — con unità di qualità superiore e già in stato di allerta. Il turno esatto non è comunicato al giocatore in anticipo.
 
@@ -630,6 +630,30 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | Cecchino VC | Mosin (ATK3, RNG4, ∞) | — |
 | Comandante VC | TT-33 (ATK3, RNG2, ∞) | — |
 
+### Classi nemiche
+
+Le statistiche dei VC si cambiano con `enemyClasses` in `config.json`; con un nome nuovo si aggiunge una classe (parte dai valori del guerrigliero). Le sue armi vanno in `weapons` sotto lo stesso nome, e l'immagine in `unitImages`. Per farla comparire in partita va inserita in una composizione: `vcMix` in `config.json` (default per tutte le mappe) oppure `vcMix`/`ambushMix`/`reinforcementMix` nella mappa.
+
+```json
+"enemyClasses": {
+  "commander": { "hp": 9 },
+  "nva": { "name": { "it": "Regolare NVA", "en": "NVA Regular" }, "role": "rifleman",
+           "hp": 7, "attack": 3, "defense": 1, "sprite": "grunt" }
+},
+"vcMix": { "spawn": { "grunt": 3, "sniper_vc": 1, "commander": 1, "nva": 1 } },
+"weapons": { "nva": [{ "id": "ak47", "label": "AK-47", "atk": 3, "range": 3, "noise": 5, "sound": "assets/ak47.mp3" }] }
+```
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `name` | number / object | Indice nei nomi VC tradotti (0 Guerrigliero, 1 Cecchino VC, 3 Comandante VC) oppure `{ "it", "en" }` |
+| `role` | string | Comportamento: `"rifleman"` (pattuglia, piazza trappole, aggira), `"sniper"` (mimetizzato, salta un turno dopo lo sparo, resta a distanza), `"commander"` (resta sempre in agguato, la sua morte fa ripiegare i VC vicini) |
+| `hp`, `ap` | number | Punti ferita e AP per turno |
+| `attack`, `range`, `defense`, `move` | number | ATK e gittata senza armi, DEF, movimento |
+| `sprite` | string | Classe VC di cui usare lo sprite disegnato se `unitImages` non ha un'immagine per questa classe |
+
+In `config.json`, `vcMix` ha tre composizioni: `spawn` (schieramento iniziale), `ambush` (imboscata), `reinforcement` (rinforzi).
+
 ---
 
 ## Controlli
@@ -861,6 +885,32 @@ Struttura completa con tutti i campi:
 | `mist` | boolean / object | (opzionale, solo visivo) Banchi di nebbiolina che derivano lenti: `true` = sui tile palude (`id` `"swamp"`); `{ "tiles": ["swamp", "river"], "density": 1 }` per scegliere gli id dei tile e lo spessore (0.5 = rada, 2 = fitta) |
 | `temperature` | object | (opzionale, solo informativo) Intervallo di temperatura in °C mostrato nel pannello meteo: `{ "day": [min, max], "night": [min, max] }`; default giorno 27–34, notte 21–26 (pianura del Sud). La pioggia la abbassa di 3°, il cielo coperto di 1° |
 | `cloudy` | number | (opzionale, solo informativo) Probabilità (0–1) di cielo coperto a inizio missione; default 0.35. A ogni turno il cielo cambia con probabilità 20% |
+
+### Campi opzionali: armi, nemici e bilanciamento
+
+Valgono solo per la missione della mappa: alla missione successiva tornano i valori di `config.json` e del gioco.
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `weapons` | object | Armi per classe (US o VC). Un **array** sostituisce l'intero loadout della classe (stesso formato di `config.json`). Un **oggetto** modifica singole armi per `id`: i campi vengono uniti all'arma, `null` la toglie, un `id` nuovo aggiunge l'arma in fondo |
+| `vcMix` | object | Composizione dei VC: pesi per classe, es. `{ "grunt": 3, "nva": 2 }`. Vale per lo schieramento iniziale e, se manca `ambushMix`, per l'imboscata. Default `{ "grunt": 3, "sniper_vc": 1, "commander": 1 }` |
+| `ambushMix` | object | Composizione dell'imboscata; default `{ "grunt": 2, "sniper_vc": 1, "commander": 1 }` |
+| `reinforcementMix` | object | Composizione dei rinforzi; default `{ "grunt": 1 }` |
+| `tuning` | object | Parametri di bilanciamento, uniti in profondità ai valori del gioco (numeri e array sostituiti, oggetti uniti). Gruppi modificabili: `VC_TACTICS` (IA tattica, `js/ai.js`), `STANCES` (posture), `MELEE` (coltello), `ARTILLERY`, `NAPALM` (`js/mechanics.js`), `ENEMY_CLASSES` (statistiche VC), `VC_MIX` (composizioni di default). Un gruppo sconosciuto è ignorato con un avviso in console |
+
+```json
+"weapons": {
+  "assault": { "grenade": { "ammo": 4 }, "smoke": null },
+  "medic": [{ "id": "shotgun", "label": "Ithaca 37", "atk": 3, "range": 1, "noise": 4 }]
+},
+"vcMix": { "grunt": 2, "nva": 3, "commander": 1 },
+"reinforcementMix": { "nva": 1 },
+"tuning": {
+  "VC_TACTICS": { "holdChance": 0.8 },
+  "ENEMY_CLASSES": { "commander": { "hp": 10 } },
+  "STANCES": { "prone": { "def": 3 } }
+}
+```
 
 ### Campi del tile type
 

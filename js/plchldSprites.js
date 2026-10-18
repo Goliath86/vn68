@@ -1481,8 +1481,10 @@ function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy) {
   }
 
   if (isEnemy) {
-    if (cls === "commander") _sprVCCommander(ctx, cx, cy, s);
-    else if (cls === "sniper_vc") _sprVCSniper(ctx, cx, cy, s);
+    // Classi VC aggiunte da config.json: sprite di una classe base ("sprite")
+    const base = ENEMY_CLASSES[cls]?.sprite ?? cls;
+    if (base === "commander") _sprVCCommander(ctx, cx, cy, s);
+    else if (base === "sniper_vc") _sprVCSniper(ctx, cx, cy, s);
     else _sprVCGrunt(ctx, cx, cy, s);
   } else {
     if (cls === "sniper") _sprUSSniper(ctx, cx, cy, s);

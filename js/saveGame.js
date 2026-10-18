@@ -56,6 +56,7 @@ async function resumeGame(save) {
 
   // Ripristina mapData (include griglia modificata da demolizioni)
   G.mapData = save.mapData;
+  applyMissionTuning(G.mapData);
   loadMissionSounds(G.mapData);
 
   // Carica immagine mappa se presente
@@ -87,7 +88,7 @@ async function resumeGame(save) {
     delete u.needReload;
     for (const w of u.weapons || []) {
       if (w.mag) continue;
-      const cfg = (WEAPONS_CONFIG[u.cls] || []).find((c) => c.id === w.id);
+      const cfg = classWeapons(u.cls).find((c) => c.id === w.id);
       if (!cfg?.mag) continue;
       Object.assign(w, {
         mag: cfg.mag,

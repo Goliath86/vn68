@@ -31,6 +31,23 @@ const dist = (a, b) => Math.abs(a.col - b.col) + Math.abs(a.row - b.row);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 /**
+ * Merge `patch` into `target` recursively: plain objects are merged key by
+ * key, anything else (numbers, strings, arrays) replaces the old value
+ * @param {object} target Object modified in place
+ * @param {object} patch Values to apply
+ * @returns {object} target
+ */
+function deepMerge(target, patch) {
+  for (const [k, v] of Object.entries(patch || {})) {
+    const isObj = v && typeof v === "object" && !Array.isArray(v);
+    if (isObj && target[k] && typeof target[k] === "object" && !Array.isArray(target[k]))
+      deepMerge(target[k], v);
+    else target[k] = isObj ? deepMerge({}, v) : v;
+  }
+  return target;
+}
+
+/**
  * Pause execution for a specified number of milliseconds
  * @param {number} ms Number of milliseconds to sleep
  * @returns {Promise<void>}

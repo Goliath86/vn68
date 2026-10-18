@@ -30,7 +30,11 @@ async function catalogAssetPaths() {
   const list = maps.filter(Boolean);
   return {
     files: list
-      .flatMap((md) => [md.image && "missions/" + md.image, ...Object.values(md.sounds || {})])
+      .flatMap((md) => [
+        md.image && "missions/" + md.image,
+        ...Object.values(md.sounds || {}),
+        ...missionWeaponSounds(md),
+      ])
       .filter(Boolean),
     ambient: list.map((md) => md.ambient).filter(Boolean),
   };

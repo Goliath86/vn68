@@ -132,6 +132,32 @@ const VC_NAMES = [
   "Comandante VC",
 ];
 
+// ── CLASSI VC ──────────────────────────────────────────────────────────
+// Statistiche di base dei nemici. config.json "enemyClasses" modifica queste
+// classi o ne aggiunge di nuove (config.js:loadConfig), il "tuning" di una
+// mappa le cambia per quella missione (game.js:applyMissionTuning).
+//   name   indice in VC_NAMES (tradotti) oppure { "it": …, "en": … }
+//   role   comportamento: "rifleman" (pattuglia, piazza trappole, aggira),
+//          "sniper" (mimetizzato, salta un turno dopo lo sparo),
+//          "commander" (resta in agguato, la sua morte fa ripiegare i vicini)
+//   sprite classe VC di cui usare lo sprite disegnato se unitImages non ha
+//          un'immagine per questa classe
+// Le armi stanno in config.json "weapons" sotto lo stesso nome di classe.
+const ENEMY_CLASSES = {
+  grunt: { name: 0, role: "rifleman", hp: 5, ap: 2, attack: 2, range: 2, defense: 0, move: 3 },
+  sniper_vc: { name: 1, role: "sniper", hp: 6, ap: 2, attack: 3, range: 4, defense: 0, move: 2 },
+  commander: { name: 3, role: "commander", hp: 8, ap: 2, attack: 3, range: 2, defense: 1, move: 3 },
+};
+
+// Composizione dei VC: pesi per classe. Una mappa li sostituisce con
+// "vcMix" (schieramento iniziale e imboscate), "ambushMix" e
+// "reinforcementMix" (combat.js:vcMix)
+const VC_MIX = {
+  spawn: { grunt: 3, sniper_vc: 1, commander: 1 },
+  ambush: { grunt: 2, sniper_vc: 1, commander: 1 },
+  reinforcement: { grunt: 1 },
+};
+
 // ── TIPI MISSIONE ──────────────────────────────────────────────────────
 const MISSION_TYPES = {
   recon: {

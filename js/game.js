@@ -53,6 +53,29 @@ function useMission(data) {
   return G.mapData;
 }
 
+// ── PARAMETRI PER MISSIONE ─────────────────────────────────────────────
+// "tuning" nel JSON della mappa: { "VC_TACTICS": { "holdChance": 0.8 },
+// "ENEMY_CLASSES": { "commander": { "hp": 10 } }, … } unito in profondità
+// alle costanti di bilanciamento (numeri e array sostituiti, oggetti uniti).
+// A ogni avvio o ripresa si torna prima ai valori di partenza, così una
+// missione non lascia i suoi parametri alla successiva.
+const TUNABLES = () => ({ VC_TACTICS, STANCES, MELEE, ARTILLERY, NAPALM, ENEMY_CLASSES, VC_MIX });
+let _tuningDefaults = null;
+
+function applyMissionTuning(md) {
+  const objs = TUNABLES();
+  // Valori di partenza = quelli dopo config.json, fotografati al primo avvio
+  _tuningDefaults ??= JSON.parse(JSON.stringify(objs));
+  for (const [k, obj] of Object.entries(objs)) {
+    for (const key of Object.keys(obj)) delete obj[key];
+    deepMerge(obj, _tuningDefaults[k]);
+  }
+  for (const [k, patch] of Object.entries(md?.tuning || {})) {
+    if (objs[k]) deepMerge(objs[k], patch);
+    else console.warn(`[tuning] parametro sconosciuto: ${k}`);
+  }
+}
+
 // ── INIT GAME ──────────────────────────────────────────────────────────
 function startGame(
   missionType,
@@ -61,6 +84,7 @@ function startGame(
 ) {
   history.pushState({ game: true }, "");
   clearLog();
+  applyMissionTuning(G.mapData);
 
   G.missionType = missionType;
   G.turn = 1;
@@ -130,28 +154,14 @@ function startGame(
   // (hold: sentinella che non pattuglia finché non è allertata)
   let spawned = 0;
   for (const ed of G.mapData.enemies || []) {
-    const cls = ed.cls || "grunt";
-    const maxHp = cls === "commander" ? 8 : cls === "sniper_vc" ? 6 : 5;
-    G.enemies.push({
-      id: "e" + spawned,
-      name: cls === "sniper_vc" ? VC_NAMES[1] : cls === "commander" ? VC_NAMES[3] : VC_NAMES[0],
-      cls,
-      col: ed.col,
-      row: ed.row,
-      hp: Math.min(maxHp, ed.hp ?? maxHp),
-      maxHp,
-      ap: 2,
-      maxAp: 2,
-      alive: true,
-      alerted: !!ed.alerted,
-      hold: !!ed.hold,
-      facing: ed.facing ?? rnd(0, 3),
-      suppressed: false,
-      vx: ed.col,
-      vy: ed.row,
-      weapons: buildWeapons(cls, G.missionState.vcCarrierCounts),
-      weaponIdx: 0,
-    });
+    G.enemies.push(
+      makeEnemy("e" + spawned, ed.cls || "grunt", ed.col, ed.row, {
+        hp: ed.hp,
+        facing: ed.facing,
+        alerted: ed.alerted,
+        hold: ed.hold,
+      }),
+    );
     spawned++;
   }
 
@@ -170,34 +180,7 @@ function startGame(
 
     if (G.enemies.find((e) => e.col === col && e.row === row)) continue;
 
-    const vcClass = pick(["grunt", "grunt", "grunt", "sniper_vc", "commander"]);
-    const vcName =
-      vcClass === "sniper_vc"
-        ? VC_NAMES[1]
-        : vcClass === "commander"
-          ? VC_NAMES[3]
-          : VC_NAMES[0];
-
-    G.enemies.push({
-      id: "e" + spawned,
-      name: vcName,
-      cls: vcClass,
-      col,
-      row,
-      hp: vcClass === "commander" ? 8 : vcClass === "sniper_vc" ? 6 : 5,
-      maxHp: vcClass === "commander" ? 8 : vcClass === "sniper_vc" ? 6 : 5,
-      ap: 2,
-      maxAp: 2,
-      alive: true,
-      alerted: false,
-      facing: rnd(0, 3),
-      suppressed: false,
-      vx: col,
-      vy: row,
-      weapons: buildWeapons(vcClass, G.missionState.vcCarrierCounts),
-      weaponIdx: 0,
-    });
-
+    G.enemies.push(makeEnemy("e" + spawned, pickEnemyClass(vcMix("spawn")), col, row));
     spawned++;
   }
 

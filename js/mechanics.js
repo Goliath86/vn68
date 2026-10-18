@@ -1189,7 +1189,7 @@ const COMMANDER_ROUT_RADIUS = 4;
 
 function checkVcMorale() {
   for (const cmd of G.enemies) {
-    if (cmd.cls !== "commander" || cmd.alive || cmd.moraleHandled) continue;
+    if (enemyRole(cmd) !== "commander" || cmd.alive || cmd.moraleHandled) continue;
     cmd.moraleHandled = true;
     const near = G.enemies.filter(
       (e) => e.alive && dist(e, cmd) <= COMMANDER_ROUT_RADIUS,
