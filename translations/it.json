@@ -410,7 +410,9 @@
     "trap_disarmed": "{name} disinnesca la trappola ({trap})",
     "smoke_deployed": "{name} lancia {weapon}: cortina fumogena per {turns} turni",
     "artillery_called": "{name} chiama l'artiglieria su ({col},{row}) — impatto al prossimo turno",
-    "artillery_impact": "ARTIGLIERIA in arrivo su ({col},{row})!",
+    "artillery_impact": "ARTIGLIERIA in arrivo su ({col},{row}): {shells} colpi!",
+    "artillery_destroyed": "Colpo in pieno: {label} in ({col},{row}) ridotto in macerie",
+    "artillery_burn": "Colpo in pieno: {label} in ({col},{row}) in fiamme",
     "vc_routed": "{name} è demoralizzato e ripiega!",
     "vc_commander_down": "Il comandante è caduto: {count} VC ripiegano!",
     "vc_retreat": "{name} ripiega (distanza: {dist})"

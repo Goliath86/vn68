@@ -693,8 +693,73 @@ function tickSmokes() {
 }
 
 // ── SUPPORTO D'ARTIGLIERIA ─────────────────────────────────────────────
-// Armi con `artillery: true`: il colpo viene richiesto ora e cade all'inizio
-// del turno giocatore successivo (dopo la mossa dei VC), su chiunque sia nell'area
+// Armi con `artillery: true`: la salva viene richiesta ora e cade all'inizio
+// del turno giocatore successivo (dopo la mossa dei VC), su chiunque sia
+// nell'area. Campi arma: "shells" (colpi della salva, numero o [min, max]),
+// "scatter" (raggio in tile del quadrato in cui cade ogni colpo, più probabile
+// verso il centro), "aoe"/"atk" di ogni singolo colpo. Ogni colpo distrugge
+// il tile su cui cade (blastTile).
+const ARTILLERY = {
+  shells: [5, 6],
+  scatter: 2,
+  intervalMs: [380, 650], // cadenza tra un colpo e l'altro
+  fireTurns: 2, // incendio sulla vegetazione colpita (come l'incendio del geniere)
+};
+
+function artilleryScatter(weapon) {
+  return weapon.scatter ?? ARTILLERY.scatter;
+}
+
+function artilleryShells(weapon) {
+  const s = weapon.shells ?? ARTILLERY.shells;
+  return Array.isArray(s) ? s : [s, s];
+}
+
+// Punti di caduta possibili attorno a (tc, tr) con il loro peso: per asse
+// s+1-|d| (distribuzione triangolare), solo tile dentro la mappa
+function artilleryLandings(tc, tr, s) {
+  const out = [];
+  for (let dr = -s; dr <= s; dr++)
+    for (let dc = -s; dc <= s; dc++) {
+      if (!getTileAt(tc + dc, tr + dr)) continue;
+      out.push({ col: tc + dc, row: tr + dr, w: (s + 1 - Math.abs(dc)) * (s + 1 - Math.abs(dr)) });
+    }
+  return out;
+}
+
+function artilleryLanding(tc, tr, s) {
+  const opts = artilleryLandings(tc, tr, s);
+  let r = Math.random() * opts.reduce((a, o) => a + o.w, 0);
+  for (const o of opts) if ((r -= o.w) < 0) return o;
+  return opts[opts.length - 1] || { col: tc, row: tr };
+}
+
+// Anteprima della salva (combat.js:aoeOdds): probabilità che almeno un colpo
+// colpisca ciascun bersaglio, sommando i punti di caduta che lo prendono nel
+// raggio; uccisione approssimata come colpi indipendenti
+function artilleryOdds(weapon, tc, tr, targets) {
+  const opts = artilleryLandings(tc, tr, artilleryScatter(weapon));
+  const total = opts.reduce((a, o) => a + o.w, 0) || 1;
+  const [lo, hi] = artilleryShells(weapon);
+  const n = (lo + hi) / 2;
+  return targets
+    .map((target) => {
+      const pIn = opts.filter((o) => dist(o, target) <= weapon.aoe).reduce((a, o) => a + o.w, 0) / total;
+      if (!pIn) return null;
+      const { isUS, defStat, defCover } = aoeDefense(target);
+      const one = diceOdds(weapon.atk, defStat + defCover, target.hp);
+      return {
+        target,
+        isUS,
+        ...one,
+        pHit: 1 - (1 - pIn * one.pHit) ** n,
+        pKill: 1 - (1 - pIn * one.pKill) ** n,
+        expDmg: one.expDmg * pIn * n,
+      };
+    })
+    .filter(Boolean);
+}
+
 function scheduleArtillery(caller, weapon, tc, tr) {
   const st = G.missionState;
   st.artillery = st.artillery || [];
@@ -703,6 +768,8 @@ function scheduleArtillery(caller, weapon, tc, tr) {
     row: tr,
     atk: weapon.atk,
     aoe: weapon.aoe,
+    shells: artilleryShells(weapon),
+    scatter: artilleryScatter(weapon),
     label: weapon.label,
     sound: weapon.sound,
     noise: weaponNoise(caller, weapon),
@@ -723,17 +790,92 @@ async function resolveArtillery() {
   G.missionState.artillery = [];
   for (const s of strikes) {
     if (G.phase === "gameover") return;
-    log(t("log.artillery_impact", { col: s.col, row: s.row }), "combat");
-    await resolveAoeCombat(
-      { cls: s.callerCls, name: s.callerName },
-      { atk: s.atk, aoe: s.aoe, label: s.label, sound: s.sound, noise: s.noise },
-      s.col,
-      s.row,
-      false,
-      true,
-    );
-    await sleep(400);
+    // Salvataggi precedenti alla salva: valori di default
+    const [lo, hi] = s.shells || ARTILLERY.shells;
+    const shells = rnd(lo, hi);
+    log(t("log.artillery_impact", { col: s.col, row: s.row, shells }), "combat");
+    statAdd("artillery");
+    for (let i = 0; i < shells; i++) {
+      if (G.phase === "gameover") return;
+      const land = artilleryLanding(s.col, s.row, s.scatter ?? ARTILLERY.scatter);
+      // Prima il tile (il bersaglio si difende con la copertura che resta),
+      // poi l'esplosione col suo cratere
+      blastTile(land.col, land.row);
+      await resolveAoeCombat(
+        { cls: s.callerCls, name: s.callerName },
+        { atk: s.atk, aoe: s.aoe, label: s.label, sound: s.sound, noise: s.noise },
+        land.col,
+        land.row,
+        false,
+        true,
+      );
+      await sleep(rnd(...ARTILLERY.intervalMs));
+    }
+    await sleep(300);
   }
+}
+
+// ── DISTRUZIONE DEL TERRENO ────────────────────────────────────────────
+// Tile colpito in pieno da un proiettile d'artiglieria: la vegetazione
+// (burnable) diventa terra bruciata e prende fuoco, muri, edifici e bunker
+// crollano in macerie, gli altri demolibili seguono demolishResult. Campo del
+// tipo di tile "blastResult": chiave del tile risultante (false = indistruttibile).
+// I tile risultanti mancanti nella mappa vengono aggiunti (BLAST_TILE_TYPES).
+const BLAST_RUBBLE_IDS = new Set(["building", "temple", "wall", "wall_breach", "bunker"]);
+const BLAST_TILE_TYPES = {
+  scorched: {
+    type: { id: "scorched", label: "Terra bruciata", moveCost: 1, coverBonus: 1, color: "#3b3328" },
+    text: { it: "Terra bruciata", en: "Scorched earth" },
+  },
+  debris: {
+    type: { id: "debris", label: "Macerie", moveCost: 2, coverBonus: 2, color: "#6a5040", losBlock: "partial" },
+    text: { it: "Macerie", en: "Rubble" },
+  },
+};
+
+// Chiave del tile con quell'id nella mappa, aggiungendolo se manca
+function blastTileKey(id) {
+  const md = G.mapData;
+  const found = Object.keys(md.tileTypes).find((k) => md.tileTypes[k].id === id);
+  if (found) return found;
+  const def = BLAST_TILE_TYPES[id];
+  const key = def && [..."ZYXWVUQKLNHE0123456789"].find((k) => !md.tileTypes[k]);
+  if (!key) return null;
+  md.tileTypes[key] = { ...def.type };
+  md.translations ||= {};
+  for (const [lang, label] of Object.entries(def.text)) {
+    const tr = (md.translations[lang] ||= {});
+    tr.tileLabels ||= {};
+    tr.tileLabels[id] ??= label;
+  }
+  return key;
+}
+
+function blastTile(col, row) {
+  const md = G.mapData;
+  const tile = getTileAt(col, row);
+  if (!tile) return;
+  let key = null;
+  if (tile.blastResult !== undefined) key = tile.blastResult || null;
+  else if (tile.burnable) key = blastTileKey("scorched");
+  else if (BLAST_RUBBLE_IDS.has(tile.id)) key = blastTileKey("debris");
+  else if (tile.demolishable) key = tile.demolishResult || null;
+  if (!key || !md.tileTypes[key] || md.grid[row][col] === key) return;
+
+  md.grid[row][col] = key;
+  const st = G.missionState;
+  // Mappe con immagine di sfondo: il tile nuovo va ridisegnato sopra (render.js)
+  if (!(st.blasted ||= []).some((b) => b.col === col && b.row === row)) st.blasted.push({ col, row });
+  invalidateTerrainCache();
+  const label = mt(`tileLabels.${tile.id}`) ?? tile.label;
+  if (tile.burnable) {
+    if (!isOnFire(col, row)) G.activeFires.push({ col, row, turnsLeft: ARTILLERY.fireTurns });
+    log(t("log.artillery_burn", { label, col, row }), "combat");
+    _startTileAnimLoop();
+  } else {
+    log(t("log.artillery_destroyed", { label, col, row }), "combat");
+  }
+  if (G.fowEnabled) recomputeVisibility();
 }
 
 // ── TRAPPOLE VC ────────────────────────────────────────────────────────

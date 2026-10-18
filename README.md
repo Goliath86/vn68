@@ -331,7 +331,7 @@ Esempi pratici:
 - **Trappole VC (punji e mine):** nascoste sulla mappa. Un soldato che ci passa sopra si ferma lì e subisce danno (punji 2 HP, mina 4 HP). Il **geniere** individua automaticamente le trappole a distanza 1; una trappola individuata è segnata sulla mappa, il movimento la aggira e il geniere può **disinnescarla** con l'abilità speciale (1 AP). I VC ne sono immuni.
 - **Fumogeni:** l'Assalto ha un fumogeno (×1) che crea una cortina di raggio 1 per 2 turni. Il fumo blocca la linea di vista: chi è dentro vede ed è visto solo da distanza 1. Vale anche per i VC, che non possono sparare attraverso il fumo.
 - **Linea di vista dei VC:** i VC seguono le stesse regole di vista dei soldati. La loro vista è la distanza d'allerta (5, di notte 3); ogni tile intermedio di vegetazione o macerie la riduce di 1, muri, bunker ed edifici la bloccano, il fumo pure. Un VC in pattuglia si allerta solo se vede un soldato; un VC in allerta spara solo a chi è in gittata **e** in vista, altrimenti avanza per prendere la linea di tiro (sa comunque dove sono i soldati non occultati). Vale anche per il cecchino VC, che cerca posizioni da cui vede il bersaglio, e per l'imboscata casuale. A distanza 1 la vista c'è sempre.
-- **Supporto d'artiglieria:** il geniere porta la radio (una sola per squadra, 1 uso). Il colpo si richiede come un'arma ad area (gittata 10) ma **cade all'inizio del turno successivo**, dopo la mossa dei VC, su chiunque si trovi nell'area — soldati US compresi, e anche i VC nascosti nella nebbia. L'area d'impatto in arrivo è segnata in rosso sulla mappa.
+- **Supporto d'artiglieria:** il geniere porta la radio (una sola per squadra, 1 uso). Il colpo si richiede come un'arma ad area (gittata 10) ma **cade all'inizio del turno successivo**, dopo la mossa dei VC, su chiunque si trovi nell'area — soldati US compresi, e anche i VC nascosti nella nebbia. Non è un colpo di precisione: arriva una **salva di 5–6 colpi** cadenzati, ognuno su un tile a caso del quadrato 5×5 attorno al punto richiesto (più probabile verso il centro), ciascuno con la sua esplosione (raggio 1, cratere, alberi scossi). Il tile colpito in pieno viene distrutto: giungla, villaggi e giardini diventano **terra bruciata** e bruciano per 2 turni, muri, edifici, templi e bunker crollano in **macerie**, gli ostacoli vengono spazzati via. L'area della salva in arrivo è segnata in rosso sulla mappa (più scura dove cadono i colpi); l'anteprima mostra per ogni bersaglio la probabilità di essere colpito da almeno un colpo.
 - **Missioni notturne:** attivabili dal briefing (o imposte dalla mappa con `"night": true`). Il raggio visivo di ogni soldato cala di 1 (minimo 1) e i VC, che conoscono il terreno, si accorgono della squadra da 3 caselle invece di 5. Poiché per sparare serve la linea di vista, di notte anche il cecchino colpisce solo entro la propria visione ridotta.
 - **Morale VC:** un VC sotto il 30% degli HP (una volta per unità) e tutti i VC entro 4 caselle da un comandante caduto vanno **in rotta** per 2 attivazioni: ripiegano lontano dalla squadra cercando copertura e non attaccano (bandiera bianca ⚐ sulla mappa).
 
@@ -605,6 +605,7 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 | `thrown` | boolean | (opzionale, solo armi AoE US) Lancio a mano: animazione ad arco con rimbalzi prima dell'esplosione |
 | `scatter` | number | (opzionale, solo armi AoE US) Deviazione del lancio: raggio in tile del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: "full"` |
 | `scatterChance` | number | (opzionale, con `scatter`) Probabilità (0–1) che il lancio devii su un altro tile del quadrato; default 0.5 |
+| `shells` | number \| [min, max] | (opzionale, con `artillery`) Colpi della salva; default [5, 6]. Con `artillery`, `scatter` è il raggio del quadrato in cui cade ogni colpo (default 2 = 5×5, più probabile al centro, anche su muri ed edifici) e `atk`/`aoe` valgono per il singolo colpo |
 
 **Comportamento:**
 
@@ -620,7 +621,7 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 |---|---|---|
 | Assalto | M16 (ATK3, RNG3, ∞) | Granata (ATK5, RNG3, AoE1, ×2) · Fumogeno (RNG3, AoE1, ×1, 2 turni) |
 | Cecchino | M14 (ATK4, RNG6, ∞) | — |
-| Geniere | M16 (ATK2, RNG3, ∞) | Radio: artiglieria (ATK6, RNG10, AoE1, ×1, max 1 per squadra) |
+| Geniere | M16 (ATK2, RNG3, ∞) | Radio: artiglieria (salva di 5–6 colpi ATK4 AoE1 dispersi in 5×5, RNG10, ×1, max 1 per squadra) |
 | Medico | M1911 (ATK1, RNG1, ∞) | — |
 | Guerrigliero VC | AK-47 (ATK2, RNG2, ∞) | RPG-7 (ATK4, RNG4, AoE1, ×1, max 1 portatore) |
 | Cecchino VC | Mosin (ATK3, RNG4, ∞) | — |
@@ -872,6 +873,7 @@ Struttura completa con tutti i campi:
 | `burnable` | bool | Il geniere può incendiarlo (fuoco per 2 turni) |
 | `demolishable` | bool | Il geniere può demolirlo con dado ≥ 4 |
 | `demolishResult` | string | Chiave del tile che sostituisce quello demolito |
+| `blastResult` | string \| false | (opzionale) Chiave del tile che sostituisce questo quando un colpo d'artiglieria ci cade sopra; `false` = indistruttibile. Default: `burnable` → terra bruciata in fiamme, muri/edifici/templi/bunker → macerie, altri `demolishable` → `demolishResult` (i tile terra bruciata/macerie vengono aggiunti alla mappa se mancano) |
 
 ### Tipi di obiettivo
 

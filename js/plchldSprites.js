@@ -725,7 +725,45 @@ function _tdBunker(ctx, x, y, ts, rng) {
   _grain(ctx, x, y, ts, rng, 8, 0.1);
 }
 
+// Terra bruciata (vegetazione colpita dall'artiglieria): chiazze di cenere,
+// tronchi carbonizzati a terra e ceppi anneriti
+function _tdScorched(ctx, x, y, ts, rng) {
+  ctx.fillStyle = _dk(0.3);
+  ctx.fillRect(x, y, ts, ts);
+  for (let i = 0; i < 4; i++) {
+    _oval(ctx, x + ts * (0.15 + rng() * 0.7), y + ts * (0.15 + rng() * 0.7), ts * (0.12 + rng() * 0.14), ts * (0.08 + rng() * 0.1), "rgba(150,145,135,0.2)");
+  }
+  _grain(ctx, x, y, ts, rng, 26, 0.16);
+  ctx.lineCap = "round";
+  for (let i = 0; i < 1 + Math.floor(rng() * 2); i++) {
+    const bx = x + ts * (0.25 + rng() * 0.5);
+    const by = y + ts * (0.25 + rng() * 0.5);
+    const a = rng() * Math.PI;
+    const l = ts * (0.18 + rng() * 0.14);
+    ctx.strokeStyle = "rgba(18,13,9,0.85)";
+    ctx.lineWidth = ts * 0.065;
+    ctx.beginPath();
+    ctx.moveTo(bx - Math.cos(a) * l, by - Math.sin(a) * l);
+    ctx.lineTo(bx + Math.cos(a) * l, by + Math.sin(a) * l);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(120,110,100,0.3)"; // crepe grigie del carbone
+    ctx.lineWidth = ts * 0.012;
+    ctx.setLineDash([ts * 0.03, ts * 0.06]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  for (let i = 0; i < 2 + Math.floor(rng() * 2); i++) {
+    const sx = x + ts * (0.15 + rng() * 0.7);
+    const sy = y + ts * (0.15 + rng() * 0.7);
+    const r = ts * (0.04 + rng() * 0.03);
+    _disc(ctx, sx + r * 0.4, sy + r * 0.5, r, _dk(0.4));
+    _disc(ctx, sx, sy, r, "rgb(34,26,18)");
+    _disc(ctx, sx - r * 0.25, sy - r * 0.25, r * 0.45, "rgba(90,78,64,0.6)");
+  }
+}
+
 const TILE_DETAILS = {
+  scorched: _tdScorched,
   wall: (ctx, x, y, ts, rng) => _tdBricks(ctx, x, y, ts, rng, false),
   obstacle: _tdObstacle,
   wall_breach: (ctx, x, y, ts, rng) => _tdBricks(ctx, x, y, ts, rng, true),
@@ -783,6 +821,7 @@ const TILE_BLEED_PRIORITY = {
   garden: 7,
   clearing: 6,
   village: 5,
+  scorched: 4.5,
   debris: 4,
   trail: 3,
   street: 2,

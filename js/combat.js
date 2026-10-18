@@ -381,6 +381,12 @@ function aoeDefense(def) {
 // Anteprima di un'esplosione US in (tc, tr): per ogni bersaglio nel raggio
 // (soldati inclusi, VC solo se visibili) probabilità di colpire e uccidere
 function aoeOdds(weapon, tc, tr) {
+  // Artiglieria: la salva si disperde, probabilità su tutti i colpi (mechanics.js)
+  if (weapon.artillery) {
+    const reach = artilleryScatter(weapon) + weapon.aoe;
+    const near = (x) => x.alive && Math.abs(x.col - tc) <= reach && Math.abs(x.row - tr) <= reach;
+    return artilleryOdds(weapon, tc, tr, [...G.units.filter(near), ...G.enemies.filter((e) => near(e) && isEnemyVisible(e))]);
+  }
   const inBlast = (x) => x.alive && dist(x, { col: tc, row: tr }) <= weapon.aoe;
   return [...G.units.filter(inBlast), ...G.enemies.filter((e) => inBlast(e) && isEnemyVisible(e))]
     .map((target) => {
@@ -423,7 +429,8 @@ function throwLanding(weapon, tc, tr) {
 // arco con rimbalzi (animations.js:_drawGrenadeThrow), poi l'esplosione.
 // Durante il volo G.throwing blocca le altre azioni.
 async function throwAoe(attacker, weapon, tc, tr) {
-  const land = throwLanding(weapon, tc, tr);
+  // Artiglieria: "scatter" è la dispersione della salva, non del lancio
+  const land = weapon.artillery ? { col: tc, row: tr } : throwLanding(weapon, tc, tr);
   if (weapon.thrown) {
     G.throwing = true;
     updateUI();
@@ -472,8 +479,8 @@ async function resolveAoeCombat(
   sfxShoot(attacker.cls, weapon);
   // big: cratere più largo per l'artiglieria (animations.js:addCrater)
   addFX("explosion", { col: tc, row: tr, aoe: weapon.aoe, big: hitHidden }, 1300);
-  // Statistiche: artiglieria (hitHidden), esplosivi US, RPG VC
-  statAdd(isEnemyAttacking ? "aoeVc" : hitHidden ? "artillery" : "aoeUs");
+  // Statistiche: esplosivi US, RPG VC (l'artiglieria conta le salve, mechanics.js)
+  if (!hitHidden) statAdd(isEnemyAttacking ? "aoeVc" : "aoeUs");
   // Esplosione US: il rumore parte dal punto d'impatto (e il lancio svela chi lancia)
   if (!isEnemyAttacking) {
     const noise = weaponNoise(attacker, weapon);
@@ -482,7 +489,8 @@ async function resolveAoeCombat(
   }
 
   if (!defenders.length) {
-    log(
+    // Colpi della salva d'artiglieria a vuoto: niente riga di log per ognuno
+    if (!hitHidden) log(
       t("log.aoe_no_targets", {
         name: attacker.name,
         weapon: weapon.label,

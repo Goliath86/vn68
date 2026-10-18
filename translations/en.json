@@ -405,7 +405,9 @@
     "trap_disarmed": "{name} disarms the trap ({trap})",
     "smoke_deployed": "{name} throws {weapon}: smoke screen for {turns} turns",
     "artillery_called": "{name} calls in artillery on ({col},{row}) — impact next turn",
-    "artillery_impact": "ARTILLERY incoming on ({col},{row})!",
+    "artillery_impact": "ARTILLERY incoming on ({col},{row}): {shells} rounds!",
+    "artillery_destroyed": "Direct hit: {label} at ({col},{row}) reduced to rubble",
+    "artillery_burn": "Direct hit: {label} at ({col},{row}) set ablaze",
     "vc_routed": "{name} is demoralized and falls back!",
     "vc_commander_down": "The commander is down: {count} VC fall back!",
     "vc_retreat": "{name} retreats (distance: {dist})"

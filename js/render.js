@@ -85,6 +85,33 @@ function getTerrainCache() {
   return canvas;
 }
 
+// Mappe con immagine di sfondo: i tile trasformati dall'artiglieria
+// (mechanics.js:blastTile, G.missionState.blasted) sono ridisegnati sopra
+// l'immagine con la texture procedurale. Uno sprite per tile e tipo.
+const _blastedSprites = new Map(); // "col,row,id" → canvas
+
+function renderBlastedTiles(ctx, ts) {
+  for (const b of G.missionState?.blasted || []) {
+    const def = getTileAt(b.col, b.row);
+    if (!def) continue;
+    const key = `${b.col},${b.row},${def.id}`;
+    let cv = _blastedSprites.get(key);
+    if (!cv) {
+      const dens = 2;
+      cv = document.createElement("canvas");
+      cv.width = cv.height = TILE * dens;
+      const g = cv.getContext("2d");
+      g.scale(dens, dens);
+      g.fillStyle = def.color || "#2d5a1b";
+      g.fillRect(0, 0, TILE, TILE);
+      drawTileDetails(g, def, 0, 0, TILE, b.col, b.row);
+      _blastedSprites.set(key, cv);
+    }
+    const { x, y } = tileToScreen(b.col, b.row);
+    ctx.drawImage(cv, x, y, ts, ts);
+  }
+}
+
 // Bordi dei tile in coordinate di mondo (ctx già trasformato)
 function drawTerrainGrid(ctx, md) {
   ctx.strokeStyle = "rgba(0,0,0,0.25)";
@@ -112,6 +139,7 @@ function renderMap(animFrame = false) {
   // Se c'è immagine mappa, la disegna a piena risoluzione al posto dei tile
   if (G.tileImg) {
     ctx.drawImage(G.tileImg, G.camX, G.camY, md.cols * ts, md.rows * ts);
+    renderBlastedTiles(ctx, ts);
     // Solo bordi griglia (navigazione), niente fill né texture
     ctx.strokeStyle = "rgba(0,0,0,0.18)";
     ctx.lineWidth = 0.5;
@@ -751,13 +779,14 @@ function renderOverlay() {
   // Anteprima AoE in attesa di conferma
   if (G.actionMode === "aoe_confirm" && G.pendingAoe) {
     const { col: tc, row: tr, weapon: w } = G.pendingAoe;
-    // Raggio AoE attorno al tile bersaglio
+    // Raggio AoE attorno al tile bersaglio (artiglieria: tutta l'area della salva)
+    const spread = w.artillery ? artilleryScatter(w) : 0;
     ctx.fillStyle = "rgba(255,90,0,0.28)";
     ctx.strokeStyle = "rgba(255,160,0,0.75)";
     ctx.lineWidth = 1.5;
     for (let c = 0; c < G.mapData.cols; c++) {
       for (let r = 0; r < G.mapData.rows; r++) {
-        if (dist({ col: c, row: r }, { col: tc, row: tr }) <= w.aoe) {
+        if (salvoDist(c, r, tc, tr, spread) <= w.aoe) {
           const { x, y } = tileToScreen(c, r);
           ctx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
           ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
@@ -766,9 +795,10 @@ function renderOverlay() {
     }
     // Tile bersaglio: bordo più marcato
     const { x: bx, y: by } = tileToScreen(tc, tr);
-    // Granate: quadrato tratteggiato in cui il lancio può deviare (combat.js:throwLanding)
-    if (w.scatter) {
-      const s = w.scatter;
+    // Granate: quadrato tratteggiato in cui il lancio può deviare (combat.js:throwLanding);
+    // artiglieria: quadrato in cui cadono i colpi della salva (mechanics.js)
+    if (spread || w.scatter) {
+      const s = spread || w.scatter;
       ctx.save();
       ctx.setLineDash([ts * 0.12, ts * 0.08]);
       ctx.strokeStyle = "rgba(255,235,160,0.85)";
@@ -899,22 +929,25 @@ function renderOverlay() {
     ctx.setLineDash([]);
   }
 
-  // Artiglieria richiesta: area d'impatto del colpo in arrivo
+  // Artiglieria richiesta: area della salva in arrivo, più scura dove cadono
+  // i colpi (quadrato di dispersione), più chiara dove arrivano le schegge
   for (const s of G.missionState?.artillery || []) {
+    const spread = s.scatter ?? ARTILLERY.scatter;
     ctx.strokeStyle = "rgba(255,60,40,0.85)";
-    ctx.fillStyle = "rgba(255,60,40,0.12)";
     ctx.lineWidth = 1.5;
     ctx.setLineDash([5, 4]);
     for (let c = 0; c < G.mapData.cols; c++) {
       for (let r = 0; r < G.mapData.rows; r++) {
-        if (dist({ col: c, row: r }, s) > s.aoe) continue;
+        const d = salvoDist(c, r, s.col, s.row, spread);
+        if (d > s.aoe) continue;
         const { x, y } = tileToScreen(c, r);
+        ctx.fillStyle = d ? "rgba(255,60,40,0.07)" : "rgba(255,60,40,0.14)";
         ctx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
-        ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
       }
     }
-    ctx.setLineDash([]);
     const { x: ax, y: ay } = tileToScreen(s.col, s.row);
+    ctx.strokeRect(ax - spread * ts + 1, ay - spread * ts + 1, (2 * spread + 1) * ts - 2, (2 * spread + 1) * ts - 2);
+    ctx.setLineDash([]);
     ctx.font = `${Math.round(ts * 0.42)}px serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -923,6 +956,12 @@ function renderOverlay() {
 
   // Effetti grafici
   renderEffects(ctx, ts);
+}
+
+// Distanza Manhattan del tile (c, r) dal quadrato di lato 2s+1 centrato su
+// (tc, tr): 0 dentro il quadrato (s = 0: dist() dal centro)
+function salvoDist(c, r, tc, tr, s) {
+  return Math.max(0, Math.abs(c - tc) - s) + Math.max(0, Math.abs(r - tr) - s);
 }
 
 // Traccia il bordo esterno dei tile entro `range` (distanza Manhattan, coerente con dist())
