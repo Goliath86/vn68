@@ -1458,18 +1458,37 @@ function _drawNapalmPlane(ctx, ts, d, p) {
   const s = d.dist * p;
   const sx = G.camX + (d.x0 + d.dx * s) * TILE * G.scale;
   const sy = G.camY + (d.y0 + d.dy * s) * TILE * G.scale;
-  const L = ts * NAPALM_FLIGHT.size;
+  const spr = _jetShadowSprite(ts);
   ctx.save();
   ctx.translate(sx, sy);
   ctx.rotate(d.angle);
-  ctx.filter = `blur(${Math.max(1, ts * 0.03).toFixed(1)}px)`;
-  ctx.fillStyle = `rgba(8,10,6,${NAPALM_FLIGHT.alpha})`;
-  ctx.beginPath();
-  const pts = [..._JET_SHAPE, ..._JET_SHAPE.slice(1, -1).reverse().map(([x, y]) => [x, -y])];
-  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * L, y * L) : ctx.moveTo(x * L, y * L)));
-  ctx.closePath();
-  ctx.fill();
+  ctx.drawImage(spr, -spr.width / 2, -spr.height / 2);
   ctx.restore();
+}
+
+// Ombra del jet già sfocata, preparata una volta per zoom: ctx.filter blur a
+// ogni fotogramma costa molto (soprattutto su mobile), drawImage no
+let _jetShadow = null; // { key, canvas }
+
+function _jetShadowSprite(ts) {
+  const L = Math.round(ts * NAPALM_FLIGHT.size);
+  if (_jetShadow?.key === L) return _jetShadow.canvas;
+  const blur = Math.max(1, ts * 0.03);
+  const pts = [..._JET_SHAPE, ..._JET_SHAPE.slice(1, -1).reverse().map(([x, y]) => [x, -y])];
+  const ext = Math.max(...pts.map(([x, y]) => Math.max(Math.abs(x), Math.abs(y)))) * L;
+  const half = Math.ceil(ext + blur * 3);
+  const cv = document.createElement("canvas");
+  cv.width = cv.height = half * 2;
+  const g = cv.getContext("2d");
+  g.translate(half, half);
+  g.filter = `blur(${blur.toFixed(1)}px)`;
+  g.fillStyle = `rgba(8,10,6,${NAPALM_FLIGHT.alpha})`;
+  g.beginPath();
+  pts.forEach(([x, y], i) => (i ? g.lineTo(x * L, y * L) : g.moveTo(x * L, y * L)));
+  g.closePath();
+  g.fill();
+  _jetShadow = { key: L, canvas: cv };
+  return cv;
 }
 
 function _drawNapalm(ctx, ts, d, p) {

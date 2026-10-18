@@ -90,20 +90,7 @@ function* _terrainCacheSteps(md) {
   const total = md.rows * 2 + (crowns ? Math.ceil(crowns.length / CANOPY_BUILD_CHUNK) : 1);
   let done = 0;
   for (let r = 0; r < md.rows; r++) {
-    for (let c = 0; c < md.cols; c++) {
-      const tileDef = md.tileTypes[md.grid[r][c]];
-      if (!tileDef) continue;
-      const x = c * TILE;
-      const y = r * TILE;
-      ctx.globalAlpha = 0.85;
-      ctx.fillStyle = tileDef.color || "#2d5a1b";
-      ctx.fillRect(x, y, TILE, TILE);
-      ctx.globalAlpha = 1;
-      if (wind && WIND_GRASS_IDS.has(tileDef.id)) _grassSink = [];
-      drawTileDetails(ctx, tileDef, x, y, TILE, c, r);
-      if (_grassSink) grass.tiles[r * md.cols + c] = _grassSink;
-      _grassSink = null;
-    }
+    for (let c = 0; c < md.cols; c++) _drawTerrainTile(ctx, md, c, r, grass);
     yield ++done / total;
   }
   // Sfumature tra terreni, rive e ombre: richiedono tutti i tile già disegnati
@@ -129,6 +116,74 @@ function* _terrainCacheSteps(md) {
   }
 
   _terrainCache = { canvas, mapData: md, grass, canopy };
+}
+
+// Fondo e dettagli di un tile. Col vento (grass) l'erba dei tile in
+// WIND_GRASS_IDS resta fuori dalla cache: i fili sono ridisegnati a ogni
+// fotogramma
+function _drawTerrainTile(ctx, md, c, r, grass) {
+  const tileDef = md.tileTypes[md.grid[r][c]];
+  if (!tileDef) return;
+  const x = c * TILE;
+  const y = r * TILE;
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = tileDef.color || "#2d5a1b";
+  ctx.fillRect(x, y, TILE, TILE);
+  ctx.globalAlpha = 1;
+  if (grass && WIND_GRASS_IDS.has(tileDef.id)) _grassSink = [];
+  drawTileDetails(ctx, tileDef, x, y, TILE, c, r);
+  if (grass) grass.tiles[r * md.cols + c] = _grassSink || undefined;
+  _grassSink = null;
+}
+
+// Tile cambiato in partita (artiglieria, napalm, demolizione): ridisegna
+// nella cache solo i dintorni invece di ricostruirla tutta, che su mappe
+// grandi blocca la pagina per centinaia di ms a metà animazione. Con il
+// tile cambiano transizioni, ombre e chiome dei vicini, e le chiome sporgono
+// al massimo di un tile: si ridisegna il quadrato di raggio TERRAIN_PATCH_R
+// (clip), con sotto anche i tile appena fuori per ciò che sporge dentro
+const TERRAIN_PATCH_R = 2;
+
+function invalidateTerrainTile(col, row) {
+  const tc = _terrainCache;
+  const md = G.mapData;
+  if (!tc || tc.mapData !== md) return;
+  const R = TERRAIN_PATCH_R;
+  const c0 = Math.max(0, col - R);
+  const c1 = Math.min(md.cols - 1, col + R);
+  const r0 = Math.max(0, row - R);
+  const r1 = Math.min(md.rows - 1, row + R);
+  const e0 = Math.max(0, c0 - 1);
+  const e1 = Math.min(md.cols - 1, c1 + 1);
+  const f0 = Math.max(0, r0 - 1);
+  const f1 = Math.min(md.rows - 1, r1 + 1);
+  const { canvas, grass } = tc;
+  const ctx = canvas.getContext("2d");
+  ctx.save();
+  ctx.setTransform(canvas.width / (md.cols * TILE), 0, 0, canvas.height / (md.rows * TILE), 0, 0);
+  const x = c0 * TILE;
+  const y = r0 * TILE;
+  const w = (c1 - c0 + 1) * TILE;
+  const h = (r1 - r0 + 1) * TILE;
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  ctx.clearRect(x, y, w, h);
+  for (let r = f0; r <= f1; r++) {
+    for (let c = e0; c <= e1; c++) _drawTerrainTile(ctx, md, c, r, grass);
+  }
+  drawTerrainTransitions(ctx, md, TILE, f0, f1 + 1, e0, e1 + 1);
+  if (tc.canopy) {
+    // Col vento le chiome sono disegnate a ogni fotogramma: basta la lista
+    tc.canopy = windCanopy(md, TILE);
+  } else {
+    const near = jungleCrowns(md, TILE).filter(
+      (k) => k.c >= e0 && k.c <= e1 && k.r >= f0 && k.r <= f1,
+    );
+    drawJungleCanopy(ctx, md, TILE, near);
+    drawTerrainGrid(ctx, md);
+  }
+  ctx.restore();
 }
 
 // Mappe con immagine di sfondo: i tile trasformati dall'artiglieria

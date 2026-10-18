@@ -1026,12 +1026,13 @@ function _drawCastShadow(ctx, x, y, ts, hN, hW, hNW) {
   }
 }
 
-// r0..r1: righe da disegnare (render.js costruisce la cache a passi)
-function drawTerrainTransitions(ctx, md, ts, r0 = 0, r1 = md.rows) {
+// r0..r1, c0..c1: righe e colonne da disegnare (render.js costruisce la
+// cache a passi e ridisegna i dintorni dei tile cambiati in partita)
+function drawTerrainTransitions(ctx, md, ts, r0 = 0, r1 = md.rows, c0 = 0, c1 = md.cols) {
   const defAt = (c, r) =>
     c < 0 || r < 0 || c >= md.cols || r >= md.rows ? null : md.tileTypes[md.grid[r][c]];
   for (let r = r0; r < r1; r++) {
-    for (let c = 0; c < md.cols; c++) {
+    for (let c = c0; c < c1; c++) {
       const def = defAt(c, r);
       if (!def) continue;
       const x = c * ts;

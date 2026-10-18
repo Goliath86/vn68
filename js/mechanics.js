@@ -878,7 +878,7 @@ function setTileType(col, row, key) {
   const st = G.missionState;
   // Mappe con immagine di sfondo: il tile nuovo va ridisegnato sopra (render.js)
   if (!(st.blasted ||= []).some((b) => b.col === col && b.row === row)) st.blasted.push({ col, row });
-  invalidateTerrainCache();
+  invalidateTerrainTile(col, row);
   if (G.fowEnabled) recomputeVisibility();
 }
 
