@@ -1,6 +1,7 @@
 
 setupCanvas();
 initPanelCollapse();
+document.querySelectorAll(".game-version").forEach((el) => (el.textContent = `v${GAME_VERSION}`));
 
 audioInit();
 
