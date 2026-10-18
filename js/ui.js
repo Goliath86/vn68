@@ -1,3 +1,29 @@
+// ── SEZIONI COLLASSABILI DEL PANNELLO SINISTRO ─────────────────────────
+// Click sul titolo → nasconde il contenuto che lo segue (CSS
+// .panel-title.collapsed + *); le sezioni chiuse, identificate dalla loro
+// chiave data-i18n, restano chiuse anche nelle partite successive
+const COLLAPSED_PANELS_KEY = "vn68_collapsed_panels";
+
+function initPanelCollapse() {
+  let closed = [];
+  try {
+    closed = JSON.parse(localStorage.getItem(COLLAPSED_PANELS_KEY)) || [];
+  } catch (e) {}
+  document.querySelectorAll("#left-panel .panel-title").forEach((title) => {
+    const key = title.dataset.i18n;
+    title.classList.add("collapsible");
+    title.classList.toggle("collapsed", closed.includes(key));
+    title.addEventListener("click", () => {
+      title.classList.toggle("collapsed");
+      closed = closed.filter((k) => k !== key);
+      if (title.classList.contains("collapsed")) closed.push(key);
+      try {
+        localStorage.setItem(COLLAPSED_PANELS_KEY, JSON.stringify(closed));
+      } catch (e) {}
+    });
+  });
+}
+
 // Bottoni azione mobile — delegano al corrispondente desktop
 document
   .getElementById("mob-btn-move")

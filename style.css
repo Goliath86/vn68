@@ -111,6 +111,27 @@ body {
     border-bottom: 1px solid var(--border);
     background: rgba(0, 0, 0, 0.3);
 }
+/* Sezioni collassabili del pannello sinistro (ui.js:initPanelCollapse) */
+.panel-title.collapsible {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+}
+.panel-title.collapsible:hover {
+    color: var(--tan);
+}
+.panel-title.collapsible::after {
+    content: "▾";
+    margin-left: auto;
+    letter-spacing: 0;
+}
+.panel-title.collapsible.collapsed::after {
+    content: "▸";
+}
+.panel-title.collapsible.collapsed + * {
+    display: none !important;
+}
 
 /* Unit cards */
 #unit-list {

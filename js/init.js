@@ -1,5 +1,6 @@
 
 setupCanvas();
+initPanelCollapse();
 
 audioInit();
 
