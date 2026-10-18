@@ -91,6 +91,7 @@
     "suppressions": "Suppressions",
     "explosives": "Explosives",
     "artillery": "artillery",
+    "napalm": "napalm",
     "scattered": "scattered",
     "friendly_fire": "Friendly fire (HP)",
     "sec_vc_fire": "VC fire",
@@ -405,6 +406,8 @@
     "trap_disarmed": "{name} disarms the trap ({trap})",
     "smoke_deployed": "{name} throws {weapon}: smoke screen for {turns} turns",
     "artillery_called": "{name} calls in artillery on ({col},{row}) — impact next turn",
+    "napalm_called": "{name} calls in a napalm strike from ({c1},{r1}) to ({c2},{r2}) — next turn",
+    "napalm_incoming": "AIR STRIKE: napalm incoming!",
     "artillery_impact": "ARTILLERY incoming on ({col},{row}): {shells} rounds!",
     "artillery_destroyed": "Direct hit: {label} at ({col},{row}) reduced to rubble",
     "artillery_burn": "Direct hit: {label} at ({col},{row}) set ablaze",
@@ -418,6 +421,8 @@
     "ammo_inf": "∞",
     "ammo_tag": "×{n}",
     "confirm_aoe": "🎯 Confirm",
+    "napalm_pick_start": "{weapon}: pick the tile where the line starts",
+    "napalm_pick_end": "Pick the end tile (straight or diagonal, max {n} tiles): the plane flies that way",
     "cancel_aoe": "✕ Cancel"
   },
 

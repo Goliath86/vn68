@@ -126,6 +126,19 @@
         "sound": "assets/grenade.mp3"
       },
       {
+        "id": "napalm",
+        "label": "Radio: napalm",
+        "labelEn": "Radio: napalm",
+        "atk": 4,
+        "range": 12,
+        "ammo": 1,
+        "minRange": 3,
+        "napalm": true,
+        "length": 5,
+        "maxCarriers": 1,
+        "noise": 8
+      },
+      {
         "id": "knife",
         "label": "Coltello",
         "labelEn": "Knife",

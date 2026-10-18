@@ -54,7 +54,7 @@ function showTooltip(e, col, row) {
   if (
     enemy &&
     G.actionMode === "attack" &&
-    !G.currentWeapon?.aoe &&
+    !isAreaWeapon(G.currentWeapon) &&
     G.selectedUnit &&
     G.attackable.includes(enemy)
   ) {

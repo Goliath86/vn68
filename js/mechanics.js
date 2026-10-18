@@ -862,20 +862,162 @@ function blastTile(col, row) {
   else if (tile.demolishable) key = tile.demolishResult || null;
   if (!key || !md.tileTypes[key] || md.grid[row][col] === key) return;
 
-  md.grid[row][col] = key;
+  setTileType(col, row, key);
+  const label = mt(`tileLabels.${tile.id}`) ?? tile.label;
+  if (tile.burnable) {
+    igniteTile(col, row, ARTILLERY.fireTurns);
+    log(t("log.artillery_burn", { label, col, row }), "combat");
+  } else {
+    log(t("log.artillery_destroyed", { label, col, row }), "combat");
+  }
+}
+
+// Cambia il tipo di un tile in partita (artiglieria, napalm)
+function setTileType(col, row, key) {
+  G.mapData.grid[row][col] = key;
   const st = G.missionState;
   // Mappe con immagine di sfondo: il tile nuovo va ridisegnato sopra (render.js)
   if (!(st.blasted ||= []).some((b) => b.col === col && b.row === row)) st.blasted.push({ col, row });
   invalidateTerrainCache();
-  const label = mt(`tileLabels.${tile.id}`) ?? tile.label;
-  if (tile.burnable) {
-    if (!isOnFire(col, row)) G.activeFires.push({ col, row, turnsLeft: ARTILLERY.fireTurns });
-    log(t("log.artillery_burn", { label, col, row }), "combat");
-    _startTileAnimLoop();
-  } else {
-    log(t("log.artillery_destroyed", { label, col, row }), "combat");
-  }
   if (G.fowEnabled) recomputeVisibility();
+}
+
+// Incendio su un tile (già in fiamme: dura almeno `turns` turni)
+function igniteTile(col, row, turns) {
+  const fire = G.activeFires.find((f) => f.col === col && f.row === row);
+  if (fire) fire.turnsLeft = Math.max(fire.turnsLeft, turns);
+  else G.activeFires.push({ col, row, turnsLeft: turns });
+  _startTileAnimLoop();
+}
+
+// ── ATTACCO AEREO AL NAPALM ────────────────────────────────────────────
+// Armi con `napalm: true`: il geniere sceglie una linea di tile (primo click
+// l'inizio, secondo la fine, anche in diagonale, al massimo "length" tile).
+// All'inizio del turno giocatore successivo un aereo la sorvola in quella
+// direzione (ombra che attraversa tutta la mappa, animations.js) e sgancia sui
+// tile uno dopo l'altro: ogni tile prende fuoco (non acqua e muri; la
+// vegetazione diventa terra bruciata) e chi ci si trova subisce un attacco
+// "atk" senza copertura del terreno, VC nascosti compresi.
+const NAPALM = {
+  length: 5,
+  fireTurns: 2,
+};
+const NAPALM_DIRS = [
+  [0, -1],
+  [1, -1],
+  [1, 0],
+  [1, 1],
+  [0, 1],
+  [-1, 1],
+  [-1, 0],
+  [-1, -1],
+];
+
+function napalmLength(w) {
+  return w?.length ?? NAPALM.length;
+}
+
+// Fini possibili della linea che parte da `start`: gli 8 versi, entro la mappa
+function napalmEndTiles(start, w) {
+  const out = [];
+  for (const [dc, dr] of NAPALM_DIRS)
+    for (let k = 1; k < napalmLength(w); k++) {
+      const col = start.col + dc * k;
+      const row = start.row + dr * k;
+      if (!getTileAt(col, row)) break;
+      out.push({ col, row });
+    }
+  return out;
+}
+
+// Tile da `a` a `b` compresi (b sulla stessa riga, colonna o diagonale)
+function napalmLine(a, b) {
+  const dc = Math.sign(b.col - a.col);
+  const dr = Math.sign(b.row - a.row);
+  const n = Math.max(Math.abs(b.col - a.col), Math.abs(b.row - a.row));
+  return Array.from({ length: n + 1 }, (_, i) => ({ col: a.col + dc * i, row: a.row + dr * i }));
+}
+
+// Inizio già scelto, si sta scegliendo la fine
+function napalmPickingEnd() {
+  return G.actionMode === "attack" && !!G.currentWeapon?.napalm && !!G.pendingAoe;
+}
+
+// Anteprima verso il tile sotto il mouse, se è una fine valida
+function napalmHoverLine() {
+  const h = G.hoveredTile;
+  if (!napalmPickingEnd() || !h || !G.attackable.some((t) => t.col === h.col && t.row === h.row)) return null;
+  return napalmLine(G.pendingAoe, h);
+}
+
+function napalmOdds(weapon, line) {
+  const on = (x) => x.alive && line.some((t) => t.col === x.col && t.row === x.row);
+  return [...G.units.filter(on), ...G.enemies.filter((e) => on(e) && isEnemyVisible(e))].map((target) => {
+    const { isUS, defStat } = aoeDefense(target);
+    return { target, isUS, ...diceOdds(weapon.atk, defStat, target.hp) };
+  });
+}
+
+function scheduleNapalm(caller, weapon, line) {
+  if (!line?.length) return;
+  const st = G.missionState;
+  (st.napalm ||= []).push({
+    line,
+    atk: weapon.atk,
+    label: weapon.label,
+    noise: weaponNoise(caller, weapon),
+    callerCls: caller.cls,
+    callerName: caller.name,
+  });
+  const a = line[0];
+  const b = line[line.length - 1];
+  sfx("click");
+  log(t("log.napalm_called", { name: caller.name, c1: a.col, r1: a.row, c2: b.col, r2: b.row }), "system");
+  updateUI();
+  render();
+}
+
+// Tile colpito dal napalm: fuoco, e la vegetazione diventa terra bruciata
+function napalmTile(col, row) {
+  const tile = getTileAt(col, row);
+  if (!tile || tile.impassable || WATER_IDS.has(tile.id)) return;
+  if (tile.burnable && tile.blastResult !== false) {
+    const key = blastTileKey("scorched");
+    if (key) setTileType(col, row, key);
+  }
+  igniteTile(col, row, NAPALM.fireTurns);
+}
+
+async function resolveNapalm() {
+  const strikes = G.missionState.napalm || [];
+  G.missionState.napalm = [];
+  for (const s of strikes) {
+    if (G.phase === "gameover") return;
+    log(t("log.napalm_incoming"), "combat");
+    statAdd("napalm");
+    // Volo dell'ombra: istanti di passaggio sopra ciascun tile (animations.js)
+    const plan = planNapalmFlight(s.line);
+    addFX("napalmPlane", plan, plan.ms);
+    sfx("jet");
+    const t0 = performance.now();
+    for (let i = 0; i < s.line.length; i++) {
+      if (G.phase === "gameover") return;
+      const { col, row } = s.line[i];
+      await sleep(Math.max(0, t0 + plan.dropAt[i] - performance.now()));
+      addFX("napalm", { col, row, dir: plan.angle }, NAPALM_FX_MS);
+      napalmTile(col, row);
+      await resolveAoeCombat(
+        { cls: s.callerCls, name: s.callerName },
+        { atk: s.atk, aoe: 0, napalm: true, label: s.label, noise: s.noise },
+        col,
+        row,
+        false,
+        true,
+      );
+    }
+    // L'aereo esce dalla mappa prima che il turno continui
+    await sleep(Math.max(0, t0 + plan.ms - performance.now()));
+  }
 }
 
 // ── TRAPPOLE VC ────────────────────────────────────────────────────────

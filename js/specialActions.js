@@ -170,13 +170,15 @@ async function handleSpecialAction(col, row) {
 async function confirmAoeAttack() {
   if (!G.pendingAoe || !G.selectedUnit || G.throwing) return;
   const u = G.selectedUnit;
-  const { col: tc, row: tr, weapon: w } = G.pendingAoe;
+  const { col: tc, row: tr, weapon: w, line } = G.pendingAoe;
   clearLastMove();
   u.ap -= 1;
   consumeShot(w);
   tutorialEvent("aoe", { cls: u.cls, weapon: w.id });
   setActionMode(null);
   updateUI();
+  // Napalm: attacco aereo sulla linea scelta, al prossimo turno (mechanics.js)
+  if (w.napalm) return scheduleNapalm(u, w, line);
   // Granate: deviazione e volo animato prima dell'esplosione (combat.js)
   await throwAoe(u, w, tc, tr);
 }

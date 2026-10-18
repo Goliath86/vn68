@@ -25,8 +25,9 @@ function setActionMode(mode, weapon = null) {
   if (mode === "attack") {
     const def = UNIT_CLASSES[u.cls];
     const range = weapon?.range ?? def.range;
-    if (weapon?.aoe) {
-      // AoE: evidenzia le tile tra gittata minima e massima (click → aoe_confirm)
+    if (isAreaWeapon(weapon)) {
+      // AoE: evidenzia le tile tra gittata minima e massima (click → aoe_confirm;
+      // napalm: click = inizio della linea, poi la fine, canvas.js)
       const minRange = weaponMinRange(weapon);
       for (let c = 0; c < G.mapData.cols; c++) {
         for (let r = 0; r < G.mapData.rows; r++) {

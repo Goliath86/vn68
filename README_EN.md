@@ -333,6 +333,7 @@ Practical examples:
 - **Smoke grenades:** the Assault carries one smoke grenade (×1) creating a radius-1 screen for 2 turns. Smoke blocks line of sight: anyone inside sees and is seen only from distance 1. This applies to VC as well, who cannot fire through smoke.
 - **VC line of sight:** VC follow the same sight rules as soldiers. Their sight is their alert distance (5, 3 at night); every intermediate tile of vegetation or rubble reduces it by 1, walls, bunkers and buildings block it, and so does smoke. A patrolling VC gets alerted only if it sees a soldier; an alerted VC fires only at someone in range **and** in sight, otherwise it advances to get a line of fire (it still knows where non-concealed soldiers are). This also applies to the VC sniper, who looks for positions with a view of the target, and to the random ambush. At distance 1 there is always line of sight.
 - **Artillery support:** the Engineer carries the radio (one per squad, 1 use). The strike is called like an area weapon (range 10) but **lands at the start of the next turn**, after the VC move, on anyone in the area — US soldiers included, and VC hidden in the fog too. It isn't a precision strike: a **salvo of 5–6 rounds** comes in one after another, each on a random tile of the 5×5 square around the requested point (more likely near the centre), each with its own blast (radius 1, crater, shaken trees). The tile hit directly is destroyed: jungle, villages and gardens become **scorched earth** and burn for 2 turns, walls, buildings, temples and bunkers collapse into **rubble**, obstacles are blown away. The incoming salvo area is marked in red on the map (darker where rounds land); the preview shows, for each target, the chance of being hit by at least one round.
+- **Napalm air strike:** the Engineer also carries a second radio (one per squad, 1 use). You pick a **line** of tiles: first click on the start tile (range 3–12), second click on the end tile, horizontal, vertical or diagonal, at most 5 tiles. Once confirmed, at the start of the next turn the shadow of a plane crosses the whole map in the chosen direction, edge to edge, dropping on the line's tiles one after another: a flash of flame and black smoke, then the tile stays **on fire for 2 turns** (jungle, villages and gardens become scorched earth; water and walls don't burn). Anyone on the line, US soldiers and hidden VC included, takes an ATK4 attack **with no terrain cover**. The incoming line stays marked on the map with an arrow showing the flight direction.
 - **Night missions:** enabled from the briefing (or forced by the map with `"night": true`). Each soldier's vision drops by 1 (minimum 1), while the VC, who know the terrain, notice the squad from 3 tiles instead of 5. Since firing requires line of sight, at night even the Sniper can only hit within its reduced vision.
 - **VC morale:** a VC below 30% HP (once per unit) and every VC within 4 tiles of a fallen commander become **routed** for 2 activations: they fall back away from the squad looking for cover and do not attack (white flag ⚐ on the map).
 
@@ -606,6 +607,8 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 | `thrown` | boolean | (optional, US AoE weapons only) Hand-thrown: arc animation with bounces before the explosion |
 | `scatter` | number | (optional, US AoE weapons only) Throw deviation: radius in tiles of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: "full"` |
 | `scatterChance` | number | (optional, with `scatter`) Probability (0–1) that the throw deviates to another tile of the square; default 0.5 |
+| `napalm` | boolean | (optional) Napalm air strike: you pick a line of tiles (start and end, diagonals allowed), it lands at the start of the next turn, sets the tiles on fire and hits anyone on them with no terrain cover |
+| `length` | number | (optional, with `napalm`) Maximum line length in tiles; default 5 |
 | `shells` | number \| [min, max] | (optional, with `artillery`) Rounds in the salvo; default [5, 6]. With `artillery`, `scatter` is the radius of the square where each round lands (default 2 = 5×5, more likely near the centre, walls and buildings included) and `atk`/`aoe` apply to each round |
 
 **Behavior:**
@@ -622,7 +625,7 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 |---|---|---|
 | Assault | M16 (ATK3, RNG3, ∞) | Grenade (ATK5, RNG3, AoE1, ×2) · Smoke (RNG3, AoE1, ×1, 2 turns) |
 | Sniper | M14 (ATK4, RNG6, ∞) | — |
-| Engineer | M16 (ATK2, RNG3, ∞) | Radio: artillery (salvo of 5–6 ATK4 AoE1 rounds scattered over 5×5, RNG10, ×1, max 1 per squad) |
+| Engineer | M16 (ATK2, RNG3, ∞) | Radio: artillery (salvo of 5–6 ATK4 AoE1 rounds scattered over 5×5, RNG10, ×1, max 1 per squad), Radio: napalm (line of up to 5 tiles, ATK4 ignoring cover, RNG3–12, ×1, max 1 per squad) |
 | Medic | M1911 (ATK1, RNG1, ∞) | — |
 | VC Guerrilla | AK-47 (ATK2, RNG2, ∞) | RPG-7 (ATK4, RNG4, AoE1, ×1, max 1 carrier) |
 | VC Sniper | Mosin (ATK3, RNG4, ∞) | — |

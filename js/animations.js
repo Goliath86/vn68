@@ -1378,6 +1378,144 @@ function _drawEffect(ctx, ts, fx, p) {
       _drawBirds(ctx, ts, fx.data, p);
       break;
     }
+
+    case "napalmPlane": {
+      _drawNapalmPlane(ctx, ts, fx.data, p);
+      break;
+    }
+
+    case "napalm": {
+      _drawNapalm(ctx, ts, fx.data, p);
+      break;
+    }
+  }
+  ctx.restore();
+}
+
+// ── NAPALM — ombra dell'aereo e fiammate ───────────────────────────────
+// L'ombra entra da fuori mappa lungo la linea scelta (mechanics.js:
+// resolveNapalm), la attraversa tutta ed esce dal bordo opposto; quando passa
+// sopra un tile della linea, lì parte la fiammata ("napalm": lampo allungato
+// nel verso di volo, palle di fuoco che rotolano avanti, fumo nero che sale).
+// Sotto resta l'incendio del tile (_drawTileFire).
+const NAPALM_FLIGHT = {
+  speed: 11, // tile/s
+  margin: 2.5, // tile fuori mappa all'entrata e all'uscita
+  size: 1.9, // lunghezza della sagoma, in tile
+  alpha: 0.42,
+  fxMs: 2600, // durata della fiammata su ogni tile
+};
+const NAPALM_FX_MS = NAPALM_FLIGHT.fxMs;
+
+// Rotta dell'aereo (coordinate in tile): retta per i centri dei tile della
+// linea, tagliata sui bordi della mappa più il margine; dropAt = ms dalla
+// partenza al passaggio sopra ciascun tile
+function planNapalmFlight(line) {
+  const a = line[0];
+  const b = line[line.length - 1];
+  let dx = b.col - a.col;
+  let dy = b.row - a.row;
+  const len = Math.hypot(dx, dy) || 1;
+  dx /= len;
+  dy /= len;
+  if (!dx && !dy) dx = 1;
+  const px = a.col + 0.5;
+  const py = a.row + 0.5;
+  let sIn = -Infinity;
+  let sOut = Infinity;
+  for (const [p, d, size] of [
+    [px, dx, G.mapData.cols],
+    [py, dy, G.mapData.rows],
+  ]) {
+    if (Math.abs(d) < 1e-9) continue;
+    const s1 = -p / d;
+    const s2 = (size - p) / d;
+    sIn = Math.max(sIn, Math.min(s1, s2));
+    sOut = Math.min(sOut, Math.max(s1, s2));
+  }
+  const s0 = sIn - NAPALM_FLIGHT.margin;
+  const dist = sOut + NAPALM_FLIGHT.margin - s0;
+  const msPerTile = 1000 / NAPALM_FLIGHT.speed;
+  return {
+    x0: px + dx * s0,
+    y0: py + dy * s0,
+    dx,
+    dy,
+    dist,
+    angle: Math.atan2(dy, dx),
+    ms: dist * msPerTile,
+    dropAt: line.map((t) => ((t.col - a.col) * dx + (t.row - a.row) * dy - s0) * msPerTile),
+  };
+}
+
+// Sagoma di un cacciabombardiere vista dall'alto, muso verso +x, lunghezza 1
+const _JET_SHAPE = [
+  [0.5, 0], [0.4, 0.035], [0.12, 0.05], [-0.16, 0.46], [-0.27, 0.46], [-0.15, 0.06],
+  [-0.36, 0.05], [-0.47, 0.2], [-0.53, 0.2], [-0.48, 0.03], [-0.5, 0],
+];
+
+function _drawNapalmPlane(ctx, ts, d, p) {
+  const s = d.dist * p;
+  const sx = G.camX + (d.x0 + d.dx * s) * TILE * G.scale;
+  const sy = G.camY + (d.y0 + d.dy * s) * TILE * G.scale;
+  const L = ts * NAPALM_FLIGHT.size;
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(d.angle);
+  ctx.filter = `blur(${Math.max(1, ts * 0.03).toFixed(1)}px)`;
+  ctx.fillStyle = `rgba(8,10,6,${NAPALM_FLIGHT.alpha})`;
+  ctx.beginPath();
+  const pts = [..._JET_SHAPE, ..._JET_SHAPE.slice(1, -1).reverse().map(([x, y]) => [x, -y])];
+  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * L, y * L) : ctx.moveTo(x * L, y * L)));
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function _drawNapalm(ctx, ts, d, p) {
+  const { x, y } = tileToScreen(d.col, d.row);
+  const cx = x + ts * 0.5;
+  const cy = y + ts * 0.5;
+  const seed = d.col * 31 + d.row * 57;
+  const ca = Math.cos(d.dir || 0);
+  const sa = Math.sin(d.dir || 0);
+  const fade = (a, b) => Math.min(1, Math.max(0, (p - a) / (b - a)));
+  // punto a `along` tile nel verso di volo e `side` di lato
+  const at = (along, side) => [cx + (ca * along - sa * side) * ts, cy + (sa * along + ca * side) * ts];
+
+  // 1) Fumo nero denso che sale e si allarga
+  const smokeA = fade(0.08, 0.3) * (1 - fade(0.6, 1)) * 0.6;
+  for (let i = 0; i < 8; i++) {
+    const h = seed + i * 13;
+    const [px, py] = at((_hash01(h) - 0.35) * 1.3, (_hash01(h + 1) - 0.5) * 0.6);
+    const r = ts * (0.22 + 0.32 * p) * (0.7 + _hash01(h + 3) * 0.6);
+    const rise = ts * (0.15 + _hash01(h + 2) * 0.55) * p;
+    _smokePuff(ctx, px, py - rise, r, i % 2 ? "28,24,22" : "52,46,40", smokeA);
+  }
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  // 2) Lampo dell'impatto, allungato nel verso di volo
+  if (p < 0.25) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(d.dir || 0);
+    ctx.scale(1.9, 0.75);
+    _smokePuff(ctx, 0, 0, ts * 0.6, "255,230,160", 0.85 * (1 - p / 0.25));
+    ctx.restore();
+  }
+  // 3) Palle di fuoco che rotolano avanti e salgono raffreddandosi
+  const fireA = fade(0, 0.06) * (1 - fade(0.4, 0.85));
+  const out = 1 - (1 - Math.min(1, p / 0.5)) ** 2;
+  const heat = 1 - Math.min(1, p / 0.7);
+  for (let i = 0; i < 10; i++) {
+    const h = seed + i * 7;
+    const along = (_hash01(h) - 0.4) * 0.9 + out * (0.2 + _hash01(h + 1) * 0.5);
+    const [px, py] = at(along, (_hash01(h + 2) - 0.5) * 0.7 * (0.5 + out));
+    const r = ts * (0.14 + 0.2 * out) * (0.7 + _hash01(h + 3) * 0.6);
+    const g = Math.floor(90 + 150 * heat);
+    const b = Math.floor(10 + 90 * heat ** 3);
+    _smokePuff(ctx, px, py - ts * 0.3 * p, r, `255,${g},${b}`, 0.6 * fireA);
   }
   ctx.restore();
 }

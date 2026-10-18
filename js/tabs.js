@@ -98,7 +98,7 @@ function updateQuickWeaponsBar(u) {
     (u.weapons || []).forEach((w, i) => {
       const hasAmmo = weaponUsable(u, w);
       const ammoStr = weaponAmmoLabel(w);
-      const aoeStr = w.aoe ? ` · AoE${w.aoe}` : "";
+      const aoeStr = weaponAreaTag(w);
       html += `<button class="btn qwb-btn" ${!hasAmmo ? "disabled" : ""} data-widx="${i}">
 <span class="qwb-name">${w.label} ${ammoStr}</span>
 <span class="qwb-stats">ATK${w.atk} · RNG${w.range}${aoeStr} · 🔊${weaponNoise(u, w)}</span>
@@ -118,8 +118,10 @@ function updateQuickWeaponsBar(u) {
     const w = G.pendingAoe.weapon;
     html = `<button class="btn btn-attack qwb-btn" data-qwb="confirm">
 <span class="qwb-name">${t("weapons.confirm_aoe")}</span>
-<span class="qwb-stats">${w.label} · AoE ${w.aoe} · ${aoeSummaryText()}</span>
+<span class="qwb-stats">${w.label}${weaponAreaTag(w)} · ${aoeSummaryText()}</span>
 </button>${cancelBtn}`;
+  } else if (G.actionMode === "attack" && G.currentWeapon?.napalm) {
+    html = `<span class="qwb-stats" style="align-self:center">${napalmPromptText()}</span>${cancelBtn}`;
   } else if (aimedOdds(u)) {
     const o = aimedOdds(u);
     html = `<button class="btn btn-attack qwb-btn" data-qwb="fire">
@@ -201,7 +203,7 @@ function weaponBarHTML(u, withKeys) {
         (G.currentWeapon === w || G.pendingAoe?.weapon === w);
       const stats = reload
         ? t("buttons.reload_with", { ap: weaponReloadAp(w) })
-        : `ATK${w.atk} · RNG${w.range}${w.aoe ? ` · AoE${w.aoe}` : ""} · 🔊${weaponNoise(u, w)}`;
+        : `ATK${w.atk} · RNG${w.range}${weaponAreaTag(w)} · 🔊${weaponNoise(u, w)}`;
       const cls = `btn weapon-card${active ? " active" : ""}${empty ? " empty" : ""}`;
       const key = withKeys && i < 9 ? ` data-key="${i + 1}"` : "";
       return `<button class="${cls}" data-wcard="${i}"${key} ${enabled ? "" : "disabled"}>
@@ -425,7 +427,7 @@ function updateActionButtons() {
     ws.forEach((w, i) => {
       const hasAmmo = weaponUsable(u, w);
       const ammoStr = weaponAmmoLabel(w);
-      const aoeStr = w.aoe ? ` · AoE${w.aoe}` : "";
+      const aoeStr = weaponAreaTag(w);
       html += `<button class="btn btn-weapon" ${!hasAmmo ? "disabled" : ""} data-widx="${i}">${w.label} ${ammoStr} · ATK${w.atk} · RNG${w.range}${aoeStr} · 🔊${weaponNoise(u, w)}</button>`;
     });
     [pickerEl, mobPickerEl].forEach((el) => {
@@ -462,7 +464,7 @@ function updateActionButtons() {
     });
   } else if (G.actionMode === "aoe_confirm" && G.pendingAoe) {
     const w = G.pendingAoe.weapon;
-    const html = `<div style="font-size:10px;color:#ffaa33;margin-bottom:3px">${w.label} · AoE ${w.aoe} · ${aoeSummaryText()}</div>
+    const html = `<div style="font-size:10px;color:#ffaa33;margin-bottom:3px">${w.label}${weaponAreaTag(w)} · ${aoeSummaryText()}</div>
 <button class="btn btn-attack" data-aoe="confirm">${t("weapons.confirm_aoe")}</button>
 <button class="btn" data-aoe="cancel">${t("weapons.cancel_aoe")}</button>`;
     [pickerEl, mobPickerEl].forEach((el) => {
@@ -502,6 +504,20 @@ function updateActionButtons() {
         updateUI();
       });
     });
+  } else if (G.actionMode === "attack" && G.currentWeapon?.napalm) {
+    // Napalm: istruzioni per i due click (inizio e fine della linea)
+    const html = `<div style="font-size:10px;color:#ffaa33;margin-bottom:3px">${napalmPromptText()}</div>
+<button class="btn" data-aoe="cancel">${t("weapons.cancel_aoe")}</button>`;
+    [pickerEl, mobPickerEl].forEach((el) => {
+      if (!el) return;
+      el.innerHTML = html;
+      el.style.display = "flex";
+      el.querySelector('[data-aoe="cancel"]')?.addEventListener("click", () => {
+        sfx("click");
+        setActionMode(null);
+        updateUI();
+      });
+    });
   } else {
     [pickerEl, mobPickerEl].forEach((el) => {
       if (!el) return;
@@ -509,6 +525,13 @@ function updateActionButtons() {
       el.style.display = "none";
     });
   }
+}
+
+function napalmPromptText() {
+  const w = G.currentWeapon;
+  return G.pendingAoe
+    ? t("weapons.napalm_pick_end", { n: napalmLength(w) })
+    : t("weapons.napalm_pick_start", { weapon: w.label });
 }
 
 // Probabilità del bersaglio puntato col primo tap (null se non c'è o non è
@@ -531,8 +554,8 @@ function oddsSummaryText(o) {
 
 // Bersagli dell'esplosione in attesa di conferma, con avviso di fuoco amico
 function aoeSummaryText() {
-  const { col, row, weapon } = G.pendingAoe;
-  const odds = aoeOdds(weapon, col, row);
+  const { col, row, weapon, line } = G.pendingAoe;
+  const odds = aoeOdds(weapon, col, row, line);
   const vc = odds.filter((o) => !o.isUS).length;
   const us = odds.length - vc;
   const parts = [t("odds.aoe_targets", { n: vc })];

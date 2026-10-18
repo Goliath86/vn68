@@ -76,7 +76,19 @@ function weaponNeedsReload(w) {
 // dalle schede armi.
 function defaultAttackWeapon(u) {
   const usable = (u?.weapons || []).filter((w) => weaponUsable(u, w));
-  return usable.find((w) => !w.aoe) ?? usable[0] ?? null;
+  return usable.find((w) => !isAreaWeapon(w)) ?? usable[0] ?? null;
+}
+
+// Arma che si punta su un tile invece che su un nemico: AoE (granate, RPG,
+// artiglieria) o napalm (linea di tile, mechanics.js)
+function isAreaWeapon(w) {
+  return !!(w?.aoe || w?.napalm);
+}
+
+// Etichetta dell'area nelle schede armi: " · AoE1", napalm " · 🔥5"
+function weaponAreaTag(w) {
+  if (w?.napalm) return ` · 🔥${napalmLength(w)}`;
+  return w?.aoe ? ` · AoE${w.aoe}` : "";
 }
 
 // Prima arma ricaricabile dell'unità (null se nessuna)
@@ -115,7 +127,7 @@ function weaponEmpty(w) {
  * @returns {object|null}
  */
 function unitFireWeapon(unit) {
-  return unit.weapons?.find((w) => !w.aoe && !w.melee) ?? null;
+  return unit.weapons?.find((w) => !isAreaWeapon(w) && !w.melee) ?? null;
 }
 
 /**

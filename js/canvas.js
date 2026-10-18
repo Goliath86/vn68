@@ -213,6 +213,24 @@ function onCanvasClick(e) {
   if (G.actionMode === "attack") {
     const w = G.currentWeapon;
 
+    // Napalm: primo click = inizio della linea, secondo = fine (mechanics.js)
+    if (w?.napalm) {
+      const tile = G.attackable.find((t) => t.col === col && t.row === row);
+      if (!tile) {
+        setActionMode(null);
+      } else if (!G.pendingAoe) {
+        sfx("click");
+        G.pendingAoe = { col, row, weapon: w };
+        G.attackable = napalmEndTiles(G.pendingAoe, w);
+      } else {
+        G.pendingAoe.line = napalmLine(G.pendingAoe, tile);
+        G.actionMode = "aoe_confirm";
+      }
+      render();
+      updateUI();
+      return;
+    }
+
     if (w?.aoe) {
       // AoE: click tile → mostra anteprima e chiedi conferma
       const tile = G.attackable.find((t) => t.col === col && t.row === row);

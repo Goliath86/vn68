@@ -109,6 +109,12 @@ function sfx(type) {
     case "click":
       _sfxClick(ac, out, t0);
       break;
+    case "jet":
+      _sfxJet(ac, out, t0);
+      break;
+    case "napalm":
+      _sfxNapalm(ac, out, t0);
+      break;
   }
 }
 
@@ -262,6 +268,33 @@ function _sfxDemolition(ac, out, t) {
   _noise(ac, "lowpass", 160, out, t, 0.65, 0.7);
   _osc(ac, "sine", 75, out, t, 0.5, 0.58, 22);
   _noise(ac, "bandpass", 900, out, t + 0.05, 0.2, 0.3, 0.5);
+}
+function _sfxJet(ac, out, t) {
+  // Passaggio di un jet: rombo che cresce, picco e si allontana (effetto Doppler)
+  const dur = 3.4;
+  const src = ac.createBufferSource();
+  src.buffer = _nb(ac, dur);
+  const f = ac.createBiquadFilter();
+  f.type = "bandpass";
+  f.Q.value = 0.8;
+  f.frequency.setValueAtTime(500, t);
+  f.frequency.exponentialRampToValueAtTime(1800, t + dur * 0.45);
+  f.frequency.exponentialRampToValueAtTime(260, t + dur);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.001, t);
+  g.gain.exponentialRampToValueAtTime(0.55, t + dur * 0.45);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  src.connect(f);
+  f.connect(g);
+  g.connect(out);
+  src.start(t);
+  src.stop(t + dur + 0.01);
+}
+function _sfxNapalm(ac, out, t) {
+  // Napalm: vampata sorda e crepitio
+  _noise(ac, "lowpass", 380, out, t, 1.1, 0.6);
+  _osc(ac, "sine", 60, out, t, 0.6, 0.4, 30);
+  _noise(ac, "highpass", 2500, out, t + 0.1, 0.5, 0.12);
 }
 function _sfxDisarm(ac, out, t) {
   // Disinnesco: raschiate di attrezzi sul congegno, poi lo scatto metallico finale

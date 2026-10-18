@@ -657,8 +657,18 @@ function renderOverlay() {
 
   // Celle attaccabili
   if (G.actionMode === "attack") {
-    const isAoe = !!G.currentWeapon?.aoe;
+    const isAoe = isAreaWeapon(G.currentWeapon);
     if (isAoe) {
+      // Napalm, dopo il primo click: tile d'inizio marcato e linea in
+      // anteprima fino al tile sotto il mouse (se è una fine valida)
+      if (napalmPickingEnd()) {
+        const hover = napalmHoverLine();
+        if (hover) drawNapalmLine(ctx, ts, hover, false);
+        const { x, y } = tileToScreen(G.pendingAoe.col, G.pendingAoe.row);
+        ctx.strokeStyle = "rgba(255,220,0,0.95)";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x + 2, y + 2, ts - 4, ts - 4);
+      }
       // AoE weapon: colora l'area di tiro in arancione
       ctx.fillStyle = "rgba(255,140,0,0.18)";
       ctx.strokeStyle = "rgba(255,180,0,0.5)";
@@ -778,48 +788,53 @@ function renderOverlay() {
 
   // Anteprima AoE in attesa di conferma
   if (G.actionMode === "aoe_confirm" && G.pendingAoe) {
-    const { col: tc, row: tr, weapon: w } = G.pendingAoe;
-    // Raggio AoE attorno al tile bersaglio (artiglieria: tutta l'area della salva)
-    const spread = w.artillery ? artilleryScatter(w) : 0;
-    ctx.fillStyle = "rgba(255,90,0,0.28)";
-    ctx.strokeStyle = "rgba(255,160,0,0.75)";
-    ctx.lineWidth = 1.5;
-    for (let c = 0; c < G.mapData.cols; c++) {
-      for (let r = 0; r < G.mapData.rows; r++) {
-        if (salvoDist(c, r, tc, tr, spread) <= w.aoe) {
-          const { x, y } = tileToScreen(c, r);
-          ctx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
-          ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
+    const { col: tc, row: tr, weapon: w, line } = G.pendingAoe;
+    if (w.napalm) {
+      // Napalm: la linea scelta con la direzione di volo
+      drawNapalmLine(ctx, ts, line, true);
+    } else {
+      // Raggio AoE attorno al tile bersaglio (artiglieria: tutta l'area della salva)
+      const spread = w.artillery ? artilleryScatter(w) : 0;
+      ctx.fillStyle = "rgba(255,90,0,0.28)";
+      ctx.strokeStyle = "rgba(255,160,0,0.75)";
+      ctx.lineWidth = 1.5;
+      for (let c = 0; c < G.mapData.cols; c++) {
+        for (let r = 0; r < G.mapData.rows; r++) {
+          if (salvoDist(c, r, tc, tr, spread) <= w.aoe) {
+            const { x, y } = tileToScreen(c, r);
+            ctx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
+            ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
+          }
         }
       }
+      // Tile bersaglio: bordo più marcato
+      const { x: bx, y: by } = tileToScreen(tc, tr);
+      // Granate: quadrato tratteggiato in cui il lancio può deviare (combat.js:throwLanding);
+      // artiglieria: quadrato in cui cadono i colpi della salva (mechanics.js)
+      if (spread || w.scatter) {
+        const s = spread || w.scatter;
+        ctx.save();
+        ctx.setLineDash([ts * 0.12, ts * 0.08]);
+        ctx.strokeStyle = "rgba(255,235,160,0.85)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(bx - s * ts + 1, by - s * ts + 1, (2 * s + 1) * ts - 2, (2 * s + 1) * ts - 2);
+        ctx.restore();
+      }
+      // Raggio del rumore dell'esplosione, dal punto d'impatto
+      if (G.selectedUnit)
+        strokeNoiseOutline(ctx, bx, by, ts, weaponNoise(G.selectedUnit, w));
+      ctx.strokeStyle = "rgba(255,220,0,0.95)";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(bx + 2, by + 2, ts - 4, ts - 4);
+      // Icona esplosione al centro
+      ctx.font = `${Math.round(ts * 0.45)}px serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("💥", bx + ts / 2, by + ts / 2);
     }
-    // Tile bersaglio: bordo più marcato
-    const { x: bx, y: by } = tileToScreen(tc, tr);
-    // Granate: quadrato tratteggiato in cui il lancio può deviare (combat.js:throwLanding);
-    // artiglieria: quadrato in cui cadono i colpi della salva (mechanics.js)
-    if (spread || w.scatter) {
-      const s = spread || w.scatter;
-      ctx.save();
-      ctx.setLineDash([ts * 0.12, ts * 0.08]);
-      ctx.strokeStyle = "rgba(255,235,160,0.85)";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(bx - s * ts + 1, by - s * ts + 1, (2 * s + 1) * ts - 2, (2 * s + 1) * ts - 2);
-      ctx.restore();
-    }
-    // Raggio del rumore dell'esplosione, dal punto d'impatto
-    if (G.selectedUnit)
-      strokeNoiseOutline(ctx, bx, by, ts, weaponNoise(G.selectedUnit, w));
-    ctx.strokeStyle = "rgba(255,220,0,0.95)";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(bx + 2, by + 2, ts - 4, ts - 4);
-    // Icona esplosione al centro
-    ctx.font = `${Math.round(ts * 0.45)}px serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("💥", bx + ts / 2, by + ts / 2);
     // Probabilità di colpire per ogni bersaglio nel raggio; i soldati della
     // squadra (fuoco amico) in rosso con bordo
-    for (const o of aoeOdds(w, tc, tr)) {
+    for (const o of aoeOdds(w, tc, tr, line)) {
       const { x, y } = tileToScreen(o.target.col, o.target.row);
       if (o.isUS) {
         ctx.strokeStyle = "rgba(255,70,60,0.95)";
@@ -954,8 +969,59 @@ function renderOverlay() {
     ctx.fillText("🎯", ax + ts / 2, ay + ts / 2);
   }
 
+  // Napalm richiesto: linea e direzione dell'attacco aereo in arrivo
+  for (const s of G.missionState?.napalm || []) drawNapalmLine(ctx, ts, s.line, false, true);
+
   // Effetti grafici
   renderEffects(ctx, ts);
+}
+
+// Linea del napalm: tile colorati e freccia dal primo all'ultimo (direzione
+// di volo). strong: anteprima da confermare; pending: attacco già richiesto
+function drawNapalmLine(ctx, ts, line, strong, pending = false) {
+  if (!line?.length) return;
+  ctx.save();
+  ctx.fillStyle = pending ? "rgba(255,110,20,0.14)" : strong ? "rgba(255,110,0,0.32)" : "rgba(255,110,0,0.2)";
+  ctx.strokeStyle = pending ? "rgba(255,90,30,0.85)" : "rgba(255,170,0,0.8)";
+  ctx.lineWidth = 1.5;
+  if (pending) ctx.setLineDash([5, 4]);
+  for (const t of line) {
+    const { x, y } = tileToScreen(t.col, t.row);
+    ctx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
+    ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
+  }
+  ctx.setLineDash([]);
+  const a = tileToScreen(line[0].col, line[0].row);
+  const b = tileToScreen(line[line.length - 1].col, line[line.length - 1].row);
+  const ax = a.x + ts / 2,
+    ay = a.y + ts / 2,
+    bx = b.x + ts / 2,
+    by = b.y + ts / 2;
+  const ang = Math.atan2(by - ay, bx - ax);
+  const head = ts * 0.28;
+  ctx.strokeStyle = "rgba(255,235,170,0.9)";
+  ctx.fillStyle = "rgba(255,235,170,0.9)";
+  ctx.lineWidth = Math.max(2, ts * 0.05);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(ax - Math.cos(ang) * ts * 0.35, ay - Math.sin(ang) * ts * 0.35);
+  ctx.lineTo(bx + Math.cos(ang) * ts * 0.1, by + Math.sin(ang) * ts * 0.1);
+  ctx.stroke();
+  const tx = bx + Math.cos(ang) * ts * 0.38,
+    ty = by + Math.sin(ang) * ts * 0.38;
+  ctx.beginPath();
+  ctx.moveTo(tx, ty);
+  ctx.lineTo(tx - Math.cos(ang - 0.5) * head, ty - Math.sin(ang - 0.5) * head);
+  ctx.lineTo(tx - Math.cos(ang + 0.5) * head, ty - Math.sin(ang + 0.5) * head);
+  ctx.closePath();
+  ctx.fill();
+  if (pending || strong) {
+    ctx.font = `${Math.round(ts * 0.38)}px serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("🔥", ax, ay);
+  }
+  ctx.restore();
 }
 
 // Distanza Manhattan del tile (c, r) dal quadrato di lato 2s+1 centrato su

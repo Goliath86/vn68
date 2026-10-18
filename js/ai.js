@@ -102,6 +102,9 @@ async function runEnemyTurn() {
   // Colpi d'artiglieria richiesti nel turno precedente: cadono ora
   await resolveArtillery();
   if (G.phase === "gameover") return;
+  // Attacchi aerei al napalm richiesti nel turno precedente
+  await resolveNapalm();
+  if (G.phase === "gameover") return;
 
   saveGame();
 

@@ -77,6 +77,7 @@ function startGame(
     night: !!(options.night || G.mapData.night),
     smokes: [],
     artillery: [],
+    napalm: [],
   };
   G.lastMove = null;
 

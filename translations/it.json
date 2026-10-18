@@ -91,6 +91,7 @@
     "suppressions": "Soppressioni",
     "explosives": "Esplosivi",
     "artillery": "artiglieria",
+    "napalm": "napalm",
     "scattered": "deviate",
     "friendly_fire": "Fuoco amico (HP)",
     "sec_vc_fire": "Fuoco dei VC",
@@ -410,6 +411,8 @@
     "trap_disarmed": "{name} disinnesca la trappola ({trap})",
     "smoke_deployed": "{name} lancia {weapon}: cortina fumogena per {turns} turni",
     "artillery_called": "{name} chiama l'artiglieria su ({col},{row}) — impatto al prossimo turno",
+    "napalm_called": "{name} richiede un attacco al napalm da ({c1},{r1}) a ({c2},{r2}) — al prossimo turno",
+    "napalm_incoming": "ATTACCO AEREO: napalm in arrivo!",
     "artillery_impact": "ARTIGLIERIA in arrivo su ({col},{row}): {shells} colpi!",
     "artillery_destroyed": "Colpo in pieno: {label} in ({col},{row}) ridotto in macerie",
     "artillery_burn": "Colpo in pieno: {label} in ({col},{row}) in fiamme",
@@ -423,6 +426,8 @@
     "ammo_inf": "∞",
     "ammo_tag": "×{n}",
     "confirm_aoe": "🎯 Conferma",
+    "napalm_pick_start": "{weapon}: scegli il tile d'inizio della linea",
+    "napalm_pick_end": "Scegli il tile finale (in linea o in diagonale, max {n} tile): l'aereo vola in quella direzione",
     "cancel_aoe": "✕ Annulla"
   },
 

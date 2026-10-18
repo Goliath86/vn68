@@ -380,7 +380,9 @@ function aoeDefense(def) {
 
 // Anteprima di un'esplosione US in (tc, tr): per ogni bersaglio nel raggio
 // (soldati inclusi, VC solo se visibili) probabilità di colpire e uccidere
-function aoeOdds(weapon, tc, tr) {
+function aoeOdds(weapon, tc, tr, line = null) {
+  // Napalm: chi si trova sui tile della linea (mechanics.js)
+  if (weapon.napalm) return napalmOdds(weapon, line || [{ col: tc, row: tr }]);
   // Artiglieria: la salva si disperde, probabilità su tutti i colpi (mechanics.js)
   if (weapon.artillery) {
     const reach = artilleryScatter(weapon) + weapon.aoe;
@@ -476,9 +478,14 @@ async function resolveAoeCombat(
     ),
   ];
 
-  sfxShoot(attacker.cls, weapon);
-  // big: cratere più largo per l'artiglieria (animations.js:addCrater)
-  addFX("explosion", { col: tc, row: tr, aoe: weapon.aoe, big: hitHidden }, 1300);
+  // Napalm: niente esplosione né cratere, le fiamme le disegna resolveNapalm
+  if (weapon.napalm) {
+    sfx("napalm");
+  } else {
+    sfxShoot(attacker.cls, weapon);
+    // big: cratere più largo per l'artiglieria (animations.js:addCrater)
+    addFX("explosion", { col: tc, row: tr, aoe: weapon.aoe, big: hitHidden }, 1300);
+  }
   // Statistiche: esplosivi US, RPG VC (l'artiglieria conta le salve, mechanics.js)
   if (!hitHidden) statAdd(isEnemyAttacking ? "aoeVc" : "aoeUs");
   // Esplosione US: il rumore parte dal punto d'impatto (e il lancio svela chi lancia)
@@ -513,7 +520,9 @@ async function resolveAoeCombat(
 
   let anyKill = false;
   for (const def of defenders) {
-    const { isUS, defStat, defCover } = aoeDefense(def);
+    const { isUS, defStat, defCover: cover } = aoeDefense(def);
+    // Il napalm cola dentro ogni riparo: niente copertura del terreno
+    const defCover = weapon.napalm ? 0 : cover;
     const defDice = rollD6();
     const save = defStat + defCover + defDice;
     const dmg = Math.max(0, hit - save);

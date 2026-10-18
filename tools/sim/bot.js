@@ -156,7 +156,7 @@ function simBestDirect(u, from = u) {
   const fake = from === u ? u : { ...u, col: from.col, row: from.row };
   let best = null;
   for (const w of u.weapons || []) {
-    if (w.aoe || !weaponUsable(u, w)) continue;
+    if (isAreaWeapon(w) || !weaponUsable(u, w)) continue;
     for (const e of G.enemies) {
       if (!e.alive || dist(fake, e) > (w.range ?? UNIT_CLASSES[u.cls].range)) continue;
       if (!isEnemyVisible(e) && !(from !== u && _simSeen.has(e.id))) continue;

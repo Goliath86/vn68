@@ -24,7 +24,8 @@ function onCanvasMove(e) {
   const prev = G.hoveredTile;
   if (!prev || prev.col !== col || prev.row !== row) {
     G.hoveredTile = { col, row };
-    if (G.actionMode === "rotate" || isAimRayMode()) render();
+    // Napalm: anteprima della linea fino al tile sotto il mouse
+    if (G.actionMode === "rotate" || isAimRayMode() || napalmPickingEnd()) render();
   }
   if (col >= 0 && row >= 0 && col < G.mapData.cols && row < G.mapData.rows) {
     showTooltip(e, col, row);
@@ -33,7 +34,7 @@ function onCanvasMove(e) {
   }
 }
 function isAimRayMode() {
-  return G.actionMode === "attack" && !G.currentWeapon?.aoe;
+  return G.actionMode === "attack" && !isAreaWeapon(G.currentWeapon);
 }
 
 function onWheel(e) {
