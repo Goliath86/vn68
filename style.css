@@ -308,6 +308,29 @@ body {
     padding: 4px 10px;
     opacity: 0.6;
 }
+/* Barra di disegno del terreno: generazione procedurale e ripresa
+   del salvataggio (initModal.js) */
+.gen-bar {
+    height: 8px;
+    max-width: 320px;
+    margin: 0 auto 10px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+}
+.gen-bar.hidden {
+    display: none;
+}
+#resume-banner .gen-bar {
+    margin: 6px 0 0;
+}
+.gen-fill {
+    height: 100%;
+    width: 0;
+    background: var(--green-light);
+    transition: width 0.15s;
+}
 #map-size-picker .btn.active {
     opacity: 1;
     border-color: var(--highlight);

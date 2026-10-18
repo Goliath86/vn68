@@ -1026,10 +1026,11 @@ function _drawCastShadow(ctx, x, y, ts, hN, hW, hNW) {
   }
 }
 
-function drawTerrainTransitions(ctx, md, ts) {
+// r0..r1: righe da disegnare (render.js costruisce la cache a passi)
+function drawTerrainTransitions(ctx, md, ts, r0 = 0, r1 = md.rows) {
   const defAt = (c, r) =>
     c < 0 || r < 0 || c >= md.cols || r >= md.rows ? null : md.tileTypes[md.grid[r][c]];
-  for (let r = 0; r < md.rows; r++) {
+  for (let r = r0; r < r1; r++) {
     for (let c = 0; c < md.cols; c++) {
       const def = defAt(c, r);
       if (!def) continue;
@@ -1100,8 +1101,8 @@ function jungleCrowns(md, ts) {
   return crowns.sort((a, b) => a.cy - b.cy);
 }
 
-function drawJungleCanopy(ctx, md, ts) {
-  for (const k of jungleCrowns(md, ts)) {
+function drawJungleCanopy(ctx, md, ts, crowns = jungleCrowns(md, ts)) {
+  for (const k of crowns) {
     _foliage(ctx, k.cx, k.cy, k.rad, _tileRng(k.c + k.i * 0.071, k.r + 0.53), CANOPY_COLS);
   }
 }

@@ -27,6 +27,7 @@ function initModal() {
         <div style="font-family:var(--stamp-font);font-size:13px;color:var(--tan);letter-spacing:1px">${t("modal.resume_title")}</div>
         <div style="font-size:11px;color:var(--paper-dark)">${save.mapName} · ${missionLabel} · ${t("modal.resume_turn", { turn: save.turn })}</div>
         <div style="font-size:10px;color:#556644">${savedDate}</div>
+        <div class="gen-bar hidden" id="resume-gen-bar"><div class="gen-fill" id="resume-gen-fill"></div></div>
       </div>
       <button class="btn" id="btn-resume" style="font-size:12px;padding:7px 16px;white-space:nowrap">${t("buttons.resume")}</button>
     `;
@@ -43,7 +44,18 @@ function initModal() {
       .addEventListener("click", async () => {
         const s = loadSave();
         if (!s) return;
-        await ambientFadeOut(800);
+        // Terreno procedurale disegnato a passi (render.js:prebuildTerrainCache)
+        // mentre la musica sfuma, con la barra nel banner
+        const btn = document.getElementById("btn-resume");
+        const bar = document.getElementById("resume-gen-bar");
+        btn.disabled = true;
+        if (!s.mapData.image) bar.classList.remove("hidden");
+        await Promise.all([
+          ambientFadeOut(800),
+          prebuildTerrainCache(s.mapData, (p) => {
+            document.getElementById("resume-gen-fill").style.width = `${Math.round(p * 100)}%`;
+          }),
+        ]);
         resumeGame(s);
       });
   }
@@ -125,8 +137,38 @@ async function loadMissionStep(map) {
     mapSize = localStorage.getItem(MAP_SIZE_KEY) || "small";
   } catch (e) {}
   if (!PROC_SIZES[mapSize]) mapSize = "small";
-  const generate = () =>
-    useMission(generateProceduralMap(map.generator, undefined, mapSize));
+  // Generazione con barra di avanzamento: il grosso del tempo è il disegno
+  // del terreno (render.js:prebuildTerrainCache), fatto a passi così la
+  // pagina non si blocca; nel frattempo rigenera/dimensione/avvio sono spenti
+  const genBar = document.getElementById("map-gen-bar");
+  const genFill = document.getElementById("map-gen-fill");
+  const startBtn = document.getElementById("modal-start-btn");
+  let generating = false;
+  const generate = async () => {
+    generating = true;
+    regenBtn.disabled = true;
+    startBtn.disabled = true;
+    sizePicker.querySelectorAll("[data-size]").forEach((b) => (b.disabled = true));
+    const progress = (p) => {
+      const pct = Math.round(p * 100);
+      genFill.style.width = `${pct}%`;
+      document.getElementById("map-description").textContent = t("modal.generating_map", { pct });
+    };
+    progress(0);
+    genBar.classList.remove("hidden");
+    try {
+      await nextPaint();
+      const data = generateProceduralMap(map.generator, undefined, mapSize);
+      await prebuildTerrainCache(data, progress);
+      return useMission(data);
+    } finally {
+      genBar.classList.add("hidden");
+      regenBtn.disabled = false;
+      startBtn.disabled = !document.querySelector(".mission-option.active");
+      sizePicker.querySelectorAll("[data-size]").forEach((b) => (b.disabled = false));
+      generating = false;
+    }
+  };
   const markSize = () =>
     sizePicker.querySelectorAll("[data-size]").forEach((b) =>
       b.classList.toggle("active", b.dataset.size === mapSize),
@@ -134,23 +176,24 @@ async function loadMissionStep(map) {
 
   try {
     // Mappa procedurale: generata qui, poi salvata per intero con la partita
-    const data = map.generator ? generate() : await loadMission(map.file);
+    const data = map.generator ? await generate() : await loadMission(map.file);
     showDescription(data);
-    regenBtn.onclick = () => {
-      showDescription(generate());
+    regenBtn.onclick = async () => {
+      if (generating) return;
       sfx("click");
+      showDescription(await generate());
     };
     markSize();
     sizePicker.querySelectorAll("[data-size]").forEach((b) => {
-      b.onclick = () => {
-        if (b.dataset.size === mapSize) return;
+      b.onclick = async () => {
+        if (generating || b.dataset.size === mapSize) return;
         mapSize = b.dataset.size;
         try {
           localStorage.setItem(MAP_SIZE_KEY, mapSize);
         } catch (e) {}
         markSize();
-        showDescription(generate());
         sfx("click");
+        showDescription(await generate());
       };
     });
 

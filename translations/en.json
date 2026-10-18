@@ -281,6 +281,7 @@
     "resume_turn": "Turn {turn}",
     "night_mission": "🌙 Night mission (reduced visibility)",
     "regenerate_map": "🎲 Regenerate map",
+    "generating_map": "Generating map… {pct}%",
     "map_size": "Map size",
     "size_small": "Small",
     "size_medium": "Medium",

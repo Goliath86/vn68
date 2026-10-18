@@ -37,7 +37,37 @@ function invalidateTerrainCache() {
 function getTerrainCache() {
   const md = G.mapData;
   if (_terrainCache && _terrainCache.mapData === md) return _terrainCache.canvas;
+  for (const _ of _terrainCacheSteps(md));
+  return _terrainCache.canvas;
+}
 
+// Costruisce la cache prima del primo render() cedendo il controllo al
+// browser ogni ~TERRAIN_BUILD_SLICE_MS: la pagina resta reattiva e
+// onProgress(0..1) può aggiornare una barra (briefing, mappe procedurali)
+const TERRAIN_BUILD_SLICE_MS = 30;
+
+async function prebuildTerrainCache(md, onProgress = () => {}) {
+  if (md.image) return;
+  let last = performance.now();
+  for (const p of _terrainCacheSteps(md)) {
+    if (performance.now() - last < TERRAIN_BUILD_SLICE_MS) continue;
+    onProgress(p);
+    await nextPaint();
+    last = performance.now();
+  }
+  onProgress(1);
+}
+
+// Attende che il browser abbia disegnato un fotogramma
+function nextPaint() {
+  return new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+}
+
+// Disegno della cache a passi (righe di tile, righe di transizioni, gruppi
+// di chiome): ogni yield dà l'avanzamento 0..1
+const CANOPY_BUILD_CHUNK = 150;
+
+function* _terrainCacheSteps(md) {
   const w = md.cols * TILE;
   const h = md.rows * TILE;
   const density = Math.min(
@@ -56,6 +86,9 @@ function getTerrainCache() {
   // cache: i fili, per tile, sono ridisegnati a ogni fotogramma
   const wind = windActive();
   const grass = wind ? { cols: md.cols, rows: md.rows, tiles: [] } : null;
+  const crowns = wind ? null : jungleCrowns(md, TILE);
+  const total = md.rows * 2 + (crowns ? Math.ceil(crowns.length / CANOPY_BUILD_CHUNK) : 1);
+  let done = 0;
   for (let r = 0; r < md.rows; r++) {
     for (let c = 0; c < md.cols; c++) {
       const tileDef = md.tileTypes[md.grid[r][c]];
@@ -71,18 +104,31 @@ function getTerrainCache() {
       if (_grassSink) grass.tiles[r * md.cols + c] = _grassSink;
       _grassSink = null;
     }
+    yield ++done / total;
   }
   // Sfumature tra terreni, rive e ombre: richiedono tutti i tile già disegnati
-  drawTerrainTransitions(ctx, md, TILE);
+  for (let r = 0; r < md.rows; r++) {
+    drawTerrainTransitions(ctx, md, TILE, r, r + 1);
+    yield ++done / total;
+  }
   // Chiome della giungla senza clip: sporgono sui tile vicini. Col vento sono
-  // disegnate a ogni fotogramma (animations.js:renderWindCanopy)
-  const canopy = wind ? windCanopy(md, TILE) : null;
-  if (!wind) drawJungleCanopy(ctx, md, TILE);
-  // Col vento la griglia va sopra le chiome animate: la disegna renderMap
-  if (!wind) drawTerrainGrid(ctx, md);
+  // disegnate a ogni fotogramma (animations.js:renderWindCanopy) dagli sprite
+  // preparati qui; senza vento a gruppi, sempre in ordine da nord a sud
+  let canopy = null;
+  if (wind) {
+    canopy = windCanopy(md, TILE);
+    canopySprites();
+    yield ++done / total;
+  } else {
+    for (let i = 0; i < crowns.length; i += CANOPY_BUILD_CHUNK) {
+      drawJungleCanopy(ctx, md, TILE, crowns.slice(i, i + CANOPY_BUILD_CHUNK));
+      yield ++done / total;
+    }
+    // Col vento la griglia va sopra le chiome animate: la disegna renderMap
+    drawTerrainGrid(ctx, md);
+  }
 
   _terrainCache = { canvas, mapData: md, grass, canopy };
-  return canvas;
 }
 
 // Mappe con immagine di sfondo: i tile trasformati dall'artiglieria
