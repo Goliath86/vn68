@@ -70,6 +70,7 @@ Promise.all([loadLang("it"), loadCatalog(), loadConfig()])
     rebuildMapsFromCatalog();
     applyTranslationsToData();
     applyTranslationsToDOM();
+    reportStartupIssues();
     setLoadingProgress(_loadingPct / 100);
     initModal();
 

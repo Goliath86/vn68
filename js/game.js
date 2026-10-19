@@ -1,7 +1,9 @@
 // ── LOAD MAP ───────────────────────────────────────────────────────────
+// Una mappa con errori (validate.js) non parte: MapDataError con l'elenco,
+// mostrato nel briefing; gli avvisi restano in console
 async function loadMission(jsonPath) {
-  const resp = await fetch(jsonPath);
-  const data = await resp.json();
+  const data = await fetchJsonData(jsonPath);
+  assertValid(jsonPath, validateMission(data));
   // Immagini dei tile ("texture") pronte prima del primo disegno del terreno
   if (!data.image) await loadTileTextures(data);
   return useMission(data);

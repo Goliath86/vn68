@@ -56,6 +56,7 @@ async function openTutorialModal() {
   const list = document.getElementById("tutorial-list");
   const startBtn = document.getElementById("btn-tutorial-start");
   list.innerHTML = `<div class="tut-loading">${t("modal.loading")}</div>`;
+  list.classList.remove("load-error");
   startBtn.disabled = true;
 
   document.getElementById("btn-tutorial-back").onclick = () => {
@@ -105,32 +106,21 @@ async function openTutorialModal() {
   startBtn.onclick = async () => {
     if (!selected) return;
     startBtn.disabled = true;
-    await startTutorialLesson(selected);
+    try {
+      await startTutorialLesson(selected);
+    } catch (err) {
+      showLoadError(list, err);
+      startBtn.disabled = false;
+    }
   };
 }
 
-// Carica e avvia una lezione
+// Carica e avvia una lezione; una lezione con errori (validate.js) non parte
 async function startTutorialLesson(lesson) {
   const index = await loadTutorialIndex();
-  const resp = await fetch("missions/tutorial/" + lesson.file);
-  const data = await resp.json();
-
-  // Tile e loro etichette condivisi dall'indice (la lezione può sovrascriverli)
-  data.tileTypes = { ...(index.tileTypes || {}), ...(data.tileTypes || {}) };
-  data.translations = data.translations || {};
-  for (const [lang, labels] of Object.entries(index.tileLabels || {})) {
-    const tr = (data.translations[lang] = data.translations[lang] || {});
-    tr.tileLabels = { ...labels, ...(tr.tileLabels || {}) };
-  }
-  // Niente casualità: trappole, tunnel e imboscate solo se la lezione li prevede
-  data.trapCount ??= 0;
-  data.tunnelCount ??= 0;
-  data.vcTrapPlantMax ??= 0;
-  data.ambushChance ??= 0;
-  data.vcSpawnZones ??= [];
-  data.playerStart ??= data.squad.map((s) => ({ col: s.col, row: s.row }));
-  data.supportedMissions ??= [data.tutorial.missionType];
-  data.tutorial.lessonId = lesson.id;
+  const file = "missions/tutorial/" + lesson.file;
+  const data = prepareTutorialLesson(index, lesson, await fetchJsonData(file));
+  assertValid(file, validateMission(data));
 
   document.getElementById("tutorial-overlay").classList.add("hidden");
   document.getElementById("gameover-overlay").classList.add("hidden");
@@ -144,6 +134,30 @@ async function startTutorialLesson(lesson) {
   G.missionState.tutorialLog = [];
   renderTutorialPanel();
   render();
+}
+
+// Completa il JSON di una lezione con quanto è condiviso dall'indice e i
+// default senza casualità (usato anche da tools/validate.js)
+function prepareTutorialLesson(index, lesson, data) {
+  // Tile e loro etichette condivisi dall'indice (la lezione può sovrascriverli)
+  data.tileTypes = { ...(index.tileTypes || {}), ...(data.tileTypes || {}) };
+  data.translations = data.translations || {};
+  for (const [lang, labels] of Object.entries(index.tileLabels || {})) {
+    const tr = (data.translations[lang] = data.translations[lang] || {});
+    tr.tileLabels = { ...labels, ...(tr.tileLabels || {}) };
+  }
+  // Niente casualità: trappole, tunnel e imboscate solo se la lezione li prevede
+  data.trapCount ??= 0;
+  data.tunnelCount ??= 0;
+  data.vcTrapPlantMax ??= 0;
+  data.ambushChance ??= 0;
+  data.vcSpawnZones ??= [];
+  data.playerStart ??= (data.squad || []).map((s) => ({ col: s.col, row: s.row }));
+  if (data.tutorial) {
+    data.supportedMissions ??= [data.tutorial.missionType];
+    data.tutorial.lessonId = lesson.id;
+  }
+  return data;
 }
 
 // Lezione successiva a quella in corso (null se è l'ultima)
@@ -327,7 +341,7 @@ function tutorialGameOver(win) {
       if (!next) return;
       btn.textContent = t("tutorial.next_lesson", { title: lessonText(next, "title") });
       btn.classList.remove("hidden");
-      btn.onclick = () => startTutorialLesson(next);
+      btn.onclick = () => startTutorialLesson(next).catch((err) => console.error(err.message));
     })
     .catch(() => {});
 }

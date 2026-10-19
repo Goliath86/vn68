@@ -9,7 +9,7 @@ async function loadConfig() {
   try {
     const resp = await fetch("config.json");
     if (!resp.ok) return;
-    CONFIG = await resp.json();
+    CONFIG = parseJsonText(await resp.text(), "config.json");
     WEAPONS_CONFIG = CONFIG.weapons || {};
     // Classi US modificate o nuove (le nuove partono dalle statistiche
     // dell'assalto, col nome della chiave finché "labels" non ne dà uno)
@@ -30,7 +30,9 @@ async function loadConfig() {
     }
     deepMerge(VC_MIX, CONFIG.vcMix);
   } catch (e) {
-    // config.json assente o non valido — nessun effetto, si usano gli sprite canvas
+    // config.json assente o non valido — nessun effetto, si usano gli sprite
+    // canvas; un errore di sintassi va in console all'avvio (init.js)
+    if (e.issues) LOAD_ISSUES.push(e);
   }
 }
 

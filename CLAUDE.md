@@ -29,6 +29,7 @@ missions/             una mappa = un JSON + asset opzionali (immagine, musica, s
 missions/catalog.json registro delle mappe disponibili nel menu
 translations/it.json, translations/en.json   stringhe UI (chiavi usate da js/i18n.js)
 assets/               sprite PNG unità, SFX MP3, musica menu
+tools/validate.js     validatore dei JSON moddabili da riga di comando (`node tools/validate.js --all`: config, catalogo, mappe, tutorial, mappe procedurali su più seed; o singoli file), stessi controlli del gioco più l'esistenza dei file citati
 tools/sim/            simulatore headless di partite (Node, solo sviluppo): env.js carica gli script di index.html in un contesto vm con DOM finto, bot.js gioca la squadra, run.js lancia N partite e confronta varianti A/B (`node tools/sim/run.js --help`)
 ```
 
@@ -37,7 +38,7 @@ Tutti i file in `js/` sono script classici concatenati via `<script>` tag in `in
 
 ```
 config.js → constants.js → canvas.js → sounds.js → fowLos.js → utils.js →
-maps.js → mapGen.js → i18n.js → alea.js → weapons.js → actions.js → specialActions.js →
+maps.js → mapGen.js → i18n.js → schema.js → validate.js → alea.js → weapons.js → actions.js → specialActions.js →
 plchldSprites.js → overwatch.js → render.js → saveGame.js → combat.js →
 mechanics.js → stats.js → guerrilla.js → tutorial.js → initModal.js → tabs.js → backModal.js → pathfind.js → camera.js →
 animations.js → ai.js → game.js → suppression.js → log.js → tooltip.js →
@@ -63,6 +64,8 @@ Altre costanti in `constants.js`: `TILE=64`, `AP_PER_TURN=3`, `SAVE_KEY`, `UNIT_
 | `maps.js` | costruisce l'elenco mappe a runtime da `catalog.json` |
 | `mapGen.js` | mappe procedurali: `generateProceduralMap(name, seed, size)` produce un mapData con lo stesso schema dei JSON missione; dimensioni in `PROC_SIZES` (small 16×12 / medium 22×16 / large 28×20, scelta nel briefing da `initModal.js`, ricordata in `localStorage[vn68_map_size]`): i generatori sono scritti in coordinate della mappa piccola e scalano con `_procScale` (`sx`/`sy`/`sd`/`area`/`step`); la giungla sceglie un layout da `JUNGLE_LAYOUTS` (crossing/bend/parallel/confluence/swamp, descrizione per layout in `JUNGLE_TEXT`), costruisce in un sistema canonico con partenza a ovest e poi ruota/specchia verso il bordo estratto (`toMap`), e scarta i seed con meno di 2 corridoi disgiunti verso gli obiettivi (`_corridorCount`); la città fa lo stesso con `URBAN_LAYOUTS` (river/canal/sidecanal/riverside/dry, partenza canonica a sud, cittadella a nord con porta + secondo ingresso, isolati da `URBAN_BLOCK_KINDS`); registro `MAP_GENERATORS` (oggi `jungle` e `urban`), seed deterministico (mulberry32), posizione del pilota da `_pilotSite` (al `PILOT_ROUTE_SHARE` = 60% del tragitto estrazione→LZ/relitto, RNG separato così il resto della mappa non cambia), helper condivisi `_generateWithRetries` (tentativi derivati dal seed), `_allReachable` (verifica BFS), `_procTranslations` (testi `*_TEXT` → blocco `translations`) |
 | `i18n.js` | `t()`/`mt()` lookup traduzioni, `applyTranslationsToData()`, `setLang()` |
+| `schema.js` | **schema unico dei JSON moddabili** (`SCHEMA_MISSION`, `SCHEMA_TILE_TYPE`, `SCHEMA_WEAPON`, `SCHEMA_UNIT_CLASS`, `SCHEMA_ENEMY_CLASS`, `SCHEMA_CATALOG`, `SCHEMA_TUTORIAL_INDEX`, `SCHEMA_CONFIG`): tipo, obbligatorio, limiti, valori ammessi (`allowed`), riferimenti (`ref`/`keyRef`), descrizione IT/EN. **Un campo JSON nuovo letto dal codice va aggiunto qui**, altrimenti il validatore lo segnala come sconosciuto; i campi scritti dal gioco vanno in `internal` |
+| `validate.js` | validatore: `validateMission`/`validateCatalog`/`validateConfig`/`validateTutorialIndex` restituiscono `{ level, path, key, vars }` (testi da `translations validation.*`, `formatIssue`); controlli incrociati (griglia, coordinate, raggiungibilità degli obiettivi con BFS, riferimenti, `tuning` contro `TUNABLES`); `fetchJsonData`/`parseJsonText` (errori di sintassi con riga e colonna); `assertValid` lancia `MapDataError` sugli errori (`game.js:loadMission`, `tutorial.js:startTutorialLesson`, mostrato da `initModal.js:showLoadError`); config e catalogo in console all'avvio (`reportStartupIssues`) |
 | `alea.js` | dadi: `rollD6`, `rollDice(n)`, `diceSum` |
 | `weapons.js` | `unitWeapon(unit)` — arma correntemente equipaggiata/selezionata; munizioni: `weaponUsable`/`canAttack`, `consumeShot` (usi `ammo`, caricatore `mag`/`loaded`, `shotsPerTurn`), `reloadableWeapon`, `weaponAmmoLabel` (ricarica in `actions.js:reloadWeapon`; il vecchio `hasShot`/`needReload` resta solo per il cecchino VC) |
 | `actions.js` | `setActionMode()` — entra/esce da modalità muovi/attacca/speciale |
@@ -122,4 +125,4 @@ Mappe esistenti oggi: `rung_sat.json`, `hue_city.json`, più le mappe procedural
 - **Bilinguismo**: ogni stringa visibile all'utente deve passare da `t()`/`mt()` e avere entry in `translations/it.json` + `translations/en.json` (e nel blocco `translations` del JSON missione, se specifica del contesto di gioco).
 - **Fallback ovunque**: il gioco è progettato per non rompersi se asset opzionali mancano (immagine mappa, sprite unità, SFX custom, `config.json` assente) — quando aggiungi un nuovo campo opzionale, segui questo pattern (default sensato + nessun errore bloccante).
 - **`TODO`** è un log libero di bugfix già risolti (non backlog attivo) — non è uno issue tracker formale, utile solo come cronologia di micro-fix passati sullo sniper e sulla card "Resume".
-- Non c'è test suite, linter o build step configurati nel repo: le modifiche si verificano avviando un server locale e giocando manualmente le missioni esistenti.
+- Non c'è test suite, linter o build step configurati nel repo: le modifiche si verificano avviando un server locale e giocando manualmente le missioni esistenti. Dopo aver toccato JSON, schema o generatori: `node tools/validate.js --all` deve dare 0 errori.

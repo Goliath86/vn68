@@ -539,6 +539,69 @@
   },
 
   "errors": {
-    "map_load_failed": "Map load error: {message}"
+    "map_load_failed": "Map load error: {message}",
+    "map_invalid": "{file}: {count} errors, the map cannot be played."
+  },
+
+  "validation": {
+    "required": "required field missing",
+    "type": "expected {expected}, found {found}",
+    "min": "{value} is below the minimum ({min})",
+    "max": "{value} is above the maximum ({max})",
+    "enum": "\"{value}\" not allowed (possible values: {allowed})",
+    "unknown": "unknown field, ignored",
+    "unknown_hint": "unknown field, ignored: did you mean \"{hint}\"?",
+    "ref": "\"{value}\" is not {kind}",
+    "color": "\"{value}\" is not a hex color (#rgb or #rrggbb)",
+    "texture_unknown": "unknown texture \"{value}\" (known: {known}, or an image)",
+    "file_missing": "file not found: {file}",
+    "min_items": "at least {min} items needed",
+    "length": "exactly {len} items needed (found {found})",
+    "out_of_bounds": "{col},{row} is outside the map ({cols}×{rows})",
+    "zone_order": "colMin/rowMin greater than colMax/rowMax",
+    "zone_blocked": "no passable tile in the zone",
+    "json_syntax": "invalid JSON at line {line}, column {col}: {message}",
+    "json_syntax_noloc": "invalid JSON: {message}",
+    "grid_rows": "the grid has {found} rows, \"rows\" says {rows}",
+    "grid_cols": "{found} columns, \"cols\" says {cols}",
+    "grid_key": "\"{key}\" (column {col}, row {row}) is not in tileTypes",
+    "demolish_no_result": "demolishable without demolishResult: once demolished it becomes \"J\"",
+    "no_missions": "no playable mission: add the types to supportedMissions",
+    "no_objectives": "mission \"{type}\" is in supportedMissions but has no objectives",
+    "no_spawn_zones": "vcSpawnZones needed to deploy {count} VC",
+    "no_ambush_zones": "vcAmbushTurn without vcAmbushZones: the ambush never triggers",
+    "pilot_on_extract": "the pilot is already on the extraction point",
+    "step_duplicate": "repeated id \"{id}\"",
+    "step_text_missing": "missing text for step \"{id}\" ({lang})",
+    "mix_empty": "no class with a weight above 0",
+    "weapon_incomplete": "new weapon without atk or range",
+    "translation_missing": "missing \"{lang}\" translation",
+    "label_unknown_tile": "no tile with id \"{value}\"",
+    "on_impassable": "on an impassable tile",
+    "start_count": "at least 4 start positions needed (found {count})",
+    "start_duplicate": "two start positions on the same tile",
+    "unreachable": "unreachable from the start",
+    "needs_demolition": "reachable only by demolishing an obstacle (engineer needed)",
+    "catalog_kind": "exactly one of \"file\", \"generator\" and \"tutorial\" needed",
+    "more": "… and {count} more",
+    "types": {
+      "number": "a number",
+      "int": "an integer",
+      "bool": "true or false",
+      "string": "a text",
+      "null": "null",
+      "object": "an object",
+      "array": "a list",
+      "any": "a value"
+    },
+    "kinds": {
+      "tileKey": "a tileTypes key",
+      "unitClass": "a squad class",
+      "enemyClass": "a VC class",
+      "anyClass": "a known class (squad or VC)",
+      "missionType": "a mission type (recon, search_destroy, rescue_pilot, capture_objective)",
+      "tunable": "a tuning group (VC_TACTICS, STANCES, MELEE, ARTILLERY, NAPALM, ENEMY_CLASSES, VC_MIX)",
+      "generator": "a map generator (jungle, urban)"
+    }
   }
 }

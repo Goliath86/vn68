@@ -719,7 +719,7 @@ Completed lessons get a ✓ (stored in the browser) and at the end of a lesson t
 **Creating a lesson:** it's a regular map JSON in `missions/tutorial/`, listed in `missions/tutorial/index.json` (which also holds the shared tile types). Compared to a mission it has:
 - **`squad` and `enemies`:** fixed squad and VC; `"hold": true` marks a sentry that stays put until alerted.
 - **`tutorial` block:** `missionType` and the steps, `{ "id", "until", "highlight", "ui", "fresh" }`.
-- **`until`:** either `"next"` (Next button) or an event, with fields to match and optionally `at` / `within` on position. The events are `select`, `move`, `rotate`, `stance`, `attack`, `aoe`, `reload`, `firstaid`, `special` (with `kind`: `overwatch`, `suppression`, `heal`, `disarm`, `demolish`, `burn`, `seal`), `trapFound`, `tunnelFound`, `endTurn`, `turnStart`.
+- **`until`:** either `"next"` (Next button) or an event, with fields to match and optionally `at` / `within` on position. The events are `select`, `move`, `rotate`, `stance`, `attack`, `kill`, `aoe`, `reload`, `firstaid`, `special` (with `kind`: `overwatch`, `suppression`, `heal`, `disarm`, `demolish`, `burn`, `seal`), `trapFound`, `tunnelFound`, `endTurn`, `turnStart`.
 - **Step texts:** they live in `translations.<lang>.tutorial.<id>`.
 
 ### End-of-mission stats
@@ -975,6 +975,19 @@ You can include only the types you want to support and declare them in `supporte
 | `missions/my_map.jpg` | Background image (replaces colored tiles); declared with `"image": "my_map.jpg"` |
 | `missions/my_map_ambient.ogg` | Ambient music looping during the game |
 | `"sounds": { "move": "..." }` | Map-specific SFX (override `config.json`) |
+
+### Checking a map
+
+The game checks a map when loading it. If there are **errors** (grid not matching `cols`/`rows`, grid character missing from `tileTypes`, coordinates outside the map, objectives unreachable from the start, nonexistent classes or tiles, invalid JSON…) the map does not start and the briefing lists them with the field path (e.g. `tileTypes.J.moveCost`). **Warnings** (unknown fields, often typos, with the closest name; invalid colors or textures; missing translations) go to the browser console and the map starts anyway. `config.json` and the catalog are also checked at startup, with results in the console.
+
+The same checks, plus the existence of the referenced files (images, sounds, music), run without opening the game (Node.js required):
+
+```
+node tools/validate.js missions/my_map.json
+node tools/validate.js --all
+```
+
+`--all` checks `config.json`, the catalog and its maps, the tutorial lessons and the procedural maps over several seeds; `--lang en` gives English messages. It exits with code 1 if it finds errors.
 
 ### Tile Animations
 

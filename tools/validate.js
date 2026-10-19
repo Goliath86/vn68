@@ -1,0 +1,155 @@
+// Validatore dei JSON moddabili da riga di comando: stessi controlli del gioco
+// (js/schema.js + js/validate.js, caricati con l'ambiente del simulatore,
+// quindi con le costanti e config.json veri) più l'esistenza dei file citati.
+// Esempi:
+//   node tools/validate.js missions/mia_mappa.json
+//   node tools/validate.js --all
+//   node tools/validate.js --all --seeds 50 --lang en
+// Opzioni:
+//   <file> …        mappe, lezioni (missions/tutorial/*.json), catalog.json,
+//                   missions/tutorial/index.json, config.json
+//   --all           config, catalogo e sue mappe, tutorial, mappe procedurali
+//   --seeds N       seed per generatore e dimensione con --all (default 20)
+//   --lang it|en    lingua dei messaggi (default it)
+//   --quiet         solo gli errori, niente avvisi
+// Esce con codice 1 se c'è almeno un errore.
+"use strict";
+const fs = require("fs");
+const path = require("path");
+const { createGame, ROOT } = require("./sim/env");
+
+function parseArgs(argv) {
+  const opts = { files: [], all: false, seeds: 20, lang: "it", quiet: false };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--all") opts.all = true;
+    else if (a === "--seeds") opts.seeds = +argv[++i];
+    else if (a === "--lang") opts.lang = argv[++i];
+    else if (a === "--quiet") opts.quiet = true;
+    else if (a === "--help" || a === "-h") opts.help = true;
+    else opts.files.push(a.replace(/\\/g, "/"));
+  }
+  return opts;
+}
+
+// Percorsi relativi alla cartella del gioco (come nei JSON); un file fuori
+// dalla cartella resta assoluto
+const rel = (f) => {
+  const r = path.relative(ROOT, path.resolve(f));
+  return (r.startsWith("..") || path.isAbsolute(r) ? path.resolve(f) : r).replace(/\\/g, "/");
+};
+const abs = (p) => (path.isAbsolute(p) ? p : path.join(ROOT, p));
+const exists = (p) => fs.existsSync(abs(p));
+
+async function main() {
+  const opts = parseArgs(process.argv.slice(2));
+  if (opts.help || (!opts.all && !opts.files.length)) {
+    console.log(fs.readFileSync(__filename, "utf8").split("\n").slice(0, 15).join("\n"));
+    return;
+  }
+  const { ctx, run } = await createGame({ lang: opts.lang });
+  ctx.__exists = exists;
+  const vopts = "{ fileExists: __exists }";
+  let errors = 0;
+  let warnings = 0;
+
+  // Stampa i problemi di un file; ne restituisce gli errori
+  const print = (label, issues) => {
+    const errs = issues.filter((i) => i.level === "error");
+    const shown = opts.quiet ? errs : issues;
+    errors += errs.length;
+    warnings += issues.length - errs.length;
+    if (!shown.length) {
+      console.log(`✔ ${label}`);
+      return;
+    }
+    console.log(`${errs.length ? "✖" : "⚠"} ${label}`);
+    ctx.__issues = shown;
+    const lines = run("__issues.map((i) => formatIssue(i))");
+    shown.forEach((i, n) => console.log(`    ${i.level === "error" ? "errore " : "avviso "} ${lines[n]}`));
+  };
+
+  // Legge e interpreta un file con riga/colonna degli errori di sintassi
+  const load = (file) => {
+    if (!exists(file)) {
+      print(file, [{ level: "error", path: "", key: "file_missing", vars: { file } }]);
+      return null;
+    }
+    ctx.__text = fs.readFileSync(abs(file), "utf8");
+    ctx.__file = file;
+    try {
+      return run("parseJsonText(__text, __file)");
+    } catch (e) {
+      if (!e.issues) throw e;
+      print(file, e.issues);
+      return null;
+    }
+  };
+
+  let tutorialIndex = null;
+  const checkFile = (file) => {
+    const data = load(file);
+    if (data == null) return;
+    ctx.__data = data;
+    if (file === "config.json") return print(file, run(`validateConfig(__data, ${vopts})`));
+    if (file === "missions/catalog.json") return print(file, run(`validateCatalog(__data, ${vopts})`));
+    if (file === "missions/tutorial/index.json") {
+      tutorialIndex = data;
+      return print(file, run(`validateTutorialIndex(__data, ${vopts})`));
+    }
+    if (file.startsWith("missions/tutorial/")) {
+      tutorialIndex ??= load("missions/tutorial/index.json") || {};
+      ctx.__index = tutorialIndex;
+      ctx.__lesson = (tutorialIndex.lessons || []).find((l) => "missions/tutorial/" + l.file === file) || {};
+      run("prepareTutorialLesson(__index, __lesson, __data)");
+    }
+    return print(file, run(`validateMission(__data, ${vopts})`));
+  };
+
+  const files = opts.files.map(rel);
+  if (opts.all) {
+    files.push("config.json", "missions/catalog.json");
+    const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, "missions/catalog.json"), "utf8"));
+    for (const e of catalog) if (e.file) files.push("missions/" + e.file);
+    files.push("missions/tutorial/index.json");
+    const index = JSON.parse(fs.readFileSync(path.join(ROOT, "missions/tutorial/index.json"), "utf8"));
+    for (const l of index.lessons || []) files.push("missions/tutorial/" + l.file);
+  }
+  for (const f of [...new Set(files)]) checkFile(f);
+
+  // Mappe procedurali: ogni generatore × dimensione × seed; problemi
+  // raggruppati per percorso e messaggio, con il primo seed che li mostra
+  if (opts.all) {
+    const gens = run("Object.keys(MAP_GENERATORS)");
+    const sizes = run("Object.keys(PROC_SIZES)");
+    for (const gen of gens) {
+      for (const size of sizes) {
+        const groups = new Map();
+        for (let seed = 1; seed <= opts.seeds; seed++) {
+          ctx.__gen = gen;
+          ctx.__size = size;
+          ctx.__seed = seed;
+          const issues = run(`validateMission(generateProceduralMap(__gen, __seed, __size), ${vopts})`);
+          for (const i of issues) {
+            const k = `${i.level}|${i.path}|${i.key}`;
+            if (!groups.has(k)) groups.set(k, { issue: i, seeds: [] });
+            groups.get(k).seeds.push(seed);
+          }
+        }
+        const issues = [...groups.values()].map(({ issue, seeds }) => ({
+          ...issue,
+          path: `${issue.path} (seed ${seeds.slice(0, 5).join(", ")}${seeds.length > 5 ? "…" : ""}; ${seeds.length}/${opts.seeds})`,
+        }));
+        print(`generatore ${gen}, ${size}, ${opts.seeds} seed`, issues);
+      }
+    }
+  }
+
+  console.log(`\n${errors} errori, ${warnings} avvisi`);
+  process.exitCode = errors ? 1 : 0;
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});

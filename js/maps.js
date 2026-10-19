@@ -8,9 +8,10 @@ let CATALOG = [];
 async function loadCatalog() {
   try {
     const resp = await fetch("missions/catalog.json");
-    CATALOG = await resp.json();
+    CATALOG = parseJsonText(await resp.text(), "missions/catalog.json");
   } catch (e) {
-    console.warn("[catalog] Failed to load missions/catalog.json:", e);
+    if (e.issues) LOAD_ISSUES.push(e);
+    else console.warn("[catalog] Failed to load missions/catalog.json:", e);
   }
 }
 

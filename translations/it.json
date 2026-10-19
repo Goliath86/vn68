@@ -544,6 +544,69 @@
   },
 
   "errors": {
-    "map_load_failed": "Errore caricamento mappa: {message}"
+    "map_load_failed": "Errore caricamento mappa: {message}",
+    "map_invalid": "{file}: {count} errori, la mappa non si può giocare."
+  },
+
+  "validation": {
+    "required": "campo obbligatorio mancante",
+    "type": "atteso {expected}, trovato {found}",
+    "min": "{value} è sotto il minimo ({min})",
+    "max": "{value} è sopra il massimo ({max})",
+    "enum": "\"{value}\" non ammesso (valori possibili: {allowed})",
+    "unknown": "campo sconosciuto, ignorato",
+    "unknown_hint": "campo sconosciuto, ignorato: forse \"{hint}\"?",
+    "ref": "\"{value}\" non è {kind}",
+    "color": "\"{value}\" non è un colore esadecimale (#rgb o #rrggbb)",
+    "texture_unknown": "texture \"{value}\" sconosciuta (note: {known}, oppure un'immagine)",
+    "file_missing": "file non trovato: {file}",
+    "min_items": "servono almeno {min} elementi",
+    "length": "servono esattamente {len} elementi (ce ne sono {found})",
+    "out_of_bounds": "{col},{row} è fuori dalla mappa ({cols}×{rows})",
+    "zone_order": "colMin/rowMin maggiori di colMax/rowMax",
+    "zone_blocked": "nessun tile percorribile nella zona",
+    "json_syntax": "JSON non valido alla riga {line}, colonna {col}: {message}",
+    "json_syntax_noloc": "JSON non valido: {message}",
+    "grid_rows": "la griglia ha {found} righe, \"rows\" ne indica {rows}",
+    "grid_cols": "{found} colonne, \"cols\" ne indica {cols}",
+    "grid_key": "\"{key}\" (colonna {col}, riga {row}) non è in tileTypes",
+    "demolish_no_result": "demolishable senza demolishResult: demolito diventa \"J\"",
+    "no_missions": "nessuna missione giocabile: aggiungi i tipi in supportedMissions",
+    "no_objectives": "la missione \"{type}\" è in supportedMissions ma non ha obiettivi",
+    "no_spawn_zones": "servono vcSpawnZones per schierare {count} VC",
+    "no_ambush_zones": "vcAmbushTurn senza vcAmbushZones: l'imboscata non scatta",
+    "pilot_on_extract": "il pilota è già sul punto di estrazione",
+    "step_duplicate": "id \"{id}\" ripetuto",
+    "step_text_missing": "manca il testo del passo \"{id}\" ({lang})",
+    "mix_empty": "nessuna classe con peso maggiore di 0",
+    "weapon_incomplete": "arma nuova senza atk o range",
+    "translation_missing": "manca la traduzione \"{lang}\"",
+    "label_unknown_tile": "nessun tile con id \"{value}\"",
+    "on_impassable": "su un tile non percorribile",
+    "start_count": "servono almeno 4 posizioni di partenza (ce ne sono {count})",
+    "start_duplicate": "due posizioni di partenza sullo stesso tile",
+    "unreachable": "non raggiungibile dalla partenza",
+    "needs_demolition": "raggiungibile solo demolendo un ostacolo (serve il geniere)",
+    "catalog_kind": "serve uno solo tra \"file\", \"generator\" e \"tutorial\"",
+    "more": "… e altri {count}",
+    "types": {
+      "number": "un numero",
+      "int": "un numero intero",
+      "bool": "true o false",
+      "string": "un testo",
+      "null": "null",
+      "object": "un oggetto",
+      "array": "una lista",
+      "any": "un valore"
+    },
+    "kinds": {
+      "tileKey": "una chiave di tileTypes",
+      "unitClass": "una classe della squadra",
+      "enemyClass": "una classe VC",
+      "anyClass": "una classe nota (squadra o VC)",
+      "missionType": "un tipo di missione (recon, search_destroy, rescue_pilot, capture_objective)",
+      "tunable": "un gruppo di tuning (VC_TACTICS, STANCES, MELEE, ARTILLERY, NAPALM, ENEMY_CLASSES, VC_MIX)",
+      "generator": "un generatore di mappe (jungle, urban)"
+    }
   }
 }

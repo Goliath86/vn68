@@ -718,7 +718,7 @@ Le lezioni superate sono segnate con ✓ (salvato nel browser) e a fine lezione 
 **Creare una lezione:** è una normale mappa JSON in `missions/tutorial/`, elencata in `missions/tutorial/index.json` (che contiene anche i tipi di tile condivisi). Rispetto a una missione ha:
 - **`squad` ed `enemies`:** squadra e VC fissi; `"hold": true` indica una sentinella che resta ferma finché non viene allertata.
 - **Blocco `tutorial`:** `missionType` e i passi, `{ "id", "until", "highlight", "ui", "fresh" }`.
-- **`until`:** è `"next"` (bottone Avanti) oppure un evento, con campi da confrontare ed eventualmente `at` / `within` sulla posizione. Gli eventi sono `select`, `move`, `rotate`, `stance`, `attack`, `aoe`, `reload`, `firstaid`, `special` (con `kind`: `overwatch`, `suppression`, `heal`, `disarm`, `demolish`, `burn`, `seal`), `trapFound`, `tunnelFound`, `endTurn`, `turnStart`.
+- **`until`:** è `"next"` (bottone Avanti) oppure un evento, con campi da confrontare ed eventualmente `at` / `within` sulla posizione. Gli eventi sono `select`, `move`, `rotate`, `stance`, `attack`, `kill`, `aoe`, `reload`, `firstaid`, `special` (con `kind`: `overwatch`, `suppression`, `heal`, `disarm`, `demolish`, `burn`, `seal`), `trapFound`, `tunnelFound`, `endTurn`, `turnStart`.
 - **Testi dei passi:** stanno in `translations.<lingua>.tutorial.<id>`.
 
 ### Statistiche di fine missione
@@ -974,6 +974,19 @@ Puoi includere solo i tipi che vuoi supportare e dichiararli in `supportedMissio
 | `missions/mia_mappa.jpg` | Immagine di sfondo (sostituisce i tile colorati); dichiarata con `"image": "mia_mappa.jpg"` |
 | `missions/mia_mappa_ambient.ogg` | Musica ambientale in loop durante la partita |
 | `"sounds": { "move": "..." }` | SFX specifici per questa mappa (sovrascrivono `config.json`) |
+
+### Controllare una mappa
+
+Al caricamento il gioco controlla la mappa. Se ci sono **errori** (griglia che non torna con `cols`/`rows`, carattere della griglia assente da `tileTypes`, coordinate fuori mappa, obiettivi non raggiungibili dalla partenza, classi o tile inesistenti, JSON non valido…) la mappa non parte e il briefing li elenca con il percorso del campo (es. `tileTypes.J.moveCost`). Gli **avvisi** (campi sconosciuti, spesso refusi, con il nome più vicino; colori o texture non validi; traduzioni mancanti) vanno nella console del browser e la mappa parte lo stesso. Anche `config.json` e il catalogo vengono controllati all'avvio, con i risultati in console.
+
+Gli stessi controlli, più l'esistenza dei file citati (immagini, suoni, musiche), si eseguono senza aprire il gioco (serve Node.js):
+
+```
+node tools/validate.js missions/mia_mappa.json
+node tools/validate.js --all
+```
+
+`--all` controlla `config.json`, il catalogo e le sue mappe, le lezioni del tutorial e le mappe procedurali su più seed; `--lang en` dà i messaggi in inglese. Esce con codice 1 se trova errori.
 
 ### Animazioni tile
 

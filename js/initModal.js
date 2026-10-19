@@ -118,6 +118,7 @@ function initModal() {
 
 async function loadMissionStep(map) {
   document.getElementById("map-description").textContent = t("modal.loading");
+  document.getElementById("map-description").classList.remove("load-error");
   document.getElementById("modal-start-btn").disabled = true;
   document.getElementById("mission-list").innerHTML = "";
   const regenBtn = document.getElementById("btn-regen-map");
@@ -264,9 +265,17 @@ async function loadMissionStep(map) {
       startGame(selected, [...squadClasses], { night: nightToggle.checked });
     };
   } catch (err) {
-    document.getElementById("map-description").textContent = t(
-      "errors.map_load_failed",
-      { message: err.message },
-    );
+    showLoadError(document.getElementById("map-description"), err);
+  }
+}
+
+// Errore di caricamento di una mappa: l'elenco dei problemi se è una mappa
+// non valida (validate.js:MapDataError), altrimenti il messaggio
+function showLoadError(el, err) {
+  if (err.issues) {
+    el.textContent = issuesSummary(err);
+    el.classList.add("load-error");
+  } else {
+    el.textContent = t("errors.map_load_failed", { message: err.message });
   }
 }

@@ -409,6 +409,13 @@ body {
     font-size: 12px;
     color: var(--paper-dark);
 }
+/* Mappa non valida (validate.js): un problema per riga */
+.load-error {
+    white-space: pre-line;
+    text-align: left;
+    font-size: 12px;
+    color: #e07a5f;
+}
 /* Scheda "Addestramento" nella scelta della mappa: su tutta la riga */
 .map-card.tutorial-card {
     grid-column: 1 / -1;

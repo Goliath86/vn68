@@ -1048,6 +1048,7 @@ function _buildUrbanMap(seed, attempt, size) {
   const ex = toMap(extract);
   const pilot = toMap(_pilotSite(grid, URBAN_TILE_TYPES, extract, crashAt, seed, isWater));
   const reconFirst = bridges.length ? toMap(rpick(bridges)) : toMap(pagodaAt);
+  const eastLand = layout === "riverside" ? colLimit : W - 1;
 
   const { it, en } = _procTranslations(
     URBAN_TEXT,
@@ -1102,9 +1103,11 @@ function _buildUrbanMap(seed, attempt, size) {
     reinforcementCount: step ? 3 : 2,
     vcAmbushTurn: ri(3, 4) + step,
     vcAmbushCount: 2 + step,
+    // Fianco est: con il fiume sul fianco (riverside) le ultime colonne sono
+    // acqua, l'imboscata parte dalla riva
     vcAmbushZones: [
       zone(0, 1, Math.floor(H / 2), H - 2),
-      zone(W - 2, W - 1, Math.floor(H / 2), H - 2),
+      zone(eastLand - 1, eastLand, Math.floor(H / 2), H - 2),
     ],
     translations: { it, en },
   };
