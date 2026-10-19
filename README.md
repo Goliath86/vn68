@@ -948,6 +948,7 @@ Valgono solo per la missione della mappa: alla missione successiva tornano i val
 | `moveCost` | number | AP per attraversare il tile (0 = gratis, 3 = palude) |
 | `coverBonus` | number | Bonus difesa per chi occupa il tile |
 | `color` | string | Colore hex per il rendering procedurale |
+| `texture` | string | (opzionale, solo mappe senza `image`) Aspetto del tile. Il nome di un terreno già disegnato dal gioco (`jungle`, `swamp`, `clearing`, `garden`, `village`, `trail`, `river`, `ford`, `bridge`, `street`, `plaza`, `objective`, `debris`, `scorched`, `wall`, `wall_breach`, `building`, `temple`, `bunker`, `obstacle`) fa disegnare un `id` nuovo come quel terreno, con tutti i suoi effetti (chiome e uccelli della giungla, rive e onde dell'acqua, erba al vento, nebbia della palude, ombre dei tile alti); la tinta resta quella di `color`. In alternativa il percorso di un'immagine (`"assets/risaia.png"`, PNG/JPG/WebP/GIF) disegnata su ogni tile sopra `color` (le parti trasparenti lasciano vedere il colore). Senza `texture` un `id` sconosciuto ha una grana generica. Solo grafica: regole e comportamento dipendono dagli altri campi |
 | `impassable` | bool | Se `true`, blocca il movimento (muri, fiumi) |
 | `losBlock` | string | `"full"` = blocca la visione, `"partial"` = −1 al raggio per ogni tile attraversato |
 | `burnable` | bool | Il geniere può incendiarlo (fuoco per 2 turni) |

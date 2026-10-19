@@ -32,6 +32,7 @@ async function catalogAssetPaths() {
     files: list
       .flatMap((md) => [
         md.image && "missions/" + md.image,
+        ...Object.values(md.tileTypes || {}).map((d) => !md.image && _textureImagePath(d)),
         ...Object.values(md.sounds || {}),
         ...missionWeaponSounds(md),
       ])

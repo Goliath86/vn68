@@ -949,6 +949,7 @@ They apply only to this map's mission: the next mission goes back to the `config
 | `moveCost` | number | AP to cross the tile (0 = free, 3 = swamp) |
 | `coverBonus` | number | Defense bonus for units occupying the tile |
 | `color` | string | Hex color for procedural rendering |
+| `texture` | string | (optional, only maps without `image`) Tile look. The name of a terrain the game already draws (`jungle`, `swamp`, `clearing`, `garden`, `village`, `trail`, `river`, `ford`, `bridge`, `street`, `plaza`, `objective`, `debris`, `scorched`, `wall`, `wall_breach`, `building`, `temple`, `bunker`, `obstacle`) draws a new `id` like that terrain, with all its effects (jungle canopy and birds, water shores and waves, wind-blown grass, swamp mist, shadows of tall tiles); the tint still comes from `color`. Alternatively the path of an image (`"assets/paddy.png"`, PNG/JPG/WebP/GIF) drawn on every tile over `color` (transparent parts let the color show through). Without `texture` an unknown `id` gets a generic grain. Visual only: rules and behavior depend on the other fields |
 | `impassable` | bool | If `true`, blocks movement (walls, rivers) |
 | `losBlock` | string | `"full"` = blocks vision entirely, `"partial"` = −1 to range per tile traversed |
 | `burnable` | bool | The Engineer can set it on fire (burns for 2 turns) |

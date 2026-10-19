@@ -1,7 +1,10 @@
 // ── LOAD MAP ───────────────────────────────────────────────────────────
 async function loadMission(jsonPath) {
   const resp = await fetch(jsonPath);
-  return useMission(await resp.json());
+  const data = await resp.json();
+  // Immagini dei tile ("texture") pronte prima del primo disegno del terreno
+  if (!data.image) await loadTileTextures(data);
+  return useMission(data);
 }
 
 // Attiva un mapData già pronto (da JSON o da generatore procedurale)
@@ -11,6 +14,9 @@ function useMission(data) {
   if (data.grid) data.grid = data.grid.map((r) => (typeof r === "string" ? r.split("") : r));
   G.mapData = data;
   loadMissionSounds(G.mapData);
+  // Altri ingressi (lezioni, generatori): le texture che arrivano dopo
+  // rifanno la cache del terreno (plchldSprites.js:loadTileTextures)
+  if (!data.image) loadTileTextures(data);
 
   // Imposta scala iniziale per far stare la mappa nello schermo
   const c = document.getElementById("center");

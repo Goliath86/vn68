@@ -980,7 +980,7 @@ function scheduleNapalm(caller, weapon, line) {
 // Tile colpito dal napalm: fuoco, e la vegetazione diventa terra bruciata
 function napalmTile(col, row) {
   const tile = getTileAt(col, row);
-  if (!tile || tile.impassable || WATER_IDS.has(tile.id)) return;
+  if (!tile || tile.impassable || WATER_IDS.has(tileLook(tile))) return;
   if (tile.burnable && tile.blastResult !== false) {
     const key = blastTileKey("scorched");
     if (key) setTileType(col, row, key);

@@ -617,8 +617,8 @@ function _tdDebris(ctx, x, y, ts, rng) {
   }
 }
 
-function _tdObjective(ctx, x, y, ts, rng) {
-  _tdPavers(ctx, x, y, ts, rng, 4);
+// Segnale dell'obiettivo (TILE_OBJECTS): il fondo è il lastricato
+function _objectiveMarker(ctx, x, y, ts) {
   ctx.strokeStyle = "rgba(255,200,30,0.55)";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -689,6 +689,10 @@ function _hut(ctx, cx, cy, w, h, rng) {
 function _tdVillage(ctx, x, y, ts, rng) {
   _oval(ctx, x + ts / 2, y + ts / 2, ts * 0.42, ts * 0.36, _lt(0.07)); // aia
   _grass(ctx, x, y, ts, rng, 10);
+}
+
+// Capanne del villaggio (TILE_OBJECTS)
+function _villageHuts(ctx, x, y, ts, rng) {
   if (rng() < 0.5) {
     _hut(ctx, x + ts * 0.5, y + ts * 0.48, ts * 0.52, ts * 0.4, rng);
   } else {
@@ -779,18 +783,95 @@ const TILE_DETAILS = {
   street: _tdStreet,
   urban: _tdStreet,
   plaza: _tdPavers,
-  objective: _tdObjective,
+  objective: (ctx, x, y, ts, rng) => _tdPavers(ctx, x, y, ts, rng, 4),
   debris: _tdDebris,
   trail: _tdTrail,
   village: _tdVillage,
   bunker: _tdBunker,
 };
 
-function _paintDetails(ctx, draw, x, y, ts, rng) {
+// Elementi in rilievo sul fondo del tile: disegnati da drawTileObjects dopo
+// le fusioni tra terreni (drawTerrainTransitions), così il terreno vicino che
+// sconfina nel tile passa sotto e non li sbiadisce
+const TILE_OBJECTS = {
+  village: _villageHuts,
+  objective: _objectiveMarker,
+};
+
+// ── ASPETTO DEI TILE ("texture" nel tileType) ─────────────────────────
+// Tutto ciò che è solo disegno (texture, fusioni, rive, ombre, chiome, erba
+// al vento, onde, nebbia, uccelli, crateri) dipende dall'aspetto del tile, non
+// dal suo id: "texture": "jungle" fa disegnare un tile nuovo come la giungla.
+// Un percorso d'immagine ("assets/risaia.png") viene invece disegnato sopra
+// il `color` del tile (le parti trasparenti lasciano vedere il colore) e per
+// il resto conta come terreno generico (altezza da losBlock).
+const TEXTURE_IMAGE_RE = /\.(png|jpe?g|webp|gif)$/i;
+const _textureImages = new Map(); // percorso → Image
+const _unknownLooks = new Set(); // aspetti sconosciuti già segnalati
+
+function _textureImagePath(def) {
+  const tx = def?.texture;
+  return typeof tx === "string" && TEXTURE_IMAGE_RE.test(tx) ? tx : null;
+}
+
+function tileLook(def) {
+  if (!def) return undefined;
+  const tx = def.texture;
+  if (typeof tx !== "string" || !tx || TEXTURE_IMAGE_RE.test(tx)) return def.id;
+  if (!TILE_DETAILS[tx] && !_unknownLooks.has(tx)) {
+    _unknownLooks.add(tx);
+    console.warn(`[tiles] texture "${tx}" sconosciuta (tile "${def.id}"): note ${Object.keys(TILE_DETAILS).join(", ")}`);
+  }
+  return tx;
+}
+
+// Immagini delle texture della mappa: caricate dall'avvio della missione
+// (game.js:useMission, render.js:prebuildTerrainCache); se una arriva a
+// cache del terreno già costruita, la cache viene rifatta
+function loadTileTextures(md) {
+  const paths = [...new Set(Object.values(md?.tileTypes || {}).map(_textureImagePath).filter(Boolean))];
+  return Promise.all(
+    paths.map((p) => {
+      let img = _textureImages.get(p);
+      if (!img) {
+        img = new Image();
+        img.onload = () => {
+          if (!_terrainCache) return;
+          invalidateTerrainCache();
+          _blastedSprites.clear();
+          render();
+        };
+        img.onerror = () => console.warn(`[tiles] texture non trovata: ${p}`);
+        img.src = assetUrl(p);
+        _textureImages.set(p, img);
+      }
+      if (img.complete) return null;
+      return new Promise((r) => {
+        img.addEventListener("load", r);
+        img.addEventListener("error", r);
+      });
+    }),
+  );
+}
+
+function _tileImage(def) {
+  const img = _textureImages.get(_textureImagePath(def));
+  return img?.complete && img.naturalWidth ? img : null;
+}
+
+// surface: solo il fondo (TILE_SURFACE), per la fusione nel tile vicino
+function _paintDetails(ctx, def, x, y, ts, rng, surface = false) {
+  const img = _tileImage(def);
+  if (img) {
+    ctx.drawImage(img, x, y, ts, ts);
+    return;
+  }
   // lieve variazione di luminosità per tile: rompe l'uniformità della griglia
   ctx.fillStyle = _tint(rng() - 0.5, 0.1, 0.05);
   ctx.fillRect(x, y, ts, ts);
-  // id sconosciuto (nuove mappe config-driven): grana generica
+  const look = tileLook(def);
+  const draw = (surface && TILE_SURFACE[look]) || TILE_DETAILS[look];
+  // aspetto sconosciuto (nuove mappe config-driven senza texture): grana generica
   if (draw) draw(ctx, x, y, ts, rng);
   else _grain(ctx, x, y, ts, rng, 16, 0.09);
 }
@@ -800,8 +881,15 @@ function drawTileDetails(ctx, tileDef, x, y, ts, col = 0, row = 0) {
   ctx.beginPath();
   ctx.rect(x, y, ts, ts);
   ctx.clip();
-  _paintDetails(ctx, TILE_DETAILS[tileDef.id], x, y, ts, _tileRng(col, row));
+  _paintDetails(ctx, tileDef, x, y, ts, _tileRng(col, row));
   ctx.restore();
+}
+
+// ctx già limitato al tile (drawTerrainTransitions) o tile isolato
+// (render.js:renderBlastedTiles); seme proprio, indipendente dal fondo
+function drawTileObjects(ctx, tileDef, x, y, ts, col = 0, row = 0) {
+  const draw = !_tileImage(tileDef) && TILE_OBJECTS[tileLook(tileDef)];
+  if (draw) draw(ctx, x, y, ts, _tileRng(col + 0.37, row + 0.61));
 }
 
 // ── TRANSIZIONI E OMBRE TRA TILE ───────────────────────────────────────
@@ -835,11 +923,11 @@ const TILE_BLEND_DEPTH_DEFAULT = 0.4;
 // Tetto per terreno che riceve: il tracciato del sentiero resta leggibile
 const TILE_BLEND_MAX_IN = { trail: 0.38 };
 // Texture usata quando il terreno invade un vicino: solo il fondo, senza gli
-// elementi che non devono comparire a metà nel tile accanto (capanne, tracciato)
+// elementi che non devono comparire a metà nel tile accanto (aia, tracciato;
+// capanne e segnale dell'obiettivo sono già a parte in TILE_OBJECTS)
 const TILE_SURFACE = {
   village: (ctx, x, y, ts, rng) => _grass(ctx, x, y, ts, rng, 10),
   trail: (ctx, x, y, ts, rng) => _grain(ctx, x, y, ts, rng, 14, 0.1),
-  objective: (ctx, x, y, ts, rng) => _tdPavers(ctx, x, y, ts, rng, 4),
 };
 const TILE_HEIGHT = {
   wall: 0.32,
@@ -864,13 +952,13 @@ const _DIRS = [
 
 function _tileHeight(def) {
   if (!def) return 0;
-  return TILE_HEIGHT[def.id] ?? (def.losBlock === "full" ? 0.25 : 0);
+  return TILE_HEIGHT[tileLook(def)] ?? (def.losBlock === "full" ? 0.25 : 0);
 }
 
 function _isGround(def) {
-  return (
-    !!def && !_tileHeight(def) && !WATER_IDS.has(def.id) && !NO_BLEND_IDS.has(def.id) && def.id !== "bridge"
-  );
+  if (!def || _tileHeight(def)) return false;
+  const look = tileLook(def);
+  return !WATER_IDS.has(look) && !NO_BLEND_IDS.has(look) && look !== "bridge";
 }
 
 // Gradiente dal lato `d` del tile verso l'interno, profondo `len`
@@ -897,8 +985,8 @@ function _edgePoint(x, y, ts, d, s, depth) {
 }
 
 function _outranks(a, b) {
-  const pa = TILE_BLEED_PRIORITY[a.id] || 0;
-  const pb = TILE_BLEED_PRIORITY[b.id] || 0;
+  const pa = TILE_BLEED_PRIORITY[tileLook(a)] || 0;
+  const pb = TILE_BLEED_PRIORITY[tileLook(b)] || 0;
   return pa !== pb ? pa > pb : a.id > b.id;
 }
 
@@ -946,8 +1034,10 @@ function _blendCanvas(c, px) {
 
 function _drawSoftEdges(ctx, defAt, def, c, r, ts) {
   const invaders = new Map(); // id → { def, sides, corners }
+  // stesso aspetto (es. id nuovo con "texture" uguale al vicino): niente fusione
+  const same = (a, b) => a.id === b.id || (tileLook(a) === tileLook(b) && !_tileImage(a) && !_tileImage(b));
   const take = (n) => {
-    if (!_isGround(n) || n.id === def.id || !_outranks(n, def)) return null;
+    if (!_isGround(n) || same(n, def) || !_outranks(n, def)) return null;
     if (!invaders.has(n.id)) invaders.set(n.id, { def: n, sides: [], corners: [] });
     return invaders.get(n.id);
   };
@@ -957,7 +1047,7 @@ function _drawSoftEdges(ctx, defAt, def, c, r, ts) {
     const n = defAt(c + dx, r + dy);
     const a = defAt(c + dx, r);
     const b = defAt(c, r + dy);
-    if (!n || !_isGround(a) || !_isGround(b) || a.id === n.id || b.id === n.id) continue;
+    if (!n || !_isGround(a) || !_isGround(b) || same(a, n) || same(b, n)) continue;
     take(n)?.corners.push([dx, dy]);
   }
   if (!invaders.size) return;
@@ -966,7 +1056,7 @@ function _drawSoftEdges(ctx, defAt, def, c, r, ts) {
   const px = Math.ceil(ts * k);
   const x = c * ts;
   const y = r * ts;
-  const cap = TILE_BLEND_MAX_IN[def.id] ?? 1;
+  const cap = TILE_BLEND_MAX_IN[tileLook(def)] ?? 1;
   // dal più debole al più forte: il terreno dominante resta sopra
   const list = [...invaders.values()].sort((p, q) => (_outranks(p.def, q.def) ? 1 : -1));
   for (const { def: n, sides, corners } of list) {
@@ -981,8 +1071,8 @@ function _drawSoftEdges(ctx, defAt, def, c, r, ts) {
     tg.fillStyle = n.color || "#2d5a1b";
     tg.fillRect(x, y, ts, ts);
     tg.globalAlpha = 1;
-    _paintDetails(tg, TILE_SURFACE[n.id] || TILE_DETAILS[n.id], x, y, ts, _tileRng(c + 0.71, r + 0.43));
-    const len = ts * Math.min(cap, TILE_BLEND_DEPTH[n.id] ?? TILE_BLEND_DEPTH_DEFAULT);
+    _paintDetails(tg, n, x, y, ts, _tileRng(c + 0.71, r + 0.43), true);
+    const len = ts * Math.min(cap, TILE_BLEND_DEPTH[tileLook(n)] ?? TILE_BLEND_DEPTH_DEFAULT);
     for (const d of sides) _maskEdge(mg, x, y, ts, d, len);
     for (const [dx, dy] of corners) _softBlob(mg, dx > 0 ? x + ts : x, dy > 0 ? y + ts : y, len * 1.2, 0.9);
     tg.setTransform(1, 0, 0, 1, 0, 0);
@@ -1041,14 +1131,15 @@ function drawTerrainTransitions(ctx, md, ts, r0 = 0, r1 = md.rows, c0 = 0, c1 = 
       ctx.beginPath();
       ctx.rect(x, y, ts, ts);
       ctx.clip();
-      if (def.id === "river") {
+      if (tileLook(def) === "river") {
         _DIRS.forEach(([dx, dy], d) => {
-          const n = defAt(c + dx, r + dy);
-          if (n && !WATER_IDS.has(n.id) && n.id !== "bridge") _drawShore(ctx, x, y, ts, d);
+          const look = tileLook(defAt(c + dx, r + dy));
+          if (look && !WATER_IDS.has(look) && look !== "bridge") _drawShore(ctx, x, y, ts, d);
         });
       } else if (_isGround(def)) {
         _drawSoftEdges(ctx, defAt, def, c, r, ts);
       }
+      drawTileObjects(ctx, def, x, y, ts, c, r);
       if (!_tileHeight(def)) {
         _drawCastShadow(
           ctx, x, y, ts,
@@ -1075,7 +1166,7 @@ const CANOPY_COLS = ["rgba(25,60,18,0.92)", "rgba(50,105,30,0.72)", "rgba(140,20
 // Chiome ordinate da nord a sud: { cx, cy, rad, c, r, i } (i = indice nel tile)
 function jungleCrowns(md, ts) {
   const isJungle = (c, r) =>
-    c < 0 || r < 0 || c >= md.cols || r >= md.rows || md.tileTypes[md.grid[r][c]]?.id === "jungle";
+    c < 0 || r < 0 || c >= md.cols || r >= md.rows || tileLook(md.tileTypes[md.grid[r][c]]) === "jungle";
   // Intervallo del centro di una chioma lungo un asse: fino al bordo verso la
   // giungla, rientrato di (estensione − sporgenza) verso altri terreni
   const span = (start, re, openLo, openHi) => {
@@ -1086,7 +1177,7 @@ function jungleCrowns(md, ts) {
   const crowns = [];
   for (let r = 0; r < md.rows; r++) {
     for (let c = 0; c < md.cols; c++) {
-      if (md.tileTypes[md.grid[r][c]]?.id !== "jungle") continue;
+      if (tileLook(md.tileTypes[md.grid[r][c]]) !== "jungle") continue;
       const rng = _tileRng(c + 0.13, r + 0.29);
       const n = 6 + Math.floor(rng() * 2);
       for (let i = 0; i < n; i++) {

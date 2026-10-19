@@ -48,6 +48,7 @@ const TERRAIN_BUILD_SLICE_MS = 30;
 
 async function prebuildTerrainCache(md, onProgress = () => {}) {
   if (md.image) return;
+  await loadTileTextures(md);
   let last = performance.now();
   for (const p of _terrainCacheSteps(md)) {
     if (performance.now() - last < TERRAIN_BUILD_SLICE_MS) continue;
@@ -130,7 +131,7 @@ function _drawTerrainTile(ctx, md, c, r, grass) {
   ctx.fillStyle = tileDef.color || "#2d5a1b";
   ctx.fillRect(x, y, TILE, TILE);
   ctx.globalAlpha = 1;
-  if (grass && WIND_GRASS_IDS.has(tileDef.id)) _grassSink = [];
+  if (grass && WIND_GRASS_IDS.has(tileLook(tileDef))) _grassSink = [];
   drawTileDetails(ctx, tileDef, x, y, TILE, c, r);
   if (grass) grass.tiles[r * md.cols + c] = _grassSink || undefined;
   _grassSink = null;
@@ -206,6 +207,7 @@ function renderBlastedTiles(ctx, ts) {
       g.fillStyle = def.color || "#2d5a1b";
       g.fillRect(0, 0, TILE, TILE);
       drawTileDetails(g, def, 0, 0, TILE, b.col, b.row);
+      drawTileObjects(g, def, 0, 0, TILE, b.col, b.row);
       _blastedSprites.set(key, cv);
     }
     const { x, y } = tileToScreen(b.col, b.row);

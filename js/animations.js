@@ -180,8 +180,8 @@ function _craterAllowed(col, row) {
     !!tile &&
     !tile.impassable &&
     tile.losBlock !== "full" &&
-    !WATER_IDS.has(tile.id) &&
-    tile.id !== "bridge"
+    !WATER_IDS.has(tileLook(tile)) &&
+    tileLook(tile) !== "bridge"
   );
 }
 
@@ -426,7 +426,7 @@ function leafTiles() {
   const tiles = [];
   for (let r = 0; r < md.rows; r++)
     for (let c = 0; c < md.cols; c++)
-      if (LEAF_GUST.tileIds.has(md.tileTypes[md.grid[r][c]]?.id))
+      if (LEAF_GUST.tileIds.has(tileLook(md.tileTypes[md.grid[r][c]])))
         tiles.push({ x: (c + 0.5) * TILE, y: (r + 0.5) * TILE, last: 0 });
   _leafTiles = { mapData: md, tiles };
   _leaves = [];
@@ -619,7 +619,7 @@ function waterTiles() {
   if (!md || G.tileImg) return [];
   if (_waterCache && _waterCache.mapData === md) return _waterCache.tiles;
   const idAt = (c, r) =>
-    c < 0 || r < 0 || c >= md.cols || r >= md.rows ? null : md.tileTypes[md.grid[r][c]]?.id;
+    c < 0 || r < 0 || c >= md.cols || r >= md.rows ? null : tileLook(md.tileTypes[md.grid[r][c]]);
   const wet = (c, r) => {
     const id = idAt(c, r);
     return id === "river" || id === "ford" || id === "bridge";
@@ -815,6 +815,11 @@ function renderCloudShadows(ctx, ts) {
   ctx.restore();
 }
 
+// "tiles" della nebbia: per id oppure per aspetto ("texture")
+function _mistOn(ids, def) {
+  return !!def && (ids.has(def.id) || ids.has(tileLook(def)));
+}
+
 function mistTiles() {
   const md = G.mapData;
   if (!md?.mist) return [];
@@ -824,7 +829,7 @@ function mistTiles() {
   const tiles = [];
   for (let r = 0; r < md.rows; r++)
     for (let c = 0; c < md.cols; c++)
-      if (ids.has(md.tileTypes[md.grid[r][c]]?.id)) tiles.push({ c, r, ph: _hash01(c * 37 + r * 91) * 6.28 });
+      if (_mistOn(ids, md.tileTypes[md.grid[r][c]])) tiles.push({ c, r, ph: _hash01(c * 37 + r * 91) * 6.28 });
   _mistCache = { mapData: md, tiles, density: cfg.density ?? 1 };
   return tiles;
 }
@@ -1558,7 +1563,7 @@ const BIRDS = {
 function birdFlushStep(path) {
   const idx = [];
   for (let i = 1; i < path.length; i++) {
-    if (BIRDS.tileIds.has(getTileAt(path[i].col, path[i].row)?.id)) idx.push(i);
+    if (BIRDS.tileIds.has(tileLook(getTileAt(path[i].col, path[i].row)))) idx.push(i);
   }
   if (!idx.length || Math.random() >= BIRDS.chance) return -1;
   return pick(idx);
