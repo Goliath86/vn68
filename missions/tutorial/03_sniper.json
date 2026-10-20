@@ -1,4 +1,5 @@
 {
+  "$schema": "../../schemas/lesson.schema.json",
   "name": "Training 3 — Hawk eye",
   "description": "The Sniper: range, reloading and overwatch.",
   "tileSize": 64,

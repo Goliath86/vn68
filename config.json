@@ -1,4 +1,5 @@
 {
+  "$schema": "schemas/config.schema.json",
   "menuMusic": "assets/fumo_su_saigon.mp3",
   "unitImages": {
     "assault": "assets/assault_us.webp",

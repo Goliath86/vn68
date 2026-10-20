@@ -1,4 +1,5 @@
 {
+  "$schema": "../../schemas/tutorial-index.schema.json",
   "tileTypes": {
     "J": { "id": "jungle", "label": "Giungla", "moveCost": 2, "coverBonus": 2, "color": "#2d5a1b", "losBlock": "partial", "burnable": true },
     "S": { "id": "swamp", "label": "Palude", "moveCost": 3, "coverBonus": 1, "color": "#4a6741", "losBlock": "partial" },

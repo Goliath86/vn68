@@ -8,7 +8,8 @@
 // Opzioni:
 //   <file> …        mappe, lezioni (missions/tutorial/*.json), catalog.json,
 //                   missions/tutorial/index.json, config.json
-//   --all           config, catalogo e sue mappe, tutorial, mappe procedurali
+//   --all           config, catalogo e sue mappe, tutorial, mappe procedurali,
+//                   guida ai campi e JSON Schema aggiornati (tools/schema-docs.js)
 //   --seeds N       seed per generatore e dimensione con --all (default 20)
 //   --lang it|en    lingua dei messaggi (default it)
 //   --quiet         solo gli errori, niente avvisi
@@ -17,6 +18,7 @@
 const fs = require("fs");
 const path = require("path");
 const { createGame, ROOT } = require("./sim/env");
+const { staleOutputs } = require("./schema-docs");
 
 function parseArgs(argv) {
   const opts = { files: [], all: false, seeds: 20, lang: "it", quiet: false };
@@ -44,7 +46,7 @@ const exists = (p) => fs.existsSync(abs(p));
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (opts.help || (!opts.all && !opts.files.length)) {
-    console.log(fs.readFileSync(__filename, "utf8").split("\n").slice(0, 15).join("\n"));
+    console.log(fs.readFileSync(__filename, "utf8").split("\n").slice(0, 16).join("\n"));
     return;
   }
   const { ctx, run } = await createGame({ lang: opts.lang });
@@ -143,6 +145,13 @@ async function main() {
         print(`generatore ${gen}, ${size}, ${opts.seeds} seed`, issues);
       }
     }
+  }
+
+  // Guida ai campi e JSON Schema generati dallo schema
+  if (opts.all) {
+    const stale = await staleOutputs();
+    for (const f of stale) console.log(`⚠ ${f} non aggiornato: node tools/schema-docs.js`);
+    warnings += stale.length;
   }
 
   console.log(`\n${errors} errori, ${warnings} avvisi`);

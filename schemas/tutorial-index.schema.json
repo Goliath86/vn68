@@ -1,0 +1,213 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "Generata da `js/schema.js` con `node tools/schema-docs.js`: non modificarla a mano.",
+  "title": "VIETNAM '68 — indice del tutorial / tutorial index",
+  "description": "Indice dell'addestramento (`missions/tutorial/index.json`)\n\nTraining index (`missions/tutorial/index.json`)",
+  "markdownDescription": "Indice dell'addestramento (`missions/tutorial/index.json`)\n\n*Training index (`missions/tutorial/index.json`)*",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Percorso del JSON Schema per l'editor (es. `../schemas/mission.schema.json`); ignorato dal gioco\n\nPath of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game",
+      "markdownDescription": "Percorso del JSON Schema per l'editor (es. `../schemas/mission.schema.json`); ignorato dal gioco\n\n*Path of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game*",
+      "type": "string"
+    },
+    "tileTypes": {
+      "description": "Tipi di tile condivisi dalle lezioni (una lezione può sovrascriverli)\n\nTile types shared by the lessons (a lesson may override them)",
+      "markdownDescription": "Tipi di tile condivisi dalle lezioni (una lezione può sovrascriverli)\n\n*Tile types shared by the lessons (a lesson may override them)*",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/tileType"
+      }
+    },
+    "tileLabels": {
+      "description": "Nomi dei tile condivisi, per lingua\n\nShared tile names, per language",
+      "markdownDescription": "Nomi dei tile condivisi, per lingua\n\n*Shared tile names, per language*",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      }
+    },
+    "lessons": {
+      "description": "Lezioni, in ordine\n\nLessons, in order",
+      "markdownDescription": "Lezioni, in ordine\n\n*Lessons, in order*",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Identificatore (lezioni superate)\n\nIdentifier (passed lessons)",
+            "markdownDescription": "Identificatore (lezioni superate)\n\n*Identifier (passed lessons)*",
+            "type": "string"
+          },
+          "file": {
+            "description": "JSON della lezione in `missions/tutorial/`\n\nLesson JSON in `missions/tutorial/`",
+            "markdownDescription": "JSON della lezione in `missions/tutorial/`\n\n*Lesson JSON in `missions/tutorial/`*",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icona (emoji)\n\nIcon (emoji)",
+            "markdownDescription": "Icona (emoji)\n\n*Icon (emoji)*",
+            "type": "string"
+          },
+          "classes": {
+            "description": "Classi mostrate nella scheda\n\nClasses shown on the card",
+            "markdownDescription": "Classi mostrate nella scheda\n\n*Classes shown on the card*",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "examples": [
+                "assault",
+                "sniper",
+                "engineer",
+                "medic"
+              ]
+            }
+          },
+          "labels": {
+            "description": "Testi della scheda per lingua\n\nCard texts per language",
+            "markdownDescription": "Testi della scheda per lingua\n\n*Card texts per language*",
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "description": "Titolo\n\nTitle",
+                  "markdownDescription": "Titolo\n\n*Title*",
+                  "type": "string"
+                },
+                "desc": {
+                  "description": "Descrizione\n\nDescription",
+                  "markdownDescription": "Descrizione\n\n*Description*",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "file"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "lessons"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "tileType": {
+      "description": "Tipo di tile\n\nTile type",
+      "markdownDescription": "Tipo di tile\n\n*Tile type*",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Identificatore (usato in `tileLabels`, `mist` e per l'aspetto)\n\nIdentifier (used in `tileLabels`, `mist` and for the look)",
+          "markdownDescription": "Identificatore (usato in `tileLabels`, `mist` e per l'aspetto)\n\n*Identifier (used in `tileLabels`, `mist` and for the look)*",
+          "type": "string"
+        },
+        "label": {
+          "description": "Nome di default, se manca la traduzione\n\nDefault name, when the translation is missing",
+          "markdownDescription": "Nome di default, se manca la traduzione\n\n*Default name, when the translation is missing*",
+          "type": "string"
+        },
+        "moveCost": {
+          "description": "AP per attraversarlo (0 = gratis, 3 = palude)\n\nAP to cross it (0 = free, 3 = swamp)",
+          "markdownDescription": "AP per attraversarlo (0 = gratis, 3 = palude)\n\n*AP to cross it (0 = free, 3 = swamp)*",
+          "type": "number",
+          "minimum": 0
+        },
+        "coverBonus": {
+          "description": "Bonus difesa a chi lo occupa\n\nDefense bonus to its occupant",
+          "markdownDescription": "Bonus difesa a chi lo occupa\n\n*Defense bonus to its occupant*",
+          "type": "number",
+          "minimum": 0
+        },
+        "color": {
+          "description": "Colore del disegno procedurale (#rrggbb)\n\nProcedural drawing color (#rrggbb)",
+          "markdownDescription": "Colore del disegno procedurale (#rrggbb)\n\n*Procedural drawing color (#rrggbb)*",
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+        },
+        "texture": {
+          "description": "Solo mappe senza `image`. Aspetto del tile: il nome di un terreno già disegnato dal gioco (`jungle`, `swamp`, `clearing`, `river`, `building`…) disegna l'`id` come quel terreno con tutti i suoi effetti (chiome, onde, erba al vento, nebbia, ombre), con la tinta di `color`; oppure il percorso di un'immagine (PNG/JPG/WebP/GIF) disegnata sopra `color`. Solo grafica\n\nMaps without `image` only. Tile look: the name of a terrain the game already draws (`jungle`, `swamp`, `clearing`, `river`, `building`…) draws the `id` like that terrain with all its effects (canopy, waves, wind-blown grass, mist, shadows), tinted by `color`; or the path of an image (PNG/JPG/WebP/GIF) drawn over `color`. Visual only",
+          "markdownDescription": "Solo mappe senza `image`. Aspetto del tile: il nome di un terreno già disegnato dal gioco (`jungle`, `swamp`, `clearing`, `river`, `building`…) disegna l'`id` come quel terreno con tutti i suoi effetti (chiome, onde, erba al vento, nebbia, ombre), con la tinta di `color`; oppure il percorso di un'immagine (PNG/JPG/WebP/GIF) disegnata sopra `color`. Solo grafica\n\n*Maps without `image` only. Tile look: the name of a terrain the game already draws (`jungle`, `swamp`, `clearing`, `river`, `building`…) draws the `id` like that terrain with all its effects (canopy, waves, wind-blown grass, mist, shadows), tinted by `color`; or the path of an image (PNG/JPG/WebP/GIF) drawn over `color`. Visual only*",
+          "type": "string",
+          "examples": [
+            "scorched",
+            "wall",
+            "obstacle",
+            "wall_breach",
+            "building",
+            "temple",
+            "garden",
+            "clearing",
+            "jungle",
+            "swamp",
+            "river",
+            "bridge",
+            "ford",
+            "street",
+            "urban",
+            "plaza",
+            "objective",
+            "debris",
+            "trail",
+            "village",
+            "bunker"
+          ]
+        },
+        "impassable": {
+          "description": "Blocca il movimento (muri, fiumi)\n\nBlocks movement (walls, rivers)",
+          "markdownDescription": "Blocca il movimento (muri, fiumi)\n\n*Blocks movement (walls, rivers)*",
+          "type": "boolean"
+        },
+        "losBlock": {
+          "description": "`full` = blocca la vista, `partial` = −1 al raggio visivo per ogni tile attraversato\n\n`full` = blocks sight, `partial` = −1 to vision range per tile crossed",
+          "markdownDescription": "`full` = blocca la vista, `partial` = −1 al raggio visivo per ogni tile attraversato\n\n*`full` = blocks sight, `partial` = −1 to vision range per tile crossed*",
+          "type": "string",
+          "enum": [
+            "full",
+            "partial"
+          ]
+        },
+        "burnable": {
+          "description": "Il geniere può incendiarlo (fuoco per 2 turni)\n\nThe Engineer can set it on fire (burns for 2 turns)",
+          "markdownDescription": "Il geniere può incendiarlo (fuoco per 2 turni)\n\n*The Engineer can set it on fire (burns for 2 turns)*",
+          "type": "boolean"
+        },
+        "demolishable": {
+          "description": "Il geniere può demolirlo con dado ≥ 4\n\nThe Engineer can demolish it with a roll ≥ 4",
+          "markdownDescription": "Il geniere può demolirlo con dado ≥ 4\n\n*The Engineer can demolish it with a roll ≥ 4*",
+          "type": "boolean"
+        },
+        "demolishResult": {
+          "description": "Carattere della griglia del tile dopo la demolizione\n\nGrid character of the tile after demolition",
+          "markdownDescription": "Carattere della griglia del tile dopo la demolizione\n\n*Grid character of the tile after demolition*",
+          "type": "string"
+        },
+        "blastResult": {
+          "description": "Carattere del tile che lo sostituisce quando ci cade un colpo d'artiglieria; `false` = indistruttibile. Default: `burnable` → terra bruciata in fiamme, muri/edifici/templi/bunker → macerie, altri `demolishable` → `demolishResult`\n\nCharacter of the tile replacing it when an artillery round lands on it; `false` = indestructible. Default: `burnable` → burning scorched earth, walls/buildings/temples/bunkers → rubble, other `demolishable` → `demolishResult`",
+          "markdownDescription": "Carattere del tile che lo sostituisce quando ci cade un colpo d'artiglieria; `false` = indistruttibile. Default: `burnable` → terra bruciata in fiamme, muri/edifici/templi/bunker → macerie, altri `demolishable` → `demolishResult`\n\n*Character of the tile replacing it when an artillery round lands on it; `false` = indestructible. Default: `burnable` → burning scorched earth, walls/buildings/temples/bunkers → rubble, other `demolishable` → `demolishResult`*",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

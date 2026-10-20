@@ -1,0 +1,9 @@
+{
+  "json.schemas": [
+    { "fileMatch": ["/config.json"], "url": "./schemas/config.schema.json" },
+    { "fileMatch": ["/missions/catalog.json"], "url": "./schemas/catalog.schema.json" },
+    { "fileMatch": ["/missions/*.json", "!/missions/catalog.json"], "url": "./schemas/mission.schema.json" },
+    { "fileMatch": ["/missions/tutorial/index.json"], "url": "./schemas/tutorial-index.schema.json" },
+    { "fileMatch": ["/missions/tutorial/*.json", "!/missions/tutorial/index.json"], "url": "./schemas/lesson.schema.json" }
+  ]
+}

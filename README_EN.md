@@ -582,34 +582,7 @@ Each class can have a weapon arsenal defined in `config.json` under the `weapons
 }
 ```
 
-**Weapon fields:**
-
-| Field | Type | Description |
-|---|---|---|
-| `id` | string | Internal identifier |
-| `label` / `labelEn` | string | Display name in Italian / English; without `labelEn`, `label` is shown in English too |
-| `atk` | number | Weapon ATK value (overrides class default) |
-| `range` | number | Maximum range in tiles |
-| `ammo` | number or null | Total uses available (grenades, smoke, radio); `null` = unlimited |
-| `mag` | number | (optional, US only) Rounds per magazine: every attack (and every overwatch shot / suppression burst) uses 1; an empty magazine must be reloaded |
-| `mags` | number | (optional, with `mag`) Spare magazines; each reload uses one. Unlimited when absent |
-| `reloadAp` | number | (optional, with `mag`) AP to reload; default 1 |
-| `shotsPerTurn` | number | (optional) Max attacks per turn with this weapon (sniper: 1) |
-| `aoe` | number | (optional) Area-of-effect radius in Manhattan distance |
-| `minRange` | number | (optional, AoE weapons only) Minimum range in tiles; defaults to `aoe + 1` so the thrower is never inside the blast |
-| `maxCarriers` | number | (optional) Max units per mission that can carry this weapon (separate counters for the US squad and the VC) |
-| `rangePenalty` | boolean | (optional, US only) Applies the range penalty (−1 ATK every 2 tiles), overwatch included; when absent it is `true` only for the sniper |
-| `noise` | number | (optional) Noise radius in tiles: VC within this distance become alerted. US weapons: from the shooter for direct weapons, from the impact point for AoE. VC weapons: always from the shooter. Default 4 (direct) / 6 (AoE) |
-| `melee` | boolean | (optional, US only) Melee weapon: a slash instead of tracers, excluded from overwatch and suppression; if it kills the target the unit advances into its tile (0 AP) |
-| `rounds` | number | (optional, visual only) Tracers shown per attack (1–5); when absent 1 for snipers, 3 for other weapons |
-| `smoke` | number | (optional, AoE weapons only) Smoke grenade: no damage, creates smoke within `aoe` for N turns |
-| `artillery` | boolean | (optional, AoE weapons only) Artillery call: the strike lands at the start of the next turn and also hits hidden VC |
-| `thrown` | boolean | (optional, US AoE weapons only) Hand-thrown: arc animation with bounces before the explosion |
-| `scatter` | number | (optional, US AoE weapons only) Throw deviation: radius in tiles of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: "full"` |
-| `scatterChance` | number | (optional, with `scatter`) Probability (0–1) that the throw deviates to another tile of the square; default 0.5 |
-| `napalm` | boolean | (optional) Napalm air strike: you pick a line of tiles (start and end, diagonals allowed), it lands at the start of the next turn, sets the tiles on fire and hits anyone on them with no terrain cover |
-| `length` | number | (optional, with `napalm`) Maximum line length in tiles; default 5 |
-| `shells` | number \| [min, max] | (optional, with `artillery`) Rounds in the salvo; default [5, 6]. With `artillery`, `scatter` is the radius of the square where each round lands (default 2 = 5×5, more likely near the centre, walls and buildings included) and `atk`/`aoe` apply to each round |
+**Weapon fields:** every field, with allowed values and defaults, is in the [field guide](docs/FIELDS_EN.md#weapon).
 
 **Behavior:**
 
@@ -648,15 +621,7 @@ US classes are changed with `unitClasses` in `config.json`; a new name adds a cl
 "weapons": { "machinegunner": [{ "id": "m60", "label": "M60", "atk": 4, "range": 4, "mag": 2, "mags": 2, "noise": 7 }] }
 ```
 
-| Field | Type | Description |
-|---|---|---|
-| `labels` | object | `{ "it": { "name", "desc", "special"? }, "en": … }`: name, description and (optional) ability label; without the current language, Italian is used. The base classes take their texts from the translations |
-| `symbol`, `color` | string | Badge letter and colour |
-| `hp`, `move`, `attack`, `defense`, `range`, `vision` | number | Stats (ATK and range apply without weapons) |
-| `special` | string / null | Ability: `"suppression"` (suppressive fire), `"overwatch"`, `"demolition"` (demolition, burning, disarming, sealing tunnels), `"heal"`; `null` = none |
-| `marksman` | boolean | Marksman: range penalty for weapons without `rangePenalty`, single tracer |
-| `trapSense` | boolean | Spots traps 1 tile away and tunnel entrances 2 tiles away |
-| `sprite` | string | US class whose drawn sprite is used when `unitImages` has no picture for this class |
+Every class field is in the [field guide](docs/FIELDS_EN.md#unit-class).
 
 ### Enemy classes
 
@@ -672,13 +637,7 @@ VC stats are changed with `enemyClasses` in `config.json`; a new name adds a cla
 "weapons": { "nva": [{ "id": "ak47", "label": "AK-47", "atk": 3, "range": 3, "noise": 5, "sound": "assets/ak47.mp3" }] }
 ```
 
-| Field | Type | Description |
-|---|---|---|
-| `name` | number / object | Index into the translated VC names (0 Guerrilla, 1 VC Sniper, 3 VC Commander) or `{ "it", "en" }` |
-| `role` | string | Behaviour: `"rifleman"` (patrols, plants traps, flanks), `"sniper"` (camouflaged, skips a turn after firing, keeps its distance), `"commander"` (always holds in ambush, its death makes nearby VC fall back) |
-| `hp`, `ap` | number | Hit points and AP per turn |
-| `attack`, `range`, `defense`, `move` | number | ATK and range without weapons, DEF, movement |
-| `sprite` | string | VC class whose drawn sprite is used when `unitImages` has no picture for this class |
+Every class field is in the [field guide](docs/FIELDS_EN.md#enemy-class).
 
 In `config.json`, `vcMix` holds three compositions: `spawn` (initial deployment), `ambush`, `reinforcement`.
 
@@ -786,7 +745,7 @@ For a procedural map use `"generator": "jungle"` (or `"urban"`) instead of `"fil
 
 ### 2. Create `missions/my_map.json`
 
-Full structure with all fields:
+Example with the main fields (every field, with allowed values and defaults, is in the [field guide](docs/FIELDS_EN.md#map)):
 
 ```json
 {
@@ -891,40 +850,15 @@ Full structure with all fields:
 }
 ```
 
-### Optional fields: traps and night
+### Other map fields
 
-| Field | Type | Description |
-|---|---|---|
-| `trapCount` | number | Random traps (punji or mine) placed at mission start; default 0 |
-| `trapZones` | array | Zones `{colMin, colMax, rowMin, rowMax}` for random traps; if absent, anywhere at least 4 tiles from the start |
-| `traps` | array | Fixed traps `{col, row, type, dmg?}`; `type` = `"punji"` (2 HP) or `"mine"` (4 HP) |
-| `night` | boolean | Mission is always at night (the briefing option is locked) |
-| `vcNoise` | boolean | (optional) `false` = VC gunfire doesn't alert other VC; enabled by default |
-| `tunnels` | array | (optional) Fixed VC tunnel entrances: `[{ "col", "row" }]`; when present it replaces the random ones |
-| `tunnelCount` | number | (optional) Number of random entrances (on concealing tiles, away from the start); default 3, `0` = no tunnels |
-| `vcTrapPlantMax` | number | (optional) Traps patrolling VC can plant during the mission; default 3, `0` = none |
-| `squad` | array | (optional) Fixed squad instead of the briefing choice: `[{ "cls", "col", "row", "facing"?, "hp"?, "bleeding"?, "stance"? }]` |
-| `enemies` | array | (optional) VC at fixed positions instead of random spawning: `[{ "cls", "col", "row", "facing"?, "alerted"?, "hold"?, "hp"? }]`; `hold` = a sentry that doesn't patrol until alerted |
-| `grid` | array | Each row can also be a string (`"JJCCT..."`) instead of an array of characters |
-| `nightVisionPenalty` | number | Soldiers' vision reduction at night; default 1 |
-| `bleedStopChance` | number | Chance (0–1) that bleeding stops on its own at turn start; default 1/3, `0` = only the Medic stops it |
-| `vcNightPenalty` | number | Night reduction of VC alert distance and sight (base 5, minimum 2); default 2 |
-| `rain` | boolean / object | (optional, visual only) `true` = it rains for the whole mission; `{ "chance", "minTurns", "maxTurns", "fromStart" }` = random showers: at the start of each player turn, if it isn't raining, it starts with probability `chance` (default 0.2) and lasts `minTurns`–`maxTurns` turns (default 2–4); `fromStart: true` = the first shower is already under way at mission start |
-| `mist` | boolean / object | (optional, visual only) Drifting mist banks: `true` = on swamp tiles (`id` `"swamp"`); `{ "tiles": ["swamp", "river"], "density": 1 }` to pick the tile ids and the thickness (0.5 = thin, 2 = thick) |
-| `temperature` | object | (optional, informational only) Temperature range in °C shown in the weather panel: `{ "day": [min, max], "night": [min, max] }`; default day 27–34, night 21–26 (southern lowlands). Rain lowers it by 3°, overcast sky by 1° |
-| `cloudy` | number | (optional, informational only) Probability (0–1) of overcast sky at mission start; default 0.35. Each turn the sky has a 20% chance to change |
+Traps, tunnels, night, weather, fixed squad and VC, ambushes and reinforcements: the full list is in the [field guide](docs/FIELDS_EN.md#map).
 
 ### Optional fields: weapons, enemies and balance
 
 They apply only to this map's mission: the next mission goes back to the `config.json` and game values.
 
-| Field | Type | Description |
-|---|---|---|
-| `weapons` | object | Weapons per class (US or VC). An **array** replaces the class's whole loadout (same format as `config.json`). An **object** changes single weapons by `id`: fields are merged into the weapon, `null` removes it, a new `id` adds the weapon at the end |
-| `vcMix` | object | VC composition: weights per class, e.g. `{ "grunt": 3, "nva": 2 }`. Used for the initial deployment and, without `ambushMix`, for the ambush. Default `{ "grunt": 3, "sniper_vc": 1, "commander": 1 }` |
-| `ambushMix` | object | Ambush composition; default `{ "grunt": 2, "sniper_vc": 1, "commander": 1 }` |
-| `reinforcementMix` | object | Reinforcement composition; default `{ "grunt": 1 }` |
-| `tuning` | object | Balance parameters, deep-merged into the game values (numbers and arrays replaced, objects merged). Editable groups: `VC_TACTICS` (tactical AI, `js/ai.js`), `STANCES`, `MELEE` (knife), `ARTILLERY`, `NAPALM` (`js/mechanics.js`), `ENEMY_CLASSES` (VC stats), `VC_MIX` (default compositions). An unknown group is ignored with a console warning |
+The fields are described in the [field guide](docs/FIELDS_EN.md#map); the values `tuning` can change, group by group, in the [`tuning` groups](docs/FIELDS_EN.md#tuning) section.
 
 ```json
 "weapons": {
@@ -942,31 +876,11 @@ They apply only to this map's mission: the next mission goes back to the `config
 
 ### Tile Type Fields
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | string | Internal identifier (used in `tileLabels`) |
-| `label` | string | Default name (used if translation is absent) |
-| `moveCost` | number | AP to cross the tile (0 = free, 3 = swamp) |
-| `coverBonus` | number | Defense bonus for units occupying the tile |
-| `color` | string | Hex color for procedural rendering |
-| `texture` | string | (optional, only maps without `image`) Tile look. The name of a terrain the game already draws (`jungle`, `swamp`, `clearing`, `garden`, `village`, `trail`, `river`, `ford`, `bridge`, `street`, `plaza`, `objective`, `debris`, `scorched`, `wall`, `wall_breach`, `building`, `temple`, `bunker`, `obstacle`) draws a new `id` like that terrain, with all its effects (jungle canopy and birds, water shores and waves, wind-blown grass, swamp mist, shadows of tall tiles); the tint still comes from `color`. Alternatively the path of an image (`"assets/paddy.png"`, PNG/JPG/WebP/GIF) drawn on every tile over `color` (transparent parts let the color show through). Without `texture` an unknown `id` gets a generic grain. Visual only: rules and behavior depend on the other fields |
-| `impassable` | bool | If `true`, blocks movement (walls, rivers) |
-| `losBlock` | string | `"full"` = blocks vision entirely, `"partial"` = −1 to range per tile traversed |
-| `burnable` | bool | The Engineer can set it on fire (burns for 2 turns) |
-| `demolishable` | bool | The Engineer can demolish it with a roll ≥ 4 |
-| `demolishResult` | string | Grid key of the tile that replaces the demolished one |
-| `blastResult` | string \| false | (optional) Grid key of the tile that replaces this one when an artillery round lands on it; `false` = indestructible. Default: `burnable` → burning scorched earth, walls/buildings/temples/bunkers → rubble, other `demolishable` → `demolishResult` (scorched earth/rubble tiles are added to the map if missing) |
+See the [field guide](docs/FIELDS_EN.md#tile).
 
 ### Objective Types
 
-| Type | Structure in `objectives` |
-|---|---|
-| `recon` | Array of `{"col", "row", "label"}` — zones to reach |
-| `search_destroy` | `{"eliminateAll": bool, "minKills": N}` |
-| `rescue_pilot` | `{"pilotCol", "pilotRow", "extractCol", "extractRow"}` — pilot position is hidden in FOW |
-| `capture_objective` | Array of `{"col", "row", "label", "holdTurns"}` — hold for N consecutive turns |
-
-You can include only the types you want to support and declare them in `supportedMissions`.
+Objectives go in `objectives`, one per mission type (`recon`, `search_destroy`, `rescue_pilot`, `capture_objective`; fields in the [field guide](docs/FIELDS_EN.md#map)). You can include only the types you want to support and declare them in `supportedMissions`.
 
 ### Optional Files
 
@@ -988,6 +902,8 @@ node tools/validate.js --all
 ```
 
 `--all` checks `config.json`, the catalog and its maps, the tutorial lessons and the procedural maps over several seeds; `--lang en` gives English messages. It exits with code 1 if it finds errors.
+
+While typing, the JSON Schemas in `schemas/` give the editor field autocompletion, field descriptions and the same type checks: VS Code uses them by itself, other editors (Zed, JetBrains…) with `"$schema": "../schemas/mission.schema.json"` at the top of the map. The [field guide](docs/FIELDS_EN.md) and the schemas are generated from `js/schema.js` by `node tools/schema-docs.js`.
 
 ### Tile Animations
 

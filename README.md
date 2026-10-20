@@ -581,34 +581,7 @@ Ogni classe può avere un arsenale di armi definito in `config.json` sotto la ch
 }
 ```
 
-**Campi per arma:**
-
-| Campo | Tipo | Descrizione |
-|---|---|---|
-| `id` | string | Identificatore interno |
-| `label` / `labelEn` | string | Nome visualizzato in italiano / inglese; senza `labelEn` anche in inglese si usa `label` |
-| `atk` | number | Valore ATK dell'arma (sovrascrive quello della classe) |
-| `range` | number | Gittata massima in tile |
-| `ammo` | number o null | Usi totali disponibili (granate, fumogeni, radio); `null` = illimitati |
-| `mag` | number | (opzionale, solo US) Colpi per caricatore: ogni attacco (e ogni overwatch/raffica di soppressione) ne consuma 1; a caricatore vuoto serve ricaricare |
-| `mags` | number | (opzionale, con `mag`) Caricatori di riserva; ogni ricarica ne consuma uno. Se assente sono illimitati |
-| `reloadAp` | number | (opzionale, con `mag`) AP per ricaricare; default 1 |
-| `shotsPerTurn` | number | (opzionale) Attacchi massimi per turno con quest'arma (il cecchino: 1) |
-| `aoe` | number | (opzionale) Raggio area d'effetto in distanza Manhattan |
-| `minRange` | number | (opzionale, solo armi AoE) Gittata minima in tile; default `aoe + 1`, così chi lancia non è mai nel raggio dell'esplosione |
-| `maxCarriers` | number | (opzionale) Max unità per missione che possono portare quest'arma (contatori separati per squadra US e VC) |
-| `rangePenalty` | boolean | (opzionale, solo US) Applica la penalità gittata (−1 ATK ogni 2 tile), anche in overwatch; se assente vale `true` solo per il cecchino |
-| `noise` | number | (opzionale) Raggio del rumore in tile: i VC entro questa distanza si allertano. Armi US: dal tiratore per le armi dirette, dal punto d'impatto per le AoE. Armi VC: sempre dal tiratore. Default 4 (diretta) / 6 (AoE) |
-| `melee` | boolean | (opzionale, solo US) Arma bianca: fendente al posto dei traccianti, esclusa da overwatch e soppressione; se uccide il bersaglio l'unità avanza nel suo tile (0 AP) |
-| `rounds` | number | (opzionale, solo grafica) Traccianti mostrati per attacco (1–5); se assente 1 per i cecchini, 3 per le altre armi |
-| `smoke` | number | (opzionale, solo armi AoE) Fumogeno: nessun danno, crea fumo nel raggio `aoe` per N turni |
-| `artillery` | boolean | (opzionale, solo armi AoE) Richiesta d'artiglieria: il colpo cade all'inizio del turno successivo e colpisce anche i VC nascosti |
-| `thrown` | boolean | (opzionale, solo armi AoE US) Lancio a mano: animazione ad arco con rimbalzi prima dell'esplosione |
-| `scatter` | number | (opzionale, solo armi AoE US) Deviazione del lancio: raggio in tile del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: "full"` |
-| `scatterChance` | number | (opzionale, con `scatter`) Probabilità (0–1) che il lancio devii su un altro tile del quadrato; default 0.5 |
-| `napalm` | boolean | (opzionale) Attacco aereo al napalm: si sceglie una linea di tile (inizio e fine, anche in diagonale), cade all'inizio del turno successivo, incendia i tile e colpisce chi ci si trova senza copertura del terreno |
-| `length` | number | (opzionale, con `napalm`) Lunghezza massima della linea in tile; default 5 |
-| `shells` | number \| [min, max] | (opzionale, con `artillery`) Colpi della salva; default [5, 6]. Con `artillery`, `scatter` è il raggio del quadrato in cui cade ogni colpo (default 2 = 5×5, più probabile al centro, anche su muri ed edifici) e `atk`/`aoe` valgono per il singolo colpo |
+**Campi per arma:** tutti i campi, con valori ammessi e default, sono nella [guida ai campi](docs/FIELDS.md#weapon).
 
 **Comportamento:**
 
@@ -647,15 +620,7 @@ Le classi US si cambiano con `unitClasses` in `config.json`; con un nome nuovo s
 "weapons": { "machinegunner": [{ "id": "m60", "label": "M60", "atk": 4, "range": 4, "mag": 2, "mags": 2, "noise": 7 }] }
 ```
 
-| Campo | Tipo | Descrizione |
-|---|---|---|
-| `labels` | object | `{ "it": { "name", "desc", "special"? }, "en": … }`: nome, descrizione e (facoltativa) etichetta dell'abilità; senza la lingua corrente si usa l'italiano. Le classi base prendono i testi dalle traduzioni |
-| `symbol`, `color` | string | Lettera e colore del distintivo |
-| `hp`, `move`, `attack`, `defense`, `range`, `vision` | number | Statistiche (ATK e gittata valgono senza armi) |
-| `special` | string / null | Abilità: `"suppression"` (fuoco soppressivo), `"overwatch"`, `"demolition"` (demolizione, incendio, disinnesco, sigillo dei tunnel), `"heal"` (cura); `null` = nessuna |
-| `marksman` | boolean | Tiratore scelto: penalità di gittata per le armi senza `rangePenalty`, tracciante singolo |
-| `trapSense` | boolean | Individua le trappole a 1 tile e gli ingressi dei tunnel a 2 |
-| `sprite` | string | Classe US di cui usare lo sprite disegnato se `unitImages` non ha un'immagine per questa classe |
+Tutti i campi della classe sono nella [guida ai campi](docs/FIELDS.md#unit-class).
 
 ### Classi nemiche
 
@@ -671,13 +636,7 @@ Le statistiche dei VC si cambiano con `enemyClasses` in `config.json`; con un no
 "weapons": { "nva": [{ "id": "ak47", "label": "AK-47", "atk": 3, "range": 3, "noise": 5, "sound": "assets/ak47.mp3" }] }
 ```
 
-| Campo | Tipo | Descrizione |
-|---|---|---|
-| `name` | number / object | Indice nei nomi VC tradotti (0 Guerrigliero, 1 Cecchino VC, 3 Comandante VC) oppure `{ "it", "en" }` |
-| `role` | string | Comportamento: `"rifleman"` (pattuglia, piazza trappole, aggira), `"sniper"` (mimetizzato, salta un turno dopo lo sparo, resta a distanza), `"commander"` (resta sempre in agguato, la sua morte fa ripiegare i VC vicini) |
-| `hp`, `ap` | number | Punti ferita e AP per turno |
-| `attack`, `range`, `defense`, `move` | number | ATK e gittata senza armi, DEF, movimento |
-| `sprite` | string | Classe VC di cui usare lo sprite disegnato se `unitImages` non ha un'immagine per questa classe |
+Tutti i campi della classe sono nella [guida ai campi](docs/FIELDS.md#enemy-class).
 
 In `config.json`, `vcMix` ha tre composizioni: `spawn` (schieramento iniziale), `ambush` (imboscata), `reinforcement` (rinforzi).
 
@@ -785,7 +744,7 @@ Per una mappa procedurale si usa `"generator": "jungle"` (o `"urban"`) al posto 
 
 ### 2. Creare `missions/mia_mappa.json`
 
-Struttura completa con tutti i campi:
+Esempio con i campi principali (tutti i campi, con valori ammessi e default, sono nella [guida ai campi](docs/FIELDS.md#map)):
 
 ```json
 {
@@ -890,40 +849,15 @@ Struttura completa con tutti i campi:
 }
 ```
 
-### Campi opzionali: trappole e notte
+### Altri campi della mappa
 
-| Campo | Tipo | Descrizione |
-|---|---|---|
-| `trapCount` | number | Trappole casuali (punji o mina) piazzate a inizio missione; default 0 |
-| `trapZones` | array | Zone `{colMin, colMax, rowMin, rowMax}` per le trappole casuali; se assenti, ovunque ad almeno 4 caselle dalla partenza |
-| `traps` | array | Trappole fisse `{col, row, type, dmg?}`; `type` = `"punji"` (2 HP) o `"mine"` (4 HP) |
-| `night` | boolean | Missione sempre notturna (l'opzione nel briefing viene bloccata) |
-| `vcNoise` | boolean | (opzionale) `false` = gli spari dei VC non allertano gli altri VC; default attivo |
-| `tunnels` | array | (opzionale) Ingressi di tunnel VC in posizione fissa: `[{ "col", "row" }]`; se presente sostituisce quelli casuali |
-| `tunnelCount` | number | (opzionale) Numero di ingressi casuali (su tile che nascondono, lontano dalla partenza); default 3, `0` = nessun tunnel |
-| `vcTrapPlantMax` | number | (opzionale) Trappole che i VC in pattuglia possono piazzare durante la missione; default 3, `0` = nessuna |
-| `squad` | array | (opzionale) Squadra fissa al posto della scelta nel briefing: `[{ "cls", "col", "row", "facing"?, "hp"?, "bleeding"?, "stance"? }]` |
-| `enemies` | array | (opzionale) VC in posizione fissa al posto dello spawn casuale: `[{ "cls", "col", "row", "facing"?, "alerted"?, "hold"?, "hp"? }]`; `hold` = sentinella che non pattuglia finché non è allertata |
-| `grid` | array | Ogni riga può essere anche una stringa (`"JJCCT..."`) invece di un array di caratteri |
-| `nightVisionPenalty` | number | Riduzione del raggio visivo dei soldati di notte; default 1 |
-| `bleedStopChance` | number | Probabilità (0–1) che un'emorragia si fermi da sola a inizio turno; default 1/3, `0` = solo il medico la ferma |
-| `vcNightPenalty` | number | Riduzione di notte della distanza d'allerta e della vista dei VC (base 5, minimo 2); default 2 |
-| `rain` | boolean / object | (opzionale, solo visivo) `true` = piove per tutta la missione; `{ "chance", "minTurns", "maxTurns", "fromStart" }` = acquazzoni casuali: a inizio di ogni turno giocatore, se non piove, comincia con probabilità `chance` (default 0.2) e dura da `minTurns` a `maxTurns` turni (default 2–4); `fromStart: true` = il primo acquazzone è già in corso a inizio missione |
-| `mist` | boolean / object | (opzionale, solo visivo) Banchi di nebbiolina che derivano lenti: `true` = sui tile palude (`id` `"swamp"`); `{ "tiles": ["swamp", "river"], "density": 1 }` per scegliere gli id dei tile e lo spessore (0.5 = rada, 2 = fitta) |
-| `temperature` | object | (opzionale, solo informativo) Intervallo di temperatura in °C mostrato nel pannello meteo: `{ "day": [min, max], "night": [min, max] }`; default giorno 27–34, notte 21–26 (pianura del Sud). La pioggia la abbassa di 3°, il cielo coperto di 1° |
-| `cloudy` | number | (opzionale, solo informativo) Probabilità (0–1) di cielo coperto a inizio missione; default 0.35. A ogni turno il cielo cambia con probabilità 20% |
+Trappole, tunnel, notte, meteo, squadra e VC in posizione fissa, imboscate e rinforzi: l'elenco completo è nella [guida ai campi](docs/FIELDS.md#map).
 
 ### Campi opzionali: armi, nemici e bilanciamento
 
 Valgono solo per la missione della mappa: alla missione successiva tornano i valori di `config.json` e del gioco.
 
-| Campo | Tipo | Descrizione |
-|---|---|---|
-| `weapons` | object | Armi per classe (US o VC). Un **array** sostituisce l'intero loadout della classe (stesso formato di `config.json`). Un **oggetto** modifica singole armi per `id`: i campi vengono uniti all'arma, `null` la toglie, un `id` nuovo aggiunge l'arma in fondo |
-| `vcMix` | object | Composizione dei VC: pesi per classe, es. `{ "grunt": 3, "nva": 2 }`. Vale per lo schieramento iniziale e, se manca `ambushMix`, per l'imboscata. Default `{ "grunt": 3, "sniper_vc": 1, "commander": 1 }` |
-| `ambushMix` | object | Composizione dell'imboscata; default `{ "grunt": 2, "sniper_vc": 1, "commander": 1 }` |
-| `reinforcementMix` | object | Composizione dei rinforzi; default `{ "grunt": 1 }` |
-| `tuning` | object | Parametri di bilanciamento, uniti in profondità ai valori del gioco (numeri e array sostituiti, oggetti uniti). Gruppi modificabili: `VC_TACTICS` (IA tattica, `js/ai.js`), `STANCES` (posture), `MELEE` (coltello), `ARTILLERY`, `NAPALM` (`js/mechanics.js`), `ENEMY_CLASSES` (statistiche VC), `VC_MIX` (composizioni di default). Un gruppo sconosciuto è ignorato con un avviso in console |
+I campi sono descritti nella [guida ai campi](docs/FIELDS.md#map); i valori modificabili con `tuning`, gruppo per gruppo, nella sezione [Gruppi di `tuning`](docs/FIELDS.md#tuning).
 
 ```json
 "weapons": {
@@ -941,31 +875,11 @@ Valgono solo per la missione della mappa: alla missione successiva tornano i val
 
 ### Campi del tile type
 
-| Campo | Tipo | Descrizione |
-|---|---|---|
-| `id` | string | Identificatore interno (usato in `tileLabels`) |
-| `label` | string | Nome di default (usato se traduzione assente) |
-| `moveCost` | number | AP per attraversare il tile (0 = gratis, 3 = palude) |
-| `coverBonus` | number | Bonus difesa per chi occupa il tile |
-| `color` | string | Colore hex per il rendering procedurale |
-| `texture` | string | (opzionale, solo mappe senza `image`) Aspetto del tile. Il nome di un terreno già disegnato dal gioco (`jungle`, `swamp`, `clearing`, `garden`, `village`, `trail`, `river`, `ford`, `bridge`, `street`, `plaza`, `objective`, `debris`, `scorched`, `wall`, `wall_breach`, `building`, `temple`, `bunker`, `obstacle`) fa disegnare un `id` nuovo come quel terreno, con tutti i suoi effetti (chiome e uccelli della giungla, rive e onde dell'acqua, erba al vento, nebbia della palude, ombre dei tile alti); la tinta resta quella di `color`. In alternativa il percorso di un'immagine (`"assets/risaia.png"`, PNG/JPG/WebP/GIF) disegnata su ogni tile sopra `color` (le parti trasparenti lasciano vedere il colore). Senza `texture` un `id` sconosciuto ha una grana generica. Solo grafica: regole e comportamento dipendono dagli altri campi |
-| `impassable` | bool | Se `true`, blocca il movimento (muri, fiumi) |
-| `losBlock` | string | `"full"` = blocca la visione, `"partial"` = −1 al raggio per ogni tile attraversato |
-| `burnable` | bool | Il geniere può incendiarlo (fuoco per 2 turni) |
-| `demolishable` | bool | Il geniere può demolirlo con dado ≥ 4 |
-| `demolishResult` | string | Chiave del tile che sostituisce quello demolito |
-| `blastResult` | string \| false | (opzionale) Chiave del tile che sostituisce questo quando un colpo d'artiglieria ci cade sopra; `false` = indistruttibile. Default: `burnable` → terra bruciata in fiamme, muri/edifici/templi/bunker → macerie, altri `demolishable` → `demolishResult` (i tile terra bruciata/macerie vengono aggiunti alla mappa se mancano) |
+Vedi la [guida ai campi](docs/FIELDS.md#tile).
 
 ### Tipi di obiettivo
 
-| Tipo | Struttura in `objectives` |
-|---|---|
-| `recon` | Array di `{"col", "row", "label"}` — zone da raggiungere |
-| `search_destroy` | `{"eliminateAll": bool, "minKills": N}` |
-| `rescue_pilot` | `{"pilotCol", "pilotRow", "extractCol", "extractRow"}` — la posizione del pilota è nascosta nella FOW |
-| `capture_objective` | Array di `{"col", "row", "label", "holdTurns"}` — occupare per N turni consecutivi |
-
-Puoi includere solo i tipi che vuoi supportare e dichiararli in `supportedMissions`.
+Gli obiettivi stanno in `objectives`, uno per tipo di missione (`recon`, `search_destroy`, `rescue_pilot`, `capture_objective`; campi nella [guida ai campi](docs/FIELDS.md#map)). Puoi includere solo i tipi che vuoi supportare e dichiararli in `supportedMissions`.
 
 ### File opzionali
 
@@ -987,6 +901,8 @@ node tools/validate.js --all
 ```
 
 `--all` controlla `config.json`, il catalogo e le sue mappe, le lezioni del tutorial e le mappe procedurali su più seed; `--lang en` dà i messaggi in inglese. Esce con codice 1 se trova errori.
+
+Mentre si scrive, i JSON Schema in `schemas/` danno nell'editor l'autocompletamento dei campi, la loro descrizione e gli stessi controlli di tipo: VS Code li usa da solo, gli altri editor (Zed, JetBrains…) con `"$schema": "../schemas/mission.schema.json"` in cima alla mappa. La [guida ai campi](docs/FIELDS.md) e gli schemi si generano da `js/schema.js` con `node tools/schema-docs.js`.
 
 ### Animazioni tile
 

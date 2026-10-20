@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "Generata da `js/schema.js` con `node tools/schema-docs.js`: non modificarla a mano.",
+  "title": "VIETNAM '68 — catalogo / catalog",
+  "description": "Mappe del menu, in ordine (`missions/catalog.json`)\n\nMenu maps, in order (`missions/catalog.json`)",
+  "markdownDescription": "Mappe del menu, in ordine (`missions/catalog.json`)\n\n*Menu maps, in order (`missions/catalog.json`)*",
+  "type": "array",
+  "items": {
+    "description": "Voce del menu delle mappe\n\nMap menu entry",
+    "markdownDescription": "Voce del menu delle mappe\n\n*Map menu entry*",
+    "type": "object",
+    "properties": {
+      "file": {
+        "description": "JSON della mappa in `missions/`\n\nMap JSON in `missions/`",
+        "markdownDescription": "JSON della mappa in `missions/`\n\n*Map JSON in `missions/`*",
+        "type": "string"
+      },
+      "generator": {
+        "description": "Mappa procedurale (al posto di `file`)\n\nProcedural map (instead of `file`)",
+        "markdownDescription": "Mappa procedurale (al posto di `file`)\n\n*Procedural map (instead of `file`)*",
+        "type": "string",
+        "examples": [
+          "jungle",
+          "urban"
+        ]
+      },
+      "tutorial": {
+        "description": "Scheda dell'addestramento (lezioni da `missions/tutorial/index.json`)\n\nTraining card (lessons from `missions/tutorial/index.json`)",
+        "markdownDescription": "Scheda dell'addestramento (lezioni da `missions/tutorial/index.json`)\n\n*Training card (lessons from `missions/tutorial/index.json`)*",
+        "type": "boolean"
+      },
+      "icon": {
+        "description": "Icona (emoji)\n\nIcon (emoji)",
+        "markdownDescription": "Icona (emoji)\n\n*Icon (emoji)*",
+        "type": "string"
+      },
+      "color": {
+        "description": "Colore della scheda\n\nCard color",
+        "markdownDescription": "Colore della scheda\n\n*Card color*",
+        "type": "string",
+        "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+      },
+      "theaterColor": {
+        "description": "Colore dell'etichetta del teatro\n\nTheater badge color",
+        "markdownDescription": "Colore dell'etichetta del teatro\n\n*Theater badge color*",
+        "type": "string",
+        "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+      },
+      "labels": {
+        "description": "Testi della scheda per lingua\n\nCard texts per language",
+        "markdownDescription": "Testi della scheda per lingua\n\n*Card texts per language*",
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "description": "Nome\n\nName",
+              "markdownDescription": "Nome\n\n*Name*",
+              "type": "string"
+            },
+            "subtitle": {
+              "description": "Sottotitolo (luogo · anno)\n\nSubtitle (place · year)",
+              "markdownDescription": "Sottotitolo (luogo · anno)\n\n*Subtitle (place · year)*",
+              "type": "string"
+            },
+            "theater": {
+              "description": "Teatro\n\nTheater",
+              "markdownDescription": "Teatro\n\n*Theater*",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}

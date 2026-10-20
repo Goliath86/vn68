@@ -1,4 +1,5 @@
 {
+  "$schema": "../../schemas/lesson.schema.json",
   "name": "Training 5 — Blood and bandages",
   "description": "The Medic: wounds, bleeding, panic, healing and first aid.",
   "tileSize": 64,

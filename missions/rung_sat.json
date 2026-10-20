@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/mission.schema.json",
   "name": "Rung Sat Special Zone",
   "description": "An operation in the Mekong Delta mangroves. Hostile terrain, reduced visibility.",
   "image": "rung_sat_ext.webp",

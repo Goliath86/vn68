@@ -1,0 +1,1847 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "Generata da `js/schema.js` con `node tools/schema-docs.js`: non modificarla a mano.",
+  "title": "VIETNAM '68 — mappa / map",
+  "description": "Mappa (`missions/<nome>.json`)\n\nMap (`missions/<name>.json`)",
+  "markdownDescription": "Mappa (`missions/<nome>.json`)\n\n*Map (`missions/<name>.json`)*",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Percorso del JSON Schema per l'editor (es. `../schemas/mission.schema.json`); ignorato dal gioco\n\nPath of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game",
+      "markdownDescription": "Percorso del JSON Schema per l'editor (es. `../schemas/mission.schema.json`); ignorato dal gioco\n\n*Path of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game*",
+      "type": "string"
+    },
+    "name": {
+      "description": "Nome della mappa: testo o `{ \"it\", \"en\" }` (di solito in `translations`)\n\nMap name: text or `{ \"it\", \"en\" }` (usually in `translations`)",
+      "markdownDescription": "Nome della mappa: testo o `{ \"it\", \"en\" }` (di solito in `translations`)\n\n*Map name: text or `{ \"it\", \"en\" }` (usually in `translations`)*",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "description": {
+      "description": "Descrizione: testo o `{ \"it\", \"en\" }` (di solito in `translations`)\n\nDescription: text or `{ \"it\", \"en\" }` (usually in `translations`)",
+      "markdownDescription": "Descrizione: testo o `{ \"it\", \"en\" }` (di solito in `translations`)\n\n*Description: text or `{ \"it\", \"en\" }` (usually in `translations`)*",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "cols": {
+      "description": "Colonne della griglia\n\nGrid columns",
+      "markdownDescription": "Colonne della griglia\n\n*Grid columns*",
+      "type": "integer",
+      "minimum": 1
+    },
+    "rows": {
+      "description": "Righe della griglia\n\nGrid rows",
+      "markdownDescription": "Righe della griglia\n\n*Grid rows*",
+      "type": "integer",
+      "minimum": 1
+    },
+    "width": {
+      "description": "(informativo) larghezza dell'immagine\n\n(informative) image width",
+      "markdownDescription": "(informativo) larghezza dell'immagine\n\n*(informative) image width*",
+      "type": "number"
+    },
+    "height": {
+      "description": "(informativo) altezza dell'immagine\n\n(informative) image height",
+      "markdownDescription": "(informativo) altezza dell'immagine\n\n*(informative) image height*",
+      "type": "number"
+    },
+    "tileSize": {
+      "description": "(informativo) lato del tile in pixel\n\n(informative) tile side in pixels",
+      "markdownDescription": "(informativo) lato del tile in pixel\n\n*(informative) tile side in pixels*",
+      "type": "number"
+    },
+    "image": {
+      "description": "Immagine di sfondo in `missions/` (sostituisce il disegno dei tile)\n\nBackground image in `missions/` (replaces the drawn tiles)",
+      "markdownDescription": "Immagine di sfondo in `missions/` (sostituisce il disegno dei tile)\n\n*Background image in `missions/` (replaces the drawn tiles)*",
+      "type": "string"
+    },
+    "ambient": {
+      "description": "Musica d'ambiente in loop durante la partita\n\nAmbient music looping during the game",
+      "markdownDescription": "Musica d'ambiente in loop durante la partita\n\n*Ambient music looping during the game*",
+      "type": "string"
+    },
+    "sounds": {
+      "description": "Effetti sonori della mappa (prevalgono su `config.json`)\n\nMap sound effects (override `config.json`)",
+      "markdownDescription": "Effetti sonori della mappa (prevalgono su `config.json`)\n\n*Map sound effects (override `config.json`)*",
+      "type": "object",
+      "properties": {
+        "move": {
+          "type": "string"
+        },
+        "hit": {
+          "type": "string"
+        },
+        "death": {
+          "type": "string"
+        },
+        "miss": {
+          "type": "string"
+        },
+        "ambush": {
+          "type": "string"
+        },
+        "demolition": {
+          "type": "string"
+        },
+        "disarm": {
+          "type": "string"
+        },
+        "melee": {
+          "type": "string"
+        },
+        "reload": {
+          "type": "string"
+        },
+        "heal": {
+          "type": "string"
+        },
+        "overwatch": {
+          "type": "string"
+        },
+        "spawn": {
+          "type": "string"
+        },
+        "turn_end": {
+          "type": "string"
+        },
+        "victory": {
+          "type": "string"
+        },
+        "defeat": {
+          "type": "string"
+        },
+        "click": {
+          "type": "string"
+        },
+        "jet": {
+          "type": "string"
+        },
+        "napalm": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "tileTypes": {
+      "description": "Tipi di tile per carattere della griglia\n\nTile types by grid character",
+      "markdownDescription": "Tipi di tile per carattere della griglia\n\n*Tile types by grid character*",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/tileType"
+      }
+    },
+    "grid": {
+      "description": "Righe della mappa: stringhe (`\"JJCCT…\"`) o array di caratteri di `tileTypes`\n\nMap rows: strings (`\"JJCCT…\"`) or arrays of `tileTypes` characters",
+      "markdownDescription": "Righe della mappa: stringhe (`\"JJCCT…\"`) o array di caratteri di `tileTypes`\n\n*Map rows: strings (`\"JJCCT…\"`) or arrays of `tileTypes` characters*",
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "minItems": 1
+    },
+    "playerStart": {
+      "description": "Posizioni di partenza della squadra\n\nSquad start positions",
+      "markdownDescription": "Posizioni di partenza della squadra\n\n*Squad start positions*",
+      "type": "array",
+      "items": {
+        "description": "Tile { col, row } (da 0, in alto a sinistra)\n\nTile { col, row } (from 0, top left)",
+        "markdownDescription": "Tile { col, row } (da 0, in alto a sinistra)\n\n*Tile { col, row } (from 0, top left)*",
+        "$ref": "#/definitions/cell"
+      }
+    },
+    "vcSpawnZones": {
+      "description": "Zone dello schieramento VC iniziale\n\nInitial VC deployment zones",
+      "markdownDescription": "Zone dello schieramento VC iniziale\n\n*Initial VC deployment zones*",
+      "type": "array",
+      "items": {
+        "description": "Rettangolo { colMin, colMax, rowMin, rowMax } (estremi inclusi)\n\nRectangle { colMin, colMax, rowMin, rowMax } (inclusive)",
+        "markdownDescription": "Rettangolo { colMin, colMax, rowMin, rowMax } (estremi inclusi)\n\n*Rectangle { colMin, colMax, rowMin, rowMax } (inclusive)*",
+        "$ref": "#/definitions/zone"
+      }
+    },
+    "vcCount": {
+      "description": "VC iniziali; default 6\n\nInitial VC; default 6",
+      "markdownDescription": "VC iniziali; default 6\n\n*Initial VC; default 6*",
+      "type": "integer",
+      "minimum": 0
+    },
+    "reinforcementTurn": {
+      "description": "Rinforzi VC ogni N turni; senza, nessun rinforzo\n\nVC reinforcements every N turns; without it, none",
+      "markdownDescription": "Rinforzi VC ogni N turni; senza, nessun rinforzo\n\n*VC reinforcements every N turns; without it, none*",
+      "type": "integer",
+      "minimum": 1
+    },
+    "reinforcementCount": {
+      "description": "VC per ondata di rinforzi; default 2\n\nVC per reinforcement wave; default 2",
+      "markdownDescription": "VC per ondata di rinforzi; default 2\n\n*VC per reinforcement wave; default 2*",
+      "type": "integer",
+      "minimum": 0
+    },
+    "vcAmbushTurn": {
+      "description": "Turno dell'imboscata (una sola, non annunciata); serve `vcAmbushZones`\n\nAmbush turn (one, unannounced); needs `vcAmbushZones`",
+      "markdownDescription": "Turno dell'imboscata (una sola, non annunciata); serve `vcAmbushZones`\n\n*Ambush turn (one, unannounced); needs `vcAmbushZones`*",
+      "type": "integer",
+      "minimum": 1
+    },
+    "vcAmbushCount": {
+      "description": "VC dell'imboscata; default 2\n\nAmbush VC; default 2",
+      "markdownDescription": "VC dell'imboscata; default 2\n\n*Ambush VC; default 2*",
+      "type": "integer",
+      "minimum": 0
+    },
+    "vcAmbushZones": {
+      "description": "Zone in cui compare l'imboscata\n\nZones where the ambush appears",
+      "markdownDescription": "Zone in cui compare l'imboscata\n\n*Zones where the ambush appears*",
+      "type": "array",
+      "items": {
+        "description": "Rettangolo { colMin, colMax, rowMin, rowMax } (estremi inclusi)\n\nRectangle { colMin, colMax, rowMin, rowMax } (inclusive)",
+        "markdownDescription": "Rettangolo { colMin, colMax, rowMin, rowMax } (estremi inclusi)\n\n*Rectangle { colMin, colMax, rowMin, rowMax } (inclusive)*",
+        "$ref": "#/definitions/zone"
+      }
+    },
+    "ambushChance": {
+      "description": "Probabilità per turno che un VC in vista spari a sorpresa; default 0\n\nChance per turn that a VC in sight fires by surprise; default 0",
+      "markdownDescription": "Probabilità per turno che un VC in vista spari a sorpresa; default 0\n\n*Chance per turn that a VC in sight fires by surprise; default 0*",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "trapCount": {
+      "description": "Trappole casuali (punji o mina) a inizio missione; default 0\n\nRandom traps (punji or mine) at mission start; default 0",
+      "markdownDescription": "Trappole casuali (punji o mina) a inizio missione; default 0\n\n*Random traps (punji or mine) at mission start; default 0*",
+      "type": "integer",
+      "minimum": 0
+    },
+    "trapZones": {
+      "description": "Zone delle trappole casuali; senza, ovunque ad almeno 4 tile dalla partenza\n\nRandom trap zones; without them, anywhere at least 4 tiles from the start",
+      "markdownDescription": "Zone delle trappole casuali; senza, ovunque ad almeno 4 tile dalla partenza\n\n*Random trap zones; without them, anywhere at least 4 tiles from the start*",
+      "type": "array",
+      "items": {
+        "description": "Rettangolo { colMin, colMax, rowMin, rowMax } (estremi inclusi)\n\nRectangle { colMin, colMax, rowMin, rowMax } (inclusive)",
+        "markdownDescription": "Rettangolo { colMin, colMax, rowMin, rowMax } (estremi inclusi)\n\n*Rectangle { colMin, colMax, rowMin, rowMax } (inclusive)*",
+        "$ref": "#/definitions/zone"
+      }
+    },
+    "traps": {
+      "description": "Trappole fisse\n\nFixed traps",
+      "markdownDescription": "Trappole fisse\n\n*Fixed traps*",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "col": {
+            "description": "Colonna (da 0)\n\nColumn (from 0)",
+            "markdownDescription": "Colonna (da 0)\n\n*Column (from 0)*",
+            "type": "integer",
+            "minimum": 0
+          },
+          "row": {
+            "description": "Riga (da 0)\n\nRow (from 0)",
+            "markdownDescription": "Riga (da 0)\n\n*Row (from 0)*",
+            "type": "integer",
+            "minimum": 0
+          },
+          "type": {
+            "description": "`punji` (2 HP) o `mine` (4 HP)\n\n`punji` (2 HP) or `mine` (4 HP)",
+            "markdownDescription": "`punji` (2 HP) o `mine` (4 HP)\n\n*`punji` (2 HP) or `mine` (4 HP)*",
+            "type": "string",
+            "enum": [
+              "punji",
+              "mine"
+            ]
+          },
+          "dmg": {
+            "description": "Danno (sostituisce quello del tipo)\n\nDamage (replaces the type's)",
+            "markdownDescription": "Danno (sostituisce quello del tipo)\n\n*Damage (replaces the type's)*",
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "col",
+          "row"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "tunnels": {
+      "description": "Ingressi dei tunnel VC in posizione fissa (sostituiscono quelli casuali)\n\nFixed VC tunnel entrances (replace the random ones)",
+      "markdownDescription": "Ingressi dei tunnel VC in posizione fissa (sostituiscono quelli casuali)\n\n*Fixed VC tunnel entrances (replace the random ones)*",
+      "type": "array",
+      "items": {
+        "description": "Tile { col, row } (da 0, in alto a sinistra)\n\nTile { col, row } (from 0, top left)",
+        "markdownDescription": "Tile { col, row } (da 0, in alto a sinistra)\n\n*Tile { col, row } (from 0, top left)*",
+        "$ref": "#/definitions/cell"
+      }
+    },
+    "tunnelCount": {
+      "description": "Ingressi casuali dei tunnel, su tile che nascondono, lontano dalla partenza; default 3\n\nRandom tunnel entrances, on concealing tiles, away from the start; default 3",
+      "markdownDescription": "Ingressi casuali dei tunnel, su tile che nascondono, lontano dalla partenza; default 3\n\n*Random tunnel entrances, on concealing tiles, away from the start; default 3*",
+      "type": "integer",
+      "minimum": 0
+    },
+    "vcTrapPlantMax": {
+      "description": "Trappole che i VC in pattuglia possono piazzare; default 3\n\nTraps patrolling VC can plant; default 3",
+      "markdownDescription": "Trappole che i VC in pattuglia possono piazzare; default 3\n\n*Traps patrolling VC can plant; default 3*",
+      "type": "integer",
+      "minimum": 0
+    },
+    "night": {
+      "description": "Missione sempre notturna (l'opzione del briefing è bloccata)\n\nAlways a night mission (the briefing option is locked)",
+      "markdownDescription": "Missione sempre notturna (l'opzione del briefing è bloccata)\n\n*Always a night mission (the briefing option is locked)*",
+      "type": "boolean"
+    },
+    "vcNoise": {
+      "description": "`false` = gli spari dei VC non allertano gli altri VC; default attivo\n\n`false` = VC gunfire doesn't alert other VC; on by default",
+      "markdownDescription": "`false` = gli spari dei VC non allertano gli altri VC; default attivo\n\n*`false` = VC gunfire doesn't alert other VC; on by default*",
+      "type": "boolean"
+    },
+    "nightVisionPenalty": {
+      "description": "Riduzione notturna del raggio visivo dei soldati; default 1\n\nNight reduction of the soldiers' vision; default 1",
+      "markdownDescription": "Riduzione notturna del raggio visivo dei soldati; default 1\n\n*Night reduction of the soldiers' vision; default 1*",
+      "type": "integer",
+      "minimum": 0
+    },
+    "vcNightPenalty": {
+      "description": "Riduzione notturna della distanza d'allerta e della vista dei VC (base 5, minimo 2); default 2\n\nNight reduction of VC alert distance and sight (base 5, minimum 2); default 2",
+      "markdownDescription": "Riduzione notturna della distanza d'allerta e della vista dei VC (base 5, minimo 2); default 2\n\n*Night reduction of VC alert distance and sight (base 5, minimum 2); default 2*",
+      "type": "integer",
+      "minimum": 0
+    },
+    "bleedStopChance": {
+      "description": "Probabilità che un'emorragia si fermi da sola a inizio turno; default 1/3, 0 = solo il medico la ferma\n\nChance a bleed stops by itself at turn start; default 1/3, 0 = only the Medic stops it",
+      "markdownDescription": "Probabilità che un'emorragia si fermi da sola a inizio turno; default 1/3, 0 = solo il medico la ferma\n\n*Chance a bleed stops by itself at turn start; default 1/3, 0 = only the Medic stops it*",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "rain": {
+      "description": "Solo grafica. `true` = piove tutta la missione; un oggetto = acquazzoni casuali, che cominciano a inizio turno giocatore se non piove già\n\nVisual only. `true` = it rains all mission long; an object = random showers, starting at the beginning of a player turn when it isn't raining",
+      "markdownDescription": "Solo grafica. `true` = piove tutta la missione; un oggetto = acquazzoni casuali, che cominciano a inizio turno giocatore se non piove già\n\n*Visual only. `true` = it rains all mission long; an object = random showers, starting at the beginning of a player turn when it isn't raining*",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "chance": {
+              "description": "Probabilità per turno che cominci un acquazzone; default 0.2\n\nChance per turn that a shower starts; default 0.2",
+              "markdownDescription": "Probabilità per turno che cominci un acquazzone; default 0.2\n\n*Chance per turn that a shower starts; default 0.2*",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "minTurns": {
+              "description": "Durata minima in turni; default 2\n\nMinimum length in turns; default 2",
+              "markdownDescription": "Durata minima in turni; default 2\n\n*Minimum length in turns; default 2*",
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxTurns": {
+              "description": "Durata massima in turni; default 4\n\nMaximum length in turns; default 4",
+              "markdownDescription": "Durata massima in turni; default 4\n\n*Maximum length in turns; default 4*",
+              "type": "integer",
+              "minimum": 1
+            },
+            "fromStart": {
+              "description": "Il primo acquazzone è già in corso a inizio missione\n\nThe first shower is already under way at mission start",
+              "markdownDescription": "Il primo acquazzone è già in corso a inizio missione\n\n*The first shower is already under way at mission start*",
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "mist": {
+      "description": "Solo grafica. Banchi di nebbiolina: `true` = sui tile palude, un oggetto per scegliere tile e spessore\n\nVisual only. Mist banks: `true` = on swamp tiles, an object to choose tiles and thickness",
+      "markdownDescription": "Solo grafica. Banchi di nebbiolina: `true` = sui tile palude, un oggetto per scegliere tile e spessore\n\n*Visual only. Mist banks: `true` = on swamp tiles, an object to choose tiles and thickness*",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "tiles": {
+              "description": "`id` dei tile con la nebbiolina; default `[\"swamp\"]`\n\n`id` of the misty tiles; default `[\"swamp\"]`",
+              "markdownDescription": "`id` dei tile con la nebbiolina; default `[\"swamp\"]`\n\n*`id` of the misty tiles; default `[\"swamp\"]`*",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "density": {
+              "description": "Spessore: 0.5 rada, 1 normale, 2 fitta\n\nThickness: 0.5 thin, 1 normal, 2 thick",
+              "markdownDescription": "Spessore: 0.5 rada, 1 normale, 2 fitta\n\n*Thickness: 0.5 thin, 1 normal, 2 thick*",
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "temperature": {
+      "description": "Solo informativo. Temperature in °C del pannello meteo; la pioggia toglie 3°, il cielo coperto 1°\n\nInformative only. Weather panel temperatures in °C; rain takes 3° off, overcast sky 1°",
+      "markdownDescription": "Solo informativo. Temperature in °C del pannello meteo; la pioggia toglie 3°, il cielo coperto 1°\n\n*Informative only. Weather panel temperatures in °C; rain takes 3° off, overcast sky 1°*",
+      "type": "object",
+      "properties": {
+        "day": {
+          "description": "[min, max] di giorno; default [27, 34]\n\nDay [min, max]; default [27, 34]",
+          "markdownDescription": "[min, max] di giorno; default [27, 34]\n\n*Day [min, max]; default [27, 34]*",
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2
+        },
+        "night": {
+          "description": "[min, max] di notte; default [21, 26]\n\nNight [min, max]; default [21, 26]",
+          "markdownDescription": "[min, max] di notte; default [21, 26]\n\n*Night [min, max]; default [21, 26]*",
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2
+        }
+      },
+      "additionalProperties": false
+    },
+    "cloudy": {
+      "description": "Solo informativo. Probabilità di cielo coperto a inizio missione; default 0.35 (poi cambia col 20% a turno)\n\nInformative only. Chance of overcast sky at mission start; default 0.35 (then 20% per turn to change)",
+      "markdownDescription": "Solo informativo. Probabilità di cielo coperto a inizio missione; default 0.35 (poi cambia col 20% a turno)\n\n*Informative only. Chance of overcast sky at mission start; default 0.35 (then 20% per turn to change)*",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "squad": {
+      "description": "Squadra fissa al posto della scelta nel briefing\n\nFixed squad instead of the briefing choice",
+      "markdownDescription": "Squadra fissa al posto della scelta nel briefing\n\n*Fixed squad instead of the briefing choice*",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cls": {
+            "description": "Classe US\n\nUS class",
+            "markdownDescription": "Classe US\n\n*US class*",
+            "type": "string",
+            "examples": [
+              "assault",
+              "sniper",
+              "engineer",
+              "medic"
+            ]
+          },
+          "col": {
+            "description": "Colonna (da 0)\n\nColumn (from 0)",
+            "markdownDescription": "Colonna (da 0)\n\n*Column (from 0)*",
+            "type": "integer",
+            "minimum": 0
+          },
+          "row": {
+            "description": "Riga (da 0)\n\nRow (from 0)",
+            "markdownDescription": "Riga (da 0)\n\n*Row (from 0)*",
+            "type": "integer",
+            "minimum": 0
+          },
+          "facing": {
+            "description": "Orientamento: 0 nord, 1 est, 2 sud, 3 ovest\n\nFacing: 0 north, 1 east, 2 south, 3 west",
+            "markdownDescription": "Orientamento: 0 nord, 1 est, 2 sud, 3 ovest\n\n*Facing: 0 north, 1 east, 2 south, 3 west*",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "hp": {
+            "description": "Punti ferita iniziali\n\nStarting hit points",
+            "markdownDescription": "Punti ferita iniziali\n\n*Starting hit points*",
+            "type": "integer",
+            "minimum": 1
+          },
+          "bleeding": {
+            "description": "Parte con un'emorragia\n\nStarts bleeding",
+            "markdownDescription": "Parte con un'emorragia\n\n*Starts bleeding*",
+            "type": "boolean"
+          },
+          "stance": {
+            "description": "Postura iniziale\n\nStarting stance",
+            "markdownDescription": "Postura iniziale\n\n*Starting stance*",
+            "type": "string",
+            "enum": [
+              "stand",
+              "crouch",
+              "prone"
+            ]
+          }
+        },
+        "required": [
+          "cls",
+          "col",
+          "row"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "enemies": {
+      "description": "VC in posizione fissa al posto dello schieramento casuale\n\nVC at fixed positions instead of random deployment",
+      "markdownDescription": "VC in posizione fissa al posto dello schieramento casuale\n\n*VC at fixed positions instead of random deployment*",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cls": {
+            "description": "Classe VC\n\nVC class",
+            "markdownDescription": "Classe VC\n\n*VC class*",
+            "type": "string",
+            "examples": [
+              "grunt",
+              "sniper_vc",
+              "commander"
+            ]
+          },
+          "col": {
+            "description": "Colonna (da 0)\n\nColumn (from 0)",
+            "markdownDescription": "Colonna (da 0)\n\n*Column (from 0)*",
+            "type": "integer",
+            "minimum": 0
+          },
+          "row": {
+            "description": "Riga (da 0)\n\nRow (from 0)",
+            "markdownDescription": "Riga (da 0)\n\n*Row (from 0)*",
+            "type": "integer",
+            "minimum": 0
+          },
+          "facing": {
+            "description": "Orientamento: 0 nord, 1 est, 2 sud, 3 ovest\n\nFacing: 0 north, 1 east, 2 south, 3 west",
+            "markdownDescription": "Orientamento: 0 nord, 1 est, 2 sud, 3 ovest\n\n*Facing: 0 north, 1 east, 2 south, 3 west*",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "alerted": {
+            "description": "Parte in allerta\n\nStarts alerted",
+            "markdownDescription": "Parte in allerta\n\n*Starts alerted*",
+            "type": "boolean"
+          },
+          "hold": {
+            "description": "Sentinella: non pattuglia finché non è allertata\n\nSentry: doesn't patrol until alerted",
+            "markdownDescription": "Sentinella: non pattuglia finché non è allertata\n\n*Sentry: doesn't patrol until alerted*",
+            "type": "boolean"
+          },
+          "hp": {
+            "description": "Punti ferita iniziali\n\nStarting hit points",
+            "markdownDescription": "Punti ferita iniziali\n\n*Starting hit points*",
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "col",
+          "row"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "supportedMissions": {
+      "description": "Tipi di missione giocabili sulla mappa\n\nMission types playable on the map",
+      "markdownDescription": "Tipi di missione giocabili sulla mappa\n\n*Mission types playable on the map*",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "recon",
+          "search_destroy",
+          "rescue_pilot",
+          "capture_objective"
+        ]
+      }
+    },
+    "objectives": {
+      "description": "Obiettivi per tipo di missione; servono quelli dei tipi in `supportedMissions`\n\nObjectives per mission type; those of the `supportedMissions` types are needed",
+      "markdownDescription": "Obiettivi per tipo di missione; servono quelli dei tipi in `supportedMissions`\n\n*Objectives per mission type; those of the `supportedMissions` types are needed*",
+      "type": "object",
+      "properties": {
+        "recon": {
+          "description": "Ricognizione: zone da raggiungere\n\nRecon: zones to reach",
+          "markdownDescription": "Ricognizione: zone da raggiungere\n\n*Recon: zones to reach*",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "col": {
+                "description": "Colonna (da 0)\n\nColumn (from 0)",
+                "markdownDescription": "Colonna (da 0)\n\n*Column (from 0)*",
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "description": "Riga (da 0)\n\nRow (from 0)",
+                "markdownDescription": "Riga (da 0)\n\n*Row (from 0)*",
+                "type": "integer",
+                "minimum": 0
+              },
+              "label": {
+                "description": "Nome della zona\n\nZone name",
+                "markdownDescription": "Nome della zona\n\n*Zone name*",
+                "type": "string"
+              }
+            },
+            "required": [
+              "col",
+              "row"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "search_destroy": {
+          "description": "Cerca e distruggi\n\nSearch and destroy",
+          "markdownDescription": "Cerca e distruggi\n\n*Search and destroy*",
+          "type": "object",
+          "properties": {
+            "eliminateAll": {
+              "description": "Vanno eliminati tutti i VC\n\nAll VC must be killed",
+              "markdownDescription": "Vanno eliminati tutti i VC\n\n*All VC must be killed*",
+              "type": "boolean"
+            },
+            "minKills": {
+              "description": "VC da eliminare; default 4\n\nVC to kill; default 4",
+              "markdownDescription": "VC da eliminare; default 4\n\n*VC to kill; default 4*",
+              "type": "integer",
+              "minimum": 1
+            },
+            "tileAnimations": {
+              "description": "Animazioni visibili solo in questa modalità\n\nAnimations shown only in this mode",
+              "markdownDescription": "Animazioni visibili solo in questa modalità\n\n*Animations shown only in this mode*",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "col": {
+                    "description": "Colonna (da 0)\n\nColumn (from 0)",
+                    "markdownDescription": "Colonna (da 0)\n\n*Column (from 0)*",
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row": {
+                    "description": "Riga (da 0)\n\nRow (from 0)",
+                    "markdownDescription": "Riga (da 0)\n\n*Row (from 0)*",
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "type": {
+                    "description": "Fumo, fiamme o nebbia\n\nSmoke, fire or fog",
+                    "markdownDescription": "Fumo, fiamme o nebbia\n\n*Smoke, fire or fog*",
+                    "type": "string",
+                    "enum": [
+                      "smoke",
+                      "fire",
+                      "fog"
+                    ]
+                  }
+                },
+                "required": [
+                  "col",
+                  "row",
+                  "type"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "rescue_pilot": {
+          "description": "Recupero pilota\n\nPilot rescue",
+          "markdownDescription": "Recupero pilota\n\n*Pilot rescue*",
+          "type": "object",
+          "properties": {
+            "pilotCol": {
+              "description": "Colonna del pilota (nascosto nella FOW)\n\nPilot column (hidden in the FOW)",
+              "markdownDescription": "Colonna del pilota (nascosto nella FOW)\n\n*Pilot column (hidden in the FOW)*",
+              "type": "integer",
+              "minimum": 0
+            },
+            "pilotRow": {
+              "description": "Riga del pilota\n\nPilot row",
+              "markdownDescription": "Riga del pilota\n\n*Pilot row*",
+              "type": "integer",
+              "minimum": 0
+            },
+            "extractCol": {
+              "description": "Colonna del punto d'estrazione\n\nExtraction point column",
+              "markdownDescription": "Colonna del punto d'estrazione\n\n*Extraction point column*",
+              "type": "integer",
+              "minimum": 0
+            },
+            "extractRow": {
+              "description": "Riga del punto d'estrazione\n\nExtraction point row",
+              "markdownDescription": "Riga del punto d'estrazione\n\n*Extraction point row*",
+              "type": "integer",
+              "minimum": 0
+            },
+            "tileAnimations": {
+              "description": "Animazioni visibili solo in questa modalità (es. fumo sul relitto)\n\nAnimations shown only in this mode (e.g. smoke on the wreck)",
+              "markdownDescription": "Animazioni visibili solo in questa modalità (es. fumo sul relitto)\n\n*Animations shown only in this mode (e.g. smoke on the wreck)*",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "col": {
+                    "description": "Colonna (da 0)\n\nColumn (from 0)",
+                    "markdownDescription": "Colonna (da 0)\n\n*Column (from 0)*",
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row": {
+                    "description": "Riga (da 0)\n\nRow (from 0)",
+                    "markdownDescription": "Riga (da 0)\n\n*Row (from 0)*",
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "type": {
+                    "description": "Fumo, fiamme o nebbia\n\nSmoke, fire or fog",
+                    "markdownDescription": "Fumo, fiamme o nebbia\n\n*Smoke, fire or fog*",
+                    "type": "string",
+                    "enum": [
+                      "smoke",
+                      "fire",
+                      "fog"
+                    ]
+                  }
+                },
+                "required": [
+                  "col",
+                  "row",
+                  "type"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "pilotCol",
+            "pilotRow",
+            "extractCol",
+            "extractRow"
+          ],
+          "additionalProperties": false
+        },
+        "capture_objective": {
+          "description": "Conquista: posizioni da occupare\n\nCapture: positions to hold",
+          "markdownDescription": "Conquista: posizioni da occupare\n\n*Capture: positions to hold*",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "col": {
+                "description": "Colonna (da 0)\n\nColumn (from 0)",
+                "markdownDescription": "Colonna (da 0)\n\n*Column (from 0)*",
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "description": "Riga (da 0)\n\nRow (from 0)",
+                "markdownDescription": "Riga (da 0)\n\n*Row (from 0)*",
+                "type": "integer",
+                "minimum": 0
+              },
+              "label": {
+                "description": "Nome della posizione\n\nPosition name",
+                "markdownDescription": "Nome della posizione\n\n*Position name*",
+                "type": "string"
+              },
+              "holdTurns": {
+                "description": "Turni consecutivi da tenerla; default 2\n\nConsecutive turns to hold it; default 2",
+                "markdownDescription": "Turni consecutivi da tenerla; default 2\n\n*Consecutive turns to hold it; default 2*",
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "col",
+              "row"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "tileAnimations": {
+      "description": "Animazioni ambientali sempre visibili; il fumo si vede anche attraverso la FOW\n\nAmbient animations always shown; smoke shows through the FOW too",
+      "markdownDescription": "Animazioni ambientali sempre visibili; il fumo si vede anche attraverso la FOW\n\n*Ambient animations always shown; smoke shows through the FOW too*",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "col": {
+            "description": "Colonna (da 0)\n\nColumn (from 0)",
+            "markdownDescription": "Colonna (da 0)\n\n*Column (from 0)*",
+            "type": "integer",
+            "minimum": 0
+          },
+          "row": {
+            "description": "Riga (da 0)\n\nRow (from 0)",
+            "markdownDescription": "Riga (da 0)\n\n*Row (from 0)*",
+            "type": "integer",
+            "minimum": 0
+          },
+          "type": {
+            "description": "Fumo, fiamme o nebbia\n\nSmoke, fire or fog",
+            "markdownDescription": "Fumo, fiamme o nebbia\n\n*Smoke, fire or fog*",
+            "type": "string",
+            "enum": [
+              "smoke",
+              "fire",
+              "fog"
+            ]
+          }
+        },
+        "required": [
+          "col",
+          "row",
+          "type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "weapons": {
+      "description": "Armi per classe, solo per questa missione. Un array sostituisce il loadout; un oggetto modifica le armi per `id` (campi uniti all'arma, `null` la toglie, un `id` nuovo la aggiunge in fondo)\n\nWeapons per class, for this mission only. An array replaces the loadout; an object changes weapons by `id` (fields merged into the weapon, `null` removes it, a new `id` adds it at the end)",
+      "markdownDescription": "Armi per classe, solo per questa missione. Un array sostituisce il loadout; un oggetto modifica le armi per `id` (campi uniti all'arma, `null` la toglie, un `id` nuovo la aggiunge in fondo)\n\n*Weapons per class, for this mission only. An array replaces the loadout; an object changes weapons by `id` (fields merged into the weapon, `null` removes it, a new `id` adds it at the end)*",
+      "type": "object",
+      "properties": {
+        "assault": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/weapon"
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/definitions/weaponPatch"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "sniper": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/weapon"
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/definitions/weaponPatch"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "engineer": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/weapon"
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/definitions/weaponPatch"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "medic": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/weapon"
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/definitions/weaponPatch"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "grunt": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/weapon"
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/definitions/weaponPatch"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "sniper_vc": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/weapon"
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/definitions/weaponPatch"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "commander": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/weapon"
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/definitions/weaponPatch"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/weapon"
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/definitions/weaponPatch"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "vcMix": {
+      "description": "Composizione dello schieramento iniziale e, senza `ambushMix`, dell'imboscata; pesi per classe VC. Default `{ \"grunt\": 3, \"sniper_vc\": 1, \"commander\": 1 }`\n\nComposition of the initial deployment and, without `ambushMix`, of the ambush; weights per VC class. Default `{ \"grunt\": 3, \"sniper_vc\": 1, \"commander\": 1 }`",
+      "markdownDescription": "Composizione dello schieramento iniziale e, senza `ambushMix`, dell'imboscata; pesi per classe VC. Default `{ \"grunt\": 3, \"sniper_vc\": 1, \"commander\": 1 }`\n\n*Composition of the initial deployment and, without `ambushMix`, of the ambush; weights per VC class. Default `{ \"grunt\": 3, \"sniper_vc\": 1, \"commander\": 1 }`*",
+      "type": "object",
+      "properties": {
+        "grunt": {
+          "type": "number",
+          "minimum": 0
+        },
+        "sniper_vc": {
+          "type": "number",
+          "minimum": 0
+        },
+        "commander": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "ambushMix": {
+      "description": "Composizione dell'imboscata; default `{ \"grunt\": 2, \"sniper_vc\": 1, \"commander\": 1 }`\n\nAmbush composition; default `{ \"grunt\": 2, \"sniper_vc\": 1, \"commander\": 1 }`",
+      "markdownDescription": "Composizione dell'imboscata; default `{ \"grunt\": 2, \"sniper_vc\": 1, \"commander\": 1 }`\n\n*Ambush composition; default `{ \"grunt\": 2, \"sniper_vc\": 1, \"commander\": 1 }`*",
+      "type": "object",
+      "properties": {
+        "grunt": {
+          "type": "number",
+          "minimum": 0
+        },
+        "sniper_vc": {
+          "type": "number",
+          "minimum": 0
+        },
+        "commander": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "reinforcementMix": {
+      "description": "Composizione dei rinforzi; default `{ \"grunt\": 1 }`\n\nReinforcement composition; default `{ \"grunt\": 1 }`",
+      "markdownDescription": "Composizione dei rinforzi; default `{ \"grunt\": 1 }`\n\n*Reinforcement composition; default `{ \"grunt\": 1 }`*",
+      "type": "object",
+      "properties": {
+        "grunt": {
+          "type": "number",
+          "minimum": 0
+        },
+        "sniper_vc": {
+          "type": "number",
+          "minimum": 0
+        },
+        "commander": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "tuning": {
+      "description": "Parametri di bilanciamento per questa missione, uniti in profondità ai valori del gioco (numeri e array sostituiti, oggetti uniti), es. `{ \"VC_TACTICS\": { \"holdChance\": 0.8 } }`\n\nBalance parameters for this mission, deep-merged into the game values (numbers and arrays replaced, objects merged), e.g. `{ \"VC_TACTICS\": { \"holdChance\": 0.8 } }`",
+      "markdownDescription": "Parametri di bilanciamento per questa missione, uniti in profondità ai valori del gioco (numeri e array sostituiti, oggetti uniti), es. `{ \"VC_TACTICS\": { \"holdChance\": 0.8 } }`\n\n*Balance parameters for this mission, deep-merged into the game values (numbers and arrays replaced, objects merged), e.g. `{ \"VC_TACTICS\": { \"holdChance\": 0.8 } }`*",
+      "type": "object",
+      "properties": {
+        "VC_TACTICS": {},
+        "STANCES": {},
+        "MELEE": {},
+        "ARTILLERY": {},
+        "NAPALM": {},
+        "ENEMY_CLASSES": {},
+        "VC_MIX": {}
+      },
+      "additionalProperties": {}
+    },
+    "translations": {
+      "description": "Testi per lingua (`it`, `en`)\n\nTexts per language (`it`, `en`)",
+      "markdownDescription": "Testi per lingua (`it`, `en`)\n\n*Texts per language (`it`, `en`)*",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/translation"
+      }
+    },
+    "tutorial": {
+      "$ref": "#/definitions/tutorial"
+    },
+    "procedural": {},
+    "seed": {},
+    "size": {},
+    "layout": {},
+    "startEdge": {}
+  },
+  "required": [
+    "cols",
+    "rows",
+    "tileTypes",
+    "grid"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "tileType": {
+      "description": "Tipo di tile\n\nTile type",
+      "markdownDescription": "Tipo di tile\n\n*Tile type*",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Identificatore (usato in `tileLabels`, `mist` e per l'aspetto)\n\nIdentifier (used in `tileLabels`, `mist` and for the look)",
+          "markdownDescription": "Identificatore (usato in `tileLabels`, `mist` e per l'aspetto)\n\n*Identifier (used in `tileLabels`, `mist` and for the look)*",
+          "type": "string"
+        },
+        "label": {
+          "description": "Nome di default, se manca la traduzione\n\nDefault name, when the translation is missing",
+          "markdownDescription": "Nome di default, se manca la traduzione\n\n*Default name, when the translation is missing*",
+          "type": "string"
+        },
+        "moveCost": {
+          "description": "AP per attraversarlo (0 = gratis, 3 = palude)\n\nAP to cross it (0 = free, 3 = swamp)",
+          "markdownDescription": "AP per attraversarlo (0 = gratis, 3 = palude)\n\n*AP to cross it (0 = free, 3 = swamp)*",
+          "type": "number",
+          "minimum": 0
+        },
+        "coverBonus": {
+          "description": "Bonus difesa a chi lo occupa\n\nDefense bonus to its occupant",
+          "markdownDescription": "Bonus difesa a chi lo occupa\n\n*Defense bonus to its occupant*",
+          "type": "number",
+          "minimum": 0
+        },
+        "color": {
+          "description": "Colore del disegno procedurale (#rrggbb)\n\nProcedural drawing color (#rrggbb)",
+          "markdownDescription": "Colore del disegno procedurale (#rrggbb)\n\n*Procedural drawing color (#rrggbb)*",
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+        },
+        "texture": {
+          "description": "Solo mappe senza `image`. Aspetto del tile: il nome di un terreno già disegnato dal gioco (`jungle`, `swamp`, `clearing`, `river`, `building`…) disegna l'`id` come quel terreno con tutti i suoi effetti (chiome, onde, erba al vento, nebbia, ombre), con la tinta di `color`; oppure il percorso di un'immagine (PNG/JPG/WebP/GIF) disegnata sopra `color`. Solo grafica\n\nMaps without `image` only. Tile look: the name of a terrain the game already draws (`jungle`, `swamp`, `clearing`, `river`, `building`…) draws the `id` like that terrain with all its effects (canopy, waves, wind-blown grass, mist, shadows), tinted by `color`; or the path of an image (PNG/JPG/WebP/GIF) drawn over `color`. Visual only",
+          "markdownDescription": "Solo mappe senza `image`. Aspetto del tile: il nome di un terreno già disegnato dal gioco (`jungle`, `swamp`, `clearing`, `river`, `building`…) disegna l'`id` come quel terreno con tutti i suoi effetti (chiome, onde, erba al vento, nebbia, ombre), con la tinta di `color`; oppure il percorso di un'immagine (PNG/JPG/WebP/GIF) disegnata sopra `color`. Solo grafica\n\n*Maps without `image` only. Tile look: the name of a terrain the game already draws (`jungle`, `swamp`, `clearing`, `river`, `building`…) draws the `id` like that terrain with all its effects (canopy, waves, wind-blown grass, mist, shadows), tinted by `color`; or the path of an image (PNG/JPG/WebP/GIF) drawn over `color`. Visual only*",
+          "type": "string",
+          "examples": [
+            "scorched",
+            "wall",
+            "obstacle",
+            "wall_breach",
+            "building",
+            "temple",
+            "garden",
+            "clearing",
+            "jungle",
+            "swamp",
+            "river",
+            "bridge",
+            "ford",
+            "street",
+            "urban",
+            "plaza",
+            "objective",
+            "debris",
+            "trail",
+            "village",
+            "bunker"
+          ]
+        },
+        "impassable": {
+          "description": "Blocca il movimento (muri, fiumi)\n\nBlocks movement (walls, rivers)",
+          "markdownDescription": "Blocca il movimento (muri, fiumi)\n\n*Blocks movement (walls, rivers)*",
+          "type": "boolean"
+        },
+        "losBlock": {
+          "description": "`full` = blocca la vista, `partial` = −1 al raggio visivo per ogni tile attraversato\n\n`full` = blocks sight, `partial` = −1 to vision range per tile crossed",
+          "markdownDescription": "`full` = blocca la vista, `partial` = −1 al raggio visivo per ogni tile attraversato\n\n*`full` = blocks sight, `partial` = −1 to vision range per tile crossed*",
+          "type": "string",
+          "enum": [
+            "full",
+            "partial"
+          ]
+        },
+        "burnable": {
+          "description": "Il geniere può incendiarlo (fuoco per 2 turni)\n\nThe Engineer can set it on fire (burns for 2 turns)",
+          "markdownDescription": "Il geniere può incendiarlo (fuoco per 2 turni)\n\n*The Engineer can set it on fire (burns for 2 turns)*",
+          "type": "boolean"
+        },
+        "demolishable": {
+          "description": "Il geniere può demolirlo con dado ≥ 4\n\nThe Engineer can demolish it with a roll ≥ 4",
+          "markdownDescription": "Il geniere può demolirlo con dado ≥ 4\n\n*The Engineer can demolish it with a roll ≥ 4*",
+          "type": "boolean"
+        },
+        "demolishResult": {
+          "description": "Carattere della griglia del tile dopo la demolizione\n\nGrid character of the tile after demolition",
+          "markdownDescription": "Carattere della griglia del tile dopo la demolizione\n\n*Grid character of the tile after demolition*",
+          "type": "string"
+        },
+        "blastResult": {
+          "description": "Carattere del tile che lo sostituisce quando ci cade un colpo d'artiglieria; `false` = indistruttibile. Default: `burnable` → terra bruciata in fiamme, muri/edifici/templi/bunker → macerie, altri `demolishable` → `demolishResult`\n\nCharacter of the tile replacing it when an artillery round lands on it; `false` = indestructible. Default: `burnable` → burning scorched earth, walls/buildings/temples/bunkers → rubble, other `demolishable` → `demolishResult`",
+          "markdownDescription": "Carattere del tile che lo sostituisce quando ci cade un colpo d'artiglieria; `false` = indistruttibile. Default: `burnable` → terra bruciata in fiamme, muri/edifici/templi/bunker → macerie, altri `demolishable` → `demolishResult`\n\n*Character of the tile replacing it when an artillery round lands on it; `false` = indestructible. Default: `burnable` → burning scorched earth, walls/buildings/temples/bunkers → rubble, other `demolishable` → `demolishResult`*",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "cell": {
+      "type": "object",
+      "properties": {
+        "col": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "col",
+        "row"
+      ],
+      "additionalProperties": false
+    },
+    "zone": {
+      "type": "object",
+      "properties": {
+        "colMin": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "colMax": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rowMin": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rowMax": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "colMin",
+        "colMax",
+        "rowMin",
+        "rowMax"
+      ],
+      "additionalProperties": false
+    },
+    "weapon": {
+      "description": "Arma\n\nWeapon",
+      "markdownDescription": "Arma\n\n*Weapon*",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Identificatore interno\n\nInternal identifier",
+          "markdownDescription": "Identificatore interno\n\n*Internal identifier*",
+          "type": "string"
+        },
+        "label": {
+          "description": "Nome mostrato in italiano\n\nDisplayed name in Italian",
+          "markdownDescription": "Nome mostrato in italiano\n\n*Displayed name in Italian*",
+          "type": "string"
+        },
+        "labelEn": {
+          "description": "Nome mostrato in inglese; senza, anche in inglese si usa `label`\n\nDisplayed name in English; without it, `label` is shown in English too",
+          "markdownDescription": "Nome mostrato in inglese; senza, anche in inglese si usa `label`\n\n*Displayed name in English; without it, `label` is shown in English too*",
+          "type": "string"
+        },
+        "atk": {
+          "description": "ATK dell'arma (sostituisce quello della classe)\n\nWeapon ATK (replaces the class one)",
+          "markdownDescription": "ATK dell'arma (sostituisce quello della classe)\n\n*Weapon ATK (replaces the class one)*",
+          "type": "number",
+          "minimum": 0
+        },
+        "range": {
+          "description": "Gittata massima in tile\n\nMaximum range in tiles",
+          "markdownDescription": "Gittata massima in tile\n\n*Maximum range in tiles*",
+          "type": "integer",
+          "minimum": 0
+        },
+        "ammo": {
+          "description": "Usi totali (granate, fumogeni, radio); `null` = illimitati\n\nTotal uses (grenades, smoke, radio); `null` = unlimited",
+          "markdownDescription": "Usi totali (granate, fumogeni, radio); `null` = illimitati\n\n*Total uses (grenades, smoke, radio); `null` = unlimited*",
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mag": {
+          "description": "Solo US. Colpi per caricatore: ogni attacco (e ogni overwatch o raffica di soppressione) ne consuma 1; a caricatore vuoto serve ricaricare\n\nUS only. Rounds per magazine: every attack (and every overwatch shot or suppression burst) uses 1; an empty magazine must be reloaded",
+          "markdownDescription": "Solo US. Colpi per caricatore: ogni attacco (e ogni overwatch o raffica di soppressione) ne consuma 1; a caricatore vuoto serve ricaricare\n\n*US only. Rounds per magazine: every attack (and every overwatch shot or suppression burst) uses 1; an empty magazine must be reloaded*",
+          "type": "integer",
+          "minimum": 1
+        },
+        "mags": {
+          "description": "Con `mag`: caricatori di riserva, uno per ricarica; assente o `null` = illimitati\n\nWith `mag`: spare magazines, one per reload; absent or `null` = unlimited",
+          "markdownDescription": "Con `mag`: caricatori di riserva, uno per ricarica; assente o `null` = illimitati\n\n*With `mag`: spare magazines, one per reload; absent or `null` = unlimited*",
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reloadAp": {
+          "description": "Con `mag`: AP per ricaricare; default 1\n\nWith `mag`: AP to reload; default 1",
+          "markdownDescription": "Con `mag`: AP per ricaricare; default 1\n\n*With `mag`: AP to reload; default 1*",
+          "type": "integer",
+          "minimum": 0
+        },
+        "shotsPerTurn": {
+          "description": "Attacchi massimi per turno con quest'arma (il cecchino: 1)\n\nMaximum attacks per turn with this weapon (sniper: 1)",
+          "markdownDescription": "Attacchi massimi per turno con quest'arma (il cecchino: 1)\n\n*Maximum attacks per turn with this weapon (sniper: 1)*",
+          "type": "integer",
+          "minimum": 1
+        },
+        "aoe": {
+          "description": "Raggio dell'area d'effetto (distanza Manhattan): attacco risolto senza dado manuale, colpisce US e VC nel raggio\n\nArea of effect radius (Manhattan distance): resolved without a manual roll, hits US and VC in range",
+          "markdownDescription": "Raggio dell'area d'effetto (distanza Manhattan): attacco risolto senza dado manuale, colpisce US e VC nel raggio\n\n*Area of effect radius (Manhattan distance): resolved without a manual roll, hits US and VC in range*",
+          "type": "integer",
+          "minimum": 0
+        },
+        "minRange": {
+          "description": "Solo armi AoE. Gittata minima in tile; default `aoe + 1`, così chi lancia non è mai nel raggio\n\nAoE weapons only. Minimum range in tiles; default `aoe + 1`, so the thrower is never inside the blast",
+          "markdownDescription": "Solo armi AoE. Gittata minima in tile; default `aoe + 1`, così chi lancia non è mai nel raggio\n\n*AoE weapons only. Minimum range in tiles; default `aoe + 1`, so the thrower is never inside the blast*",
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxCarriers": {
+          "description": "Unità per missione che possono portare quest'arma (contatori separati per squadra US e VC)\n\nUnits per mission that can carry this weapon (separate counters for the US squad and the VC)",
+          "markdownDescription": "Unità per missione che possono portare quest'arma (contatori separati per squadra US e VC)\n\n*Units per mission that can carry this weapon (separate counters for the US squad and the VC)*",
+          "type": "integer",
+          "minimum": 0
+        },
+        "rangePenalty": {
+          "description": "Solo US. Penalità di gittata (−1 ATK ogni 2 tile), anche in overwatch; se assente vale solo per le classi `marksman`\n\nUS only. Range penalty (−1 ATK every 2 tiles), overwatch included; when absent it applies only to `marksman` classes",
+          "markdownDescription": "Solo US. Penalità di gittata (−1 ATK ogni 2 tile), anche in overwatch; se assente vale solo per le classi `marksman`\n\n*US only. Range penalty (−1 ATK every 2 tiles), overwatch included; when absent it applies only to `marksman` classes*",
+          "type": "boolean"
+        },
+        "noise": {
+          "description": "Raggio del rumore in tile: i VC entro questa distanza si allertano. Armi US: dal tiratore per le armi dirette, dal punto d'impatto per le AoE; armi VC: sempre dal tiratore. Default 4 (diretta) / 6 (AoE)\n\nNoise radius in tiles: VC within this distance become alerted. US weapons: from the shooter for direct weapons, from the impact point for AoE; VC weapons: always from the shooter. Default 4 (direct) / 6 (AoE)",
+          "markdownDescription": "Raggio del rumore in tile: i VC entro questa distanza si allertano. Armi US: dal tiratore per le armi dirette, dal punto d'impatto per le AoE; armi VC: sempre dal tiratore. Default 4 (diretta) / 6 (AoE)\n\n*Noise radius in tiles: VC within this distance become alerted. US weapons: from the shooter for direct weapons, from the impact point for AoE; VC weapons: always from the shooter. Default 4 (direct) / 6 (AoE)*",
+          "type": "number",
+          "minimum": 0
+        },
+        "melee": {
+          "description": "Solo US. Arma bianca: fendente al posto dei traccianti, esclusa da overwatch e soppressione; un colpo a segno uccide e l'unità avanza nel tile del bersaglio\n\nUS only. Melee weapon: a slash instead of tracers, excluded from overwatch and suppression; a hit kills and the unit advances into the target's tile",
+          "markdownDescription": "Solo US. Arma bianca: fendente al posto dei traccianti, esclusa da overwatch e soppressione; un colpo a segno uccide e l'unità avanza nel tile del bersaglio\n\n*US only. Melee weapon: a slash instead of tracers, excluded from overwatch and suppression; a hit kills and the unit advances into the target's tile*",
+          "type": "boolean"
+        },
+        "rounds": {
+          "description": "Solo grafica. Traccianti per attacco; default 1 per i tiratori scelti, 3 per le altre armi\n\nVisual only. Tracers per attack; default 1 for marksmen, 3 for other weapons",
+          "markdownDescription": "Solo grafica. Traccianti per attacco; default 1 per i tiratori scelti, 3 per le altre armi\n\n*Visual only. Tracers per attack; default 1 for marksmen, 3 for other weapons*",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "smoke": {
+          "description": "Solo armi AoE. Fumogeno: nessun danno, fumo nel raggio `aoe` per N turni\n\nAoE weapons only. Smoke grenade: no damage, smoke within `aoe` for N turns",
+          "markdownDescription": "Solo armi AoE. Fumogeno: nessun danno, fumo nel raggio `aoe` per N turni\n\n*AoE weapons only. Smoke grenade: no damage, smoke within `aoe` for N turns*",
+          "type": "integer",
+          "minimum": 1
+        },
+        "artillery": {
+          "description": "Solo armi AoE. Richiesta d'artiglieria: la salva cade all'inizio del turno successivo, colpisce anche i VC nascosti e distrugge i tile colpiti\n\nAoE weapons only. Artillery call: the salvo lands at the start of the next turn, also hits hidden VC and destroys the tiles it hits",
+          "markdownDescription": "Solo armi AoE. Richiesta d'artiglieria: la salva cade all'inizio del turno successivo, colpisce anche i VC nascosti e distrugge i tile colpiti\n\n*AoE weapons only. Artillery call: the salvo lands at the start of the next turn, also hits hidden VC and destroys the tiles it hits*",
+          "type": "boolean"
+        },
+        "thrown": {
+          "description": "Solo armi AoE US. Lancio a mano: animazione ad arco con rimbalzi prima dell'esplosione\n\nUS AoE weapons only. Hand thrown: arc animation with bounces before the explosion",
+          "markdownDescription": "Solo armi AoE US. Lancio a mano: animazione ad arco con rimbalzi prima dell'esplosione\n\n*US AoE weapons only. Hand thrown: arc animation with bounces before the explosion*",
+          "type": "boolean"
+        },
+        "scatter": {
+          "description": "Solo armi AoE US. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)\n\nUS AoE weapons only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` it is each round's square (default 2 = 5×5, likelier near the centre)",
+          "markdownDescription": "Solo armi AoE US. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)\n\n*US AoE weapons only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` it is each round's square (default 2 = 5×5, likelier near the centre)*",
+          "type": "integer",
+          "minimum": 0
+        },
+        "scatterChance": {
+          "description": "Con `scatter`: probabilità di deviare su un altro tile del quadrato; default 0.5\n\nWith `scatter`: chance to deviate to another tile of the square; default 0.5",
+          "markdownDescription": "Con `scatter`: probabilità di deviare su un altro tile del quadrato; default 0.5\n\n*With `scatter`: chance to deviate to another tile of the square; default 0.5*",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "napalm": {
+          "description": "Attacco aereo al napalm: si sceglie una linea di tile (inizio e fine, anche in diagonale); cade all'inizio del turno successivo, incendia i tile e colpisce chi ci si trova senza copertura del terreno\n\nNapalm air strike: you pick a line of tiles (start and end, diagonals allowed); it lands at the start of the next turn, sets the tiles on fire and hits anyone on them with no terrain cover",
+          "markdownDescription": "Attacco aereo al napalm: si sceglie una linea di tile (inizio e fine, anche in diagonale); cade all'inizio del turno successivo, incendia i tile e colpisce chi ci si trova senza copertura del terreno\n\n*Napalm air strike: you pick a line of tiles (start and end, diagonals allowed); it lands at the start of the next turn, sets the tiles on fire and hits anyone on them with no terrain cover*",
+          "type": "boolean"
+        },
+        "length": {
+          "description": "Con `napalm`: lunghezza massima della linea in tile; default 5\n\nWith `napalm`: maximum line length in tiles; default 5",
+          "markdownDescription": "Con `napalm`: lunghezza massima della linea in tile; default 5\n\n*With `napalm`: maximum line length in tiles; default 5*",
+          "type": "integer",
+          "minimum": 1
+        },
+        "shells": {
+          "description": "Con `artillery`: colpi della salva, numero o [min, max]; default [5, 6]. `atk` e `aoe` valgono per il singolo colpo\n\nWith `artillery`: rounds in the salvo, a number or [min, max]; default [5, 6]. `atk` and `aoe` apply to each round",
+          "markdownDescription": "Con `artillery`: colpi della salva, numero o [min, max]; default [5, 6]. `atk` e `aoe` valgono per il singolo colpo\n\n*With `artillery`: rounds in the salvo, a number or [min, max]; default [5, 6]. `atk` and `aoe` apply to each round*",
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "maxItems": 2,
+              "minItems": 2
+            }
+          ]
+        },
+        "sound": {
+          "description": "Suono dello sparo (sostituisce quello sintetizzato)\n\nFiring sound (replaces the synthesized one)",
+          "markdownDescription": "Suono dello sparo (sostituisce quello sintetizzato)\n\n*Firing sound (replaces the synthesized one)*",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "weaponPatch": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "description": "Nome mostrato in italiano\n\nDisplayed name in Italian",
+          "markdownDescription": "Nome mostrato in italiano\n\n*Displayed name in Italian*",
+          "type": "string"
+        },
+        "labelEn": {
+          "description": "Nome mostrato in inglese; senza, anche in inglese si usa `label`\n\nDisplayed name in English; without it, `label` is shown in English too",
+          "markdownDescription": "Nome mostrato in inglese; senza, anche in inglese si usa `label`\n\n*Displayed name in English; without it, `label` is shown in English too*",
+          "type": "string"
+        },
+        "atk": {
+          "description": "ATK dell'arma (sostituisce quello della classe)\n\nWeapon ATK (replaces the class one)",
+          "markdownDescription": "ATK dell'arma (sostituisce quello della classe)\n\n*Weapon ATK (replaces the class one)*",
+          "type": "number",
+          "minimum": 0
+        },
+        "range": {
+          "description": "Gittata massima in tile\n\nMaximum range in tiles",
+          "markdownDescription": "Gittata massima in tile\n\n*Maximum range in tiles*",
+          "type": "integer",
+          "minimum": 0
+        },
+        "ammo": {
+          "description": "Usi totali (granate, fumogeni, radio); `null` = illimitati\n\nTotal uses (grenades, smoke, radio); `null` = unlimited",
+          "markdownDescription": "Usi totali (granate, fumogeni, radio); `null` = illimitati\n\n*Total uses (grenades, smoke, radio); `null` = unlimited*",
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mag": {
+          "description": "Solo US. Colpi per caricatore: ogni attacco (e ogni overwatch o raffica di soppressione) ne consuma 1; a caricatore vuoto serve ricaricare\n\nUS only. Rounds per magazine: every attack (and every overwatch shot or suppression burst) uses 1; an empty magazine must be reloaded",
+          "markdownDescription": "Solo US. Colpi per caricatore: ogni attacco (e ogni overwatch o raffica di soppressione) ne consuma 1; a caricatore vuoto serve ricaricare\n\n*US only. Rounds per magazine: every attack (and every overwatch shot or suppression burst) uses 1; an empty magazine must be reloaded*",
+          "type": "integer",
+          "minimum": 1
+        },
+        "mags": {
+          "description": "Con `mag`: caricatori di riserva, uno per ricarica; assente o `null` = illimitati\n\nWith `mag`: spare magazines, one per reload; absent or `null` = unlimited",
+          "markdownDescription": "Con `mag`: caricatori di riserva, uno per ricarica; assente o `null` = illimitati\n\n*With `mag`: spare magazines, one per reload; absent or `null` = unlimited*",
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reloadAp": {
+          "description": "Con `mag`: AP per ricaricare; default 1\n\nWith `mag`: AP to reload; default 1",
+          "markdownDescription": "Con `mag`: AP per ricaricare; default 1\n\n*With `mag`: AP to reload; default 1*",
+          "type": "integer",
+          "minimum": 0
+        },
+        "shotsPerTurn": {
+          "description": "Attacchi massimi per turno con quest'arma (il cecchino: 1)\n\nMaximum attacks per turn with this weapon (sniper: 1)",
+          "markdownDescription": "Attacchi massimi per turno con quest'arma (il cecchino: 1)\n\n*Maximum attacks per turn with this weapon (sniper: 1)*",
+          "type": "integer",
+          "minimum": 1
+        },
+        "aoe": {
+          "description": "Raggio dell'area d'effetto (distanza Manhattan): attacco risolto senza dado manuale, colpisce US e VC nel raggio\n\nArea of effect radius (Manhattan distance): resolved without a manual roll, hits US and VC in range",
+          "markdownDescription": "Raggio dell'area d'effetto (distanza Manhattan): attacco risolto senza dado manuale, colpisce US e VC nel raggio\n\n*Area of effect radius (Manhattan distance): resolved without a manual roll, hits US and VC in range*",
+          "type": "integer",
+          "minimum": 0
+        },
+        "minRange": {
+          "description": "Solo armi AoE. Gittata minima in tile; default `aoe + 1`, così chi lancia non è mai nel raggio\n\nAoE weapons only. Minimum range in tiles; default `aoe + 1`, so the thrower is never inside the blast",
+          "markdownDescription": "Solo armi AoE. Gittata minima in tile; default `aoe + 1`, così chi lancia non è mai nel raggio\n\n*AoE weapons only. Minimum range in tiles; default `aoe + 1`, so the thrower is never inside the blast*",
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxCarriers": {
+          "description": "Unità per missione che possono portare quest'arma (contatori separati per squadra US e VC)\n\nUnits per mission that can carry this weapon (separate counters for the US squad and the VC)",
+          "markdownDescription": "Unità per missione che possono portare quest'arma (contatori separati per squadra US e VC)\n\n*Units per mission that can carry this weapon (separate counters for the US squad and the VC)*",
+          "type": "integer",
+          "minimum": 0
+        },
+        "rangePenalty": {
+          "description": "Solo US. Penalità di gittata (−1 ATK ogni 2 tile), anche in overwatch; se assente vale solo per le classi `marksman`\n\nUS only. Range penalty (−1 ATK every 2 tiles), overwatch included; when absent it applies only to `marksman` classes",
+          "markdownDescription": "Solo US. Penalità di gittata (−1 ATK ogni 2 tile), anche in overwatch; se assente vale solo per le classi `marksman`\n\n*US only. Range penalty (−1 ATK every 2 tiles), overwatch included; when absent it applies only to `marksman` classes*",
+          "type": "boolean"
+        },
+        "noise": {
+          "description": "Raggio del rumore in tile: i VC entro questa distanza si allertano. Armi US: dal tiratore per le armi dirette, dal punto d'impatto per le AoE; armi VC: sempre dal tiratore. Default 4 (diretta) / 6 (AoE)\n\nNoise radius in tiles: VC within this distance become alerted. US weapons: from the shooter for direct weapons, from the impact point for AoE; VC weapons: always from the shooter. Default 4 (direct) / 6 (AoE)",
+          "markdownDescription": "Raggio del rumore in tile: i VC entro questa distanza si allertano. Armi US: dal tiratore per le armi dirette, dal punto d'impatto per le AoE; armi VC: sempre dal tiratore. Default 4 (diretta) / 6 (AoE)\n\n*Noise radius in tiles: VC within this distance become alerted. US weapons: from the shooter for direct weapons, from the impact point for AoE; VC weapons: always from the shooter. Default 4 (direct) / 6 (AoE)*",
+          "type": "number",
+          "minimum": 0
+        },
+        "melee": {
+          "description": "Solo US. Arma bianca: fendente al posto dei traccianti, esclusa da overwatch e soppressione; un colpo a segno uccide e l'unità avanza nel tile del bersaglio\n\nUS only. Melee weapon: a slash instead of tracers, excluded from overwatch and suppression; a hit kills and the unit advances into the target's tile",
+          "markdownDescription": "Solo US. Arma bianca: fendente al posto dei traccianti, esclusa da overwatch e soppressione; un colpo a segno uccide e l'unità avanza nel tile del bersaglio\n\n*US only. Melee weapon: a slash instead of tracers, excluded from overwatch and suppression; a hit kills and the unit advances into the target's tile*",
+          "type": "boolean"
+        },
+        "rounds": {
+          "description": "Solo grafica. Traccianti per attacco; default 1 per i tiratori scelti, 3 per le altre armi\n\nVisual only. Tracers per attack; default 1 for marksmen, 3 for other weapons",
+          "markdownDescription": "Solo grafica. Traccianti per attacco; default 1 per i tiratori scelti, 3 per le altre armi\n\n*Visual only. Tracers per attack; default 1 for marksmen, 3 for other weapons*",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "smoke": {
+          "description": "Solo armi AoE. Fumogeno: nessun danno, fumo nel raggio `aoe` per N turni\n\nAoE weapons only. Smoke grenade: no damage, smoke within `aoe` for N turns",
+          "markdownDescription": "Solo armi AoE. Fumogeno: nessun danno, fumo nel raggio `aoe` per N turni\n\n*AoE weapons only. Smoke grenade: no damage, smoke within `aoe` for N turns*",
+          "type": "integer",
+          "minimum": 1
+        },
+        "artillery": {
+          "description": "Solo armi AoE. Richiesta d'artiglieria: la salva cade all'inizio del turno successivo, colpisce anche i VC nascosti e distrugge i tile colpiti\n\nAoE weapons only. Artillery call: the salvo lands at the start of the next turn, also hits hidden VC and destroys the tiles it hits",
+          "markdownDescription": "Solo armi AoE. Richiesta d'artiglieria: la salva cade all'inizio del turno successivo, colpisce anche i VC nascosti e distrugge i tile colpiti\n\n*AoE weapons only. Artillery call: the salvo lands at the start of the next turn, also hits hidden VC and destroys the tiles it hits*",
+          "type": "boolean"
+        },
+        "thrown": {
+          "description": "Solo armi AoE US. Lancio a mano: animazione ad arco con rimbalzi prima dell'esplosione\n\nUS AoE weapons only. Hand thrown: arc animation with bounces before the explosion",
+          "markdownDescription": "Solo armi AoE US. Lancio a mano: animazione ad arco con rimbalzi prima dell'esplosione\n\n*US AoE weapons only. Hand thrown: arc animation with bounces before the explosion*",
+          "type": "boolean"
+        },
+        "scatter": {
+          "description": "Solo armi AoE US. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)\n\nUS AoE weapons only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` it is each round's square (default 2 = 5×5, likelier near the centre)",
+          "markdownDescription": "Solo armi AoE US. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)\n\n*US AoE weapons only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` it is each round's square (default 2 = 5×5, likelier near the centre)*",
+          "type": "integer",
+          "minimum": 0
+        },
+        "scatterChance": {
+          "description": "Con `scatter`: probabilità di deviare su un altro tile del quadrato; default 0.5\n\nWith `scatter`: chance to deviate to another tile of the square; default 0.5",
+          "markdownDescription": "Con `scatter`: probabilità di deviare su un altro tile del quadrato; default 0.5\n\n*With `scatter`: chance to deviate to another tile of the square; default 0.5*",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "napalm": {
+          "description": "Attacco aereo al napalm: si sceglie una linea di tile (inizio e fine, anche in diagonale); cade all'inizio del turno successivo, incendia i tile e colpisce chi ci si trova senza copertura del terreno\n\nNapalm air strike: you pick a line of tiles (start and end, diagonals allowed); it lands at the start of the next turn, sets the tiles on fire and hits anyone on them with no terrain cover",
+          "markdownDescription": "Attacco aereo al napalm: si sceglie una linea di tile (inizio e fine, anche in diagonale); cade all'inizio del turno successivo, incendia i tile e colpisce chi ci si trova senza copertura del terreno\n\n*Napalm air strike: you pick a line of tiles (start and end, diagonals allowed); it lands at the start of the next turn, sets the tiles on fire and hits anyone on them with no terrain cover*",
+          "type": "boolean"
+        },
+        "length": {
+          "description": "Con `napalm`: lunghezza massima della linea in tile; default 5\n\nWith `napalm`: maximum line length in tiles; default 5",
+          "markdownDescription": "Con `napalm`: lunghezza massima della linea in tile; default 5\n\n*With `napalm`: maximum line length in tiles; default 5*",
+          "type": "integer",
+          "minimum": 1
+        },
+        "shells": {
+          "description": "Con `artillery`: colpi della salva, numero o [min, max]; default [5, 6]. `atk` e `aoe` valgono per il singolo colpo\n\nWith `artillery`: rounds in the salvo, a number or [min, max]; default [5, 6]. `atk` and `aoe` apply to each round",
+          "markdownDescription": "Con `artillery`: colpi della salva, numero o [min, max]; default [5, 6]. `atk` e `aoe` valgono per il singolo colpo\n\n*With `artillery`: rounds in the salvo, a number or [min, max]; default [5, 6]. `atk` and `aoe` apply to each round*",
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "maxItems": 2,
+              "minItems": 2
+            }
+          ]
+        },
+        "sound": {
+          "description": "Suono dello sparo (sostituisce quello sintetizzato)\n\nFiring sound (replaces the synthesized one)",
+          "markdownDescription": "Suono dello sparo (sostituisce quello sintetizzato)\n\n*Firing sound (replaces the synthesized one)*",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "translation": {
+      "description": "Testi di una lingua\n\nTexts of one language",
+      "markdownDescription": "Testi di una lingua\n\n*Texts of one language*",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Nome della mappa\n\nMap name",
+          "markdownDescription": "Nome della mappa\n\n*Map name*",
+          "type": "string"
+        },
+        "description": {
+          "description": "Descrizione nel briefing\n\nBriefing description",
+          "markdownDescription": "Descrizione nel briefing\n\n*Briefing description*",
+          "type": "string"
+        },
+        "tileLabels": {
+          "description": "Nomi dei tile per `id`\n\nTile names by `id`",
+          "markdownDescription": "Nomi dei tile per `id`\n\n*Tile names by `id`*",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "objectives": {
+          "description": "Nomi degli obiettivi\n\nObjective names",
+          "markdownDescription": "Nomi degli obiettivi\n\n*Objective names*",
+          "type": "object",
+          "properties": {
+            "recon": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "description": "Nome mostrato, nello stesso ordine di `objectives`\n\nDisplayed name, in the same order as `objectives`",
+                    "markdownDescription": "Nome mostrato, nello stesso ordine di `objectives`\n\n*Displayed name, in the same order as `objectives`*",
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "capture_objective": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "description": "Nome mostrato, nello stesso ordine di `objectives`\n\nDisplayed name, in the same order as `objectives`",
+                    "markdownDescription": "Nome mostrato, nello stesso ordine di `objectives`\n\n*Displayed name, in the same order as `objectives`*",
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "tutorial": {
+          "description": "Testi dei passi del tutorial per `id`\n\nTutorial step texts by `id`",
+          "markdownDescription": "Testi dei passi del tutorial per `id`\n\n*Tutorial step texts by `id`*",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "tutorial": {
+      "description": "Lezione dell'addestramento\n\nTraining lesson",
+      "markdownDescription": "Lezione dell'addestramento\n\n*Training lesson*",
+      "type": "object",
+      "properties": {
+        "missionType": {
+          "description": "Tipo di missione della lezione\n\nMission type of the lesson",
+          "markdownDescription": "Tipo di missione della lezione\n\n*Mission type of the lesson*",
+          "type": "string",
+          "enum": [
+            "recon",
+            "search_destroy",
+            "rescue_pilot",
+            "capture_objective"
+          ]
+        },
+        "steps": {
+          "description": "Passi della lezione, in ordine\n\nLesson steps, in order",
+          "markdownDescription": "Passi della lezione, in ordine\n\n*Lesson steps, in order*",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "description": "Identificatore; il testo sta in `translations.<lingua>.tutorial`\n\nIdentifier; the text is in `translations.<language>.tutorial`",
+                "markdownDescription": "Identificatore; il testo sta in `translations.<lingua>.tutorial`\n\n*Identifier; the text is in `translations.<language>.tutorial`*",
+                "type": "string"
+              },
+              "until": {
+                "description": "Quando il passo è completato: `\"next\"` = bottone Avanti, oppure un evento\n\nWhen the step is complete: `\"next\"` = Next button, or an event",
+                "markdownDescription": "Quando il passo è completato: `\"next\"` = bottone Avanti, oppure un evento\n\n*When the step is complete: `\"next\"` = Next button, or an event*",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "next"
+                    ]
+                  },
+                  {
+                    "description": "Gli altri campi devono combaciare con i dati dell'evento (valore o elenco di valori)\n\nOther fields must match the event data (a value or a list of values)",
+                    "markdownDescription": "Gli altri campi devono combaciare con i dati dell'evento (valore o elenco di valori)\n\n*Other fields must match the event data (a value or a list of values)*",
+                    "type": "object",
+                    "properties": {
+                      "event": {
+                        "description": "Azione del giocatore che chiude il passo\n\nPlayer action that completes the step",
+                        "markdownDescription": "Azione del giocatore che chiude il passo\n\n*Player action that completes the step*",
+                        "type": "string",
+                        "enum": [
+                          "select",
+                          "move",
+                          "rotate",
+                          "stance",
+                          "attack",
+                          "kill",
+                          "aoe",
+                          "reload",
+                          "firstaid",
+                          "special",
+                          "trapFound",
+                          "tunnelFound",
+                          "endTurn",
+                          "turnStart"
+                        ]
+                      },
+                      "at": {
+                        "description": "Tile in cui deve avvenire\n\nTile where it must happen",
+                        "markdownDescription": "Tile in cui deve avvenire\n\n*Tile where it must happen*",
+                        "$ref": "#/definitions/cell"
+                      },
+                      "within": {
+                        "description": "Distanza massima da `at`; default 0\n\nMaximum distance from `at`; default 0",
+                        "markdownDescription": "Distanza massima da `at`; default 0\n\n*Maximum distance from `at`; default 0*",
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "event"
+                    ]
+                  }
+                ]
+              },
+              "highlight": {
+                "description": "Tile evidenziato sulla mappa\n\nTile highlighted on the map",
+                "markdownDescription": "Tile evidenziato sulla mappa\n\n*Tile highlighted on the map*",
+                "$ref": "#/definitions/cell"
+              },
+              "ui": {
+                "description": "Id dei controlli dell'interfaccia che lampeggiano\n\nIds of the interface controls that pulse",
+                "markdownDescription": "Id dei controlli dell'interfaccia che lampeggiano\n\n*Ids of the interface controls that pulse*",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "fresh": {
+                "description": "Conta solo le azioni fatte dopo l'inizio del passo\n\nCount only actions done after the step starts",
+                "markdownDescription": "Conta solo le azioni fatte dopo l'inizio del passo\n\n*Count only actions done after the step starts*",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "lessonId": {}
+      },
+      "required": [
+        "missionType",
+        "steps"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
