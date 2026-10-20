@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "Generata da `js/schema.js` con `node tools/schema-docs.js`: non modificarla a mano.",
+  "title": "VIETNAM '68 — elenco delle mod / mod list",
+  "description": "Elenco delle mod (`mods/index.json`)\n\nMod list (`mods/index.json`)",
+  "markdownDescription": "Elenco delle mod (`mods/index.json`)\n\n*Mod list (`mods/index.json`)*",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Percorso del JSON Schema per l'editor (es. `../schemas/mission.schema.json`); ignorato dal gioco\n\nPath of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game",
+      "markdownDescription": "Percorso del JSON Schema per l'editor (es. `../schemas/mission.schema.json`); ignorato dal gioco\n\n*Path of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game*",
+      "type": "string"
+    },
+    "mods": {
+      "description": "Cartelle delle mod in `mods/`, nell'ordine in cui si applicano\n\nMod folders in `mods/`, in the order they are applied",
+      "markdownDescription": "Cartelle delle mod in `mods/`, nell'ordine in cui si applicano\n\n*Mod folders in `mods/`, in the order they are applied*",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "mods"
+  ],
+  "additionalProperties": false
+}

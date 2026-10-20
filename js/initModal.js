@@ -6,6 +6,7 @@ function initModal() {
   document.getElementById("btn-menu").style.display = "none";
   document.getElementById("tutorial-overlay").classList.add("hidden");
   document.getElementById("tutorial-panel").classList.add("hidden");
+  document.getElementById("btn-mods").style.display = MOD_LIST.length ? "" : "none";
 
   // "Resume game" banner if a savegame exists
   const existingBanner = document.getElementById("resume-banner");
@@ -17,6 +18,11 @@ function initModal() {
 
     const missionLabel =
       MISSION_TYPES[save.missionType]?.label || save.missionType;
+    // Partita salvata con mod ora spente: si riprende solo riattivandole
+    const missingMods = missingSaveMods(save).map((id) => {
+      const m = MOD_LIST.find((x) => x.id === id);
+      return m ? modLabels(m).name : id;
+    });
 
     const banner = document.createElement("div");
     banner.id = "resume-banner";
@@ -27,9 +33,10 @@ function initModal() {
         <div style="font-family:var(--stamp-font);font-size:13px;color:var(--tan);letter-spacing:1px">${t("modal.resume_title")}</div>
         <div style="font-size:11px;color:var(--paper-dark)">${save.mapName} · ${missionLabel} · ${t("modal.resume_turn", { turn: save.turn })}</div>
         <div style="font-size:10px;color:#556644">${savedDate}</div>
+        ${missingMods.length ? `<div style="font-size:11px;color:#d9764a">${t("mods.save_missing", { mods: missingMods.join(", ") })}</div>` : ""}
         <div class="gen-bar hidden" id="resume-gen-bar"><div class="gen-fill" id="resume-gen-fill"></div></div>
       </div>
-      <button class="btn" id="btn-resume" style="font-size:12px;padding:7px 16px;white-space:nowrap">${t("buttons.resume")}</button>
+      <button class="btn" id="btn-resume" style="font-size:12px;padding:7px 16px;white-space:nowrap" ${missingMods.length ? "disabled" : ""}>${t("buttons.resume")}</button>
     `;
 
     document

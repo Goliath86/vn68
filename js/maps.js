@@ -20,19 +20,13 @@ async function loadCatalog() {
 // in background a menu aperto: serve solo in missione ed è il file più
 // pesante). Le mappe procedurali riusano gli stessi file.
 async function catalogAssetPaths() {
-  const files = CATALOG.filter((e) => e.file).map((e) => `missions/${e.file}`);
-  const maps = await Promise.all(
-    files.map((f) =>
-      fetch(f)
-        .then((r) => r.json())
-        .catch(() => null),
-    ),
-  );
+  const files = CATALOG.map(catalogEntryPath).filter(Boolean);
+  const maps = await Promise.all(files.map((f) => fetchMapFile(f).catch(() => null)));
   const list = maps.filter(Boolean);
   return {
     files: list
       .flatMap((md) => [
-        md.image && "missions/" + md.image,
+        missionImagePath(md),
         ...Object.values(md.tileTypes || {}).map((d) => !md.image && _textureImagePath(d)),
         ...Object.values(md.sounds || {}),
         ...missionWeaponSounds(md),
@@ -42,11 +36,18 @@ async function catalogAssetPaths() {
   };
 }
 
+// JSON di una voce del catalogo: in missions/, o già risolto per le mappe
+// delle mod (mods.js:applyMod)
+function catalogEntryPath(entry) {
+  if (!entry.file) return null;
+  return entry.mod ? entry.file : `missions/${entry.file}`;
+}
+
 function rebuildMapsFromCatalog() {
   MAPS = CATALOG.map((entry) => {
     const labels = entry.labels?.[LANG] || entry.labels?.it || {};
     return {
-      file: entry.file ? `missions/${entry.file}` : null,
+      file: catalogEntryPath(entry),
       generator: entry.generator || null,
       // Scheda "Addestramento": apre l'elenco delle lezioni (tutorial.js)
       tutorial: !!entry.tutorial,

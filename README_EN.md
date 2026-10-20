@@ -918,3 +918,44 @@ Add ambient animations without touching the code:
 ```
 
 Global animations (`tileAnimations` at the root) are always visible. Those inside `objectives.<type>.tileAnimations` appear only in the corresponding mission mode. Smoke is visible even through Fog of War — useful as a visual indicator for the pilot's location in `rescue_pilot`.
+
+---
+
+## Mods
+
+A mod keeps classes, weapons, enemies and maps in a folder of its own, without touching `config.json`, the catalog or the game files. Mods are turned on from the start menu with the **🧩 Mods** button, shown when there is at least one: choices apply from the next page load (the **Apply and reload** button does it right away) and are remembered by the browser. A game saved with mods can only be resumed with those mods on.
+
+```
+mods/
+  index.json              mod list: { "mods": ["nva_regulars"] }
+  nva_regulars/
+    mod.json              description, additions to config.json, maps
+    avamposto.json        a map of the mod
+```
+
+The list in `mods/index.json` is needed because the game, as a static site, cannot read a folder's contents; its order is the order mods are applied in (when two change the same thing, the last one wins).
+
+```json
+{
+  "labels": {
+    "it": { "name": "Regolari NVA", "desc": "Regolari nordvietnamiti nei rinforzi, più una mappa" },
+    "en": { "name": "NVA Regulars", "desc": "North Vietnamese regulars in the reinforcements, plus a map" }
+  },
+  "author": "Me",
+  "version": "1.0",
+  "config": {
+    "enemyClasses": { "nva": { "name": { "it": "Regolare NVA", "en": "NVA Regular" }, "role": "rifleman", "hp": 7, "attack": 3, "sprite": "grunt" } },
+    "weapons": { "nva": [{ "id": "ak47", "label": "AK-47", "atk": 3, "range": 3, "sound": "../../assets/ak47.mp3" }] },
+    "vcMix": { "reinforcement": { "nva": 1 } }
+  },
+  "maps": [
+    { "file": "avamposto.json", "icon": "⭐", "labels": { "en": { "label": "NVA Outpost", "subtitle": "Highlands · 1968" } } }
+  ]
+}
+```
+
+- **`config`** has the same fields as `config.json` and is added to it: classes and compositions are merged, pictures and sounds replaced by key, weapons follow the rules of the maps' `weapons` field (an array replaces the class loadout, an object changes weapons by `id`).
+- **`maps`** has the same entries as `missions/catalog.json`; `file` is the map JSON in the mod folder. Mod maps are ordinary maps and can use the mod's classes.
+- **Paths** in `mod.json` and in its maps (pictures, sounds, music, textures, `image`) start from the mod folder; `../../` goes up to the game folder, to reuse its files (`"../../assets/ak47.mp3"`).
+
+The example mod `mods/nva_regulars/` shows every part. A mod with errors (wrong fields, nonexistent classes, missing files) is not applied: the mod menu shows the first error and the browser console the full list. `node tools/validate.js --all` checks mods and their maps too; every `mod.json` field is in the [field guide](docs/FIELDS_EN.md#mod).

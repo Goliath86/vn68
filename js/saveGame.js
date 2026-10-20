@@ -7,6 +7,8 @@ function saveGame() {
       savedAt: Date.now(),
       mapName: (mt("name") ?? G.mapData.name ?? "?").toUpperCase(),
       missionType: G.missionType,
+      // Mod attive: senza, classi e armi della partita mancherebbero (mods.js)
+      mods: ACTIVE_MODS,
       turn: G.turn,
       fowEnabled: G.fowEnabled,
       mapData: G.mapData,
@@ -65,7 +67,7 @@ async function resumeGame(save) {
     await new Promise((r) => {
       G.tileImg.onload = r;
       G.tileImg.onerror = r;
-      G.tileImg.src = assetUrl("missions/" + G.mapData.image);
+      G.tileImg.src = assetUrl(missionImagePath(G.mapData));
     });
     if (!G.tileImg.naturalWidth) G.tileImg = null;
   } else {

@@ -266,7 +266,7 @@ const SCHEMA_MISSION = _sc.obj({
   width: _sc.num({ d: ["(informativo) larghezza dell'immagine", "(informative) image width"] }),
   height: _sc.num({ d: ["(informativo) altezza dell'immagine", "(informative) image height"] }),
   tileSize: _sc.num({ d: ["(informativo) lato del tile in pixel", "(informative) tile side in pixels"] }),
-  image: _sc.str({ ref: "missionImage", d: ["Immagine di sfondo in `missions/` (sostituisce il disegno dei tile)", "Background image in `missions/` (replaces the drawn tiles)"] }),
+  image: _sc.str({ ref: "missionImage", d: ["Immagine di sfondo in `missions/`, o nella cartella della mod (sostituisce il disegno dei tile)", "Background image in `missions/`, or in the mod folder (replaces the drawn tiles)"] }),
   ambient: _sc.str({ ref: "file", d: ["Musica d'ambiente in loop durante la partita", "Ambient music looping during the game"] }),
   sounds: _sc.map(_sc.str({ ref: "file" }), { keyValues: SFX_KEYS, key: ["effetto", "effect"], d: ["Effetti sonori della mappa (prevalgono su `config.json`)", "Map sound effects (override `config.json`)"] }),
   tileTypes: _sc.map(SCHEMA_TILE_TYPE, { req: true, key: ["carattere", "character"], d: ["Tipi di tile per carattere della griglia", "Tile types by grid character"] }),
@@ -436,3 +436,46 @@ const SCHEMA_CONFIG = _sc.obj({
     reinforcement: SCHEMA_VC_MIX(["Rinforzi", "Reinforcements"]),
   }, { d: ["Composizioni VC di default per tutte le mappe", "Default VC compositions for every map"] }),
 }, { d: ["Configurazione globale (`config.json`)", "Global configuration (`config.json`)"] });
+
+// ── Mod (mods.js) ──────────────────────────────────────────────────────
+// I percorsi di una mod (e delle sue mappe) partono dalla sua cartella
+const SCHEMA_MOD_PATHS = [
+  "I percorsi dei file partono dalla cartella della mod; `../../` risale alla cartella del gioco (es. `../../assets/footsteps_jungle.mp3`)",
+  "File paths start from the mod folder; `../../` goes up to the game folder (e.g. `../../assets/footsteps_jungle.mp3`)",
+];
+const SCHEMA_MOD = _sc.obj({
+  $schema: SCHEMA_SCHEMA,
+  labels: _sc.map(_sc.obj({
+    name: _sc.str({ d: ["Nome della mod", "Mod name"] }),
+    desc: _sc.str({ d: ["Descrizione nel menu delle mod", "Description in the mod menu"] }),
+  }), { ...SCHEMA_LANGS, d: ["Testi per lingua", "Texts per language"] }),
+  author: _sc.str({ d: ["Autore", "Author"] }),
+  version: _sc.str({ d: ["Versione", "Version"] }),
+  config: _sc.obj({
+    ...SCHEMA_CONFIG.fields,
+    weapons: SCHEMA_WEAPON_LOADOUTS([
+      "Armi per classe (US o VC): un array sostituisce il loadout, un oggetto modifica le armi per `id` (`null` la toglie, un `id` nuovo la aggiunge)",
+      "Weapons per class (US or VC): an array replaces the loadout, an object changes weapons by `id` (`null` removes it, a new `id` adds it)",
+    ], true),
+  }, {
+    d: [
+      "Aggiunte a `config.json`, con gli stessi campi: classi e composizioni unite, immagini e suoni sostituiti per chiave. " + SCHEMA_MOD_PATHS[0],
+      "Additions to `config.json`, with the same fields: classes and compositions merged, pictures and sounds replaced by key. " + SCHEMA_MOD_PATHS[1],
+    ],
+  }),
+  maps: _sc.arr(SCHEMA_CATALOG_ENTRY, {
+    d: [
+      "Mappe aggiunte al menu, come le voci di `missions/catalog.json`; `file` è il JSON della mappa nella cartella della mod, e anche i percorsi dentro la mappa (immagine, suoni, texture) partono da lì",
+      "Maps added to the menu, like the `missions/catalog.json` entries; `file` is the map JSON in the mod folder, and paths inside the map (image, sounds, textures) start from there too",
+    ],
+  }),
+}, { d: ["Mod (`mods/<cartella>/mod.json`)", "Mod (`mods/<folder>/mod.json`)"] });
+delete SCHEMA_MOD.fields.config.fields.$schema;
+
+const SCHEMA_MOD_INDEX = _sc.obj({
+  $schema: SCHEMA_SCHEMA,
+  mods: _sc.arr(_sc.str({ ref: "modDir" }), {
+    req: true,
+    d: ["Cartelle delle mod in `mods/`, nell'ordine in cui si applicano", "Mod folders in `mods/`, in the order they are applied"],
+  }),
+}, { d: ["Elenco delle mod (`mods/index.json`)", "Mod list (`mods/index.json`)"] });

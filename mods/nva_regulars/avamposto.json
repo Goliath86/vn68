@@ -1,0 +1,88 @@
+{
+  "$schema": "../../schemas/mission.schema.json",
+  "name": "Avamposto NVA",
+  "description": "Un avamposto dei regolari nordvietnamiti sorveglia il sentiero.",
+  "cols": 14,
+  "rows": 10,
+  "ambient": "../../missions/rung_sat_ambient.mp3",
+  "sounds": { "move": "../../assets/footsteps_jungle.mp3" },
+
+  "tileTypes": {
+    "J": { "id": "jungle", "label": "Giungla", "moveCost": 2, "coverBonus": 2, "color": "#2d5a1b", "losBlock": "partial", "burnable": true },
+    "S": { "id": "swamp", "label": "Palude", "moveCost": 3, "coverBonus": 1, "color": "#4a6741", "losBlock": "partial" },
+    "C": { "id": "clearing", "label": "Radura", "moveCost": 1, "coverBonus": 0, "color": "#7a9e40" },
+    "T": { "id": "trail", "label": "Sentiero", "moveCost": 1, "coverBonus": 0, "color": "#a08060" },
+    "V": { "id": "village", "label": "Accampamento", "moveCost": 1, "coverBonus": 1, "color": "#8b6914", "losBlock": "partial", "burnable": true },
+    "B": { "id": "bunker", "label": "Bunker NVA", "moveCost": 1, "coverBonus": 3, "color": "#5a4a30", "losBlock": "full", "demolishable": true, "demolishResult": "C" },
+    "X": { "id": "obstacle", "label": "Sacchetti di sabbia", "moveCost": 0, "coverBonus": 0, "color": "#333333", "impassable": true, "losBlock": "full", "demolishable": true, "demolishResult": "C" },
+    "O": { "id": "objective", "label": "Obiettivo", "moveCost": 1, "coverBonus": 0, "color": "#cc9900" }
+  },
+
+  "grid": [
+    "JJJJJJCJJJJJJJ",
+    "JJCCJJCJJBVVBJ",
+    "JCCTTTTTTCVOVJ",
+    "JCJJJCJJTCVVVJ",
+    "CCJSSCJJTCCXCJ",
+    "CCJSSCCCTTTCCJ",
+    "JCJJJCJJJJTCBJ",
+    "JCCTTTTJJJTCOJ",
+    "JJCCJJTTTTTCCJ",
+    "JJJJJJJJJJJJJJ"
+  ],
+
+  "playerStart": [
+    { "col": 0, "row": 4 },
+    { "col": 1, "row": 4 },
+    { "col": 0, "row": 5 },
+    { "col": 1, "row": 5 }
+  ],
+
+  "vcSpawnZones": [{ "colMin": 8, "colMax": 13, "rowMin": 0, "rowMax": 9 }],
+  "vcCount": 6,
+  "vcMix": { "nva": 3, "grunt": 2, "commander": 1 },
+  "reinforcementTurn": 5,
+  "reinforcementCount": 2,
+  "reinforcementMix": { "nva": 1 },
+  "vcAmbushTurn": 4,
+  "vcAmbushCount": 2,
+  "vcAmbushZones": [{ "colMin": 2, "colMax": 6, "rowMin": 7, "rowMax": 8 }],
+  "ambushMix": { "nva": 1, "grunt": 1 },
+  "ambushChance": 0.15,
+  "trapCount": 2,
+  "trapZones": [{ "colMin": 3, "colMax": 9, "rowMin": 1, "rowMax": 8 }],
+
+  "supportedMissions": ["search_destroy", "capture_objective"],
+  "objectives": {
+    "search_destroy": { "eliminateAll": false, "minKills": 5 },
+    "capture_objective": [
+      { "col": 11, "row": 2, "label": "Posto comando", "holdTurns": 2 },
+      { "col": 12, "row": 7, "label": "Deposito munizioni", "holdTurns": 2 }
+    ]
+  },
+
+  "translations": {
+    "it": {
+      "name": "Avamposto NVA",
+      "description": "Un avamposto dei regolari nordvietnamiti sorveglia il sentiero: soldati addestrati, meglio armati dei guerriglieri.",
+      "tileLabels": {
+        "jungle": "Giungla", "swamp": "Palude", "clearing": "Radura", "trail": "Sentiero",
+        "village": "Accampamento", "bunker": "Bunker NVA", "obstacle": "Sacchetti di sabbia", "objective": "Obiettivo"
+      },
+      "objectives": {
+        "capture_objective": [{ "label": "Posto comando" }, { "label": "Deposito munizioni" }]
+      }
+    },
+    "en": {
+      "name": "NVA Outpost",
+      "description": "A North Vietnamese regulars' outpost watches the trail: trained soldiers, better armed than the guerrillas.",
+      "tileLabels": {
+        "jungle": "Jungle", "swamp": "Swamp", "clearing": "Clearing", "trail": "Trail",
+        "village": "Camp", "bunker": "NVA bunker", "obstacle": "Sandbags", "objective": "Objective"
+      },
+      "objectives": {
+        "capture_objective": [{ "label": "Command post" }, { "label": "Ammo dump" }]
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
-let CONFIG = {};
+let CONFIG = {}; // config.json unito alle mod attive (applyConfigData)
+let CONFIG_FILE = null; // config.json così com'è, per il validatore
 let WEAPONS_CONFIG = {}; // cls → [{id, label, atk, range, ammo?, aoe?, maxCarriers?}]
 const UNIT_IMG_CACHE = {}; // cls → HTMLImageElement (pre-caricato)
 const WEAPON_SND_CACHE = {}; // soundPath → HTMLAudioElement (pre-caricato dal campo sound delle armi)
@@ -9,31 +10,45 @@ async function loadConfig() {
   try {
     const resp = await fetch("config.json");
     if (!resp.ok) return;
-    CONFIG = parseJsonText(await resp.text(), "config.json");
-    WEAPONS_CONFIG = CONFIG.weapons || {};
-    // Classi US modificate o nuove (le nuove partono dalle statistiche
-    // dell'assalto, col nome della chiave finché "labels" non ne dà uno)
-    for (const [cls, def] of Object.entries(CONFIG.unitClasses || {})) {
-      if (ENEMY_CLASSES[cls]) console.warn(`[config] unitClasses.${cls}: nome già usato da una classe VC`);
-      const base = UNIT_CLASSES[cls] || {
-        ...UNIT_CLASSES.assault,
-        name: cls,
-        desc: "",
-        symbol: cls.charAt(0).toUpperCase(),
-      };
-      UNIT_CLASSES[cls] = deepMerge(deepMerge({}, base), def);
-    }
-    // Classi VC modificate o nuove (le nuove partono dal guerrigliero) e
-    // composizione di default
-    for (const [cls, def] of Object.entries(CONFIG.enemyClasses || {})) {
-      ENEMY_CLASSES[cls] = deepMerge(deepMerge({}, ENEMY_CLASSES[cls] || ENEMY_CLASSES.grunt), def);
-    }
-    deepMerge(VC_MIX, CONFIG.vcMix);
+    CONFIG_FILE = parseJsonText(await resp.text(), "config.json");
+    applyConfigData(CONFIG_FILE);
   } catch (e) {
     // config.json assente o non valido — nessun effetto, si usano gli sprite
     // canvas; un errore di sintassi va in console all'avvio (init.js)
     if (e.issues) LOAD_ISSUES.push(e);
   }
+}
+
+// Unisce una configurazione (config.json, poi il campo "config" di ogni mod
+// attiva, mods.js) a quella corrente: musica, immagini e suoni sostituiti per
+// chiave, armi come nella mappa (array = loadout nuovo, oggetto = modifiche
+// per id), classi e composizioni unite in profondità
+function applyConfigData(cfg) {
+  if (!cfg || typeof cfg !== "object") return;
+  if (cfg.menuMusic) CONFIG.menuMusic = cfg.menuMusic;
+  if (cfg.unitImages) CONFIG.unitImages = { ...CONFIG.unitImages, ...cfg.unitImages };
+  if (cfg.sounds) CONFIG.sounds = { ...CONFIG.sounds, ...cfg.sounds };
+  for (const [cls, ws] of Object.entries(cfg.weapons || {})) {
+    WEAPONS_CONFIG[cls] = patchWeapons(WEAPONS_CONFIG[cls] || [], ws);
+  }
+  // Classi US modificate o nuove (le nuove partono dalle statistiche
+  // dell'assalto, col nome della chiave finché "labels" non ne dà uno)
+  for (const [cls, def] of Object.entries(cfg.unitClasses || {})) {
+    if (ENEMY_CLASSES[cls]) console.warn(`[config] unitClasses.${cls}: nome già usato da una classe VC`);
+    const base = UNIT_CLASSES[cls] || {
+      ...UNIT_CLASSES.assault,
+      name: cls,
+      desc: "",
+      symbol: cls.charAt(0).toUpperCase(),
+    };
+    UNIT_CLASSES[cls] = deepMerge(deepMerge({}, base), def);
+  }
+  // Classi VC modificate o nuove (le nuove partono dal guerrigliero) e
+  // composizione di default
+  for (const [cls, def] of Object.entries(cfg.enemyClasses || {})) {
+    ENEMY_CLASSES[cls] = deepMerge(deepMerge({}, ENEMY_CLASSES[cls] || ENEMY_CLASSES.grunt), def);
+  }
+  deepMerge(VC_MIX, cfg.vcMix);
 }
 
 // File da scaricare prima del menu: musica, sprite, SFX e suoni delle armi
@@ -162,7 +177,11 @@ function initWeaponMag(w) {
 function classWeapons(cls, md = G.mapData) {
   const base = WEAPONS_CONFIG[cls] || [];
   const ov = md?.weapons?.[cls];
-  if (!ov) return base;
+  return ov ? patchWeapons(base, ov) : base;
+}
+
+// Loadout modificato: un array lo sostituisce, un oggetto cambia le armi per id
+function patchWeapons(base, ov) {
   if (Array.isArray(ov)) return ov;
   const out = base
     .filter((w) => ov[w.id] !== null)

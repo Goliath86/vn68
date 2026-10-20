@@ -160,6 +160,18 @@
     "continue": "▶ CONTINUA"
   },
 
+  "mods": {
+    "button": "🧩 Mod",
+    "title": "MOD",
+    "note": "Le mod aggiungono classi, armi, nemici e mappe. Le scelte si applicano ricaricando la pagina.",
+    "none": "Nessuna mod in mods/index.json.",
+    "active": "ATTIVA",
+    "invalid": "Non caricabile: {issue}",
+    "apply": "↻ APPLICA E RICARICA",
+    "close": "✕ CHIUDI",
+    "save_missing": "Servono le mod: {mods}"
+  },
+
   "confirm": {
     "abort_mission": "Sei sicuro di voler abbandonare la missione e tornare al menu?",
     "end_turn_ap": "{n} unità hanno ancora AP disponibili. Terminare comunque il turno?",
@@ -588,6 +600,7 @@
     "unreachable": "non raggiungibile dalla partenza",
     "needs_demolition": "raggiungibile solo demolendo un ostacolo (serve il geniere)",
     "catalog_kind": "serve uno solo tra \"file\", \"generator\" e \"tutorial\"",
+    "mod_map_kind": "serve uno solo tra \"file\" e \"generator\"",
     "more": "… e altri {count}",
     "types": {
       "number": "un numero",

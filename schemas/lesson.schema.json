@@ -69,8 +69,8 @@
       "type": "number"
     },
     "image": {
-      "description": "Immagine di sfondo in `missions/` (sostituisce il disegno dei tile)\n\nBackground image in `missions/` (replaces the drawn tiles)",
-      "markdownDescription": "Immagine di sfondo in `missions/` (sostituisce il disegno dei tile)\n\n*Background image in `missions/` (replaces the drawn tiles)*",
+      "description": "Immagine di sfondo in `missions/`, o nella cartella della mod (sostituisce il disegno dei tile)\n\nBackground image in `missions/`, or in the mod folder (replaces the drawn tiles)",
+      "markdownDescription": "Immagine di sfondo in `missions/`, o nella cartella della mod (sostituisce il disegno dei tile)\n\n*Background image in `missions/`, or in the mod folder (replaces the drawn tiles)*",
       "type": "string"
     },
     "ambient": {

@@ -1,0 +1,4 @@
+{
+  "$schema": "../schemas/mod-index.schema.json",
+  "mods": ["nva_regulars"]
+}

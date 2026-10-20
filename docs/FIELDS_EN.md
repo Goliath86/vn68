@@ -2,7 +2,7 @@
 
 > Generated from `js/schema.js` by `node tools/schema-docs.js`: do not edit by hand. [Versione italiana](FIELDS.md)
 
-Every field the game reads from the moddable files: maps, training lessons, the map catalog and `config.json`. For how to build a map and for examples see the [README](../README_EN.md#creating-a-new-mission); `node tools/validate.js --all` checks the files against these same rules.
+Every field the game reads from the moddable files: maps, training lessons, the map catalog, `config.json` and mods. For how to build a map and for examples see the [README](../README_EN.md#creating-a-new-mission); `node tools/validate.js --all` checks the files against these same rules.
 
 ## Editor autocompletion
 
@@ -20,6 +20,8 @@ The JSON Schemas in `schemas/` give suggestions, descriptions and checks while t
 - [Global configuration (`config.json`)](#config)
 - [Map menu entry](#catalog)
 - [Training index (`missions/tutorial/index.json`)](#tutorial-index)
+- [Mod (`mods/<folder>/mod.json`)](#mod)
+- [Mod list (`mods/index.json`)](#mod-index)
 - [`tuning` groups](#tuning)
 
 <a id="map"></a>
@@ -36,8 +38,8 @@ The JSON Schemas in `schemas/` give suggestions, descriptions and checks while t
 | `width` | number | (informative) image width. |
 | `height` | number | (informative) image height. |
 | `tileSize` | number | (informative) tile side in pixels. |
-| `image` | text | Background image in `missions/` (replaces the drawn tiles). → file in `missions/`. |
-| `ambient` | text | Ambient music looping during the game. → file path from the game folder. |
+| `image` | text | Background image in `missions/`, or in the mod folder (replaces the drawn tiles). → file in `missions/`. |
+| `ambient` | text | Ambient music looping during the game. → file path from the game folder (in a mod and its maps: from the mod folder). |
 | `sounds` | object { effect → text } | Map sound effects (override `config.json`). Keys: `move`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`. |
 | `tileTypes` | object { character → [Tile type](#tile) } | **Required.** Tile types by grid character. |
 | `grid` | array of text or array of text | **Required.** Map rows: strings (`"JJCCT…"`) or arrays of `tileTypes` characters. |
@@ -221,7 +223,7 @@ Fields written by the game, accepted without warnings: `lessonId`.
 | `napalm` | boolean | Napalm air strike: you pick a line of tiles (start and end, diagonals allowed); it lands at the start of the next turn, sets the tiles on fire and hits anyone on them with no terrain cover. |
 | `length` | integer ≥ 1 | With `napalm`: maximum line length in tiles; default 5. |
 | `shells` | integer ≥ 1 or array of integer ≥ 1 (2) | With `artillery`: rounds in the salvo, a number or [min, max]; default [5, 6]. `atk` and `aoe` apply to each round. |
-| `sound` | text | Firing sound (replaces the synthesized one). → file path from the game folder. |
+| `sound` | text | Firing sound (replaces the synthesized one). → file path from the game folder (in a mod and its maps: from the mod folder). |
 
 <a id="unit-class"></a>
 
@@ -271,7 +273,7 @@ Fields written by the game, accepted without warnings: `name`, `desc`, `specialL
 | Field | Type | Description |
 |---|---|---|
 | `$schema` | text | Path of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game. |
-| `menuMusic` | text | Menu music. → file path from the game folder. |
+| `menuMusic` | text | Menu music. → file path from the game folder (in a mod and its maps: from the mod folder). |
 | `unitImages` | object { class → text } | Picture per class (US or VC); without it, a drawn sprite. → US or VC class (current: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
 | `sounds` | object { effect → text } | Sound effects; without them, synthesized sounds. Keys: `move`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`. |
 | `weapons` | object { class → array of [Weapon](#weapon) } | Loadout per class (US or VC); without it, the class ATK and range. → US or VC class (current: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
@@ -290,7 +292,7 @@ The file is an array of entries with these fields.
 
 | Field | Type | Description |
 |---|---|---|
-| `file` | text | Map JSON in `missions/`. → file in `missions/`. |
+| `file` | text | Map JSON in `missions/`. → file in `missions/` (in a mod: in its folder). |
 | `generator` | text | Procedural map (instead of `file`). → procedural generator (current: `jungle`, `urban`). |
 | `tutorial` | boolean | Training card (lessons from `missions/tutorial/index.json`). |
 | `icon` | text | Icon (emoji). |
@@ -318,6 +320,42 @@ The file is an array of entries with these fields.
 | `lessons[].labels` | object { language → object } | Card texts per language. |
 | `lessons[].labels.<language>.title` | text | Title. |
 | `lessons[].labels.<language>.desc` | text | Description. |
+
+<a id="mod"></a>
+
+## Mod (`mods/<folder>/mod.json`)
+
+A mod is a `mods/<folder>/` folder with this `mod.json`, listed in [`mods/index.json`](#mod-index); it is turned on from the menu (🧩 Mods). Its maps are ordinary [maps](#map), in the same folder. See the [README](../README_EN.md#mods).
+
+| Field | Type | Description |
+|---|---|---|
+| `$schema` | text | Path of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game. |
+| `labels` | object { language → object } | Texts per language. |
+| `labels.<language>.name` | text | Mod name. |
+| `labels.<language>.desc` | text | Description in the mod menu. |
+| `author` | text | Author. |
+| `version` | text | Version. |
+| `config` | object | Additions to `config.json`, with the same fields: classes and compositions merged, pictures and sounds replaced by key. File paths start from the mod folder; `../../` goes up to the game folder (e.g. `../../assets/footsteps_jungle.mp3`). |
+| `config.menuMusic` | text | Menu music. → file path from the game folder (in a mod and its maps: from the mod folder). |
+| `config.unitImages` | object { class → text } | Picture per class (US or VC); without it, a drawn sprite. → US or VC class (current: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `config.sounds` | object { effect → text } | Sound effects; without them, synthesized sounds. Keys: `move`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`. |
+| `config.weapons` | object { class → array of [Weapon](#weapon) or object { weapon id → `null` or [Weapon](#weapon) } } | Weapons per class (US or VC): an array replaces the loadout, an object changes weapons by `id` (`null` removes it, a new `id` adds it). → US or VC class (current: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `config.unitClasses` | object { class → [US squad class](#unit-class) } | US classes: the fields written change an existing class; a new name adds a class, starting from the Assault's stats and shown in the briefing (weapons in `weapons`, picture in `unitImages`). |
+| `config.enemyClasses` | object { class → [VC class](#enemy-class) } | VC classes: the fields written change an existing class; a new name adds a class, starting from the guerrilla's values and appearing in game only when put in a composition (`vcMix`). |
+| `config.vcMix` | object | Default VC compositions for every map. |
+| `config.vcMix.spawn` | object { VC class → number ≥ 0 } | Initial deployment. → VC class (current: `grunt`, `sniper_vc`, `commander`). |
+| `config.vcMix.ambush` | object { VC class → number ≥ 0 } | Ambush. → VC class (current: `grunt`, `sniper_vc`, `commander`). |
+| `config.vcMix.reinforcement` | object { VC class → number ≥ 0 } | Reinforcements. → VC class (current: `grunt`, `sniper_vc`, `commander`). |
+| `maps` | array of [Map menu entry](#catalog) | Maps added to the menu, like the `missions/catalog.json` entries; `file` is the map JSON in the mod folder, and paths inside the map (image, sounds, textures) start from there too. |
+
+<a id="mod-index"></a>
+
+## Mod list (`mods/index.json`)
+
+| Field | Type | Description |
+|---|---|---|
+| `$schema` | text | Path of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game. |
+| `mods` | array of text | **Required.** Mod folders in `mods/`, in the order they are applied. → folder in `mods/` with a `mod.json`. |
 
 <a id="tuning"></a>
 

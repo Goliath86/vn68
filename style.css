@@ -1306,6 +1306,102 @@ body {
     margin-top: 14px;
 }
 
+/* ── MOD (mods.js:openModsMenu) ─────────────────── */
+#btn-mods {
+    font-size: 11px;
+    padding: 5px 12px;
+    margin-left: 8px;
+}
+#mods-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+}
+#mods-overlay.hidden {
+    display: none;
+}
+#mods-box {
+    background: var(--panel-bg);
+    border: 2px solid var(--tan-dark);
+    border-radius: 4px;
+    padding: 22px 28px;
+    max-width: 480px;
+    width: 90%;
+    max-height: 90dvh;
+    overflow-y: auto;
+    text-align: center;
+}
+#mods-box h2 {
+    font-family: var(--stamp-font);
+    font-size: 22px;
+    color: var(--tan);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+#mods-box .mods-note,
+#mods-box .mods-empty {
+    font-size: 11px;
+    color: var(--paper-dark);
+    margin-bottom: 10px;
+}
+.mod-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    text-align: left;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+.mod-item input {
+    margin-top: 3px;
+}
+.mod-item.mod-broken {
+    cursor: default;
+    opacity: 0.8;
+}
+.mod-name {
+    font-family: var(--stamp-font);
+    font-size: 14px;
+    color: var(--tan);
+    letter-spacing: 1px;
+}
+.mod-meta {
+    font-family: var(--ui-font);
+    font-size: 10px;
+    color: var(--paper-dark);
+    letter-spacing: 0;
+}
+.mod-active {
+    font-family: var(--ui-font);
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--green-light);
+    border: 1px solid var(--green-light);
+    border-radius: 2px;
+    padding: 0 4px;
+}
+.mod-desc {
+    font-size: 11px;
+    color: var(--paper-dark);
+    margin-top: 2px;
+}
+.mod-error {
+    font-size: 11px;
+    color: #d9764a;
+    margin-top: 4px;
+}
+#mods-apply,
+#mods-close {
+    margin-top: 10px;
+}
+
 /* ── TOOLTIP ─────────────────────────────────────── */
 #tile-tooltip {
     position: absolute;

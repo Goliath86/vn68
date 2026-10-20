@@ -7,8 +7,10 @@
 //   node tools/validate.js --all --seeds 50 --lang en
 // Opzioni:
 //   <file> …        mappe, lezioni (missions/tutorial/*.json), catalog.json,
-//                   missions/tutorial/index.json, config.json
-//   --all           config, catalogo e sue mappe, tutorial, mappe procedurali,
+//                   missions/tutorial/index.json, config.json, mods/index.json,
+//                   mods/<mod>/mod.json e le mappe delle mod
+//   --all           config, catalogo e sue mappe, tutorial, mod e loro mappe,
+//                   mappe procedurali,
 //                   guida ai campi e JSON Schema aggiornati (tools/schema-docs.js)
 //   --seeds N       seed per generatore e dimensione con --all (default 20)
 //   --lang it|en    lingua dei messaggi (default it)
@@ -42,6 +44,14 @@ const rel = (f) => {
 };
 const abs = (p) => (path.isAbsolute(p) ? p : path.join(ROOT, p));
 const exists = (p) => fs.existsSync(abs(p));
+// JSON letto senza controlli (elenchi da percorrere); null se non valido
+const readJson = (p) => {
+  try {
+    return JSON.parse(fs.readFileSync(abs(p), "utf8"));
+  } catch (e) {
+    return null;
+  }
+};
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
@@ -52,6 +62,11 @@ async function main() {
   const { ctx, run } = await createGame({ lang: opts.lang });
   ctx.__exists = exists;
   const vopts = "{ fileExists: __exists }";
+  // Tutte le mod attive, così le loro classi sono note anche nelle mappe
+  const modIds = exists("mods/index.json") ? readJson("mods/index.json")?.mods || [] : [];
+  ctx.__mods = modIds;
+  run("setEnabledModIds(__mods)");
+  await run("loadMods()");
   let errors = 0;
   let warnings = 0;
 
@@ -95,6 +110,13 @@ async function main() {
     ctx.__data = data;
     if (file === "config.json") return print(file, run(`validateConfig(__data, ${vopts})`));
     if (file === "missions/catalog.json") return print(file, run(`validateCatalog(__data, ${vopts})`));
+    if (file === "mods/index.json") return print(file, run(`validateModIndex(__data, ${vopts})`));
+    // Mod: percorsi dalla sua cartella; le sue mappe con i percorsi risolti
+    ctx.__base = file.slice(0, file.lastIndexOf("/") + 1);
+    if (/^mods\/[^/]+\/mod\.json$/.test(file)) {
+      return print(file, run(`validateMod(__data, { fileExists: __exists, base: __base })`));
+    }
+    if (file.startsWith("mods/")) run("rebasePaths(SCHEMA_MISSION, __data, __base)");
     if (file === "missions/tutorial/index.json") {
       tutorialIndex = data;
       return print(file, run(`validateTutorialIndex(__data, ${vopts})`));
@@ -116,6 +138,15 @@ async function main() {
     files.push("missions/tutorial/index.json");
     const index = JSON.parse(fs.readFileSync(path.join(ROOT, "missions/tutorial/index.json"), "utf8"));
     for (const l of index.lessons || []) files.push("missions/tutorial/" + l.file);
+    if (modIds.length) files.push("mods/index.json");
+    for (const id of modIds) {
+      const file = `mods/${id}/mod.json`;
+      files.push(file);
+      const mod = exists(file) ? readJson(file) : null;
+      for (const e of mod?.maps || []) {
+        if (e.file) files.push(path.posix.normalize(`mods/${id}/${e.file}`));
+      }
+    }
   }
   for (const f of [...new Set(files)]) checkFile(f);
 

@@ -26,7 +26,7 @@ const L = {
     title: "Guida ai campi dei JSON",
     other: "[English version](FIELDS_EN.md)",
     intro:
-      "Tutti i campi letti dal gioco nei file moddabili: mappe, lezioni dell'addestramento, catalogo delle mappe e `config.json`. " +
+      "Tutti i campi letti dal gioco nei file moddabili: mappe, lezioni dell'addestramento, catalogo delle mappe, `config.json` e mod. " +
       "Per come si crea una mappa e per gli esempi vedi il [README](../README.md#creare-una-nuova-missione); " +
       "`node tools/validate.js --all` controlla i file con queste stesse regole.",
     editorTitle: "Autocompletamento nell'editor",
@@ -43,6 +43,8 @@ const L = {
     rootArray: "Il file è un array di voci con questi campi.",
     lessonNote:
       "Una lezione (`missions/tutorial/*.json`) è una [mappa](#map) con il blocco `tutorial`; `tileTypes` e i nomi dei tile possono venire dall'[indice](#tutorial-index).",
+    modNote:
+      "Una mod è una cartella `mods/<cartella>/` con questo `mod.json`, elencata in [`mods/index.json`](#mod-index); si attiva dal menu (🧩 Mod). Le sue mappe sono [mappe](#map) normali, nella stessa cartella. Vedi il [README](../README.md#mod).",
     tuningTitle: "Gruppi di `tuning`",
     tuningIntro:
       "Valori attuali (dopo `config.json`) dei gruppi modificabili con `tuning` nella mappa. Si scrivono solo i campi da cambiare.",
@@ -54,8 +56,9 @@ const L = {
       tileKey: "carattere di `tileTypes`", unitClass: "classe US", enemyClass: "classe VC", anyClass: "classe US o VC",
       missionType: "tipo di missione", tunable: "gruppo di bilanciamento (vedi [tuning](#tuning))",
       generator: "generatore procedurale", color: "colore `#rrggbb`", texture: "terreno noto o percorso di un'immagine",
-      file: "percorso di un file dalla cartella del gioco", missionImage: "file in `missions/`",
-      missionFile: "file in `missions/`", tutorialFile: "file in `missions/tutorial/`",
+      file: "percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod)", missionImage: "file in `missions/`",
+      missionFile: "file in `missions/` (in una mod: nella sua cartella)", tutorialFile: "file in `missions/tutorial/`",
+      modDir: "cartella in `mods/` con un `mod.json`",
     },
     now: "attuali",
     values: "Valori",
@@ -65,7 +68,7 @@ const L = {
     title: "JSON field guide",
     other: "[Versione italiana](FIELDS.md)",
     intro:
-      "Every field the game reads from the moddable files: maps, training lessons, the map catalog and `config.json`. " +
+      "Every field the game reads from the moddable files: maps, training lessons, the map catalog, `config.json` and mods. " +
       "For how to build a map and for examples see the [README](../README_EN.md#creating-a-new-mission); " +
       "`node tools/validate.js --all` checks the files against these same rules.",
     editorTitle: "Editor autocompletion",
@@ -82,6 +85,8 @@ const L = {
     rootArray: "The file is an array of entries with these fields.",
     lessonNote:
       "A lesson (`missions/tutorial/*.json`) is a [map](#map) with the `tutorial` block; `tileTypes` and tile names may come from the [index](#tutorial-index).",
+    modNote:
+      "A mod is a `mods/<folder>/` folder with this `mod.json`, listed in [`mods/index.json`](#mod-index); it is turned on from the menu (🧩 Mods). Its maps are ordinary [maps](#map), in the same folder. See the [README](../README_EN.md#mods).",
     tuningTitle: "`tuning` groups",
     tuningIntro:
       "Current values (after `config.json`) of the groups a map can change with `tuning`. Write only the fields to change.",
@@ -93,8 +98,9 @@ const L = {
       tileKey: "a `tileTypes` character", unitClass: "US class", enemyClass: "VC class", anyClass: "US or VC class",
       missionType: "mission type", tunable: "balance group (see [tuning](#tuning))",
       generator: "procedural generator", color: "`#rrggbb` color", texture: "known terrain or image path",
-      file: "file path from the game folder", missionImage: "file in `missions/`",
-      missionFile: "file in `missions/`", tutorialFile: "file in `missions/tutorial/`",
+      file: "file path from the game folder (in a mod and its maps: from the mod folder)", missionImage: "file in `missions/`",
+      missionFile: "file in `missions/` (in a mod: in its folder)", tutorialFile: "file in `missions/tutorial/`",
+      modDir: "folder in `mods/` with a `mod.json`",
     },
     now: "current",
     values: "Values",
@@ -112,7 +118,7 @@ async function loadSchema() {
     mission: SCHEMA_MISSION, tile: SCHEMA_TILE_TYPE, translation: SCHEMA_TRANSLATION, tutorial: SCHEMA_TUTORIAL,
     weapon: SCHEMA_WEAPON, weaponPatch: SCHEMA_WEAPON_PATCH[1], unitClass: SCHEMA_UNIT_CLASS,
     enemyClass: SCHEMA_ENEMY_CLASS, config: SCHEMA_CONFIG, catalog: SCHEMA_CATALOG, tutorialIndex: SCHEMA_TUTORIAL_INDEX,
-    cell: SCHEMA_CELL, zone: SCHEMA_ZONE,
+    cell: SCHEMA_CELL, zone: SCHEMA_ZONE, mod: SCHEMA_MOD, modIndex: SCHEMA_MOD_INDEX,
   })`);
   const known = run(`({
     unitClass: Object.keys(UNIT_CLASSES), enemyClass: Object.keys(ENEMY_CLASSES),
@@ -141,6 +147,8 @@ function buildGuide(lang, { s, known, tuning }) {
     { id: "config", node: s.config },
     { id: "catalog", node: s.catalog.items, note: T.rootArray },
     { id: "tutorial-index", node: s.tutorialIndex },
+    { id: "mod", node: s.mod, note: T.modNote },
+    { id: "mod-index", node: s.modIndex },
   ];
   const anchor = new Map(sections.map((x) => [x.node, x.id]));
   anchor.set(s.weaponPatch, "weapon");
@@ -335,6 +343,8 @@ async function buildOutputs() {
     "schemas/catalog.schema.json": json(s.catalog, "VIETNAM '68 — catalogo / catalog"),
     "schemas/tutorial-index.schema.json": json(s.tutorialIndex, "VIETNAM '68 — indice del tutorial / tutorial index"),
     "schemas/config.schema.json": json(s.config, "VIETNAM '68 — config.json"),
+    "schemas/mod.schema.json": json(s.mod, "VIETNAM '68 — mod"),
+    "schemas/mod-index.schema.json": json(s.modIndex, "VIETNAM '68 — elenco delle mod / mod list"),
   };
 }
 

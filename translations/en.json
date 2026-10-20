@@ -160,6 +160,18 @@
     "continue": "▶ CONTINUE"
   },
 
+  "mods": {
+    "button": "🧩 Mods",
+    "title": "MODS",
+    "note": "Mods add classes, weapons, enemies and maps. Your choices apply when the page reloads.",
+    "none": "No mods in mods/index.json.",
+    "active": "ACTIVE",
+    "invalid": "Can't be loaded: {issue}",
+    "apply": "↻ APPLY AND RELOAD",
+    "close": "✕ CLOSE",
+    "save_missing": "Needs the mods: {mods}"
+  },
+
   "confirm": {
     "abort_mission": "Are you sure you want to abort the mission and return to the menu?",
     "end_turn_ap": "{n} unit(s) still have AP left. End the turn anyway?",
@@ -583,6 +595,7 @@
     "unreachable": "unreachable from the start",
     "needs_demolition": "reachable only by demolishing an obstacle (engineer needed)",
     "catalog_kind": "exactly one of \"file\", \"generator\" and \"tutorial\" needed",
+    "mod_map_kind": "exactly one of \"file\" and \"generator\" needed",
     "more": "… and {count} more",
     "types": {
       "number": "a number",

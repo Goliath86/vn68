@@ -4,6 +4,9 @@
     { "fileMatch": ["/missions/catalog.json"], "url": "./schemas/catalog.schema.json" },
     { "fileMatch": ["/missions/*.json", "!/missions/catalog.json"], "url": "./schemas/mission.schema.json" },
     { "fileMatch": ["/missions/tutorial/index.json"], "url": "./schemas/tutorial-index.schema.json" },
-    { "fileMatch": ["/missions/tutorial/*.json", "!/missions/tutorial/index.json"], "url": "./schemas/lesson.schema.json" }
+    { "fileMatch": ["/missions/tutorial/*.json", "!/missions/tutorial/index.json"], "url": "./schemas/lesson.schema.json" },
+    { "fileMatch": ["/mods/index.json"], "url": "./schemas/mod-index.schema.json" },
+    { "fileMatch": ["/mods/*/mod.json"], "url": "./schemas/mod.schema.json" },
+    { "fileMatch": ["/mods/*/*.json", "!/mods/*/mod.json"], "url": "./schemas/mission.schema.json" }
   ]
 }

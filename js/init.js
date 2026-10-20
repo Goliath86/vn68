@@ -60,12 +60,13 @@ const LOADING_SKIP_MS = 20000;
 let _loadingSkipped = false;
 const _loadingSkipTimer = setTimeout(showLoadingContinue, LOADING_SKIP_MS);
 
-// Carica traduzioni + catalogo mappe + config in parallelo, poi scarica gli
-// asset e solo allora apre il menu; le musiche d'ambiente delle missioni
-// arrivano dopo, in background (se una missione parte prima, ambientPlay
-// usa il percorso originale in streaming)
+// Carica traduzioni + catalogo mappe + config in parallelo, poi le mod attive
+// (si aggiungono a config e catalogo), scarica gli asset e solo allora apre il
+// menu; le musiche d'ambiente delle missioni arrivano dopo, in background (se
+// una missione parte prima, ambientPlay usa il percorso originale in streaming)
 let _ambientPaths = [];
 Promise.all([loadLang("it"), loadCatalog(), loadConfig()])
+  .then(loadMods)
   .then(async () => {
     rebuildMapsFromCatalog();
     applyTranslationsToData();

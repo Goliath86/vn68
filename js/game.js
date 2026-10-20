@@ -2,7 +2,7 @@
 // Una mappa con errori (validate.js) non parte: MapDataError con l'elenco,
 // mostrato nel briefing; gli avvisi restano in console
 async function loadMission(jsonPath) {
-  const data = await fetchJsonData(jsonPath);
+  const data = await fetchMapFile(jsonPath);
   assertValid(jsonPath, validateMission(data));
   // Immagini dei tile ("texture") pronte prima del primo disegno del terreno
   if (!data.image) await loadTileTextures(data);
@@ -48,7 +48,7 @@ function useMission(data) {
     return G.mapData;
   }
   const img = new Image();
-  img.src = assetUrl("missions/" + imgName);
+  img.src = assetUrl(missionImagePath(G.mapData));
   img.onload = () => {
     G.tileImg = img;
     render();

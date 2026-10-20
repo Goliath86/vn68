@@ -1,0 +1,49 @@
+{
+  "$schema": "../../schemas/mod.schema.json",
+  "labels": {
+    "it": {
+      "name": "Regolari NVA",
+      "desc": "Mod d'esempio: i regolari dell'Esercito nordvietnamita si uniscono ai rinforzi in tutte le mappe, più la mappa Avamposto NVA."
+    },
+    "en": {
+      "name": "NVA Regulars",
+      "desc": "Example mod: North Vietnamese Army regulars join the reinforcements on every map, plus the NVA Outpost map."
+    }
+  },
+  "author": "VIETNAM '68",
+  "version": "1.0",
+  "config": {
+    "enemyClasses": {
+      "nva": {
+        "name": { "it": "Regolare NVA", "en": "NVA Regular" },
+        "role": "rifleman",
+        "hp": 7,
+        "ap": 2,
+        "attack": 3,
+        "range": 3,
+        "defense": 1,
+        "move": 3,
+        "sprite": "grunt"
+      }
+    },
+    "weapons": {
+      "nva": [
+        { "id": "ak47", "label": "AK-47", "atk": 3, "range": 3, "noise": 5, "sound": "../../assets/ak47.mp3" }
+      ]
+    },
+    "unitImages": { "nva": "../../assets/vietcong_vc.webp" },
+    "vcMix": { "reinforcement": { "nva": 1 } }
+  },
+  "maps": [
+    {
+      "file": "avamposto.json",
+      "icon": "⭐",
+      "color": "#5a2a1a",
+      "theaterColor": "#aa4433",
+      "labels": {
+        "it": { "label": "Avamposto NVA", "subtitle": "Altopiani Centrali · 1968", "theater": "MOD" },
+        "en": { "label": "NVA Outpost", "subtitle": "Central Highlands · 1968", "theater": "MOD" }
+      }
+    }
+  ]
+}

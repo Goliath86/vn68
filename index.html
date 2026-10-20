@@ -592,6 +592,9 @@
                     >
                         AVANTI ▶
                     </button>
+
+                    <!-- Menu delle mod (mods.js), solo se mods/index.json ne elenca -->
+                    <button class="btn" id="btn-mods" data-i18n="mods.button" style="display: none">🧩 Mod</button>
                 </div>
 
                 <!-- STEP 2: selezione missione -->
@@ -713,6 +716,19 @@
             </div>
         </div>
 
+        <!-- MOD (mods.js:openModsMenu) -->
+        <div id="mods-overlay" class="hidden">
+            <div id="mods-box">
+                <h2 data-i18n="mods.title">MOD</h2>
+                <p class="mods-note" data-i18n="mods.note">
+                    Le mod scelte si applicano ricaricando la pagina.
+                </p>
+                <div id="mods-list"></div>
+                <button class="btn" id="mods-apply" data-i18n="mods.apply" disabled>↻ APPLICA E RICARICA</button>
+                <button class="btn" id="mods-close" data-i18n="mods.close">✕ CHIUDI</button>
+            </div>
+        </div>
+
         <!-- CONFIRM END TURN (unità con AP residui) -->
         <div id="endturn-overlay" class="hidden">
             <div id="endturn-box">
@@ -774,6 +790,7 @@
 
         <script src="js/schema.js"></script>
         <script src="js/validate.js"></script>
+        <script src="js/mods.js"></script>
 
         <script src="js/alea.js"></script>
 

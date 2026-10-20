@@ -84,9 +84,13 @@ const COLOR_RE = /^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 const _refMiss = (kind, level = "error") => (v) => [level, "ref", { value: v, kind }];
 const VALIDATION_REFS = {
   tileKey: (v, cx) => (cx.md?.tileTypes?.[v] ? null : _refMiss("tileKey")(v)),
-  unitClass: (v) => (UNIT_CLASSES[v] ? null : _refMiss("unitClass")(v)),
-  enemyClass: (v) => (ENEMY_CLASSES[v] ? null : _refMiss("enemyClass")(v)),
-  anyClass: (v) => (UNIT_CLASSES[v] || ENEMY_CLASSES[v] ? null : _refMiss("anyClass", "warning")(v)),
+  // Le classi aggiunte dalla mod che si sta controllando contano come note
+  unitClass: (v, cx) => (UNIT_CLASSES[v] || cx.classes?.unit.includes(v) ? null : _refMiss("unitClass")(v)),
+  enemyClass: (v, cx) => (ENEMY_CLASSES[v] || cx.classes?.enemy.includes(v) ? null : _refMiss("enemyClass")(v)),
+  anyClass: (v, cx) =>
+    UNIT_CLASSES[v] || ENEMY_CLASSES[v] || cx.classes?.unit.includes(v) || cx.classes?.enemy.includes(v)
+      ? null
+      : _refMiss("anyClass", "warning")(v),
   missionType: (v) => (MISSION_TYPES[v] ? null : _refMiss("missionType")(v)),
   tunable: (v) => (TUNABLES()[v] ? null : _refMiss("tunable", "warning")(v)),
   generator: (v) => (MAP_GENERATORS[v] ? null : _refMiss("generator")(v)),
@@ -95,11 +99,13 @@ const VALIDATION_REFS = {
     TEXTURE_IMAGE_RE.test(v) || TILE_DETAILS[v]
       ? null
       : ["warning", "texture_unknown", { value: v, known: Object.keys(TILE_DETAILS).join(", ") }],
-  // File: controllati solo se opts.fileExists (tools/validate.js)
-  file: (v, cx) => _fileRef(cx, v, "warning"),
-  missionImage: (v, cx) => _fileRef(cx, "missions/" + v, "warning"),
-  missionFile: (v, cx) => _fileRef(cx, "missions/" + v, "error"),
+  // File: controllati solo se opts.fileExists (tools/validate.js); in una
+  // mod (opts.base = sua cartella) i percorsi partono dalla cartella
+  file: (v, cx) => _fileRef(cx, cx.base ? modPath(cx.base, v) : v, "warning"),
+  missionImage: (v, cx) => _fileRef(cx, normPath("missions/" + v), "warning"),
+  missionFile: (v, cx) => _fileRef(cx, cx.base ? modPath(cx.base, v) : "missions/" + v, "error"),
   tutorialFile: (v, cx) => _fileRef(cx, "missions/tutorial/" + v, "error"),
+  modDir: (v, cx) => _fileRef(cx, `${MODS_DIR}${v}/mod.json`, "error"),
 };
 
 function _fileRef(cx, file, level) {
@@ -255,6 +261,8 @@ function _validationContext(opts, md = null) {
     md,
     issues,
     fileExists: opts.fileExists || null,
+    base: opts.base || null,
+    classes: opts.classes || null,
     add: (level, path, key, vars = {}) => issues.push({ level, path, key, vars }),
     _inMap: (c, r) => !md || !Number.isInteger(md.cols) || (c < md.cols && r < md.rows),
     cell: (v, path) => {
@@ -568,9 +576,39 @@ function validateTutorialIndex(index, opts = {}) {
 function validateConfig(cfg, opts = {}) {
   const cx = _validationContext(opts);
   _walk(SCHEMA_CONFIG, cfg, "", cx);
+  _checkConfigMixes(cfg, "vcMix", cx);
+  return cx.issues;
+}
+
+function _checkConfigMixes(cfg, path, cx) {
   for (const [k, mix] of Object.entries(cfg?.vcMix || {})) {
-    if (_isPlain(mix) && !Object.values(mix).some((w) => w > 0)) cx.add("error", `vcMix.${k}`, "mix_empty");
+    if (_isPlain(mix) && !Object.values(mix).some((w) => w > 0)) cx.add("error", `${path}.${k}`, "mix_empty");
   }
+}
+
+// ── Mod (mods.js) ──────────────────────────────────────────────────────
+// mod.json prima di essere applicato: le classi che aggiunge contano come
+// note; opts.base = cartella della mod, da cui partono i percorsi
+function validateMod(mod, opts = {}) {
+  const cfg = _isPlain(mod?.config) ? mod.config : {};
+  const names = (m) => (_isPlain(m) ? Object.keys(m) : []);
+  const classes = { unit: names(cfg.unitClasses), enemy: names(cfg.enemyClasses) };
+  const cx = _validationContext({ ...opts, classes });
+  _walk(SCHEMA_MOD, mod, "", cx);
+  _checkConfigMixes(cfg, "config.vcMix", cx);
+  (Array.isArray(mod?.maps) ? mod.maps : []).forEach((e, i) => {
+    if (!_isPlain(e)) return;
+    if (!e.file === !e.generator) cx.add("error", `maps[${i}]`, "mod_map_kind");
+  });
+  for (const lang of ["it", "en"]) {
+    if (_isPlain(mod) && !mod.labels?.[lang]) cx.add("warning", "labels", "translation_missing", { lang });
+  }
+  return cx.issues;
+}
+
+function validateModIndex(index, opts = {}) {
+  const cx = _validationContext(opts);
+  _walk(SCHEMA_MOD_INDEX, index, "", cx);
   return cx.issues;
 }
 
@@ -581,8 +619,9 @@ const LOAD_ISSUES = [];
 
 function reportStartupIssues() {
   for (const e of LOAD_ISSUES) reportIssues(e.file, e.issues);
-  reportIssues("config.json", validateConfig(CONFIG));
-  reportIssues("missions/catalog.json", validateCatalog(CATALOG));
+  reportIssues("config.json", validateConfig(CONFIG_FILE || {}));
+  reportIssues("missions/catalog.json", validateCatalog(CATALOG.filter((e) => !e.mod)));
+  for (const m of MOD_LIST) reportIssues(m.file, m.issues);
 }
 
 // Lancia MapDataError se ci sono errori; gli avvisi vanno in console

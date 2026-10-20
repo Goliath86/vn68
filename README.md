@@ -917,3 +917,44 @@ Aggiungi animazioni ambientali senza toccare il codice:
 ```
 
 Le animazioni globali (`tileAnimations` alla radice) sono sempre visibili. Quelle dentro `objectives.<tipo>.tileAnimations` appaiono solo nella modalità corrispondente. Il fumo è visibile anche attraverso la Fog of War — utile come indicatore visivo per la posizione del pilota in `rescue_pilot`.
+
+---
+
+## Mod
+
+Una mod raccoglie in una cartella sua classi, armi, nemici e mappe, senza toccare `config.json`, il catalogo o i file del gioco. Si attiva dal menu iniziale con il pulsante **🧩 Mod**, che compare quando ce n'è almeno una: le scelte valgono dal caricamento successivo della pagina (il pulsante **Applica e ricarica** lo fa subito) e restano ricordate nel browser. Una partita salvata con delle mod si riprende solo con quelle mod attive.
+
+```
+mods/
+  index.json              elenco delle mod: { "mods": ["nva_regulars"] }
+  nva_regulars/
+    mod.json              descrizione, aggiunte a config.json, mappe
+    avamposto.json        una mappa della mod
+```
+
+L'elenco in `mods/index.json` serve perché il gioco, da sito statico, non può leggere il contenuto di una cartella; l'ordine è quello in cui le mod si applicano (se due cambiano la stessa cosa vince l'ultima).
+
+```json
+{
+  "labels": {
+    "it": { "name": "Regolari NVA", "desc": "Regolari nordvietnamiti nei rinforzi, più una mappa" },
+    "en": { "name": "NVA Regulars", "desc": "North Vietnamese regulars in the reinforcements, plus a map" }
+  },
+  "author": "Io",
+  "version": "1.0",
+  "config": {
+    "enemyClasses": { "nva": { "name": { "it": "Regolare NVA", "en": "NVA Regular" }, "role": "rifleman", "hp": 7, "attack": 3, "sprite": "grunt" } },
+    "weapons": { "nva": [{ "id": "ak47", "label": "AK-47", "atk": 3, "range": 3, "sound": "../../assets/ak47.mp3" }] },
+    "vcMix": { "reinforcement": { "nva": 1 } }
+  },
+  "maps": [
+    { "file": "avamposto.json", "icon": "⭐", "labels": { "it": { "label": "Avamposto NVA", "subtitle": "Altopiani · 1968" } } }
+  ]
+}
+```
+
+- **`config`** ha gli stessi campi di `config.json` e si aggiunge a quello: classi e composizioni vengono unite, immagini e suoni sostituiti per chiave, le armi seguono le regole del campo `weapons` delle mappe (un array sostituisce il loadout della classe, un oggetto cambia le armi per `id`).
+- **`maps`** ha le stesse voci di `missions/catalog.json`; `file` è il JSON della mappa nella cartella della mod. Le mappe delle mod sono mappe normali e possono usare le classi della mod.
+- **I percorsi** in `mod.json` e nelle sue mappe (immagini, suoni, musiche, texture, `image`) partono dalla cartella della mod; `../../` risale alla cartella del gioco, per riusarne i file (`"../../assets/ak47.mp3"`).
+
+La mod d'esempio `mods/nva_regulars/` mostra tutte le parti. Una mod con errori (campi sbagliati, classi inesistenti, file mancanti) non viene applicata: il menu delle mod mostra il primo errore e la console del browser l'elenco completo. `node tools/validate.js --all` controlla anche le mod e le loro mappe; tutti i campi di `mod.json` sono nella [guida ai campi](docs/FIELDS.md#mod).
