@@ -96,7 +96,13 @@ function applyTranslationsToDOM() {
     const val = t(key);
     if (val !== key) el.textContent = val;
   });
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-title");
+    const val = t(key);
+    if (val !== key) el.title = val;
+  });
   updateWindButton();
+  updateHeaderTexts();
 
   // Placeholder dinamici quando il gioco non è ancora avviato
   if (!G.missionType) {
@@ -118,6 +124,31 @@ function applyTranslationsToDOM() {
   }
 }
 
+// "NOME MAPPA — TIPO MISSIONE" nell'header
+function missionSubtitle() {
+  const name = (mt("name") ?? G.mapData?.name ?? "?").toUpperCase();
+  return name + " — " + (MISSION_TYPES[G.missionType]?.label ?? "").toUpperCase();
+}
+
+// Testi dell'header scritti dal codice (non data-i18n): ridisegnati al
+// cambio lingua
+function updateHeaderTexts() {
+  document.getElementById("btn-fow").title = t(G.fowEnabled ? "buttons.fow_on" : "buttons.fow_off");
+  document.getElementById("mission-subtitle").textContent =
+    G.missionType && G.mapData ? missionSubtitle() : t("header.mission_initial");
+  if (G.missionType && (G.phase === "player" || G.phase === "enemy"))
+    document.getElementById("phase-label").textContent = t(`phases.${G.phase}`);
+}
+
+// Cambio lingua dal menu iniziale: le schede delle mappe e il banner di
+// ripresa sono generati da initModal, quindi si ridisegna il primo passo
+function refreshMenuTexts() {
+  const menuOpen = document.getElementById("modal-overlay").style.display !== "none";
+  const onMapStep = document.getElementById("modal-step-map").style.display !== "none";
+  const tutorialOpen = !document.getElementById("tutorial-overlay").classList.contains("hidden");
+  if (menuOpen && onMapStep && !tutorialOpen) initModal();
+}
+
 function setLang(lang) {
   markLangButtons(lang);
   try {
@@ -128,6 +159,7 @@ function setLang(lang) {
     rebuildMapsFromCatalog();
     applyTranslationsToData();
     applyTranslationsToDOM();
+    refreshMenuTexts();
     if (G.missionType) {
       updateUI();
       // Testi dell'istruttore nella nuova lingua (lezioni del tutorial)

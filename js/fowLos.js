@@ -86,7 +86,7 @@ function toggleFOW() {
   G.fowEnabled = !G.fowEnabled;
   const btn = document.getElementById("btn-fow");
   btn.classList.toggle("fow-on", G.fowEnabled);
-  btn.title = G.fowEnabled ? "Fog of War: ON" : "Fog of War: OFF";
+  btn.title = t(G.fowEnabled ? "buttons.fow_on" : "buttons.fow_off");
   if (G.actionMode === "attack") setActionMode("attack");
   render();
 }

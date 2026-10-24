@@ -211,10 +211,7 @@ function startGame(
     (e) => e.alive,
   ).length;
 
-  const missionName = (mt("name") ?? G.mapData.name ?? "?").toUpperCase();
-
-  document.getElementById("mission-subtitle").textContent =
-    missionName + " — " + MISSION_TYPES[missionType].label.toUpperCase();
+  document.getElementById("mission-subtitle").textContent = missionSubtitle();
 
   //document.getElementById("btn-dice").disabled = false;
 

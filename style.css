@@ -851,6 +851,14 @@ body {
     opacity: 0.7;
     pointer-events: none;
 }
+/* Pulsanti IT/EN nel menu iniziale, angolo in alto a destra */
+#modal-box .modal-lang {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    display: flex;
+    gap: 3px;
+}
 #modal-box h2 {
     font-family: var(--stamp-font);
     font-size: 26px;
@@ -1841,6 +1849,12 @@ body {
         position: static;
         text-align: right;
         margin: 8px -6px -10px 0;
+    }
+    /* Pannello stretto: pulsanti in una riga propria, non sopra il titolo */
+    #modal-box .modal-lang {
+        position: static;
+        justify-content: flex-end;
+        margin: -6px -4px 10px 0;
     }
     #modal-box h2 {
         font-size: 20px;

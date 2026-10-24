@@ -130,8 +130,7 @@ async function resumeGame(save) {
   document.getElementById("vc-remain").textContent = G.enemies.filter(
     (e) => e.alive,
   ).length;
-  document.getElementById("mission-subtitle").textContent =
-    save.mapName + " — " + MISSION_TYPES[G.missionType].label.toUpperCase();
+  document.getElementById("mission-subtitle").textContent = missionSubtitle();
 
   document.getElementById("btn-endturn").disabled = false;
   document.getElementById("btn-menu").style.display = "inline-block";

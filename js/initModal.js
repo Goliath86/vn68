@@ -18,6 +18,8 @@ function initModal() {
 
     const missionLabel =
       MISSION_TYPES[save.missionType]?.label || save.missionType;
+    // Nome nella lingua attuale, non in quella del salvataggio
+    const mapName = save.mapData?.translations?.[LANG]?.name?.toUpperCase() ?? save.mapName;
     // Partita salvata con mod ora spente: si riprende solo riattivandole
     const missingMods = missingSaveMods(save).map((id) => {
       const m = MOD_LIST.find((x) => x.id === id);
@@ -31,7 +33,7 @@ function initModal() {
     banner.innerHTML = `
       <div style="text-align:left;line-height:1.5">
         <div style="font-family:var(--stamp-font);font-size:13px;color:var(--tan);letter-spacing:1px">${t("modal.resume_title")}</div>
-        <div style="font-size:11px;color:var(--paper-dark)">${save.mapName} · ${missionLabel} · ${t("modal.resume_turn", { turn: save.turn })}</div>
+        <div style="font-size:11px;color:var(--paper-dark)">${mapName} · ${missionLabel} · ${t("modal.resume_turn", { turn: save.turn })}</div>
         <div style="font-size:10px;color:#556644">${savedDate}</div>
         ${missingMods.length ? `<div style="font-size:11px;color:#d9764a">${t("mods.save_missing", { mods: missingMods.join(", ") })}</div>` : ""}
         <div class="gen-bar hidden" id="resume-gen-bar"><div class="gen-fill" id="resume-gen-fill"></div></div>
@@ -39,12 +41,9 @@ function initModal() {
       <button class="btn" id="btn-resume" style="font-size:12px;padding:7px 16px;white-space:nowrap" ${missingMods.length ? "disabled" : ""}>${t("buttons.resume")}</button>
     `;
 
-    document
-      .getElementById("modal-step-map")
-      .insertBefore(
-        banner,
-        document.getElementById("modal-step-map").firstChild,
-      );
+    // Sotto i pulsanti della lingua, sopra il titolo
+    const stepMap = document.getElementById("modal-step-map");
+    stepMap.insertBefore(banner, stepMap.querySelector("h2"));
 
     document
       .getElementById("btn-resume")

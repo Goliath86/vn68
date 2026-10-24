@@ -45,6 +45,7 @@
                 <button
                     id="btn-menu"
                     data-i18n="buttons.menu"
+                    data-i18n-title="buttons.menu_title"
                     title="Torna al menu"
                     onclick="returnToMenu()"
                 >
@@ -53,6 +54,7 @@
 
                 <button
                     id="btn-mute"
+                    data-i18n-title="buttons.sound_title"
                     title="Toggle sound"
                     onclick="audioToggleMute()"
                 >
@@ -573,6 +575,12 @@
             <div id="modal-box">
                 <!-- STEP 1: selezione mappa -->
                 <div id="modal-step-map">
+                    <!-- Lingua anche dal menu: su mobile l'header non ha i pulsanti IT/EN -->
+                    <div class="modal-lang">
+                        <button class="lang-btn active" data-lang="it">IT</button>
+                        <button class="lang-btn" data-lang="en">EN</button>
+                    </div>
+
                     <h2 data-i18n="modal.select_theater_title">
                         SELEZIONA TEATRO
                     </h2>
