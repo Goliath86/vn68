@@ -65,7 +65,9 @@ const _loadingSkipTimer = setTimeout(showLoadingContinue, LOADING_SKIP_MS);
 // menu; le musiche d'ambiente delle missioni arrivano dopo, in background (se
 // una missione parte prima, ambientPlay usa il percorso originale in streaming)
 let _ambientPaths = [];
-Promise.all([loadLang("it"), loadCatalog(), loadConfig()])
+const _startLang = initialLang();
+markLangButtons(_startLang);
+Promise.all([loadLang(_startLang), loadCatalog(), loadConfig()])
   .then(loadMods)
   .then(async () => {
     rebuildMapsFromCatalog();

@@ -1,6 +1,33 @@
 let LANG = "it";
 let T = {};
 
+// Lingue con un file in translations/; la scelta del giocatore resta in
+// localStorage, altrimenti si usa la lingua del browser e, se non prevista,
+// l'inglese
+const SUPPORTED_LANGS = ["it", "en"];
+const LANG_KEY = "vn68_lang";
+const DEFAULT_LANG = "en";
+
+function initialLang() {
+  try {
+    const saved = localStorage.getItem(LANG_KEY);
+    if (SUPPORTED_LANGS.includes(saved)) return saved;
+  } catch (e) {}
+  const prefs = Array.isArray(navigator.languages) ? navigator.languages : [navigator.language];
+  for (const p of prefs) {
+    const code = typeof p === "string" ? p.toLowerCase().split("-")[0] : null;
+    if (SUPPORTED_LANGS.includes(code)) return code;
+  }
+  return DEFAULT_LANG;
+}
+
+function markLangButtons(lang) {
+  document
+    .querySelectorAll(".lang-btn")
+    .forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
+  document.documentElement.lang = lang;
+}
+
 async function loadLang(lang) {
   try {
     const resp = await fetch(`translations/${lang}.json`);
@@ -92,9 +119,10 @@ function applyTranslationsToDOM() {
 }
 
 function setLang(lang) {
-  document
-    .querySelectorAll(".lang-btn")
-    .forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
+  markLangButtons(lang);
+  try {
+    localStorage.setItem(LANG_KEY, lang);
+  } catch (e) {}
 
   loadLang(lang).then(() => {
     rebuildMapsFromCatalog();
