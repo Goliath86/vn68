@@ -4,7 +4,7 @@ const AP_PER_TURN = 3; // action points per unità per turno
 const SAVE_KEY = "nam68_v1_save";
 const CAMPAIGN_SAVE_KEY = "vn68_campaign_save"; // missione in corso di una campagna (campaign.js)
 // Versione mostrata nell'intestazione e nel menu (init.js → .game-version)
-const GAME_VERSION = "1.0.0";
+const GAME_VERSION = "1.1.0";
 
 // ── STATO GLOBALE ──────────────────────────────────────────────────────
 const G = {
