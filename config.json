@@ -13,7 +13,7 @@
     "heal": "assets/bandaging.mp3",
     "reload": "assets/reload.mp3",
     "overwatch": "",
-    "spawn": "",
+    "spawn": "assets/spawn.mp3",
     "turn_end": "assets/end_turn.mp3",
     "victory": "",
     "defeat": "",
