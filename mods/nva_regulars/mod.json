@@ -23,7 +23,7 @@
         "range": 3,
         "defense": 1,
         "move": 3,
-        "sprite": "grunt"
+        "sprite": "nva"
       }
     },
     "weapons": {
@@ -31,7 +31,6 @@
         { "id": "ak47", "label": "AK-47", "atk": 3, "range": 3, "noise": 5, "sound": "../../assets/ak47.mp3" }
       ]
     },
-    "unitImages": { "nva": "../../assets/vietcong_vc.webp" },
     "vcMix": { "reinforcement": { "nva": 1 } }
   },
   "maps": [

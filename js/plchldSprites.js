@@ -1,7 +1,7 @@
-// ── TILE TEXTURE DETAILS ───────────────────────────────────────────────
+// â”€â”€ TILE TEXTURE DETAILS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Disegnati una sola volta nella cache del terreno (render.js:getTerrainCache),
 // quindi possono essere ricchi. Usano solo velature chiare/scure sopra il
-// `color` del JSON missione, così la tinta resta config-driven. Variazione
+// `color` del JSON missione, cosÃ¬ la tinta resta config-driven. Variazione
 // deterministica per tile (seed da col/row); i pattern continui (mattoni,
 // onde, lastricato) usano coordinate di mondo per combaciare tra tile vicini.
 const _dk = (a) => `rgba(0,0,0,${a.toFixed(3)})`;
@@ -13,7 +13,7 @@ function _tileRng(col, row) {
   return () => _hash01(seed + i++ * 17.31);
 }
 
-// Velatura con segno: t in [-0.5, 0.5] → scura se negativo, chiara se positivo
+// Velatura con segno: t in [-0.5, 0.5] â†’ scura se negativo, chiara se positivo
 function _tint(t, dark, light) {
   return t < 0 ? _dk(-t * dark) : _lt(t * light);
 }
@@ -85,7 +85,7 @@ function _grass(ctx, x, y, ts, rng, n) {
   }
 }
 
-// Chioma/cespuglio a strati: ombra → base → lobi → luce
+// Chioma/cespuglio a strati: ombra â†’ base â†’ lobi â†’ luce
 function _foliage(ctx, cx, cy, r, rng, cols, shadow = true) {
   if (shadow) _disc(ctx, cx + r * 0.25, cy + r * 0.35, r * 1.05, _dk(0.32));
   _disc(ctx, cx, cy, r, cols[0]);
@@ -96,7 +96,7 @@ function _foliage(ctx, cx, cy, r, rng, cols, shadow = true) {
   _disc(ctx, cx - r * 0.3, cy - r * 0.35, r * 0.4, cols[2]);
 }
 
-// Mattoni allineati al mondo: le mura di più tile formano un'unica tessitura
+// Mattoni allineati al mondo: le mura di piÃ¹ tile formano un'unica tessitura
 function _tdBricks(ctx, x, y, ts, rng, cracked) {
   const bh = ts / 6;
   const bw = ts / 3;
@@ -116,7 +116,7 @@ function _tdBricks(ctx, x, y, ts, rng, cracked) {
     }
   }
   _grain(ctx, x, y, ts, rng, 10, 0.12);
-  // macchie di umidità
+  // macchie di umiditÃ 
   for (let i = 0; i < 2; i++) {
     if (rng() < 0.5) continue;
     _oval(ctx, x + rng() * ts, y + rng() * ts, ts * (0.1 + rng() * 0.12), ts * (0.06 + rng() * 0.06), _dk(0.1));
@@ -218,7 +218,7 @@ function _tdBuilding(ctx, x, y, ts, rng) {
   ctx.strokeRect(x + p, y + p, w, w);
 }
 
-// Tetto a padiglione a più ordini, finiture dorate
+// Tetto a padiglione a piÃ¹ ordini, finiture dorate
 function _tdTemple(ctx, x, y, ts, rng) {
   const cx = x + ts / 2;
   const cy = y + ts / 2;
@@ -316,7 +316,7 @@ function _log(ctx, x1, y1, x2, y2, w, rng) {
   line(w * 0.25, w * 0.35);
   ctx.strokeStyle = `rgb(${88 + Math.round(rng() * 20)},64,40)`;
   line(0, 0);
-  ctx.strokeStyle = _dk(0.25); // metà in ombra
+  ctx.strokeStyle = _dk(0.25); // metÃ  in ombra
   ctx.lineWidth = w * 0.45;
   line(Math.sin(ang) * -w * 0.22, Math.cos(ang) * w * 0.22);
   ctx.strokeStyle = _lt(0.14);
@@ -337,7 +337,7 @@ function _log(ctx, x1, y1, x2, y2, w, rng) {
     ctx.lineTo(px + Math.cos(ang) * l, py + Math.sin(ang) * l);
     ctx.stroke();
   }
-  // sezione del taglio all'estremità
+  // sezione del taglio all'estremitÃ 
   ctx.save();
   ctx.translate(x2, y2);
   ctx.rotate(ang);
@@ -378,7 +378,7 @@ function _tdObstacle(ctx, x, y, ts, rng) {
     const cy = y + ts / 2;
     const l = ts * 0.38;
     _log(ctx, cx - Math.cos(a) * l, cy - Math.sin(a) * l, cx + Math.cos(a) * l, cy + Math.sin(a) * l, ts * 0.17, rng);
-    // secondo tronco accatastato di traverso, più corto
+    // secondo tronco accatastato di traverso, piÃ¹ corto
     const b = a + Math.PI / 2 + (rng() - 0.5) * 0.8;
     const l2 = ts * 0.28;
     const ox = (rng() - 0.5) * ts * 0.2;
@@ -417,7 +417,7 @@ function _tdClearing(ctx, x, y, ts, rng) {
 }
 
 // Solo il sottobosco: le chiome sono una passata a parte senza clip
-// (drawJungleCanopy), così sporgono dal tile e la giungla non ha bordi quadrati
+// (drawJungleCanopy), cosÃ¬ sporgono dal tile e la giungla non ha bordi quadrati
 function _tdJungle(ctx, x, y, ts, rng) {
   ctx.fillStyle = _dk(0.25); // sottobosco in ombra
   ctx.fillRect(x, y, ts, ts);
@@ -617,7 +617,7 @@ function _tdDebris(ctx, x, y, ts, rng) {
   }
 }
 
-// Segnale dell'obiettivo (TILE_OBJECTS): il fondo è il lastricato
+// Segnale dell'obiettivo (TILE_OBJECTS): il fondo Ã¨ il lastricato
 function _objectiveMarker(ctx, x, y, ts) {
   ctx.strokeStyle = "rgba(255,200,30,0.55)";
   ctx.lineWidth = 1.5;
@@ -637,7 +637,7 @@ function _objectiveMarker(ctx, x, y, ts) {
   _disc(ctx, x + ts * 0.5, y + ts * 0.5, ts * 0.06, "rgba(255,200,30,0.55)");
 }
 
-// Sentiero sinuoso che entra ed esce a metà dei lati alto/basso
+// Sentiero sinuoso che entra ed esce a metÃ  dei lati alto/basso
 function _tdTrail(ctx, x, y, ts, rng) {
   _grass(ctx, x, y, ts, rng, 14);
   const c1 = x + ts * (0.25 + rng() * 0.5);
@@ -791,23 +791,23 @@ const TILE_DETAILS = {
 };
 
 // Elementi in rilievo sul fondo del tile: disegnati da drawTileObjects dopo
-// le fusioni tra terreni (drawTerrainTransitions), così il terreno vicino che
+// le fusioni tra terreni (drawTerrainTransitions), cosÃ¬ il terreno vicino che
 // sconfina nel tile passa sotto e non li sbiadisce
 const TILE_OBJECTS = {
   village: _villageHuts,
   objective: _objectiveMarker,
 };
 
-// ── ASPETTO DEI TILE ("texture" nel tileType) ─────────────────────────
-// Tutto ciò che è solo disegno (texture, fusioni, rive, ombre, chiome, erba
+// â”€â”€ ASPETTO DEI TILE ("texture" nel tileType) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Tutto ciÃ² che Ã¨ solo disegno (texture, fusioni, rive, ombre, chiome, erba
 // al vento, onde, nebbia, uccelli, crateri) dipende dall'aspetto del tile, non
 // dal suo id: "texture": "jungle" fa disegnare un tile nuovo come la giungla.
 // Un percorso d'immagine ("assets/risaia.png") viene invece disegnato sopra
 // il `color` del tile (le parti trasparenti lasciano vedere il colore) e per
 // il resto conta come terreno generico (altezza da losBlock).
 const TEXTURE_IMAGE_RE = /\.(png|jpe?g|webp|gif)$/i;
-const _textureImages = new Map(); // percorso → Image
-const _unknownLooks = new Set(); // aspetti sconosciuti già segnalati
+const _textureImages = new Map(); // percorso â†’ Image
+const _unknownLooks = new Set(); // aspetti sconosciuti giÃ  segnalati
 
 function _textureImagePath(def) {
   const tx = def?.texture;
@@ -827,7 +827,7 @@ function tileLook(def) {
 
 // Immagini delle texture della mappa: caricate dall'avvio della missione
 // (game.js:useMission, render.js:prebuildTerrainCache); se una arriva a
-// cache del terreno già costruita, la cache viene rifatta
+// cache del terreno giÃ  costruita, la cache viene rifatta
 function loadTileTextures(md) {
   const paths = [...new Set(Object.values(md?.tileTypes || {}).map(_textureImagePath).filter(Boolean))];
   return Promise.all(
@@ -866,7 +866,7 @@ function _paintDetails(ctx, def, x, y, ts, rng, surface = false) {
     ctx.drawImage(img, x, y, ts, ts);
     return;
   }
-  // lieve variazione di luminosità per tile: rompe l'uniformità della griglia
+  // lieve variazione di luminositÃ  per tile: rompe l'uniformitÃ  della griglia
   ctx.fillStyle = _tint(rng() - 0.5, 0.1, 0.05);
   ctx.fillRect(x, y, ts, ts);
   const look = tileLook(def);
@@ -885,21 +885,21 @@ function drawTileDetails(ctx, tileDef, x, y, ts, col = 0, row = 0) {
   ctx.restore();
 }
 
-// ctx già limitato al tile (drawTerrainTransitions) o tile isolato
+// ctx giÃ  limitato al tile (drawTerrainTransitions) o tile isolato
 // (render.js:renderBlastedTiles); seme proprio, indipendente dal fondo
 function drawTileObjects(ctx, tileDef, x, y, ts, col = 0, row = 0) {
   const draw = !_tileImage(tileDef) && TILE_OBJECTS[tileLook(tileDef)];
   if (draw) draw(ctx, x, y, ts, _tileRng(col + 0.37, row + 0.61));
 }
 
-// ── TRANSIZIONI E OMBRE TRA TILE ───────────────────────────────────────
-// Passata eseguita dopo aver disegnato tutti i tile; ogni effetto è disegnato
+// â”€â”€ TRANSIZIONI E OMBRE TRA TILE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Passata eseguita dopo aver disegnato tutti i tile; ogni effetto Ã¨ disegnato
 // nel tile che lo "riceve": fusioni tra terreni diversi, rive del fiume, ombre
 // a sud-est dei tile alti (luce da nord-ovest, coerente con i disegni dei
-// tile). Id sconosciuti: altezza da losBlock "full", priorità 0.
+// tile). Id sconosciuti: altezza da losBlock "full", prioritÃ  0.
 //
-// Fusione: tra due terreni "a terra" vicini, quello a priorità più alta (a
-// parità decide l'id, così ne invade sempre uno solo) entra nell'altro. Nel
+// Fusione: tra due terreni "a terra" vicini, quello a prioritÃ  piÃ¹ alta (a
+// paritÃ  decide l'id, cosÃ¬ ne invade sempre uno solo) entra nell'altro. Nel
 // tile che riceve si ridisegna la texture del vicino e la si mostra attraverso
 // una maschera alfa piena sul lato di contatto e sfumata verso l'interno, con
 // frangia irregolare; gli angoli toccati solo in diagonale ricevono uno spicchio.
@@ -916,15 +916,15 @@ const TILE_BLEED_PRIORITY = {
   plaza: 1,
   objective: 0,
 };
-// Profondità della fusione (frazione di tile) per terreno che invade;
-// i lastricati entrano poco, la giungla ha già le chiome che sporgono
+// ProfonditÃ  della fusione (frazione di tile) per terreno che invade;
+// i lastricati entrano poco, la giungla ha giÃ  le chiome che sporgono
 const TILE_BLEND_DEPTH = { jungle: 0.3, swamp: 0.55, debris: 0.28, street: 0.22, plaza: 0.2, objective: 0.2 };
 const TILE_BLEND_DEPTH_DEFAULT = 0.4;
 // Tetto per terreno che riceve: il tracciato del sentiero resta leggibile
 const TILE_BLEND_MAX_IN = { trail: 0.38 };
 // Texture usata quando il terreno invade un vicino: solo il fondo, senza gli
-// elementi che non devono comparire a metà nel tile accanto (aia, tracciato;
-// capanne e segnale dell'obiettivo sono già a parte in TILE_OBJECTS)
+// elementi che non devono comparire a metÃ  nel tile accanto (aia, tracciato;
+// capanne e segnale dell'obiettivo sono giÃ  a parte in TILE_OBJECTS)
 const TILE_SURFACE = {
   village: (ctx, x, y, ts, rng) => _grass(ctx, x, y, ts, rng, 10),
   trail: (ctx, x, y, ts, rng) => _grain(ctx, x, y, ts, rng, 14, 0.1),
@@ -932,7 +932,7 @@ const TILE_SURFACE = {
 const TILE_HEIGHT = {
   wall: 0.32,
   wall_breach: 0.32,
-  // Massi/tronchi bassi su erba: hanno già le loro ombre, il tile no
+  // Massi/tronchi bassi su erba: hanno giÃ  le loro ombre, il tile no
   // (0 esplicito: altrimenti varrebbe il default di losBlock "full")
   obstacle: 0,
   building: 0.3,
@@ -990,7 +990,7 @@ function _outranks(a, b) {
   return pa !== pb ? pa > pb : a.id > b.id;
 }
 
-// Chiazza morbida per la maschera (alfa al centro → 0 sul bordo)
+// Chiazza morbida per la maschera (alfa al centro â†’ 0 sul bordo)
 function _softBlob(ctx, cx, cy, r, a) {
   const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
   g.addColorStop(0, `rgba(0,0,0,${a})`);
@@ -1000,7 +1000,7 @@ function _softBlob(ctx, cx, cy, r, a) {
 }
 
 // Maschera del lato `d`: gradiente + frangia di chiazze. Le chiazze stanno su
-// una griglia di mondo lungo il lato, così la frangia prosegue senza salti nei
+// una griglia di mondo lungo il lato, cosÃ¬ la frangia prosegue senza salti nei
 // tile che condividono la stessa linea di contatto
 function _maskEdge(ctx, x, y, ts, d, len) {
   _edgeGradient(ctx, x, y, ts, d, len, [
@@ -1033,7 +1033,7 @@ function _blendCanvas(c, px) {
 }
 
 function _drawSoftEdges(ctx, defAt, def, c, r, ts) {
-  const invaders = new Map(); // id → { def, sides, corners }
+  const invaders = new Map(); // id â†’ { def, sides, corners }
   // stesso aspetto (es. id nuovo con "texture" uguale al vicino): niente fusione
   const same = (a, b) => a.id === b.id || (tileLook(a) === tileLook(b) && !_tileImage(a) && !_tileImage(b));
   const take = (n) => {
@@ -1052,12 +1052,12 @@ function _drawSoftEdges(ctx, defAt, def, c, r, ts) {
   }
   if (!invaders.size) return;
 
-  const k = ctx.getTransform().a; // densità della cache del terreno
+  const k = ctx.getTransform().a; // densitÃ  della cache del terreno
   const px = Math.ceil(ts * k);
   const x = c * ts;
   const y = r * ts;
   const cap = TILE_BLEND_MAX_IN[tileLook(def)] ?? 1;
-  // dal più debole al più forte: il terreno dominante resta sopra
+  // dal piÃ¹ debole al piÃ¹ forte: il terreno dominante resta sopra
   const list = [...invaders.values()].sort((p, q) => (_outranks(p.def, q.def) ? 1 : -1));
   for (const { def: n, sides, corners } of list) {
     _blendTex = _blendCanvas(_blendTex, px);
@@ -1107,7 +1107,7 @@ function _drawCastShadow(ctx, x, y, ts, hN, hW, hNW) {
   if (hW) _edgeGradient(ctx, x, y, ts, 3, ts * hW, [[0, _dk(0.4)], [1, _dk(0)]]);
   if (hN) _edgeGradient(ctx, x, y, ts, 0, ts * hN, [[0, _dk(0.4)], [1, _dk(0)]]);
   if (hNW && !hW && !hN) {
-    // solo l'angolo: il tile alto è in diagonale
+    // solo l'angolo: il tile alto Ã¨ in diagonale
     const g = ctx.createRadialGradient(x, y, 0, x, y, ts * hNW);
     g.addColorStop(0, _dk(0.35));
     g.addColorStop(1, _dk(0));
@@ -1153,12 +1153,12 @@ function drawTerrainTransitions(ctx, md, ts, r0 = 0, r1 = md.rows, c0 = 0, c1 = 
   }
 }
 
-// ── CHIOME DELLA GIUNGLA ───────────────────────────────────────────────
+// â”€â”€ CHIOME DELLA GIUNGLA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Passata finale senza clip (dopo le transizioni): le chiome degli alberi
 // escono dal tile. Verso altra giungla (o il bordo mappa) si fondono
 // liberamente; verso terreni diversi sporgono al massimo di CANOPY_OVERHANG
-// tile, per non far sembrare coperto un tile che non lo è. Tutte le chiome
-// della mappa sono disegnate da nord a sud, così si sovrappongono in modo
+// tile, per non far sembrare coperto un tile che non lo Ã¨. Tutte le chiome
+// della mappa sono disegnate da nord a sud, cosÃ¬ si sovrappongono in modo
 // coerente anche tra tile diversi.
 const CANOPY_OVERHANG = 0.14;
 const CANOPY_COLS = ["rgba(25,60,18,0.92)", "rgba(50,105,30,0.72)", "rgba(140,200,80,0.28)"];
@@ -1168,7 +1168,7 @@ function jungleCrowns(md, ts) {
   const isJungle = (c, r) =>
     c < 0 || r < 0 || c >= md.cols || r >= md.rows || tileLook(md.tileTypes[md.grid[r][c]]) === "jungle";
   // Intervallo del centro di una chioma lungo un asse: fino al bordo verso la
-  // giungla, rientrato di (estensione − sporgenza) verso altri terreni
+  // giungla, rientrato di (estensione âˆ’ sporgenza) verso altri terreni
   const span = (start, re, openLo, openHi) => {
     const lo = openLo ? start : start + re - CANOPY_OVERHANG * ts;
     const hi = openHi ? start + ts : start + ts - re + CANOPY_OVERHANG * ts;
@@ -1181,7 +1181,7 @@ function jungleCrowns(md, ts) {
       const rng = _tileRng(c + 0.13, r + 0.29);
       const n = 6 + Math.floor(rng() * 2);
       for (let i = 0; i < n; i++) {
-        // ogni tanto un albero emergente, più grande, rompe la griglia
+        // ogni tanto un albero emergente, piÃ¹ grande, rompe la griglia
         const rad = ts * (rng() < 0.12 ? 0.3 + rng() * 0.08 : 0.15 + rng() * 0.12);
         const re = rad * 1.1; // estensione dei lobi oltre il raggio
         const [x0, x1] = span(c * ts, re, isJungle(c - 1, r), isJungle(c + 1, r));
@@ -1199,7 +1199,7 @@ function drawJungleCanopy(ctx, md, ts, crowns = jungleCrowns(md, ts)) {
   }
 }
 
-// ── CHIOME AL VENTO ────────────────────────────────────────────────────
+// â”€â”€ CHIOME AL VENTO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Col vento le chiome non stanno nella cache del terreno: ridisegnarne
 // migliaia di cerchi a ogni fotogramma costerebbe troppo, quindi si
 // preparano una volta CANOPY_VARIANTS chiome tipo (raggio CANOPY_SPRITE_R) e
@@ -1248,7 +1248,7 @@ function windCanopy(md, ts) {
   }));
 }
 
-// ── SPRITES PERSONAGGI ─────────────────────────────────────────────────────
+// â”€â”€ SPRITES PERSONAGGI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function _poly(ctx, pts) {
   ctx.beginPath();
@@ -1267,323 +1267,394 @@ function _star5(ctx, cx, cy, r) {
   ctx.closePath();
 }
 
-// --- Cappelli ---
-function _hatCone(ctx, cx, cy, s, col) {
-  ctx.fillStyle = col || "#d4b050";
-  _poly(ctx, [
-    [cx, cy - s * 0.82],
-    [cx - s * 0.44, cy - s * 0.18],
-    [cx + s * 0.44, cy - s * 0.18],
-  ]);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,.35)";
-  ctx.lineWidth = s * 0.04;
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(80,50,0,.55)";
-  ctx.lineWidth = s * 0.045;
-  ctx.beginPath();
-  ctx.moveTo(cx - s * 0.38, cy - s * 0.24);
-  ctx.lineTo(cx + s * 0.38, cy - s * 0.24);
-  ctx.stroke();
-  ctx.fillStyle = "rgba(255,240,160,.22)";
-  _poly(ctx, [
-    [cx - s * 0.02, cy - s * 0.82],
-    [cx - s * 0.18, cy - s * 0.2],
-    [cx + s * 0.1, cy - s * 0.2],
-  ]);
-  ctx.fill();
-}
-function _hatHelmet(ctx, cx, cy, s, col) {
-  ctx.fillStyle = col || "#4a5c2e";
-  ctx.beginPath();
-  ctx.arc(cx, cy - s * 0.31, s * 0.26, Math.PI, 0);
-  ctx.lineTo(cx + s * 0.3, cy - s * 0.22);
-  ctx.lineTo(cx - s * 0.3, cy - s * 0.22);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,.22)";
-  ctx.lineWidth = s * 0.03;
-  ctx.stroke();
-  ctx.fillStyle = "rgba(255,255,255,.12)";
-  ctx.beginPath();
-  ctx.arc(cx - s * 0.08, cy - s * 0.38, s * 0.08, 0, Math.PI * 2);
-  ctx.fill();
-}
-function _hatBoonie(ctx, cx, cy, s) {
-  ctx.fillStyle = "#4e5e30";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - s * 0.22, s * 0.3, s * 0.09, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#3a4a22";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - s * 0.27, s * 0.2, s * 0.12, 0, Math.PI, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "rgba(0,0,0,.22)";
-  [
-    [cx - s * 0.08, cy - s * 0.29, s * 0.04],
-    [cx + s * 0.08, cy - s * 0.3, s * 0.03],
-    [cx, cy - s * 0.27, s * 0.03],
-  ].forEach(([ax, ay, ar]) => {
-    ctx.beginPath();
-    ctx.arc(ax, ay, ar, 0, Math.PI * 2);
-    ctx.fill();
-  });
-}
-function _hatPith(ctx, cx, cy, s) {
-  ctx.fillStyle = "#7e8f46";
-  ctx.beginPath();
-  ctx.arc(cx, cy - s * 0.34, s * 0.24, Math.PI * 1.08, Math.PI * 1.92);
-  ctx.lineTo(cx + s * 0.36, cy - s * 0.22);
-  ctx.lineTo(cx - s * 0.36, cy - s * 0.22);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = "#6a7a38";
-  ctx.fillRect(cx - s * 0.36, cy - s * 0.24, s * 0.72, s * 0.09);
-  ctx.fillStyle = "#ee2020";
-  _star5(ctx, cx, cy - s * 0.34, s * 0.09);
-  ctx.fill();
-}
-function _hatEngineer(ctx, cx, cy, s) {
-  ctx.fillStyle = "#6a7a40";
-  ctx.beginPath();
-  ctx.arc(cx, cy - s * 0.3, s * 0.24, Math.PI, 0);
-  ctx.lineTo(cx + s * 0.28, cy - s * 0.24);
-  ctx.lineTo(cx - s * 0.28, cy - s * 0.24);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = "#8aaa50";
-  ctx.fillRect(cx - s * 0.27, cy - s * 0.27, s * 0.54, s * 0.08);
-  ctx.strokeStyle = "rgba(255,255,255,.30)";
-  ctx.lineWidth = s * 0.035;
-  ctx.beginPath();
-  ctx.arc(cx, cy - s * 0.3, s * 0.08, 0, Math.PI * 2);
-  ctx.stroke();
-}
+// --- Pedine: soldati visti dall'alto ---
+// Ogni aspetto (scelto con il campo "sprite" della classe, altrimenti col suo
+// nome) dice uniforme, copricapo, equipaggiamento e arma. Il soldato Ã¨
+// disegnato rivolto a nord in coordinate di tile (-0.5..0.5) per ognuna
+// delle tre posture, messo in cache come immagine insieme alla sua sagoma
+// (l'ombra) e ruotato da drawUnitSprite secondo il facing dell'unitÃ .
+const SOLDIER_LOOKS = {
+  // US
+  assault: { cloth: "#56643a", skin: "#d8a77c", hat: "helmet", hatCol: "#5d6b3a", weapon: "m16", gear: ["pack", "pouches"] },
+  sniper: { cloth: "#4d5a33", skin: "#c99a70", hat: "boonie", hatCol: "#6a7442", camo: "#2e3a1a", weapon: "scoped", gear: ["pouches"] },
+  engineer: { cloth: "#56643a", skin: "#e0b48a", hat: "helmet", hatCol: "#5d6b3a", weapon: "m16", gear: ["radio"] },
+  medic: { cloth: "#5c6c3e", skin: "#b88660", hat: "helmet", hatCol: "#5d6b3a", hatCross: true, weapon: "pistol", gear: ["medbag", "armband"] },
+  // VC e NVA
+  grunt: { cloth: "#22221d", skin: "#c49565", hat: "cone", hatCol: "#c9aa6a", weapon: "ak", gear: ["rpg"] },
+  sniper_vc: { cloth: "#2b301d", skin: "#b88a5c", hat: "cone", hatCol: "#8d8a52", leaves: true, weapon: "scoped", gear: [] },
+  commander: { cloth: "#6e6a45", skin: "#c49565", hat: "pith", hatCol: "#66703f", weapon: "pistol", gear: ["boards", "mapcase"] },
+  nva: { cloth: "#4f5934", skin: "#c49565", hat: "pith", hatCol: "#5a663a", weapon: "ak", gear: ["pack", "pouches"] },
+};
 
-// --- Testa e corpo ---
-function _head(ctx, cx, cy, s, tone) {
-  ctx.fillStyle = tone || "#c8956a";
+// Per postura: ombra (tile verso sud-est, piÃ¹ corta vicino al suolo), scala e
+// punti del corpo nella figura rivolta a nord. torso [x, y, rx, ry]; legs
+// [punti, "boot" | "knee"]; gun [calcio x, y, volata x, y]; arm* spalla â†’
+// gomito â†’ mano; grip = mani sulla pistola; back = centro di zaino/radio
+const SOLDIER_POSES = {
+  stand: {
+    shadow: 0.07,
+    scale: 1.1,
+    torso: [0, 0.04, 0.2, 0.105],
+    head: [0, 0.015],
+    back: 0.155,
+    legs: [
+      [[[-0.07, 0.03], [-0.085, -0.085]], "boot"],
+      [[[0.07, 0.06], [0.085, 0.15]], "boot"],
+    ],
+    gun: [0.1, 0.08, 0.035, -0.44],
+    armR: [[0.15, 0.03], [0.18, -0.03], [0.086, -0.035]],
+    armL: [[-0.15, 0.03], [-0.15, -0.12], [0.065, -0.2]],
+    grip: [0.03, -0.22],
+  },
+  crouch: {
+    shadow: 0.045,
+    scale: 1.04,
+    torso: [0, 0.07, 0.19, 0.1],
+    head: [0, 0.0],
+    back: 0.175,
+    legs: [
+      [[[-0.07, 0.06], [-0.11, -0.15]], "knee"],
+      [[[0.07, 0.1], [0.09, 0.2], [0.1, 0.35]], "boot"],
+    ],
+    gun: [0.1, 0.1, 0.03, -0.42],
+    armR: [[0.14, 0.06], [0.17, 0.0], [0.085, -0.01]],
+    armL: [[-0.14, 0.06], [-0.15, -0.1], [0.062, -0.18]],
+    grip: [0.03, -0.2],
+  },
+  prone: {
+    shadow: 0.02,
+    scale: 1,
+    torso: [0, -0.01, 0.14, 0.17],
+    head: [0, -0.2],
+    back: 0.03,
+    legs: [
+      [[[-0.05, 0.12], [-0.13, 0.43]], "boot"],
+      [[[0.05, 0.12], [0.12, 0.43]], "boot"],
+    ],
+    gun: [0.07, -0.12, 0.02, -0.49],
+    armR: [[0.12, -0.12], [0.21, -0.21], [0.054, -0.24]],
+    armL: [[-0.12, -0.12], [-0.2, -0.27], [0.036, -0.37]],
+    grip: [0.025, -0.34],
+  },
+};
+
+const _SO = "rgba(14,16,8,.85)"; // contorno
+const _SW = 0.016; // spessore del contorno (tile)
+
+// Colore schiarito (k > 0) o scurito (k < 0)
+function _shadeHex(hex, k) {
+  const n = parseInt(hex.slice(1), 16);
+  const f = (c) => Math.round(k > 0 ? c + (255 - c) * k : c * (1 + k));
+  return "#" + ((1 << 24) + (f(n >> 16) << 16) + (f((n >> 8) & 255) << 8) + f(n & 255)).toString(16).slice(1);
+}
+// Tratto con contorno: arti, cinghie, armi
+function _limb(ctx, pts, w, col) {
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
   ctx.beginPath();
-  ctx.arc(cx, cy - s * 0.2, s * 0.17, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "rgba(0,0,0,.45)";
-  ctx.beginPath();
-  ctx.arc(cx - s * 0.055, cy - s * 0.215, s * 0.022, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(cx + s * 0.055, cy - s * 0.215, s * 0.022, 0, Math.PI * 2);
-  ctx.fill();
-}
-function _headVN(ctx, cx, cy, s) {
-  _head(ctx, cx, cy, s, "#c09058");
-}
-function _torso(ctx, cx, cy, s, col) {
-  ctx.fillStyle = col;
-  ctx.fillRect(cx - s * 0.22, cy - s * 0.02, s * 0.44, s * 0.4);
-  ctx.strokeStyle = "rgba(0,0,0,.18)";
-  ctx.lineWidth = s * 0.025;
-  ctx.strokeRect(cx - s * 0.22, cy - s * 0.02, s * 0.44, s * 0.4);
-}
-function _legs(ctx, cx, cy, s, col) {
-  ctx.fillStyle = col;
-  ctx.fillRect(cx - s * 0.19, cy + s * 0.36, s * 0.14, s * 0.28);
-  ctx.fillRect(cx + s * 0.05, cy + s * 0.36, s * 0.14, s * 0.28);
-}
-function _armL(ctx, cx, cy, s, col) {
+  pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
+  ctx.strokeStyle = _SO;
+  ctx.lineWidth = w + _SW * 2;
+  ctx.stroke();
   ctx.strokeStyle = col;
-  ctx.lineWidth = s * 0.12;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(cx - s * 0.22, cy + s * 0.04);
-  ctx.lineTo(cx - s * 0.36, cy + s * 0.24);
+  ctx.lineWidth = w;
   ctx.stroke();
 }
-function _armR(ctx, cx, cy, s, col) {
-  ctx.strokeStyle = col;
-  ctx.lineWidth = s * 0.12;
-  ctx.lineCap = "round";
+// Volume tondeggiante: piÃ¹ chiaro al centro (la luce non dipende da dove
+// guarda l'unitÃ ), contorno scuro
+function _dome(ctx, x, y, rx, ry, col, rot = 0) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
+  g.addColorStop(0, _shadeHex(col, 0.2));
+  g.addColorStop(1, _shadeHex(col, -0.25));
   ctx.beginPath();
-  ctx.moveTo(cx + s * 0.22, cy + s * 0.04);
-  ctx.lineTo(cx + s * 0.38, cy - s * 0.04);
-  ctx.stroke();
-}
-
-// --- Armi e accessori ---
-function _rifle(ctx, cx, cy, s, lng) {
-  const len = s * (lng ? 0.82 : 0.56);
-  ctx.strokeStyle = "#3a2810";
-  ctx.lineWidth = s * 0.08;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(cx + s * 0.26, cy + s * 0.02);
-  ctx.lineTo(cx + s * 0.26 + len, cy + s * 0.02 - len * 0.28);
-  ctx.stroke();
-  ctx.strokeStyle = "#6a4820";
-  ctx.lineWidth = s * 0.035;
-  ctx.beginPath();
-  ctx.moveTo(cx + s * 0.32, cy);
-  ctx.lineTo(cx + s * 0.26 + len, cy + s * 0.02 - len * 0.28);
-  ctx.stroke();
-}
-function _pistol(ctx, cx, cy, s) {
-  ctx.strokeStyle = "#2a1808";
-  ctx.lineWidth = s * 0.07;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(cx + s * 0.22, cy + s * 0.06);
-  ctx.lineTo(cx + s * 0.44, cy - s * 0.04);
-  ctx.stroke();
-}
-function _medCross(ctx, cx, cy, s) {
-  ctx.fillStyle = "rgba(255,255,255,.80)";
-  ctx.fillRect(cx - s * 0.1, cy + s * 0.1, s * 0.2, s * 0.06);
-  ctx.fillRect(cx - s * 0.04, cy + s * 0.06, s * 0.08, s * 0.14);
-}
-function _medBag(ctx, cx, cy, s) {
-  ctx.fillStyle = "#f0e8cc";
-  ctx.fillRect(cx + s * 0.24, cy + s * 0.04, s * 0.18, s * 0.16);
-  ctx.fillStyle = "#dd1818";
-  ctx.fillRect(cx + s * 0.3, cy + s * 0.07, s * 0.06, s * 0.1);
-  ctx.fillRect(cx + s * 0.25, cy + s * 0.1, s * 0.16, s * 0.04);
-}
-
-// --- Sprite VC ---
-function _sprVCGrunt(ctx, cx, cy, s) {
-  _legs(ctx, cx, cy, s, "#1e1e0e");
-  _torso(ctx, cx, cy, s, "#262610");
-  _armL(ctx, cx, cy, s, "#262610");
-  _armR(ctx, cx, cy, s, "#262610");
-  _rifle(ctx, cx, cy, s, false);
-  _headVN(ctx, cx, cy, s);
-  _hatCone(ctx, cx, cy, s);
-}
-function _sprVCSniper(ctx, cx, cy, s) {
-  const dy = s * 0.14;
-  _legs(ctx, cx, cy + dy, s, "#181808");
-  _torso(ctx, cx, cy + dy, s, "#1e1e08");
-  _armL(ctx, cx, cy + dy, s, "#1e1e08");
-  _armR(ctx, cx, cy + dy, s, "#1e1e08");
-  _rifle(ctx, cx, cy + dy, s, true);
-  ctx.fillStyle = "#111";
-  ctx.beginPath();
-  ctx.arc(cx + s * 0.56, cy + dy - s * 0.11, s * 0.05, 0, Math.PI * 2);
+  ctx.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2);
+  ctx.fillStyle = g;
   ctx.fill();
-  _headVN(ctx, cx, cy + dy, s);
-  _hatCone(ctx, cx, cy + dy, s, "#b89040");
-}
-function _sprVCCommander(ctx, cx, cy, s) {
-  _legs(ctx, cx, cy, s, "#28361a");
-  _torso(ctx, cx, cy, s, "#2e3e1c");
-  ctx.fillStyle = "#c8a420";
-  ctx.fillRect(cx - s * 0.27, cy - s * 0.01, s * 0.11, s * 0.06);
-  ctx.fillRect(cx + s * 0.16, cy - s * 0.01, s * 0.11, s * 0.06);
-  _armL(ctx, cx, cy, s, "#2e3e1c");
-  _armR(ctx, cx, cy, s, "#2e3e1c");
-  _pistol(ctx, cx, cy, s);
-  _headVN(ctx, cx, cy, s);
-  _hatPith(ctx, cx, cy, s);
-}
-
-// --- Sprite US ---
-function _sprUSAssault(ctx, cx, cy, s) {
-  _legs(ctx, cx, cy, s, "#4a5a2c");
-  _torso(ctx, cx, cy, s, "#526430");
-  ctx.fillStyle = "rgba(0,0,0,.18)";
-  ctx.fillRect(cx - s * 0.18, cy + s * 0.04, s * 0.36, s * 0.22);
-  _armL(ctx, cx, cy, s, "#4a5a2c");
-  _armR(ctx, cx, cy, s, "#4a5a2c");
-  _rifle(ctx, cx, cy, s, false);
-  _head(ctx, cx, cy, s);
-  _hatHelmet(ctx, cx, cy, s);
-}
-function _sprUSSniper(ctx, cx, cy, s) {
-  const dy = s * 0.12;
-  _legs(ctx, cx, cy + dy, s, "#3a4a22");
-  _torso(ctx, cx, cy + dy, s, "#485830");
-  ctx.fillStyle = "rgba(20,30,8,.40)";
-  [
-    [cx - s * 0.1, cy + dy + s * 0.12, s * 0.07],
-    [cx + s * 0.06, cy + dy + s * 0.24, s * 0.06],
-    [cx - s * 0.02, cy + dy + s * 0.3, s * 0.07],
-  ].forEach(([ax, ay, ar]) => {
-    ctx.beginPath();
-    ctx.arc(ax, ay, ar, 0, Math.PI * 2);
-    ctx.fill();
-  });
-  _armL(ctx, cx, cy + dy, s, "#3a4a22");
-  _armR(ctx, cx, cy + dy, s, "#3a4a22");
-  _rifle(ctx, cx, cy + dy, s, true);
-  ctx.fillStyle = "#1a1a1a";
-  ctx.beginPath();
-  ctx.arc(cx + s * 0.58, cy + dy - s * 0.14, s * 0.05, 0, Math.PI * 2);
-  ctx.fill();
-  _head(ctx, cx, cy + dy, s);
-  _hatBoonie(ctx, cx, cy + dy, s);
-}
-function _sprUSEngineer(ctx, cx, cy, s) {
-  _legs(ctx, cx, cy, s, "#4a5a2c");
-  _torso(ctx, cx, cy, s, "#4a5a30");
-  ctx.fillStyle = "#384820";
-  ctx.fillRect(cx - s * 0.3, cy + s * 0.01, s * 0.11, s * 0.28);
-  _armL(ctx, cx, cy, s, "#4a5a2c");
-  _armR(ctx, cx, cy, s, "#4a5a2c");
-  ctx.strokeStyle = "#7a7048";
-  ctx.lineWidth = s * 0.09;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(cx + s * 0.26, cy + s * 0.06);
-  ctx.lineTo(cx + s * 0.46, cy - s * 0.06);
+  ctx.strokeStyle = _SO;
+  ctx.lineWidth = _SW;
   ctx.stroke();
-  ctx.fillStyle = "#7a7048";
-  ctx.beginPath();
-  ctx.arc(cx + s * 0.46, cy - s * 0.06, s * 0.07, 0, Math.PI * 2);
-  ctx.fill();
-  _head(ctx, cx, cy, s);
-  _hatEngineer(ctx, cx, cy, s);
 }
-function _sprUSMedic(ctx, cx, cy, s) {
-  _legs(ctx, cx, cy, s, "#4a5a2c");
-  _torso(ctx, cx, cy, s, "#5e7840");
-  _medCross(ctx, cx, cy, s);
-  _medBag(ctx, cx, cy, s);
-  _armL(ctx, cx, cy, s, "#4e6234");
-  _armR(ctx, cx, cy, s, "#4e6234");
-  _head(ctx, cx, cy, s);
-  _hatHelmet(ctx, cx, cy, s, "#4a5a2c");
-  ctx.fillStyle = "#ee2020";
-  ctx.fillRect(cx - s * 0.04, cy - s * 0.46, s * 0.08, s * 0.04);
-  ctx.fillRect(cx - s * 0.08, cy - s * 0.44, s * 0.16, s * 0.04);
+function _box(ctx, x, y, w, h, col) {
+  const r = Math.min(w, h) * 0.25,
+    l = x - w / 2,
+    t = y - h / 2;
+  ctx.beginPath();
+  ctx.moveTo(l + r, t);
+  ctx.arcTo(l + w, t, l + w, t + h, r);
+  ctx.arcTo(l + w, t + h, l, t + h, r);
+  ctx.arcTo(l, t + h, l, t, r);
+  ctx.arcTo(l, t, l + w, t, r);
+  ctx.closePath();
+  ctx.fillStyle = col;
+  ctx.fill();
+  ctx.strokeStyle = _SO;
+  ctx.lineWidth = _SW;
+  ctx.stroke();
+}
+function _redCross(ctx, x, y, r) {
+  ctx.fillStyle = "#d01818";
+  ctx.fillRect(x - r, y - r * 0.35, r * 2, r * 0.7);
+  ctx.fillRect(x - r * 0.35, y - r, r * 0.7, r * 2);
 }
 
-function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy) {
-  const cx = x + ts * 0.5;
-  const cy = y + ts * 0.52;
-  const s = ts * 0.36;
+// Arma dal calcio (bx, by) alla volata (mx, my)
+function _gun(ctx, kind, bx, by, mx, my) {
+  const L = Math.hypot(mx - bx, my - by);
   ctx.save();
-  if (isDone && !isEnemy) ctx.globalAlpha = 0.6;
+  ctx.translate(bx, by);
+  ctx.rotate(Math.atan2(my - by, mx - bx));
+  const seg = (a, b, w, col) => _limb(ctx, [[a * L, 0], [b * L, 0]], w, col);
+  if (kind === "pistol") seg(0, 1, 0.034, "#1c1c1a");
+  else if (kind === "ak") {
+    seg(0, 0.24, 0.045, "#7a4a22");
+    seg(0.24, 0.5, 0.04, "#1f1f1c");
+    seg(0.5, 0.68, 0.04, "#7a4a22");
+    seg(0.68, 1, 0.018, "#1f1f1c");
+  } else if (kind === "scoped") {
+    seg(0, 0.64, 0.045, "#5e3c1c");
+    seg(0.64, 1, 0.02, "#262420");
+    seg(0.3, 0.54, 0.032, "#151515"); // ottica
+  } else {
+    // M16
+    seg(0, 0.22, 0.045, "#202220");
+    seg(0.22, 0.62, 0.042, "#2c2e2a");
+    seg(0.62, 1, 0.018, "#1a1a18");
+  }
+  ctx.restore();
+}
 
-  // Immagine custom da config.json (se caricata correttamente)
-  const img = UNIT_IMG_CACHE[cls];
+// Copricapo visto dall'alto, centrato sulla testa
+function _hat(ctx, look, hx, hy) {
+  const c = look.hatCol;
+  if (look.hat === "cone") {
+    // NÃ³n lÃ¡: cerchi concentrici di paglia, punta al centro
+    _dome(ctx, hx, hy, 0.17, 0.17, c);
+    ctx.strokeStyle = "rgba(80,55,20,.35)";
+    ctx.lineWidth = 0.008;
+    for (const r of [0.05, 0.095, 0.135]) {
+      ctx.beginPath();
+      ctx.arc(hx, hy, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.fillStyle = _shadeHex(c, 0.35);
+    ctx.beginPath();
+    ctx.arc(hx, hy, 0.018, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (look.hat === "boonie") {
+    _dome(ctx, hx, hy, 0.155, 0.145, _shadeHex(c, -0.1));
+    _dome(ctx, hx, hy, 0.085, 0.085, c);
+  } else if (look.hat === "pith") {
+    _dome(ctx, hx, hy, 0.14, 0.14, _shadeHex(c, -0.12));
+    _dome(ctx, hx, hy, 0.105, 0.105, c);
+    // Coccarda con la stella sul davanti
+    ctx.fillStyle = "#b8231d";
+    ctx.beginPath();
+    ctx.arc(hx, hy - 0.085, 0.03, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#f0c830";
+    _star5(ctx, hx, hy - 0.085, 0.022);
+    ctx.fill();
+  } else if (look.hat === "helmet") {
+    _dome(ctx, hx, hy, 0.12, 0.12, c);
+    // Telo mimetico a macchie e fascia elastica
+    ctx.fillStyle = _shadeHex(c, -0.3);
+    for (const [dx, dy, r] of [[-0.05, -0.04, 0.025], [0.04, 0.03, 0.03], [0.05, -0.05, 0.018], [-0.03, 0.06, 0.02]]) {
+      ctx.beginPath();
+      ctx.arc(hx + dx, hy + dy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = "rgba(20,24,10,.6)";
+    ctx.lineWidth = 0.014;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 0.1, 0, Math.PI * 2);
+    ctx.stroke();
+    if (look.hatCross) {
+      ctx.fillStyle = "#eee8d8";
+      ctx.fillRect(hx - 0.05, hy - 0.05, 0.1, 0.1);
+      _redCross(ctx, hx, hy, 0.04);
+    }
+  }
+}
+
+// Fronde di mimetizzazione
+function _camoLeaves(ctx, pts) {
+  pts.forEach(([x, y, a], i) => {
+    ctx.fillStyle = i % 2 ? "#4a6a26" : "#36521c";
+    ctx.beginPath();
+    ctx.ellipse(x, y, 0.045, 0.018, a, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+// Zaino, radio o lanciarazzi sulla schiena
+function _backGear(ctx, look, by) {
+  for (const g of look.gear) {
+    if (g === "pack") {
+      _box(ctx, 0, by, 0.2, 0.13, _shadeHex(look.cloth, -0.15));
+      _box(ctx, 0, by + 0.035, 0.16, 0.05, _shadeHex(look.cloth, -0.3));
+    } else if (g === "radio") {
+      // PRC-25 con l'antenna a stilo
+      _box(ctx, 0, by + 0.005, 0.2, 0.16, "#3e4629");
+      ctx.fillStyle = "#1c1f12";
+      for (const dx of [-0.05, 0, 0.05]) {
+        ctx.beginPath();
+        ctx.arc(dx, by - 0.03, 0.014, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      _limb(ctx, [[0.06, by - 0.03], [0.14, by + 0.26]], 0.008, "#151510");
+    } else if (g === "rpg") {
+      _limb(ctx, [[-0.16, by + 0.07], [0.15, by - 0.09]], 0.04, "#56603a");
+      _dome(ctx, -0.19, by + 0.085, 0.05, 0.032, "#6c7040", Math.atan2(-0.16, 0.31));
+    }
+  }
+}
+
+// Tasche, borse e mostrine ai lati del busto
+function _sideGear(ctx, look, [tx, ty, rx, ry]) {
+  for (const g of look.gear) {
+    if (g === "pouches") {
+      for (const s of [-1, 1]) _box(ctx, tx + s * (rx - 0.02), ty + ry * 0.45, 0.05, 0.06, _shadeHex(look.cloth, -0.25));
+    } else if (g === "medbag") {
+      _box(ctx, tx - rx - 0.01, ty + ry * 0.4, 0.08, 0.1, "#d9d0ae");
+      _redCross(ctx, tx - rx - 0.01, ty + ry * 0.4, 0.025);
+    } else if (g === "mapcase") {
+      _box(ctx, tx + rx, ty + ry * 0.5, 0.07, 0.09, "#6a4a26");
+    } else if (g === "boards") {
+      for (const s of [-1, 1]) {
+        ctx.fillStyle = "#b8231d";
+        ctx.fillRect(tx + s * rx * 0.75 - 0.03, ty - 0.015, 0.06, 0.03);
+        ctx.fillStyle = "#f0c830";
+        ctx.fillRect(tx + s * rx * 0.75 - 0.03, ty - 0.004, 0.06, 0.008);
+      }
+    } else if (g === "armband") {
+      ctx.fillStyle = "#eee8d8";
+      ctx.beginPath();
+      ctx.arc(tx - rx * 0.85, ty - 0.005, 0.03, 0, Math.PI * 2);
+      ctx.fill();
+      _redCross(ctx, tx - rx * 0.85, ty - 0.005, 0.02);
+    }
+  }
+}
+
+function _paintSoldier(ctx, look, stance) {
+  const p = SOLDIER_POSES[stance];
+  const [tx, ty, rx, ry] = p.torso;
+  // Gambe: scarpone in fondo o ginocchio piegato in avanti
+  for (const [pts, end] of p.legs) {
+    _limb(ctx, pts, 0.075, _shadeHex(look.cloth, -0.12));
+    const [a, b] = pts.slice(-2);
+    if (end === "boot") _dome(ctx, b[0], b[1], 0.045, 0.03, "#2a2218", Math.atan2(b[1] - a[1], b[0] - a[0]));
+    else _dome(ctx, b[0], b[1], 0.045, 0.045, _shadeHex(look.cloth, -0.05));
+  }
+  // Busto, mimetica e equipaggiamento
+  _dome(ctx, tx, ty, rx, ry, look.cloth);
+  if (look.camo) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(tx, ty, rx, ry, 0, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = look.camo;
+    for (const [dx, dy, r] of [[-0.12, -0.03, 0.05], [0.06, 0.05, 0.06], [0.14, -0.04, 0.04], [-0.03, 0.09, 0.04]]) {
+      ctx.beginPath();
+      ctx.ellipse(tx + dx * (rx / 0.2), ty + dy * (ry / 0.105), r, r * 0.7, dx * 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  _backGear(ctx, look, p.back);
+  _sideGear(ctx, look, p.torso);
+  // Braccia, arma e mani
+  const sleeve = _shadeHex(look.cloth, -0.05);
+  const hand = ([x, y]) => _dome(ctx, x, y, 0.032, 0.032, look.skin);
+  if (look.weapon === "pistol") {
+    // Pistola impugnata a due mani davanti al petto
+    const g = p.grip;
+    for (const s of [p.armR[0], p.armL[0]]) {
+      _limb(ctx, [s, [(s[0] + g[0]) / 2 + Math.sign(s[0]) * 0.05, (s[1] + g[1]) / 2], g], 0.06, sleeve);
+    }
+    _gun(ctx, "pistol", g[0], g[1] + 0.01, g[0], g[1] - 0.08);
+    hand(g);
+  } else {
+    _limb(ctx, p.armR, 0.06, sleeve);
+    _limb(ctx, p.armL, 0.06, sleeve);
+    _gun(ctx, look.weapon, ...p.gun);
+    hand(p.armR[2]);
+    hand(p.armL[2]);
+  }
+  // Testa e copricapo (il punto piÃ¹ alto)
+  const [hx, hy] = p.head;
+  _dome(ctx, hx, hy, 0.085, 0.085, look.skin);
+  _hat(ctx, look, hx, hy);
+  if (look.leaves) {
+    _camoLeaves(ctx, [
+      [hx - 0.08, hy - 0.05, 0.6], [hx + 0.07, hy + 0.06, -0.9], [hx + 0.02, hy - 0.11, 2.1],
+      [tx - rx * 0.8, ty + 0.01, 1.2], [tx + rx * 0.8, ty + 0.03, -0.4],
+    ]);
+  }
+}
+
+// Figura e sagoma per l'ombra in cache, a una risoluzione vicina a quella
+// del tile (multipli di 16 px) cosÃ¬ resta nitida a ogni zoom
+const _SOLDIER_CACHE = new Map();
+function soldierSprite(lookId, stance, ts) {
+  const px = Math.min(192, Math.max(16, Math.ceil(ts / 16) * 16));
+  const key = `${lookId}|${stance}|${px}`;
+  let spr = _SOLDIER_CACHE.get(key);
+  if (spr) return spr;
+  const body = document.createElement("canvas");
+  body.width = body.height = px;
+  const c = body.getContext("2d");
+  const k = px * SOLDIER_POSES[stance].scale;
+  c.translate(px / 2, px / 2);
+  c.scale(k, k);
+  _paintSoldier(c, SOLDIER_LOOKS[lookId], stance);
+  const shadow = document.createElement("canvas");
+  shadow.width = shadow.height = px;
+  const sc = shadow.getContext("2d");
+  sc.drawImage(body, 0, 0);
+  sc.globalCompositeOperation = "source-in";
+  sc.fillStyle = "#000";
+  sc.fillRect(0, 0, px, px);
+  spr = { body, shadow };
+  _SOLDIER_CACHE.set(key, spr);
+  return spr;
+}
+
+// Aspetto della classe: campo "sprite", altrimenti il nome se Ã¨ un aspetto
+// noto, altrimenti il fuciliere della fazione
+function soldierLook(cls, isEnemy) {
+  const base = (isEnemy ? ENEMY_CLASSES : UNIT_CLASSES)[cls]?.sprite ?? cls;
+  return SOLDIER_LOOKS[base] ? base : isEnemy ? "grunt" : "assault";
+}
+
+// Pedina dell'unitÃ  nel tile (x, y): postura e facing (0 = nord â€¦ 3 = ovest)
+// scelgono la figura e la sua rotazione; turn = rotazione extra (radianti)
+function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy, stance, facing, turn = 0) {
+  const pose = SOLDIER_POSES[stance] ? stance : "stand";
+  const ang = (facing || 0) * (Math.PI / 2) + turn;
+  ctx.save();
+  if (isDone && !isEnemy) ctx.globalAlpha *= 0.6;
+  ctx.translate(x + ts / 2, y + ts / 2);
+
+  // Immagine da config.json (unitImages), rivolta a nord come la figura
+  const img = UNIT_IMG_CACHE[cls]?.[pose];
   if (img && img.complete && img.naturalWidth > 0) {
-    const pad = ts * 0.08;
-    ctx.drawImage(img, x + pad, y + pad, ts - pad * 2, ts - pad * 2);
+    ctx.rotate(ang);
+    ctx.drawImage(img, -ts / 2, -ts / 2, ts, ts);
     ctx.restore();
     return;
   }
 
-  if (isEnemy) {
-    // Classi VC aggiunte da config.json: sprite di una classe base ("sprite")
-    const base = ENEMY_CLASSES[cls]?.sprite ?? cls;
-    if (base === "commander") _sprVCCommander(ctx, cx, cy, s);
-    else if (base === "sniper_vc") _sprVCSniper(ctx, cx, cy, s);
-    else _sprVCGrunt(ctx, cx, cy, s);
-  } else {
-    // Classi US aggiunte da config.json: sprite di una classe base ("sprite")
-    const base = UNIT_CLASSES[cls]?.sprite ?? cls;
-    if (base === "sniper") _sprUSSniper(ctx, cx, cy, s);
-    else if (base === "engineer") _sprUSEngineer(ctx, cx, cy, s);
-    else if (base === "medic") _sprUSMedic(ctx, cx, cy, s);
-    else _sprUSAssault(ctx, cx, cy, s);
-  }
+  const spr = soldierSprite(soldierLook(cls, isEnemy), pose, ts);
+  // Ombra: la sagoma ruotata, spostata sempre verso sud-est
+  const off = SOLDIER_POSES[pose].shadow * ts;
+  ctx.save();
+  ctx.translate(off, off);
+  ctx.rotate(ang);
+  ctx.globalAlpha *= 0.35;
+  ctx.drawImage(spr.shadow, -ts / 2, -ts / 2, ts, ts);
+  ctx.restore();
+  ctx.rotate(ang);
+  ctx.drawImage(spr.body, -ts / 2, -ts / 2, ts, ts);
   ctx.restore();
 }

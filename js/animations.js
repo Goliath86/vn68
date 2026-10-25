@@ -2632,15 +2632,15 @@ function _drawMiss(ctx, ts, fx, p) {
 // svanisce; all'impatto si alza polvere, poi si allarga una macchia scura.
 // Senza data.cls (chiamate vecchie) si salta la caduta e resta il resto.
 function _drawDeathPending(ctx, ts, data) {
-  const { col, row, cls, enemy } = data;
+  const { col, row, cls, enemy, stance, facing } = data;
   if (!cls || typeof drawUnitSprite !== "function" || !isTileVisible(col, row))
     return;
   const { x, y } = tileToScreen(col, row);
-  drawUnitSprite(ctx, x, y, ts, cls, false, !!enemy);
+  drawUnitSprite(ctx, x, y, ts, cls, false, !!enemy, stance, facing);
 }
 
 function _drawDeath(ctx, ts, data, p) {
-  const { col, row, cls, enemy } = data;
+  const { col, row, cls, enemy, stance, facing } = data;
   const { x, y } = tileToScreen(col, row);
   const cx = x + ts * 0.5,
     cy = y + ts * 0.5;
@@ -2648,8 +2648,6 @@ function _drawDeath(ctx, ts, data, p) {
   const dir = _hash01(seed) < 0.5 ? -1 : 1; // lato su cui cade
   const fall = Math.min(1, Math.max(0, (p - 0.05) / 0.32));
   const fe = fall * fall; // accelera come per gravità
-  const footX = cx,
-    footY = y + ts * 0.85;
   // Dove finisce il corpo a terra: macchia e polvere stanno lì
   const bodyX = cx + dir * ts * 0.22,
     bodyY = y + ts * 0.72;
@@ -2680,17 +2678,30 @@ function _drawDeath(ctx, ts, data, p) {
     ctx.restore();
   }
 
-  // 3) L'unità cade di lato ruotando attorno ai piedi e svanisce
+  // 3) L'unità si accascia di lato fino a terra (postura sdraiata, girata
+  // verso il lato della caduta) e svanisce
   // (non su tile nel FOW: l'artiglieria può uccidere VC nascosti)
   if (cls && typeof drawUnitSprite === "function" && isTileVisible(col, row)) {
     const sa = fadeOut(0.5, 0.9);
     if (sa > 0) {
       ctx.save();
-      ctx.globalAlpha = sa;
-      ctx.translate(footX, footY);
-      ctx.rotate(dir * fe * Math.PI * 0.45);
-      ctx.translate(-footX, -footY);
-      drawUnitSprite(ctx, x, y, ts, cls, false, !!enemy);
+      if (fall < 1) {
+        ctx.globalAlpha = sa * (1 - fall);
+        drawUnitSprite(ctx, x, y, ts, cls, false, !!enemy, stance, facing);
+      }
+      ctx.globalAlpha = sa * fall;
+      drawUnitSprite(
+        ctx,
+        x + (bodyX - cx) * fe * 0.5,
+        y + (bodyY - cy) * fe * 0.5,
+        ts,
+        cls,
+        false,
+        !!enemy,
+        "prone",
+        facing,
+        dir * fe * 0.6,
+      );
       ctx.restore();
     }
   }

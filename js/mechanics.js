@@ -549,7 +549,7 @@ function tickBleeding() {
       statAdd("bledOut");
       sfx("death");
       log(t("log.bled_out", { name: u.name }), "combat");
-      addFX("death", { col: u.col, row: u.row, cls: u.cls, enemy: false }, 1400);
+      addFX("death", { col: u.col, row: u.row, cls: u.cls, enemy: false, stance: u.stance, facing: u.facing }, 1400);
       continue;
     }
     log(
@@ -1156,7 +1156,7 @@ function triggerTrap(unit, trap) {
     log(t("log.unit_eliminated", { name: unit.name }), "combat");
     addFX(
       "death",
-      { col: unit.col, row: unit.row, cls: unit.cls, enemy: false },
+      { col: unit.col, row: unit.row, cls: unit.cls, enemy: false, stance: unit.stance, facing: unit.facing },
       1400,
     );
     checkGameOver();

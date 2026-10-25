@@ -458,24 +458,23 @@ Per aggiungere musica di sottofondo al menu iniziale, inserire il percorso del f
 
 ### Immagini unità
 
-Per sostituire gli sprite disegnati con immagini personalizzate, inserire il percorso del file per ogni classe:
+Di base ogni pedina è un soldato visto dall'alto disegnato dal gioco: l'aspetto dipende dalla classe (elmetto e M16 per l'assalto, cappello boonie e fucile con ottica per il cecchino, radio sulla schiena per il geniere, croce rossa per il medico, cappello conico per i VC, elmetto di sughero per il comandante), la figura cambia con la postura (in piedi, accovacciato, sdraiato) e ruota verso dove guarda l'unità. Una classe nuova sceglie l'aspetto con il campo `sprite`.
+
+Per sostituire il soldato disegnato con immagini proprie, inserire il percorso del file per ogni classe, una sola immagine oppure una per postura:
 
 ```json
 {
   "unitImages": {
-    "assault":   "assets/assault.webp",
-    "sniper":    "assets/sniper.webp",
-    "engineer":  "assets/engineer.webp",
-    "medic":     "assets/medic.webp",
-    "grunt":     "assets/grunt.webp",
-    "sniper_vc": "assets/sniper_vc.webp",
-    "commander": "assets/commander.webp"
+    "assault": "assets/assault.webp",
+    "sniper":  { "stand": "assets/sniper.webp", "crouch": "assets/sniper_crouch.webp", "prone": "assets/sniper_prone.webp" }
   }
 }
 ```
 
+- L'immagine mostra il soldato **visto dall'alto, rivolto a nord (verso il lato alto dell'immagine)**, su sfondo trasparente, quadrata: il gioco la ruota verso dove guarda l'unità
+- Nell'oggetto per postura, le posture mancanti usano l'immagine `stand`
 - Formati supportati: **webp, png, jpg, svg**
-- Lasciare la stringa vuota `""` per usare lo sprite canvas predefinito
+- Lasciare la stringa vuota `""` per usare il soldato disegnato
 - I percorsi sono relativi alla cartella principale del gioco
 - È possibile sostituire solo alcune classi e lasciare le altre con lo sprite di default
 - Se `config.json` è assente o non valido, il gioco funziona normalmente senza errori
@@ -630,7 +629,7 @@ Le statistiche dei VC si cambiano con `enemyClasses` in `config.json`; con un no
 "enemyClasses": {
   "commander": { "hp": 9 },
   "nva": { "name": { "it": "Regolare NVA", "en": "NVA Regular" }, "role": "rifleman",
-           "hp": 7, "attack": 3, "defense": 1, "sprite": "grunt" }
+           "hp": 7, "attack": 3, "defense": 1, "sprite": "nva" }
 },
 "vcMix": { "spawn": { "grunt": 3, "sniper_vc": 1, "commander": 1, "nva": 1 } },
 "weapons": { "nva": [{ "id": "ak47", "label": "AK-47", "atk": 3, "range": 3, "noise": 5, "sound": "assets/ak47.mp3" }] }
@@ -943,7 +942,7 @@ L'elenco in `mods/index.json` serve perché il gioco, da sito statico, non può 
   "author": "Io",
   "version": "1.0",
   "config": {
-    "enemyClasses": { "nva": { "name": { "it": "Regolare NVA", "en": "NVA Regular" }, "role": "rifleman", "hp": 7, "attack": 3, "sprite": "grunt" } },
+    "enemyClasses": { "nva": { "name": { "it": "Regolare NVA", "en": "NVA Regular" }, "role": "rifleman", "hp": 7, "attack": 3, "sprite": "nva" } },
     "weapons": { "nva": [{ "id": "ak47", "label": "AK-47", "atk": 3, "range": 3, "sound": "../../assets/ak47.mp3" }] },
     "vcMix": { "reinforcement": { "nva": 1 } }
   },

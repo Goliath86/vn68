@@ -246,7 +246,7 @@ Campi scritti dal gioco, accettati senza avvisi: `lessonId`.
 | `special` | `suppression` \| `overwatch` \| `demolition` \| `heal` o `null` | Abilità: `suppression` (fuoco soppressivo), `overwatch`, `demolition` (demolizione, incendio, disinnesco, sigillo dei tunnel), `heal` (cura); `null` = nessuna. |
 | `marksman` | booleano | Tiratore scelto: penalità di gittata per le armi senza `rangePenalty`, tracciante singolo. |
 | `trapSense` | booleano | Individua le trappole a 1 tile e gli ingressi dei tunnel a 2. |
-| `sprite` | `assault` \| `sniper` \| `engineer` \| `medic` | Classe US di cui usare lo sprite disegnato se `unitImages` non ha un'immagine. |
+| `sprite` | `assault` \| `sniper` \| `engineer` \| `medic` | Classe US di cui usare il soldato disegnato se `unitImages` non ha un'immagine. |
 
 Campi scritti dal gioco, accettati senza avvisi: `name`, `desc`, `specialLabel`.
 
@@ -264,7 +264,7 @@ Campi scritti dal gioco, accettati senza avvisi: `name`, `desc`, `specialLabel`.
 | `range` | intero ≥ 0 | Gittata senza armi. |
 | `defense` | numero ≥ 0 | DEF. |
 | `move` | intero ≥ 0 | Movimento. |
-| `sprite` | `grunt` \| `sniper_vc` \| `commander` | Classe VC di cui usare lo sprite disegnato se `unitImages` non ha un'immagine. |
+| `sprite` | `grunt` \| `sniper_vc` \| `commander` \| `nva` | Aspetto del soldato disegnato se `unitImages` non ha un'immagine: quello di una classe VC o `nva` (regolare nordvietnamita: elmetto di sughero, AK, zaino). |
 
 <a id="config"></a>
 
@@ -274,7 +274,10 @@ Campi scritti dal gioco, accettati senza avvisi: `name`, `desc`, `specialLabel`.
 |---|---|---|
 | `$schema` | testo | Percorso del JSON Schema per l'editor (es. `../schemas/mission.schema.json`); ignorato dal gioco. |
 | `menuMusic` | testo | Musica del menu. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
-| `unitImages` | oggetto { classe → testo } | Immagine per classe (US o VC); senza, sprite disegnato. → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `unitImages` | oggetto { classe → testo o oggetto } | Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `unitImages.<classe>.stand` | testo | In piedi (anche per le posture non indicate). → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
+| `unitImages.<classe>.crouch` | testo | Accovacciato. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
+| `unitImages.<classe>.prone` | testo | Sdraiato. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 | `sounds` | oggetto { effetto → testo } | Effetti sonori; senza, suoni sintetizzati. Chiavi: `move`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`. |
 | `weapons` | oggetto { classe → array di [Arma](#weapon) } | Loadout per classe (US o VC); senza, ATK e gittata della classe. → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
 | `unitClasses` | oggetto { classe → [Classe della squadra US](#unit-class) } | Classi US: i campi scritti cambiano una classe esistente; un nome nuovo aggiunge una classe, che parte dalle statistiche dell'assalto e compare nel briefing (armi in `weapons`, immagine in `unitImages`). |
@@ -337,7 +340,10 @@ Una mod è una cartella `mods/<cartella>/` con questo `mod.json`, elencata in [`
 | `version` | testo | Versione. |
 | `config` | oggetto | Aggiunte a `config.json`, con gli stessi campi: classi e composizioni unite, immagini e suoni sostituiti per chiave. I percorsi dei file partono dalla cartella della mod; `../../` risale alla cartella del gioco (es. `../../assets/footsteps_jungle.mp3`). |
 | `config.menuMusic` | testo | Musica del menu. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
-| `config.unitImages` | oggetto { classe → testo } | Immagine per classe (US o VC); senza, sprite disegnato. → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `config.unitImages` | oggetto { classe → testo o oggetto } | Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `config.unitImages.<classe>.stand` | testo | In piedi (anche per le posture non indicate). → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
+| `config.unitImages.<classe>.crouch` | testo | Accovacciato. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
+| `config.unitImages.<classe>.prone` | testo | Sdraiato. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 | `config.sounds` | oggetto { effetto → testo } | Effetti sonori; senza, suoni sintetizzati. Chiavi: `move`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`. |
 | `config.weapons` | oggetto { classe → array di [Arma](#weapon) o oggetto { id arma → `null` o [Arma](#weapon) } } | Armi per classe (US o VC): un array sostituisce il loadout, un oggetto modifica le armi per `id` (`null` la toglie, un `id` nuovo la aggiunge). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
 | `config.unitClasses` | oggetto { classe → [Classe della squadra US](#unit-class) } | Classi US: i campi scritti cambiano una classe esistente; un nome nuovo aggiunge una classe, che parte dalle statistiche dell'assalto e compare nel briefing (armi in `weapons`, immagine in `unitImages`). |

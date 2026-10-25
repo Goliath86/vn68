@@ -109,7 +109,7 @@ function checkOverwatch(enemy) {
           tutorialEvent("kill", { id: enemy.id, how: "overwatch" });
           addFX(
             "death",
-            { col: enemy.col, row: enemy.row, cls: enemy.cls, enemy: true },
+            { col: enemy.col, row: enemy.row, cls: enemy.cls, enemy: true, stance: pieceStance(enemy), facing: enemy.facing },
             1400,
             impact,
           );

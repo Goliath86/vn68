@@ -342,7 +342,7 @@ function renderMap(animFrame = false) {
     ctx.beginPath();
     ctx.arc(x + ts * 0.5, y + ts * 0.5, ts * 0.41, 0, Math.PI * 2);
     ctx.stroke();
-    drawUnitSprite(ctx, x, y, ts, e.cls, false, true);
+    drawUnitSprite(ctx, x, y, ts, e.cls, false, true, pieceStance(e), e.facing);
     drawFacingMarker(ctx, x, y, ts, e.facing, "#ff6a40");
     const hpRatio = e.hp / e.maxHp;
     ctx.fillStyle = "#111";
@@ -375,18 +375,8 @@ function renderMap(animFrame = false) {
     ctx.fillStyle = isDone ? "rgba(55,68,38,0.72)" : "rgba(38,58,20,0.72)";
     ctx.fillRect(x + ts * 0.11, y + ts * 0.11, ts * 0.78, ts * 0.78);
 
-    // Sprite personaggio: schiacciato verso il basso secondo la postura
-    const squash = STANCE_SQUASH[u.stance];
-    if (squash) {
-      const cx = x + ts * 0.5,
-        by = y + ts * 0.89;
-      ctx.save();
-      ctx.translate(cx, by);
-      ctx.scale(squash[0], squash[1]);
-      ctx.translate(-cx, -by);
-    }
-    drawUnitSprite(ctx, x, y, ts, u.cls, isDone, false);
-    if (squash) ctx.restore();
+    // Soldato visto dall'alto nella sua postura, rivolto dove guarda
+    drawUnitSprite(ctx, x, y, ts, u.cls, isDone, false, u.stance, u.facing);
     drawFacingMarker(ctx, x, y, ts, u.facing, isSelected ? "#f0c030" : "#e8e0b0");
 
     // Occultamento: 🌿 nascosto ai VC, 👁 posizione svelata (sparo/avvistamento)
@@ -634,8 +624,13 @@ function drawAimRay(ctx, ts, u, hov, weapon) {
   ctx.restore();
 }
 
-// Scala [x, y] dello sprite per postura (ancorata ai piedi)
-const STANCE_SQUASH = { crouch: [1, 0.8], prone: [1.12, 0.56] };
+// Postura disegnata della pedina: quella dei soldati; i VC non ne hanno una,
+// in agguato sono accovacciati e i tiratori scelti sdraiati
+function pieceStance(u) {
+  if (u.stance) return u.stance;
+  if (u.ambush) return "crouch";
+  return ENEMY_CLASSES[u.cls] && enemyRole(u) === "sniper" ? "prone" : "stand";
+}
 
 // Freccia sul bordo del tile nella direzione in cui guarda l'unità
 function drawFacingMarker(ctx, x, y, ts, facing, color) {

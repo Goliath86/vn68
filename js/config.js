@@ -1,7 +1,7 @@
 let CONFIG = {}; // config.json unito alle mod attive (applyConfigData)
 let CONFIG_FILE = null; // config.json così com'è, per il validatore
 let WEAPONS_CONFIG = {}; // cls → [{id, label, atk, range, ammo?, aoe?, maxCarriers?}]
-const UNIT_IMG_CACHE = {}; // cls → HTMLImageElement (pre-caricato)
+const UNIT_IMG_CACHE = {}; // cls → { stand, crouch, prone } HTMLImageElement (pre-caricati)
 const WEAPON_SND_CACHE = {}; // soundPath → HTMLAudioElement (pre-caricato dal campo sound delle armi)
 const SFX_CACHE = {}; // sfxKey → HTMLAudioElement (pre-caricato da config.sounds)
 const MISSION_SFX_CACHE = {}; // sfxKey → HTMLAudioElement (override per missione corrente)
@@ -51,12 +51,21 @@ function applyConfigData(cfg) {
   deepMerge(VC_MIX, cfg.vcMix);
 }
 
+// Immagini di una classe per postura (unitImages): una stringa vale per
+// tutte, nell'oggetto le posture mancanti usano quella in piedi
+function unitImagePaths(v) {
+  const o = typeof v === "string" ? { stand: v } : v || {};
+  const paths = {};
+  for (const s of ["stand", "crouch", "prone"]) if (o[s] || o.stand) paths[s] = o[s] || o.stand;
+  return paths;
+}
+
 // File da scaricare prima del menu: musica, sprite, SFX e suoni delle armi
 function configAssetPaths() {
   const weaponSounds = Object.values(WEAPONS_CONFIG).flatMap((ws) => ws.map((w) => w.sound));
   return [
     CONFIG.menuMusic,
-    ...Object.values(CONFIG.unitImages || {}),
+    ...Object.values(CONFIG.unitImages || {}).flatMap((v) => Object.values(unitImagePaths(v))),
     ...Object.values(CONFIG.sounds || {}),
     ...weaponSounds,
   ].filter(Boolean);
@@ -66,12 +75,17 @@ function configAssetPaths() {
 // sprite siano decodificati, così la prima partita non mostra i segnaposto
 async function buildAssetCaches() {
   const decoding = [];
-  for (const [cls, path] of Object.entries(CONFIG.unitImages || {})) {
-    if (!path) continue;
-    const img = new Image();
-    decoding.push(new Promise((r) => (img.onload = img.onerror = r)));
-    img.src = assetUrl(path);
-    UNIT_IMG_CACHE[cls] = img;
+  const images = {};
+  for (const [cls, v] of Object.entries(CONFIG.unitImages || {})) {
+    UNIT_IMG_CACHE[cls] = {};
+    for (const [stance, path] of Object.entries(unitImagePaths(v))) {
+      if (!images[path]) {
+        const img = (images[path] = new Image());
+        decoding.push(new Promise((r) => (img.onload = img.onerror = r)));
+        img.src = assetUrl(path);
+      }
+      UNIT_IMG_CACHE[cls][stance] = images[path];
+    }
   }
   for (const [key, path] of Object.entries(CONFIG.sounds || {})) {
     if (!path) continue;

@@ -459,24 +459,23 @@ To add background music to the main menu, set the audio file path in the `menuMu
 
 ### Unit Images
 
-To replace the drawn sprites with custom images, set the file path for each class:
+By default every piece is a soldier seen from above, drawn by the game: the look depends on the class (helmet and M16 for the assault, boonie hat and scoped rifle for the sniper, radio on the back for the engineer, red cross for the medic, conical hat for the VC, pith helmet for the commander), the figure changes with the stance (standing, crouching, prone) and turns toward where the unit faces. A new class picks its look with the `sprite` field.
+
+To replace the drawn soldier with your own pictures, set the file path for each class, either one picture or one per stance:
 
 ```json
 {
   "unitImages": {
-    "assault":   "assets/assault.webp",
-    "sniper":    "assets/sniper.webp",
-    "engineer":  "assets/engineer.webp",
-    "medic":     "assets/medic.webp",
-    "grunt":     "assets/grunt.webp",
-    "sniper_vc": "assets/sniper_vc.webp",
-    "commander": "assets/commander.webp"
+    "assault": "assets/assault.webp",
+    "sniper":  { "stand": "assets/sniper.webp", "crouch": "assets/sniper_crouch.webp", "prone": "assets/sniper_prone.webp" }
   }
 }
 ```
 
+- The picture shows the soldier **from above, facing north (top of the image)**, on a transparent background, square: the game rotates it toward where the unit faces
+- In the per-stance object, the missing stances use the `stand` picture
 - Supported formats: **webp, png, jpg, svg**
-- Set to empty string `""` to use the default canvas sprite
+- Set to empty string `""` to use the drawn soldier
 - Paths are relative to the game's root folder
 - You can replace only some classes and leave others with the default sprite
 - If `config.json` is missing or invalid, the game works normally without errors
@@ -631,7 +630,7 @@ VC stats are changed with `enemyClasses` in `config.json`; a new name adds a cla
 "enemyClasses": {
   "commander": { "hp": 9 },
   "nva": { "name": { "it": "Regolare NVA", "en": "NVA Regular" }, "role": "rifleman",
-           "hp": 7, "attack": 3, "defense": 1, "sprite": "grunt" }
+           "hp": 7, "attack": 3, "defense": 1, "sprite": "nva" }
 },
 "vcMix": { "spawn": { "grunt": 3, "sniper_vc": 1, "commander": 1, "nva": 1 } },
 "weapons": { "nva": [{ "id": "ak47", "label": "AK-47", "atk": 3, "range": 3, "noise": 5, "sound": "assets/ak47.mp3" }] }
@@ -944,7 +943,7 @@ The list in `mods/index.json` is needed because the game, as a static site, cann
   "author": "Me",
   "version": "1.0",
   "config": {
-    "enemyClasses": { "nva": { "name": { "it": "Regolare NVA", "en": "NVA Regular" }, "role": "rifleman", "hp": 7, "attack": 3, "sprite": "grunt" } },
+    "enemyClasses": { "nva": { "name": { "it": "Regolare NVA", "en": "NVA Regular" }, "role": "rifleman", "hp": 7, "attack": 3, "sprite": "nva" } },
     "weapons": { "nva": [{ "id": "ak47", "label": "AK-47", "atk": 3, "range": 3, "sound": "../../assets/ak47.mp3" }] },
     "vcMix": { "reinforcement": { "nva": 1 } }
   },

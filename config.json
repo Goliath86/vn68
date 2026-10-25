@@ -1,15 +1,6 @@
 {
   "$schema": "schemas/config.schema.json",
   "menuMusic": "assets/fumo_su_saigon.mp3",
-  "unitImages": {
-    "assault": "assets/assault_us.webp",
-    "sniper": "assets/sniper_us.webp",
-    "engineer": "assets/engineer_us.webp",
-    "medic": "assets/medic_us.webp",
-    "grunt": "assets/vietcong_vc.webp",
-    "sniper_vc": "assets/sniper_vc.webp",
-    "commander": "assets/commander_vc.webp"
-  },
   "sounds": {
     "move": "",
     "hit": "assets/hit.mp3",
@@ -19,6 +10,7 @@
     "demolition": "",
     "disarm": "",
     "heal": "assets/bandaging.mp3",
+    "reload": "assets/reload.mp3",
     "overwatch": "",
     "spawn": "",
     "turn_end": "",

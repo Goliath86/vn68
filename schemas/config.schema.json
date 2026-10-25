@@ -17,34 +17,250 @@
       "type": "string"
     },
     "unitImages": {
-      "description": "Immagine per classe (US o VC); senza, sprite disegnato\n\nPicture per class (US or VC); without it, a drawn sprite",
-      "markdownDescription": "Immagine per classe (US o VC); senza, sprite disegnato\n\n*Picture per class (US or VC); without it, a drawn sprite*",
+      "description": "Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi)\n\nPiece picture per class (US or VC): the soldier seen from above **facing north**, transparent background, rotated by the game toward where the unit faces; without it, a drawn soldier (see the classes' `sprite`)",
+      "markdownDescription": "Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi)\n\n*Piece picture per class (US or VC): the soldier seen from above **facing north**, transparent background, rotated by the game toward where the unit faces; without it, a drawn soldier (see the classes' `sprite`)*",
       "type": "object",
       "properties": {
         "assault": {
-          "type": "string"
+          "anyOf": [
+            {
+              "description": "Una sola immagine per tutte le posture\n\nOne picture for every stance",
+              "markdownDescription": "Una sola immagine per tutte le posture\n\n*One picture for every stance*",
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "stand": {
+                  "description": "In piedi (anche per le posture non indicate)\n\nStanding (also for the stances not given)",
+                  "markdownDescription": "In piedi (anche per le posture non indicate)\n\n*Standing (also for the stances not given)*",
+                  "type": "string"
+                },
+                "crouch": {
+                  "description": "Accovacciato\n\nCrouching",
+                  "markdownDescription": "Accovacciato\n\n*Crouching*",
+                  "type": "string"
+                },
+                "prone": {
+                  "description": "Sdraiato\n\nProne",
+                  "markdownDescription": "Sdraiato\n\n*Prone*",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
         },
         "sniper": {
-          "type": "string"
+          "anyOf": [
+            {
+              "description": "Una sola immagine per tutte le posture\n\nOne picture for every stance",
+              "markdownDescription": "Una sola immagine per tutte le posture\n\n*One picture for every stance*",
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "stand": {
+                  "description": "In piedi (anche per le posture non indicate)\n\nStanding (also for the stances not given)",
+                  "markdownDescription": "In piedi (anche per le posture non indicate)\n\n*Standing (also for the stances not given)*",
+                  "type": "string"
+                },
+                "crouch": {
+                  "description": "Accovacciato\n\nCrouching",
+                  "markdownDescription": "Accovacciato\n\n*Crouching*",
+                  "type": "string"
+                },
+                "prone": {
+                  "description": "Sdraiato\n\nProne",
+                  "markdownDescription": "Sdraiato\n\n*Prone*",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
         },
         "engineer": {
-          "type": "string"
+          "anyOf": [
+            {
+              "description": "Una sola immagine per tutte le posture\n\nOne picture for every stance",
+              "markdownDescription": "Una sola immagine per tutte le posture\n\n*One picture for every stance*",
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "stand": {
+                  "description": "In piedi (anche per le posture non indicate)\n\nStanding (also for the stances not given)",
+                  "markdownDescription": "In piedi (anche per le posture non indicate)\n\n*Standing (also for the stances not given)*",
+                  "type": "string"
+                },
+                "crouch": {
+                  "description": "Accovacciato\n\nCrouching",
+                  "markdownDescription": "Accovacciato\n\n*Crouching*",
+                  "type": "string"
+                },
+                "prone": {
+                  "description": "Sdraiato\n\nProne",
+                  "markdownDescription": "Sdraiato\n\n*Prone*",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
         },
         "medic": {
-          "type": "string"
+          "anyOf": [
+            {
+              "description": "Una sola immagine per tutte le posture\n\nOne picture for every stance",
+              "markdownDescription": "Una sola immagine per tutte le posture\n\n*One picture for every stance*",
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "stand": {
+                  "description": "In piedi (anche per le posture non indicate)\n\nStanding (also for the stances not given)",
+                  "markdownDescription": "In piedi (anche per le posture non indicate)\n\n*Standing (also for the stances not given)*",
+                  "type": "string"
+                },
+                "crouch": {
+                  "description": "Accovacciato\n\nCrouching",
+                  "markdownDescription": "Accovacciato\n\n*Crouching*",
+                  "type": "string"
+                },
+                "prone": {
+                  "description": "Sdraiato\n\nProne",
+                  "markdownDescription": "Sdraiato\n\n*Prone*",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
         },
         "grunt": {
-          "type": "string"
+          "anyOf": [
+            {
+              "description": "Una sola immagine per tutte le posture\n\nOne picture for every stance",
+              "markdownDescription": "Una sola immagine per tutte le posture\n\n*One picture for every stance*",
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "stand": {
+                  "description": "In piedi (anche per le posture non indicate)\n\nStanding (also for the stances not given)",
+                  "markdownDescription": "In piedi (anche per le posture non indicate)\n\n*Standing (also for the stances not given)*",
+                  "type": "string"
+                },
+                "crouch": {
+                  "description": "Accovacciato\n\nCrouching",
+                  "markdownDescription": "Accovacciato\n\n*Crouching*",
+                  "type": "string"
+                },
+                "prone": {
+                  "description": "Sdraiato\n\nProne",
+                  "markdownDescription": "Sdraiato\n\n*Prone*",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
         },
         "sniper_vc": {
-          "type": "string"
+          "anyOf": [
+            {
+              "description": "Una sola immagine per tutte le posture\n\nOne picture for every stance",
+              "markdownDescription": "Una sola immagine per tutte le posture\n\n*One picture for every stance*",
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "stand": {
+                  "description": "In piedi (anche per le posture non indicate)\n\nStanding (also for the stances not given)",
+                  "markdownDescription": "In piedi (anche per le posture non indicate)\n\n*Standing (also for the stances not given)*",
+                  "type": "string"
+                },
+                "crouch": {
+                  "description": "Accovacciato\n\nCrouching",
+                  "markdownDescription": "Accovacciato\n\n*Crouching*",
+                  "type": "string"
+                },
+                "prone": {
+                  "description": "Sdraiato\n\nProne",
+                  "markdownDescription": "Sdraiato\n\n*Prone*",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
         },
         "commander": {
-          "type": "string"
+          "anyOf": [
+            {
+              "description": "Una sola immagine per tutte le posture\n\nOne picture for every stance",
+              "markdownDescription": "Una sola immagine per tutte le posture\n\n*One picture for every stance*",
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "stand": {
+                  "description": "In piedi (anche per le posture non indicate)\n\nStanding (also for the stances not given)",
+                  "markdownDescription": "In piedi (anche per le posture non indicate)\n\n*Standing (also for the stances not given)*",
+                  "type": "string"
+                },
+                "crouch": {
+                  "description": "Accovacciato\n\nCrouching",
+                  "markdownDescription": "Accovacciato\n\n*Crouching*",
+                  "type": "string"
+                },
+                "prone": {
+                  "description": "Sdraiato\n\nProne",
+                  "markdownDescription": "Sdraiato\n\n*Prone*",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
         }
       },
       "additionalProperties": {
-        "type": "string"
+        "anyOf": [
+          {
+            "description": "Una sola immagine per tutte le posture\n\nOne picture for every stance",
+            "markdownDescription": "Una sola immagine per tutte le posture\n\n*One picture for every stance*",
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "stand": {
+                "description": "In piedi (anche per le posture non indicate)\n\nStanding (also for the stances not given)",
+                "markdownDescription": "In piedi (anche per le posture non indicate)\n\n*Standing (also for the stances not given)*",
+                "type": "string"
+              },
+              "crouch": {
+                "description": "Accovacciato\n\nCrouching",
+                "markdownDescription": "Accovacciato\n\n*Crouching*",
+                "type": "string"
+              },
+              "prone": {
+                "description": "Sdraiato\n\nProne",
+                "markdownDescription": "Sdraiato\n\n*Prone*",
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
       }
     },
     "sounds": {
@@ -554,8 +770,8 @@
           "type": "boolean"
         },
         "sprite": {
-          "description": "Classe US di cui usare lo sprite disegnato se `unitImages` non ha un'immagine\n\nUS class whose drawn sprite is used when `unitImages` has no picture",
-          "markdownDescription": "Classe US di cui usare lo sprite disegnato se `unitImages` non ha un'immagine\n\n*US class whose drawn sprite is used when `unitImages` has no picture*",
+          "description": "Classe US di cui usare il soldato disegnato se `unitImages` non ha un'immagine\n\nUS class whose drawn soldier is used when `unitImages` has no picture",
+          "markdownDescription": "Classe US di cui usare il soldato disegnato se `unitImages` non ha un'immagine\n\n*US class whose drawn soldier is used when `unitImages` has no picture*",
           "type": "string",
           "enum": [
             "assault",
@@ -638,13 +854,14 @@
           "minimum": 0
         },
         "sprite": {
-          "description": "Classe VC di cui usare lo sprite disegnato se `unitImages` non ha un'immagine\n\nVC class whose drawn sprite is used when `unitImages` has no picture",
-          "markdownDescription": "Classe VC di cui usare lo sprite disegnato se `unitImages` non ha un'immagine\n\n*VC class whose drawn sprite is used when `unitImages` has no picture*",
+          "description": "Aspetto del soldato disegnato se `unitImages` non ha un'immagine: quello di una classe VC o `nva` (regolare nordvietnamita: elmetto di sughero, AK, zaino)\n\nLook of the drawn soldier when `unitImages` has no picture: that of a VC class or `nva` (North Vietnamese regular: pith helmet, AK, pack)",
+          "markdownDescription": "Aspetto del soldato disegnato se `unitImages` non ha un'immagine: quello di una classe VC o `nva` (regolare nordvietnamita: elmetto di sughero, AK, zaino)\n\n*Look of the drawn soldier when `unitImages` has no picture: that of a VC class or `nva` (North Vietnamese regular: pith helmet, AK, pack)*",
           "type": "string",
           "enum": [
             "grunt",
             "sniper_vc",
-            "commander"
+            "commander",
+            "nva"
           ]
         }
       },

@@ -246,7 +246,7 @@ Fields written by the game, accepted without warnings: `lessonId`.
 | `special` | `suppression` \| `overwatch` \| `demolition` \| `heal` or `null` | Ability: `suppression` (suppressive fire), `overwatch`, `demolition` (demolition, burning, disarming, sealing tunnels), `heal`; `null` = none. |
 | `marksman` | boolean | Marksman: range penalty for weapons without `rangePenalty`, single tracer. |
 | `trapSense` | boolean | Spots traps 1 tile away and tunnel entrances 2 tiles away. |
-| `sprite` | `assault` \| `sniper` \| `engineer` \| `medic` | US class whose drawn sprite is used when `unitImages` has no picture. |
+| `sprite` | `assault` \| `sniper` \| `engineer` \| `medic` | US class whose drawn soldier is used when `unitImages` has no picture. |
 
 Fields written by the game, accepted without warnings: `name`, `desc`, `specialLabel`.
 
@@ -264,7 +264,7 @@ Fields written by the game, accepted without warnings: `name`, `desc`, `specialL
 | `range` | integer ≥ 0 | Range without weapons. |
 | `defense` | number ≥ 0 | DEF. |
 | `move` | integer ≥ 0 | Movement. |
-| `sprite` | `grunt` \| `sniper_vc` \| `commander` | VC class whose drawn sprite is used when `unitImages` has no picture. |
+| `sprite` | `grunt` \| `sniper_vc` \| `commander` \| `nva` | Look of the drawn soldier when `unitImages` has no picture: that of a VC class or `nva` (North Vietnamese regular: pith helmet, AK, pack). |
 
 <a id="config"></a>
 
@@ -274,7 +274,10 @@ Fields written by the game, accepted without warnings: `name`, `desc`, `specialL
 |---|---|---|
 | `$schema` | text | Path of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game. |
 | `menuMusic` | text | Menu music. → file path from the game folder (in a mod and its maps: from the mod folder). |
-| `unitImages` | object { class → text } | Picture per class (US or VC); without it, a drawn sprite. → US or VC class (current: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `unitImages` | object { class → text or object } | Piece picture per class (US or VC): the soldier seen from above **facing north**, transparent background, rotated by the game toward where the unit faces; without it, a drawn soldier (see the classes' `sprite`). → US or VC class (current: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `unitImages.<class>.stand` | text | Standing (also for the stances not given). → file path from the game folder (in a mod and its maps: from the mod folder). |
+| `unitImages.<class>.crouch` | text | Crouching. → file path from the game folder (in a mod and its maps: from the mod folder). |
+| `unitImages.<class>.prone` | text | Prone. → file path from the game folder (in a mod and its maps: from the mod folder). |
 | `sounds` | object { effect → text } | Sound effects; without them, synthesized sounds. Keys: `move`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`. |
 | `weapons` | object { class → array of [Weapon](#weapon) } | Loadout per class (US or VC); without it, the class ATK and range. → US or VC class (current: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
 | `unitClasses` | object { class → [US squad class](#unit-class) } | US classes: the fields written change an existing class; a new name adds a class, starting from the Assault's stats and shown in the briefing (weapons in `weapons`, picture in `unitImages`). |
@@ -337,7 +340,10 @@ A mod is a `mods/<folder>/` folder with this `mod.json`, listed in [`mods/index.
 | `version` | text | Version. |
 | `config` | object | Additions to `config.json`, with the same fields: classes and compositions merged, pictures and sounds replaced by key. File paths start from the mod folder; `../../` goes up to the game folder (e.g. `../../assets/footsteps_jungle.mp3`). |
 | `config.menuMusic` | text | Menu music. → file path from the game folder (in a mod and its maps: from the mod folder). |
-| `config.unitImages` | object { class → text } | Picture per class (US or VC); without it, a drawn sprite. → US or VC class (current: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `config.unitImages` | object { class → text or object } | Piece picture per class (US or VC): the soldier seen from above **facing north**, transparent background, rotated by the game toward where the unit faces; without it, a drawn soldier (see the classes' `sprite`). → US or VC class (current: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `config.unitImages.<class>.stand` | text | Standing (also for the stances not given). → file path from the game folder (in a mod and its maps: from the mod folder). |
+| `config.unitImages.<class>.crouch` | text | Crouching. → file path from the game folder (in a mod and its maps: from the mod folder). |
+| `config.unitImages.<class>.prone` | text | Prone. → file path from the game folder (in a mod and its maps: from the mod folder). |
 | `config.sounds` | object { effect → text } | Sound effects; without them, synthesized sounds. Keys: `move`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`. |
 | `config.weapons` | object { class → array of [Weapon](#weapon) or object { weapon id → `null` or [Weapon](#weapon) } } | Weapons per class (US or VC): an array replaces the loadout, an object changes weapons by `id` (`null` removes it, a new `id` adds it). → US or VC class (current: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
 | `config.unitClasses` | object { class → [US squad class](#unit-class) } | US classes: the fields written change an existing class; a new name adds a class, starting from the Assault's stats and shown in the briefing (weapons in `weapons`, picture in `unitImages`). |

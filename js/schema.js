@@ -161,7 +161,7 @@ const SCHEMA_UNIT_CLASS = _sc.obj({
   special: _sc.one(_sc.str({ allowed: ["suppression", "overwatch", "demolition", "heal"] }), { type: "null" }),
   marksman: _sc.bool({ d: ["Tiratore scelto: penalità di gittata per le armi senza `rangePenalty`, tracciante singolo", "Marksman: range penalty for weapons without `rangePenalty`, single tracer"] }),
   trapSense: _sc.bool({ d: ["Individua le trappole a 1 tile e gli ingressi dei tunnel a 2", "Spots traps 1 tile away and tunnel entrances 2 tiles away"] }),
-  sprite: _sc.str({ allowed: ["assault", "sniper", "engineer", "medic"], d: ["Classe US di cui usare lo sprite disegnato se `unitImages` non ha un'immagine", "US class whose drawn sprite is used when `unitImages` has no picture"] }),
+  sprite: _sc.str({ allowed: ["assault", "sniper", "engineer", "medic"], d: ["Classe US di cui usare il soldato disegnato se `unitImages` non ha un'immagine", "US class whose drawn soldier is used when `unitImages` has no picture"] }),
 }, {
   internal: ["name", "desc", "specialLabel"],
   d: ["Classe della squadra US", "US squad class"],
@@ -183,7 +183,7 @@ const SCHEMA_ENEMY_CLASS = _sc.obj({
   range: _sc.int({ min: 0, d: ["Gittata senza armi", "Range without weapons"] }),
   defense: _sc.num({ min: 0, d: ["DEF", "DEF"] }),
   move: _sc.int({ min: 0, d: ["Movimento", "Movement"] }),
-  sprite: _sc.str({ allowed: ["grunt", "sniper_vc", "commander"], d: ["Classe VC di cui usare lo sprite disegnato se `unitImages` non ha un'immagine", "VC class whose drawn sprite is used when `unitImages` has no picture"] }),
+  sprite: _sc.str({ allowed: ["grunt", "sniper_vc", "commander", "nva"], d: ["Aspetto del soldato disegnato se `unitImages` non ha un'immagine: quello di una classe VC o `nva` (regolare nordvietnamita: elmetto di sughero, AK, zaino)", "Look of the drawn soldier when `unitImages` has no picture: that of a VC class or `nva` (North Vietnamese regular: pith helmet, AK, pack)"] }),
 }, {
   d: ["Classe VC", "VC class"],
 });
@@ -425,7 +425,17 @@ const SCHEMA_TUTORIAL_INDEX = _sc.obj({
 const SCHEMA_CONFIG = _sc.obj({
   $schema: SCHEMA_SCHEMA,
   menuMusic: _sc.str({ ref: "file", d: ["Musica del menu", "Menu music"] }),
-  unitImages: _sc.map(_sc.str({ ref: "file" }), { keyRef: "anyClass", key: ["classe", "class"], d: ["Immagine per classe (US o VC); senza, sprite disegnato", "Picture per class (US or VC); without it, a drawn sprite"] }),
+  unitImages: _sc.map(
+    _sc.one(
+      _sc.str({ ref: "file", d: ["Una sola immagine per tutte le posture", "One picture for every stance"] }),
+      _sc.obj({
+        stand: _sc.str({ ref: "file", d: ["In piedi (anche per le posture non indicate)", "Standing (also for the stances not given)"] }),
+        crouch: _sc.str({ ref: "file", d: ["Accovacciato", "Crouching"] }),
+        prone: _sc.str({ ref: "file", d: ["Sdraiato", "Prone"] }),
+      }),
+    ),
+    { keyRef: "anyClass", key: ["classe", "class"], d: ["Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi)", "Piece picture per class (US or VC): the soldier seen from above **facing north**, transparent background, rotated by the game toward where the unit faces; without it, a drawn soldier (see the classes' `sprite`)"] },
+  ),
   sounds: _sc.map(_sc.str({ ref: "file" }), { keyValues: SFX_KEYS, key: ["effetto", "effect"], d: ["Effetti sonori; senza, suoni sintetizzati", "Sound effects; without them, synthesized sounds"] }),
   weapons: SCHEMA_WEAPON_LOADOUTS(["Loadout per classe (US o VC); senza, ATK e gittata della classe", "Loadout per class (US or VC); without it, the class ATK and range"]),
   unitClasses: _sc.map(SCHEMA_UNIT_CLASS, { key: ["classe", "class"], d: ["Classi US: i campi scritti cambiano una classe esistente; un nome nuovo aggiunge una classe, che parte dalle statistiche dell'assalto e compare nel briefing (armi in `weapons`, immagine in `unitImages`)", "US classes: the fields written change an existing class; a new name adds a class, starting from the Assault's stats and shown in the briefing (weapons in `weapons`, picture in `unitImages`)"] }),

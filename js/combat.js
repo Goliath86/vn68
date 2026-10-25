@@ -204,7 +204,7 @@ function applyAttackDamage(attacker, target, dmg, targetIsUS, weapon, impact) {
   }
   addFX(
     "death",
-    { col: target.col, row: target.row, cls: target.cls, enemy: !targetIsUS },
+    { col: target.col, row: target.row, cls: target.cls, enemy: !targetIsUS, stance: pieceStance(target), facing: target.facing },
     1400,
     impact,
   );
@@ -642,7 +642,7 @@ async function resolveAoeCombat(
           tutorialEvent("kill", { id: def.id, how: "aoe" });
         addFX(
           "death",
-          { col: def.col, row: def.row, cls: def.cls, enemy: !isUS },
+          { col: def.col, row: def.row, cls: def.cls, enemy: !isUS, stance: pieceStance(def), facing: def.facing },
           1400,
         );
         anyKill = true;
