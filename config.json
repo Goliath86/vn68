@@ -15,6 +15,7 @@
     "overwatch": "",
     "spawn": "assets/spawn.mp3",
     "jet": "assets/fighter_jet.mp3",
+    "napalm": "assets/napalm.mp3",
     "turn_end": "assets/end_turn.mp3",
     "victory": "",
     "defeat": "",
