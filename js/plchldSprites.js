@@ -1273,17 +1273,20 @@ function _star5(ctx, cx, cy, r) {
 // disegnato rivolto a nord in coordinate di tile (-0.5..0.5) per ognuna
 // delle tre posture, messo in cache come immagine insieme alla sua sagoma
 // (l'ombra) e ruotato da drawUnitSprite secondo il facing dell'unitÃ .
+// rig = cinghie sul busto (us: bretelle e cinturone; chicom: giberne sul
+// petto; belt: solo cintura); sleeves "rolled" = maniche arrotolate;
+// feet "sandals" = sandali invece degli scarponi
 const SOLDIER_LOOKS = {
   // US
-  assault: { cloth: "#56643a", skin: "#d8a77c", hat: "helmet", hatCol: "#5d6b3a", weapon: "m16", gear: ["pack", "pouches"] },
-  sniper: { cloth: "#4d5a33", skin: "#c99a70", hat: "boonie", hatCol: "#6a7442", camo: "#2e3a1a", weapon: "scoped", gear: ["pouches"] },
-  engineer: { cloth: "#56643a", skin: "#e0b48a", hat: "helmet", hatCol: "#5d6b3a", weapon: "m16", gear: ["radio"] },
-  medic: { cloth: "#5c6c3e", skin: "#b88660", hat: "helmet", hatCol: "#5d6b3a", hatCross: true, weapon: "pistol", gear: ["medbag", "armband"] },
+  assault: { cloth: "#56643a", skin: "#d8a77c", hat: "helmet", hatCol: "#5d6b3a", weapon: "m16", rig: "us", sleeves: "rolled", gear: ["pack", "pouches", "grenades"] },
+  sniper: { cloth: "#4d5a33", skin: "#c99a70", hat: "boonie", hatCol: "#6a7442", camo: "#2e3a1a", weapon: "scoped", rig: "us", gear: ["pouches"] },
+  engineer: { cloth: "#56643a", skin: "#e0b48a", hat: "helmet", hatCol: "#5d6b3a", weapon: "m16", rig: "us", sleeves: "rolled", gear: ["radio"] },
+  medic: { cloth: "#5c6c3e", skin: "#b88660", hat: "helmet", hatCol: "#5d6b3a", hatCross: true, weapon: "pistol", rig: "us", gear: ["medbag", "armband"] },
   // VC e NVA
-  grunt: { cloth: "#22221d", skin: "#c49565", hat: "cone", hatCol: "#c9aa6a", weapon: "ak", gear: ["rpg"] },
-  sniper_vc: { cloth: "#2b301d", skin: "#b88a5c", hat: "cone", hatCol: "#8d8a52", leaves: true, weapon: "scoped", gear: [] },
-  commander: { cloth: "#6e6a45", skin: "#c49565", hat: "pith", hatCol: "#66703f", weapon: "pistol", gear: ["boards", "mapcase"] },
-  nva: { cloth: "#4f5934", skin: "#c49565", hat: "pith", hatCol: "#5a663a", weapon: "ak", gear: ["pack", "pouches"] },
+  grunt: { cloth: "#22221d", skin: "#c49565", hat: "cone", hatCol: "#c9aa6a", weapon: "ak", rig: "chicom", feet: "sandals", gear: ["rpg"] },
+  sniper_vc: { cloth: "#2b301d", skin: "#b88a5c", hat: "cone", hatCol: "#8d8a52", leaves: true, weapon: "scoped", rig: "belt", feet: "sandals", gear: [] },
+  commander: { cloth: "#6e6a45", skin: "#c49565", hat: "pith", hatCol: "#66703f", weapon: "pistol", rig: "belt", gear: ["boards", "mapcase"] },
+  nva: { cloth: "#4f5934", skin: "#c49565", hat: "pith", hatCol: "#5a663a", weapon: "ak", rig: "chicom", gear: ["pack"] },
 };
 
 // Per postura: ombra (tile verso sud-est, piÃ¹ corta vicino al suolo), scala e
@@ -1347,8 +1350,9 @@ function _shadeHex(hex, k) {
   const f = (c) => Math.round(k > 0 ? c + (255 - c) * k : c * (1 + k));
   return "#" + ((1 << 24) + (f(n >> 16) << 16) + (f((n >> 8) & 255) << 8) + f(n & 255)).toString(16).slice(1);
 }
-// Tratto con contorno: arti, cinghie, armi
-function _limb(ctx, pts, w, col) {
+// Tratto con contorno: arti, cinghie, armi; shine > 0 = riflesso chiaro
+// lungo il centro, che dà il volume di un cilindro
+function _limb(ctx, pts, w, col, shine = 0) {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.beginPath();
@@ -1359,6 +1363,31 @@ function _limb(ctx, pts, w, col) {
   ctx.strokeStyle = col;
   ctx.lineWidth = w;
   ctx.stroke();
+  if (shine) {
+    ctx.strokeStyle = _shadeHex(col, shine);
+    ctx.lineWidth = w * 0.35;
+    ctx.stroke();
+  }
+}
+// Linee sottili senza contorno (cuciture, pieghe, zigrinature)
+function _lines(ctx, segs, w, col) {
+  ctx.lineCap = "round";
+  ctx.strokeStyle = col;
+  ctx.lineWidth = w;
+  ctx.beginPath();
+  for (const [ax, ay, bx, by] of segs) {
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(bx, by);
+  }
+  ctx.stroke();
+}
+function _blobs(ctx, col, pts) {
+  ctx.fillStyle = col;
+  for (const [x, y, r, a = 0] of pts) {
+    ctx.beginPath();
+    ctx.ellipse(x, y, r, r * 0.65, a, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 // Volume tondeggiante: piÃ¹ chiaro al centro (la luce non dipende da dove
 // guarda l'unitÃ ), contorno scuro
@@ -1403,22 +1432,47 @@ function _gun(ctx, kind, bx, by, mx, my) {
   ctx.save();
   ctx.translate(bx, by);
   ctx.rotate(Math.atan2(my - by, mx - bx));
-  const seg = (a, b, w, col) => _limb(ctx, [[a * L, 0], [b * L, 0]], w, col);
-  if (kind === "pistol") seg(0, 1, 0.034, "#1c1c1a");
-  else if (kind === "ak") {
-    seg(0, 0.24, 0.045, "#7a4a22");
-    seg(0.24, 0.5, 0.04, "#1f1f1c");
-    seg(0.5, 0.68, 0.04, "#7a4a22");
-    seg(0.68, 1, 0.018, "#1f1f1c");
+  const seg = (a, b, w, col, shine = 0.2) => _limb(ctx, [[a * L, 0], [b * L, 0]], w, col, shine);
+  // Blocchetto sulla canna (mirino, presa gas) e tacche trasversali
+  const nub = (a, w, h, col) => _box(ctx, a * L, 0, w, h, col);
+  const ribs = (a, b, n, h) =>
+    _lines(ctx, Array.from({ length: n }, (_, i) => {
+      const x = (a + ((b - a) * (i + 0.5)) / n) * L;
+      return [x, -h / 2, x, h / 2];
+    }), 0.006, "rgba(0,0,0,.55)");
+  if (kind === "pistol") {
+    seg(0, 1, 0.034, "#1c1c1a");
+    seg(0.2, 0.9, 0.01, "#55554e", 0); // carrello
+  } else if (kind === "ak") {
+    seg(0, 0.24, 0.048, "#7a4a22", 0.25); // calcio
+    seg(0.24, 0.5, 0.042, "#262622"); // castello
+    seg(0.28, 0.47, 0.012, "#4c4c45", 0); // coperchio
+    seg(0.5, 0.69, 0.052, "#80502a", 0.25); // astina
+    seg(0.69, 0.98, 0.017, "#1f1f1c");
+    nub(0.71, 0.026, 0.032, "#1f1f1c"); // presa gas
+    nub(0.93, 0.02, 0.03, "#1f1f1c"); // mirino
+    seg(0.97, 1, 0.022, "#1f1f1c", 0); // freno di bocca
   } else if (kind === "scoped") {
-    seg(0, 0.64, 0.045, "#5e3c1c");
-    seg(0.64, 1, 0.02, "#262420");
-    seg(0.3, 0.54, 0.032, "#151515"); // ottica
+    seg(0, 0.66, 0.048, "#5e3c1c", 0.25); // calcio e cassa
+    seg(0.66, 1, 0.02, "#262420");
+    seg(0.26, 0.58, 0.026, "#151515", 0.3); // ottica
+    seg(0.25, 0.31, 0.036, "#151515", 0); // oculare
+    seg(0.52, 0.59, 0.042, "#151515", 0); // obiettivo
+    nub(0.42, 0.026, 0.026, "#202020"); // torretta
+    ctx.fillStyle = "#8fc4dc"; // riflesso della lente
+    ctx.beginPath();
+    ctx.arc(0.6 * L, -0.008, 0.009, 0, Math.PI * 2);
+    ctx.fill();
   } else {
     // M16
-    seg(0, 0.22, 0.045, "#202220");
-    seg(0.22, 0.62, 0.042, "#2c2e2a");
-    seg(0.62, 1, 0.018, "#1a1a18");
+    seg(0, 0.22, 0.048, "#202220"); // calcio
+    seg(0.22, 0.5, 0.042, "#2c2e2a"); // castello
+    seg(0.25, 0.46, 0.014, "#4a4d46", 0); // maniglia di trasporto
+    seg(0.5, 0.74, 0.056, "#262824", 0.15); // astina
+    ribs(0.52, 0.72, 5, 0.05);
+    seg(0.74, 0.96, 0.016, "#1a1a18");
+    nub(0.79, 0.022, 0.034, "#1a1a18"); // mirino
+    seg(0.95, 1, 0.024, "#1a1a18", 0); // spegnifiamma
   }
   ctx.restore();
 }
@@ -1427,9 +1481,22 @@ function _gun(ctx, kind, bx, by, mx, my) {
 function _hat(ctx, look, hx, hy) {
   const c = look.hatCol;
   if (look.hat === "cone") {
-    // NÃ³n lÃ¡: cerchi concentrici di paglia, punta al centro
+    // Nón lá: spicchi di foglia alternati, stecche radiali e cerchi di
+    // bambù, punta al centro
     _dome(ctx, hx, hy, 0.17, 0.17, c);
-    ctx.strokeStyle = "rgba(80,55,20,.35)";
+    ctx.fillStyle = "rgba(255,240,200,.1)";
+    for (let i = 0; i < 16; i += 2) {
+      const a = (i * Math.PI) / 8;
+      ctx.beginPath();
+      ctx.moveTo(hx, hy);
+      ctx.arc(hx, hy, 0.165, a, a + Math.PI / 8);
+      ctx.fill();
+    }
+    _lines(ctx, Array.from({ length: 16 }, (_, i) => {
+      const a = (i * Math.PI) / 8;
+      return [hx + Math.cos(a) * 0.025, hy + Math.sin(a) * 0.025, hx + Math.cos(a) * 0.165, hy + Math.sin(a) * 0.165];
+    }), 0.005, "rgba(80,55,20,.3)");
+    ctx.strokeStyle = "rgba(80,55,20,.45)";
     ctx.lineWidth = 0.008;
     for (const r of [0.05, 0.095, 0.135]) {
       ctx.beginPath();
@@ -1441,11 +1508,31 @@ function _hat(ctx, look, hx, hy) {
     ctx.arc(hx, hy, 0.018, 0, Math.PI * 2);
     ctx.fill();
   } else if (look.hat === "boonie") {
+    // Tesa con le cuciture concentriche, cupola con la fascia porta-rametti
     _dome(ctx, hx, hy, 0.155, 0.145, _shadeHex(c, -0.1));
-    _dome(ctx, hx, hy, 0.085, 0.085, c);
+    ctx.save();
+    ctx.setLineDash([0.012, 0.01]);
+    ctx.strokeStyle = "rgba(20,24,10,.5)";
+    ctx.lineWidth = 0.005;
+    for (const r of [0.115, 0.135]) {
+      ctx.beginPath();
+      ctx.ellipse(hx, hy, r, r * 0.935, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+    _dome(ctx, hx, hy, 0.088, 0.088, c);
+    if (look.camo) _blobs(ctx, look.camo, [[hx - 0.03, hy - 0.03, 0.03, 0.5], [hx + 0.035, hy + 0.02, 0.028, -0.8], [hx - 0.02, hy + 0.045, 0.02, 1.4]]);
+    ctx.strokeStyle = "rgba(20,24,10,.65)";
+    ctx.lineWidth = 0.014;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 0.08, 0, Math.PI * 2);
+    ctx.stroke();
   } else if (look.hat === "pith") {
+    // Casco coloniale: tesa, quattro spicchi cuciti, sfiato in cima
     _dome(ctx, hx, hy, 0.14, 0.14, _shadeHex(c, -0.12));
     _dome(ctx, hx, hy, 0.105, 0.105, c);
+    _lines(ctx, [[hx - 0.1, hy, hx + 0.1, hy], [hx, hy - 0.1, hx, hy + 0.1]], 0.006, "rgba(20,24,10,.4)");
+    _dome(ctx, hx, hy, 0.024, 0.024, _shadeHex(c, 0.15));
     // Coccarda con la stella sul davanti
     ctx.fillStyle = "#b8231d";
     ctx.beginPath();
@@ -1455,19 +1542,26 @@ function _hat(ctx, look, hx, hy) {
     _star5(ctx, hx, hy - 0.085, 0.022);
     ctx.fill();
   } else if (look.hat === "helmet") {
-    _dome(ctx, hx, hy, 0.12, 0.12, c);
-    // Telo mimetico a macchie e fascia elastica
-    ctx.fillStyle = _shadeHex(c, -0.3);
-    for (const [dx, dy, r] of [[-0.05, -0.04, 0.025], [0.04, 0.03, 0.03], [0.05, -0.05, 0.018], [-0.03, 0.06, 0.02]]) {
-      ctx.beginPath();
-      ctx.arc(hx + dx, hy + dy, r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.strokeStyle = "rgba(20,24,10,.6)";
+    // M1: telo mimetico a foglie (verde e marrone), bordo della calotta,
+    // fascia elastica con la boccetta di repellente infilata
+    _dome(ctx, hx, hy, 0.125, 0.125, c);
+    _blobs(ctx, _shadeHex(c, -0.32), [[hx - 0.05, hy - 0.04, 0.03, 0.6], [hx + 0.045, hy + 0.035, 0.032, -0.5], [hx + 0.05, hy - 0.055, 0.02, 1.2], [hx - 0.035, hy + 0.06, 0.024, 2]]);
+    _blobs(ctx, "#6e6440", [[hx + 0.01, hy - 0.075, 0.022, 0.2], [hx - 0.075, hy + 0.01, 0.02, 1.5], [hx + 0.075, hy - 0.005, 0.018, -1], [hx + 0.005, hy + 0.01, 0.018, 0.8]]);
+    ctx.strokeStyle = "rgba(255,255,220,.18)";
+    ctx.lineWidth = 0.008;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 0.115, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(20,24,10,.7)";
     ctx.lineWidth = 0.014;
     ctx.beginPath();
-    ctx.arc(hx, hy, 0.1, 0, Math.PI * 2);
+    ctx.arc(hx, hy, 0.095, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.save();
+    ctx.translate(hx + 0.07, hy + 0.06);
+    ctx.rotate(-0.85);
+    _box(ctx, 0, 0, 0.042, 0.022, "#cfc9a2");
+    ctx.restore();
     if (look.hatCross) {
       ctx.fillStyle = "#eee8d8";
       ctx.fillRect(hx - 0.05, hy - 0.05, 0.1, 0.1);
@@ -1490,21 +1584,37 @@ function _camoLeaves(ctx, pts) {
 function _backGear(ctx, look, by) {
   for (const g of look.gear) {
     if (g === "pack") {
-      _box(ctx, 0, by, 0.2, 0.13, _shadeHex(look.cloth, -0.15));
-      _box(ctx, 0, by + 0.035, 0.16, 0.05, _shadeHex(look.cloth, -0.3));
+      // Zaino con il poncho arrotolato sopra, patta e cinghie con fibbie
+      const pc = _shadeHex(look.cloth, -0.15);
+      _limb(ctx, [[-0.1, by - 0.065], [0.1, by - 0.065]], 0.04, _shadeHex(look.cloth, 0.08), 0.2);
+      _lines(ctx, [[-0.04, by - 0.085, -0.04, by - 0.045], [0.04, by - 0.085, 0.04, by - 0.045]], 0.008, "rgba(20,24,10,.6)");
+      _box(ctx, 0, by, 0.2, 0.12, pc);
+      _box(ctx, 0, by + 0.03, 0.16, 0.06, _shadeHex(look.cloth, -0.3));
+      _lines(ctx, [[-0.05, by - 0.06, -0.05, by + 0.06], [0.05, by - 0.06, 0.05, by + 0.06]], 0.012, _shadeHex(look.cloth, -0.42));
+      ctx.fillStyle = "#9a9478";
+      for (const dx of [-0.05, 0.05]) ctx.fillRect(dx - 0.01, by + 0.045, 0.02, 0.012);
     } else if (g === "radio") {
-      // PRC-25 con l'antenna a stilo
+      // PRC-25: manopole, cornetta agganciata e antenna a stilo
       _box(ctx, 0, by + 0.005, 0.2, 0.16, "#3e4629");
+      _box(ctx, 0, by - 0.04, 0.17, 0.05, "#2f3620");
       ctx.fillStyle = "#1c1f12";
       for (const dx of [-0.05, 0, 0.05]) {
         ctx.beginPath();
-        ctx.arc(dx, by - 0.03, 0.014, 0, Math.PI * 2);
+        ctx.arc(dx, by - 0.04, 0.014, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.fillStyle = "#6a7048";
+      for (const dx of [-0.05, 0, 0.05]) ctx.fillRect(dx - 0.003, by - 0.052, 0.006, 0.012);
+      _lines(ctx, [[-0.08, by + 0.02, 0.08, by + 0.02], [-0.08, by + 0.05, 0.08, by + 0.05]], 0.006, "rgba(0,0,0,.35)");
+      _limb(ctx, [[-0.12, by - 0.02], [-0.135, by + 0.06]], 0.024, "#1a1a16", 0.2);
       _limb(ctx, [[0.06, by - 0.03], [0.14, by + 0.26]], 0.008, "#151510");
     } else if (g === "rpg") {
-      _limb(ctx, [[-0.16, by + 0.07], [0.15, by - 0.09]], 0.04, "#56603a");
-      _dome(ctx, -0.19, by + 0.085, 0.05, 0.032, "#6c7040", Math.atan2(-0.16, 0.31));
+      // RPG-2 a tracolla: tubo, impugnatura e testata a ogiva
+      const a = Math.atan2(-0.16, 0.31);
+      _limb(ctx, [[-0.16, by + 0.07], [0.15, by - 0.09]], 0.04, "#56603a", 0.2);
+      _lines(ctx, [[-0.02, by - 0.02, -0.005, by + 0.01], [0.06, by - 0.06, 0.075, by - 0.03]], 0.014, "#3a2a18");
+      _dome(ctx, -0.19, by + 0.085, 0.055, 0.034, "#6c7040", a);
+      _dome(ctx, -0.235, by + 0.108, 0.02, 0.016, "#4a4c2c", a);
     }
   }
 }
@@ -1536,15 +1646,93 @@ function _sideGear(ctx, look, [tx, ty, rx, ry]) {
   }
 }
 
+// Cinghie sul busto (campo rig): bretelle con le bombe a mano e cinturone
+// con le borracce (US), giberne cinesi sul petto con le cinghie incrociate
+// sulla schiena, oppure la sola cintura
+function _rig(ctx, look, [tx, ty, rx, ry]) {
+  const web = look.rig === "us" ? "#6e7048" : look.rig === "chicom" ? "#8a7c52" : "#3a2a18";
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(tx, ty, rx, ry, 0, 0, Math.PI * 2);
+  ctx.clip();
+  if (look.rig === "us") {
+    for (const s of [-1, 1]) _limb(ctx, [[tx + s * rx * 0.42, ty - ry], [tx + s * rx * 0.38, ty + ry]], 0.026, web);
+  } else if (look.rig === "chicom") {
+    for (const s of [-1, 1]) _limb(ctx, [[tx + s * rx * 0.5, ty - ry], [tx - s * rx * 0.5, ty + ry * 0.8]], 0.022, web);
+  }
+  _limb(ctx, [[tx - rx, ty + ry * 0.8], [tx + rx, ty + ry * 0.8]], 0.034, look.rig === "us" ? web : "#3a2a18");
+  ctx.restore();
+  if (look.rig === "us") {
+    for (const s of [-1, 1]) _dome(ctx, tx + s * rx * 0.62, ty + ry * 0.95, 0.04, 0.034, "#3f4428");
+    if (look.gear.includes("grenades")) {
+      for (const s of [-1, 1]) {
+        _dome(ctx, tx + s * rx * 0.42, ty - ry * 0.55, 0.026, 0.026, "#4f5a30");
+        _lines(ctx, [[tx + s * rx * 0.42, ty - ry * 0.55, tx + s * rx * 0.42 + s * 0.02, ty - ry * 0.55 + 0.02]], 0.007, "#a8a890");
+      }
+    }
+  } else if (look.rig === "chicom") {
+    for (const dx of [-0.075, 0, 0.075]) _box(ctx, tx + dx * (rx / 0.2), ty - ry * 0.72, 0.06, 0.045, web);
+  } else {
+    ctx.fillStyle = "#b8a060";
+    ctx.fillRect(tx - 0.015, ty + ry * 0.8 - 0.012, 0.03, 0.024);
+  }
+}
+
+// Pieghe della stoffa e cuciture delle spalle, nella sagoma del busto
+function _torsoFolds(ctx, [tx, ty, rx, ry]) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(tx, ty, rx, ry, 0, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.strokeStyle = "rgba(0,0,0,.28)";
+  ctx.lineWidth = 0.008;
+  for (const s of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(tx + s * rx * 0.7, ty - ry);
+    ctx.quadraticCurveTo(tx + s * rx * 0.55, ty, tx + s * rx * 0.7, ty + ry);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(0,0,0,.18)";
+  ctx.beginPath();
+  ctx.moveTo(tx - rx * 0.25, ty + ry * 0.2);
+  ctx.quadraticCurveTo(tx, ty + ry * 0.45, tx + rx * 0.2, ty + ry * 0.15);
+  ctx.moveTo(tx - rx * 0.15, ty - ry * 0.35);
+  ctx.quadraticCurveTo(tx + rx * 0.05, ty - ry * 0.2, tx + rx * 0.25, ty - ry * 0.4);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function _paintSoldier(ctx, look, stance) {
   const p = SOLDIER_POSES[stance];
   const [tx, ty, rx, ry] = p.torso;
-  // Gambe: scarpone in fondo o ginocchio piegato in avanti
+  // Gambe con la cucitura dei pantaloni e la tasca sulla coscia; in fondo
+  // scarpone (suola e tomaia) o sandalo, oppure il ginocchio piegato
+  const trousers = _shadeHex(look.cloth, -0.12);
   for (const [pts, end] of p.legs) {
-    _limb(ctx, pts, 0.075, _shadeHex(look.cloth, -0.12));
+    _limb(ctx, pts, 0.078, trousers, 0.12);
     const [a, b] = pts.slice(-2);
-    if (end === "boot") _dome(ctx, b[0], b[1], 0.045, 0.03, "#2a2218", Math.atan2(b[1] - a[1], b[0] - a[0]));
-    else _dome(ctx, b[0], b[1], 0.045, 0.045, _shadeHex(look.cloth, -0.05));
+    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    const [s0, s1] = pts;
+    const m = [s0[0] + (s1[0] - s0[0]) * 0.45, s0[1] + (s1[1] - s0[1]) * 0.45];
+    if (Math.hypot(s1[0] - s0[0], s1[1] - s0[1]) > 0.15) {
+      ctx.save();
+      ctx.translate(m[0], m[1]);
+      ctx.rotate(Math.atan2(s1[1] - s0[1], s1[0] - s0[0]));
+      _box(ctx, 0, 0, 0.06, 0.048, _shadeHex(look.cloth, -0.2));
+      ctx.restore();
+    }
+    if (end === "boot") {
+      if (look.feet === "sandals") {
+        _dome(ctx, b[0], b[1], 0.042, 0.026, look.skin, ang);
+        _lines(ctx, [[b[0] - Math.sin(ang) * 0.022, b[1] + Math.cos(ang) * 0.022, b[0] + Math.sin(ang) * 0.022, b[1] - Math.cos(ang) * 0.022]], 0.01, "#2a2218");
+      } else {
+        _dome(ctx, b[0], b[1], 0.05, 0.034, "#1e1812", ang);
+        _dome(ctx, b[0] - Math.cos(ang) * 0.008, b[1] - Math.sin(ang) * 0.008, 0.032, 0.022, "#3a3024", ang);
+      }
+    } else {
+      _dome(ctx, b[0], b[1], 0.047, 0.047, _shadeHex(look.cloth, -0.05));
+      _dome(ctx, b[0], b[1], 0.026, 0.026, _shadeHex(look.cloth, -0.18));
+    }
   }
   // Busto, mimetica e equipaggiamento
   _dome(ctx, tx, ty, rx, ry, look.cloth);
@@ -1561,22 +1749,37 @@ function _paintSoldier(ctx, look, stance) {
     }
     ctx.restore();
   }
+  _torsoFolds(ctx, p.torso);
+  if (look.rig) _rig(ctx, look, p.torso);
   _backGear(ctx, look, p.back);
   _sideGear(ctx, look, p.torso);
-  // Braccia, arma e mani
+  // Braccia (maniche arrotolate: risvolto al gomito e avambraccio nudo),
+  // arma e mani
   const sleeve = _shadeHex(look.cloth, -0.05);
-  const hand = ([x, y]) => _dome(ctx, x, y, 0.032, 0.032, look.skin);
+  const arm = (pts) => {
+    if (look.sleeves !== "rolled") return _limb(ctx, pts, 0.06, sleeve, 0.15);
+    const [s, e, h] = pts;
+    const cuff = [e[0] + (h[0] - e[0]) * 0.2, e[1] + (h[1] - e[1]) * 0.2];
+    _limb(ctx, [cuff, h], 0.046, look.skin, 0.15);
+    _limb(ctx, [s, e, cuff], 0.062, sleeve, 0.15);
+    _dome(ctx, cuff[0], cuff[1], 0.036, 0.036, _shadeHex(look.cloth, 0.1));
+  };
+  const hand = ([x, y]) => {
+    _dome(ctx, x, y, 0.032, 0.032, look.skin);
+    ctx.fillStyle = "rgba(255,230,200,.35)";
+    ctx.beginPath();
+    ctx.arc(x - 0.008, y - 0.008, 0.011, 0, Math.PI * 2);
+    ctx.fill();
+  };
   if (look.weapon === "pistol") {
     // Pistola impugnata a due mani davanti al petto
     const g = p.grip;
-    for (const s of [p.armR[0], p.armL[0]]) {
-      _limb(ctx, [s, [(s[0] + g[0]) / 2 + Math.sign(s[0]) * 0.05, (s[1] + g[1]) / 2], g], 0.06, sleeve);
-    }
+    for (const s of [p.armR[0], p.armL[0]]) arm([s, [(s[0] + g[0]) / 2 + Math.sign(s[0]) * 0.05, (s[1] + g[1]) / 2], g]);
     _gun(ctx, "pistol", g[0], g[1] + 0.01, g[0], g[1] - 0.08);
     hand(g);
   } else {
-    _limb(ctx, p.armR, 0.06, sleeve);
-    _limb(ctx, p.armL, 0.06, sleeve);
+    arm(p.armR);
+    arm(p.armL);
     _gun(ctx, look.weapon, ...p.gun);
     hand(p.armR[2]);
     hand(p.armL[2]);
@@ -1601,9 +1804,9 @@ function soldierSprite(lookId, stance, ts) {
   const key = `${lookId}|${stance}|${px}`;
   let spr = _SOLDIER_CACHE.get(key);
   if (spr) return spr;
-  const body = document.createElement("canvas");
-  body.width = body.height = px;
-  const c = body.getContext("2d");
+  const fig = document.createElement("canvas");
+  fig.width = fig.height = px;
+  const c = fig.getContext("2d");
   const k = px * SOLDIER_POSES[stance].scale;
   c.translate(px / 2, px / 2);
   c.scale(k, k);
@@ -1611,10 +1814,20 @@ function soldierSprite(lookId, stance, ts) {
   const shadow = document.createElement("canvas");
   shadow.width = shadow.height = px;
   const sc = shadow.getContext("2d");
-  sc.drawImage(body, 0, 0);
+  sc.drawImage(fig, 0, 0);
   sc.globalCompositeOperation = "source-in";
   sc.fillStyle = "#000";
   sc.fillRect(0, 0, px, px);
+  // Bordo scuro attorno a tutta la sagoma, così la pedina si stacca dal
+  // terreno anche a zoom bassi
+  const body = document.createElement("canvas");
+  body.width = body.height = px;
+  const bc = body.getContext("2d");
+  const d = Math.max(1, px / 96);
+  bc.globalAlpha = 0.55;
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1], [-0.7, -0.7], [0.7, -0.7], [-0.7, 0.7], [0.7, 0.7]]) bc.drawImage(shadow, dx * d, dy * d);
+  bc.globalAlpha = 1;
+  bc.drawImage(fig, 0, 0);
   spr = { body, shadow };
   _SOLDIER_CACHE.set(key, spr);
   return spr;
