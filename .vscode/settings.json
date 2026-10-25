@@ -5,8 +5,11 @@
     { "fileMatch": ["/missions/*.json", "!/missions/catalog.json"], "url": "./schemas/mission.schema.json" },
     { "fileMatch": ["/missions/tutorial/index.json"], "url": "./schemas/tutorial-index.schema.json" },
     { "fileMatch": ["/missions/tutorial/*.json", "!/missions/tutorial/index.json"], "url": "./schemas/lesson.schema.json" },
+    { "fileMatch": ["/missions/campaigns/index.json"], "url": "./schemas/campaign-index.schema.json" },
+    { "fileMatch": ["/missions/campaigns/*.json", "!/missions/campaigns/index.json"], "url": "./schemas/campaign.schema.json" },
     { "fileMatch": ["/mods/index.json"], "url": "./schemas/mod-index.schema.json" },
     { "fileMatch": ["/mods/*/mod.json"], "url": "./schemas/mod.schema.json" },
-    { "fileMatch": ["/mods/*/*.json", "!/mods/*/mod.json"], "url": "./schemas/mission.schema.json" }
+    { "fileMatch": ["/mods/*/campaign*.json"], "url": "./schemas/campaign.schema.json" },
+    { "fileMatch": ["/mods/*/*.json", "!/mods/*/mod.json", "!/mods/*/campaign*.json"], "url": "./schemas/mission.schema.json" }
   ]
 }

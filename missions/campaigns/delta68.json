@@ -1,0 +1,74 @@
+{
+  "$schema": "../../schemas/campaign.schema.json",
+  "icon": "🎖",
+  "startRoster": ["assault", "assault", "sniper", "sniper", "engineer", "engineer", "medic", "medic"],
+  "difficulty": {
+    "reinforcementTurn": [6, 4]
+  },
+  "operations": [
+    {
+      "id": "op1",
+      "map": "rung_sat.json",
+      "missionType": "recon"
+    },
+    {
+      "id": "op2",
+      "choices": [
+        { "id": "op2_pilot", "generator": "jungle", "size": "small", "missionType": "rescue_pilot", "reward": 3 },
+        { "id": "op2_raid", "map": "rung_sat.json", "missionType": "search_destroy", "night": true, "reward": 4, "overrides": { "vcCount": 7 } }
+      ]
+    },
+    {
+      "id": "op3",
+      "map": "hue_city.json",
+      "missionType": "capture_objective"
+    },
+    {
+      "id": "op4",
+      "generator": "urban",
+      "size": "medium",
+      "missionType": "search_destroy",
+      "overrides": { "vcCount": 9 }
+    },
+    {
+      "id": "op5",
+      "map": "hue_city.json",
+      "missionType": "search_destroy",
+      "night": true,
+      "reward": 5,
+      "overrides": { "vcCount": 10, "vcMix": { "commander": 2 } }
+    }
+  ],
+  "translations": {
+    "it": {
+      "name": "Delta '68",
+      "description": "Cinque operazioni dal delta del Mekong fino alla Cittadella di Hue, durante l'offensiva del Têt.",
+      "victory": "La Cittadella è di nuovo in mano americana. Gli uomini del plotone che tornano a casa non dimenticheranno il '68.",
+      "defeat": "Il plotone, decimato, viene ritirato dal fronte. Il Têt continua senza di voi.",
+      "ops": {
+        "op1": { "name": "Operazione Mangrovia", "briefing": "Primo incarico nel Rung Sat: ricognizione delle zone indicate tra canali e mangrovie. Muovetevi con calma e tornate tutti." },
+        "op2": { "name": "Operazione Airone" },
+        "op2_pilot": { "name": "Pilota abbattuto", "briefing": "Un Huey è caduto nella giungla a nord. Trovate il pilota prima dei VC e portatelo all'estrazione." },
+        "op2_raid": { "name": "Raid notturno", "briefing": "L'intelligence segnala un deposito VC nel Rung Sat. Colpite di notte ed eliminate i difensori." },
+        "op3": { "name": "Operazione Porta Imperiale", "briefing": "Il Têt è cominciato: Hue è stata invasa. Conquistate e tenete le posizioni chiave della Cittadella." },
+        "op4": { "name": "Operazione Casa per Casa", "briefing": "Un quartiere della città è ancora in mano ai VC. Rastrellatelo strada per strada." },
+        "op5": { "name": "Operazione Fiume dei Profumi", "briefing": "Ultimo assalto, di notte, contro i comandanti nemici rimasti nella Cittadella. Non lasciatene nessuno." }
+      }
+    },
+    "en": {
+      "name": "Delta '68",
+      "description": "Five operations from the Mekong Delta to the Hue Citadel, during the Tet Offensive.",
+      "victory": "The Citadel is back in American hands. The men of the platoon going home will never forget '68.",
+      "defeat": "The decimated platoon is pulled off the line. Tet goes on without you.",
+      "ops": {
+        "op1": { "name": "Operation Mangrove", "briefing": "First assignment in the Rung Sat: reconnoitre the marked zones among canals and mangroves. Move carefully and bring everyone back." },
+        "op2": { "name": "Operation Heron" },
+        "op2_pilot": { "name": "Downed pilot", "briefing": "A Huey went down in the jungle to the north. Find the pilot before the VC do and get him to the extraction point." },
+        "op2_raid": { "name": "Night raid", "briefing": "Intelligence reports a VC depot in the Rung Sat. Strike at night and wipe out the defenders." },
+        "op3": { "name": "Operation Imperial Gate", "briefing": "Tet has begun: Hue has been overrun. Take and hold the key positions of the Citadel." },
+        "op4": { "name": "Operation House to House", "briefing": "A city district is still held by the VC. Sweep it street by street." },
+        "op5": { "name": "Operation Perfume River", "briefing": "Final assault, at night, against the enemy commanders still in the Citadel. Leave none of them." }
+      }
+    }
+  }
+}

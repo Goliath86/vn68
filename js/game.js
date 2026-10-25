@@ -111,6 +111,9 @@ function startGame(
     smokes: [],
     artillery: [],
     napalm: [],
+    // Operazione di una campagna: salvataggio separato (saveGame.js) e
+    // plotone aggiornato a fine missione (campaign.js:campaignGameOver)
+    campaign: options.campaign || undefined,
   };
   G.lastMove = null;
 
@@ -118,26 +121,36 @@ function startGame(
   // maxCarriers vale anche per la squadra US (es. una sola radio)
   const usCarrierCounts = {};
 
-  // Squadra: scelta nel briefing (sulle posizioni di partenza) oppure fissa
-  // dalla mappa con "squad": [{ cls, col, row, facing?, hp?, bleeding?, stance? }]
-  // (lezioni del tutorial)
+  // Squadra: scelta nel briefing (sulle posizioni di partenza), soldati del
+  // plotone in campagna (options.roster: [{ cid, cls, name, hpBonus, perks }])
+  // oppure fissa dalla mappa con "squad": [{ cls, col, row, facing?, hp?,
+  // bleeding?, stance? }] (lezioni del tutorial)
   const squadDefs =
     G.mapData.squad ||
-    squadClasses.map((cls, i) => ({ cls, col: starts[i].col, row: starts[i].row }));
+    (options.roster || squadClasses.map((cls) => ({ cls }))).map((sd, i) => ({
+      ...sd,
+      col: starts[i].col,
+      row: starts[i].row,
+    }));
 
   squadDefs.forEach((sd, i) => {
     const cls = sd.cls;
     const def = UNIT_CLASSES[cls];
-    const hp = Math.min(def.hp, sd.hp ?? def.hp);
+    const maxHp = def.hp + (sd.hpBonus || 0);
+    const hp = Math.min(maxHp, sd.hp ?? maxHp);
 
     G.units.push({
       id: "u" + i,
-      name: SOLDIER_NAMES[i],
+      name: sd.name || SOLDIER_NAMES[i],
+      cid: sd.cid,
+      perks: sd.perks || [],
+      kills: 0,
+      heals: 0,
       cls,
       col: sd.col,
       row: sd.row,
       hp,
-      maxHp: def.hp,
+      maxHp,
       ap: AP_PER_TURN,
       maxAp: AP_PER_TURN,
       alive: true,
@@ -150,7 +163,7 @@ function startGame(
       overwatch: false,
       suppression: false,
       suppressed: false,
-      shaken: hp / def.hp < SEVERE_WOUND_THRESHOLD,
+      shaken: hp / maxHp < SEVERE_WOUND_THRESHOLD,
       bleeding: !!sd.bleeding,
       carriesPilot: false,
       weapons: buildWeapons(cls, usCarrierCounts),
@@ -361,6 +374,8 @@ function showGameOver(win) {
   renderMissionStats(win, { history: !G.mapData?.tutorial });
   // Tutorial: lezione superata e bottone per la successiva (tutorial.js)
   tutorialGameOver(win);
+  // Campagna: plotone aggiornato, il bottone porta al debriefing (campaign.js)
+  campaignGameOver(win);
   render();
 }
 

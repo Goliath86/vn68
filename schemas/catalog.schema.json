@@ -29,6 +29,11 @@
         "markdownDescription": "Scheda dell'addestramento (lezioni da `missions/tutorial/index.json`)\n\n*Training card (lessons from `missions/tutorial/index.json`)*",
         "type": "boolean"
       },
+      "campaign": {
+        "description": "Scheda della campagna (campagne da `missions/campaigns/index.json` e dalle mod)\n\nCampaign card (campaigns from `missions/campaigns/index.json` and the mods)",
+        "markdownDescription": "Scheda della campagna (campagne da `missions/campaigns/index.json` e dalle mod)\n\n*Campaign card (campaigns from `missions/campaigns/index.json` and the mods)*",
+        "type": "boolean"
+      },
       "icon": {
         "description": "Icona (emoji)\n\nIcon (emoji)",
         "markdownDescription": "Icona (emoji)\n\n*Icon (emoji)*",

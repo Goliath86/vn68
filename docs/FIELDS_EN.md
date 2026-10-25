@@ -2,7 +2,7 @@
 
 > Generated from `js/schema.js` by `node tools/schema-docs.js`: do not edit by hand. [Versione italiana](FIELDS.md)
 
-Every field the game reads from the moddable files: maps, training lessons, the map catalog, `config.json` and mods. For how to build a map and for examples see the [README](../README_EN.md#creating-a-new-mission); `node tools/validate.js --all` checks the files against these same rules.
+Every field the game reads from the moddable files: maps, training lessons, the map catalog, `config.json`, mods and campaigns. For how to build a map and for examples see the [README](../README_EN.md#creating-a-new-mission); `node tools/validate.js --all` checks the files against these same rules.
 
 ## Editor autocompletion
 
@@ -22,6 +22,12 @@ The JSON Schemas in `schemas/` give suggestions, descriptions and checks while t
 - [Training index (`missions/tutorial/index.json`)](#tutorial-index)
 - [Mod (`mods/<folder>/mod.json`)](#mod)
 - [Mod list (`mods/index.json`)](#mod-index)
+- [Perk](#perk)
+- [Campaign (`missions/campaigns/<name>.json`)](#campaign)
+- [Operation: one mission (`map` or `generator` + `missionType`) or `choices`](#campaign-op)
+- [Operation mission](#campaign-choice)
+- [Campaign rules](#campaign-rules)
+- [Campaign list (`missions/campaigns/index.json`)](#campaign-index)
 - [`tuning` groups](#tuning)
 
 <a id="map"></a>
@@ -286,6 +292,10 @@ Fields written by the game, accepted without warnings: `name`, `desc`, `specialL
 | `vcMix.spawn` | object { VC class → number ≥ 0 } | Initial deployment. → VC class (current: `grunt`, `sniper_vc`, `commander`). |
 | `vcMix.ambush` | object { VC class → number ≥ 0 } | Ambush. → VC class (current: `grunt`, `sniper_vc`, `commander`). |
 | `vcMix.reinforcement` | object { VC class → number ≥ 0 } | Reinforcements. → VC class (current: `grunt`, `sniper_vc`, `commander`). |
+| `perks` | object { perk → [Perk](#perk) or `null` } | Campaign soldier perks: the fields written change an existing perk (`steady`, `tough`, `quiet`, `pointman`, `fieldMedic`), a new name adds one, `null` removes it. |
+| `soldierNames` | object | Names of the campaign platoon soldiers; without them, the game's. |
+| `soldierNames.first` | array of text | First names. |
+| `soldierNames.last` | array of text | Last names. |
 
 <a id="catalog"></a>
 
@@ -298,6 +308,7 @@ The file is an array of entries with these fields.
 | `file` | text | Map JSON in `missions/`. → file in `missions/` (in a mod: in its folder). |
 | `generator` | text | Procedural map (instead of `file`). → procedural generator (current: `jungle`, `urban`). |
 | `tutorial` | boolean | Training card (lessons from `missions/tutorial/index.json`). |
+| `campaign` | boolean | Campaign card (campaigns from `missions/campaigns/index.json` and the mods). |
 | `icon` | text | Icon (emoji). |
 | `color` | text | Card color. → `#rrggbb` color. |
 | `theaterColor` | text | Theater badge color. → `#rrggbb` color. |
@@ -352,7 +363,12 @@ A mod is a `mods/<folder>/` folder with this `mod.json`, listed in [`mods/index.
 | `config.vcMix.spawn` | object { VC class → number ≥ 0 } | Initial deployment. → VC class (current: `grunt`, `sniper_vc`, `commander`). |
 | `config.vcMix.ambush` | object { VC class → number ≥ 0 } | Ambush. → VC class (current: `grunt`, `sniper_vc`, `commander`). |
 | `config.vcMix.reinforcement` | object { VC class → number ≥ 0 } | Reinforcements. → VC class (current: `grunt`, `sniper_vc`, `commander`). |
+| `config.perks` | object { perk → [Perk](#perk) or `null` } | Campaign soldier perks: the fields written change an existing perk (`steady`, `tough`, `quiet`, `pointman`, `fieldMedic`), a new name adds one, `null` removes it. |
+| `config.soldierNames` | object | Names of the campaign platoon soldiers; without them, the game's. |
+| `config.soldierNames.first` | array of text | First names. |
+| `config.soldierNames.last` | array of text | Last names. |
 | `maps` | array of [Map menu entry](#catalog) | Maps added to the menu, like the `missions/catalog.json` entries; `file` is the map JSON in the mod folder, and paths inside the map (image, sounds, textures) start from there too. |
+| `campaigns` | array of text | Campaigns added to the list: JSON in the mod folder; their `map` starts from there (`../../missions/hue_city.json` = game map). → file in `missions/campaigns/` (in a mod: in its folder). |
 
 <a id="mod-index"></a>
 
@@ -362,6 +378,154 @@ A mod is a `mods/<folder>/` folder with this `mod.json`, listed in [`mods/index.
 |---|---|---|
 | `$schema` | text | Path of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game. |
 | `mods` | array of text | **Required.** Mod folders in `mods/`, in the order they are applied. → folder in `mods/` with a `mod.json`. |
+
+<a id="perk"></a>
+
+## Perk
+
+| Field | Type | Description |
+|---|---|---|
+| `labels` | object { language → object } | Texts per language; the game's perks take them from the translations. |
+| `labels.<language>.name` | text | Perk name. |
+| `labels.<language>.desc` | text | Effect, in the tooltip. |
+| `icon` | text | Icon (emoji). |
+| `hp` | integer | Extra hit points. |
+| `overwatchAtk` | integer | Extra ATK on overwatch. |
+| `noise` | integer | Gunfire noise (negative = quieter; explosives excluded). |
+| `heal` | integer | Extra HP restored by the heal ability. |
+| `vision` | integer | Extra vision radius. |
+| `trapSense` | boolean | Spots traps and tunnels like the Engineer. |
+| `requires` | object | Fields the soldier's class must have to get it. |
+| `requires.special` | `suppression` \| `overwatch` \| `demolition` \| `heal` or `null` | Class ability. |
+| `requires.marksman` | boolean | Marksmen only (or only the others, with `false`). |
+| `requires.trapSense` | boolean | Classes with `trapSense` only (or without, with `false`). |
+
+<a id="campaign"></a>
+
+## Campaign (`missions/campaigns/<name>.json`)
+
+A campaign (`missions/campaigns/<name>.json`, listed in [`missions/campaigns/index.json`](#campaign-index) or in a mod's `campaigns` field) is a series of [operations](#campaign-op) played by a persistent platoon. See the [README](../README_EN.md#campaign).
+
+| Field | Type | Description |
+|---|---|---|
+| `$schema` | text | Path of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game. |
+| `name` | text or object { language → text } |  |
+| `description` | text or object { language → text } |  |
+| `icon` | text | Icon (emoji). |
+| `startRoster` | array of text | Starting platoon classes; default 2 per base class. → US class (current: `assault`, `sniper`, `engineer`, `medic`). |
+| `rules` | [Campaign rules](#campaign-rules) |  |
+| `operations` | array of [Operation: one mission (`map` or `generator` + `missionType`) or `choices`](#campaign-op) | Operations in order (fixed campaign). |
+| `procedural` | object | Procedural campaign: operations generated from the seed instead of `operations`. |
+| `procedural.operations` | integer ≥ 1 | Number of operations; default 5. |
+| `procedural.choices` | integer ≥ 1 | Missions to choose from per operation (easy, normal, hard); default 3. |
+| `procedural.generators` | array of text | Generators used; default all. → procedural generator (current: `jungle`, `urban`). |
+| `procedural.sizes` | array of `small` \| `medium` \| `large` | Sizes; default `small` and `medium`. |
+| `procedural.missionTypes` | array of text | Mission types; default all. → mission type (current: `recon`, `search_destroy`, `rescue_pilot`, `capture_objective`). |
+| `procedural.nightChance` | number 0–1 | Chance of a night mission; default 0.25. |
+| `difficulty` | object | Difficulty curve, applied before each operation's `overrides`. |
+| `difficulty.vcCount` | array of number (2) | Initial VC [first, last operation], interpolated. |
+| `difficulty.reinforcementTurn` | array of number (2) | Turns between reinforcements [first, last]. |
+| `difficulty.vcMix` | array of object { VC class → number ≥ 0 } (2) | VC composition [first, last]: weights interpolated. → VC class (current: `grunt`, `sniper_vc`, `commander`). |
+| `translations` | object { language → object } | Texts per language (`it`, `en`). |
+| `translations.<language>.name` | text | Campaign name. |
+| `translations.<language>.description` | text | Description in the list. |
+| `translations.<language>.victory` | text | Final victory text. |
+| `translations.<language>.defeat` | text | Defeat text. |
+| `translations.<language>.ops` | object { id → object } | Operation and choice texts by `id`. |
+| `translations.<language>.ops.<id>.name` | text | Operation (or choice) name. |
+| `translations.<language>.ops.<id>.briefing` | text | HQ briefing. |
+
+<a id="campaign-op"></a>
+
+## Operation: one mission (`map` or `generator` + `missionType`) or `choices`
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | text | Identifier: texts are in `translations.<language>.ops.<id>`; default `op<n>` (`op<n>_<m>` for choices). |
+| `map` | text | Map JSON in `missions/` (in a mod: from its folder). → file in `missions/` (in a mod: in its folder). |
+| `generator` | text | Procedural map (instead of `map`). → procedural generator (current: `jungle`, `urban`). |
+| `size` | `small` \| `medium` \| `large` | Procedural map size; default `small`. |
+| `seed` | integer ≥ 0 | Procedural map seed; default from the campaign seed. |
+| `missionType` | text | Mission type (among the map's `supportedMissions`). → mission type (current: `recon`, `search_destroy`, `rescue_pilot`, `capture_objective`). |
+| `night` | boolean | Night mission. |
+| `tier` | text | Choice level (`rules.tiers` key: `easy`, `normal`, `hard`): more or fewer VC, reward and VC pressure. |
+| `reward` | integer ≥ 0 | RP for winning; default the level's or `rules.requisition.win`. |
+| `overrides` | [Map (`missions/<name>.json`)](#map) |  |
+| `choices` | array of [Operation mission](#campaign-choice) | Missions to choose from at HQ (instead of the mission fields). |
+
+<a id="campaign-choice"></a>
+
+## Operation mission
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | text | Identifier: texts are in `translations.<language>.ops.<id>`; default `op<n>` (`op<n>_<m>` for choices). |
+| `map` | text | Map JSON in `missions/` (in a mod: from its folder). → file in `missions/` (in a mod: in its folder). |
+| `generator` | text | Procedural map (instead of `map`). → procedural generator (current: `jungle`, `urban`). |
+| `size` | `small` \| `medium` \| `large` | Procedural map size; default `small`. |
+| `seed` | integer ≥ 0 | Procedural map seed; default from the campaign seed. |
+| `missionType` | text | **Required.** Mission type (among the map's `supportedMissions`). → mission type (current: `recon`, `search_destroy`, `rescue_pilot`, `capture_objective`). |
+| `night` | boolean | Night mission. |
+| `tier` | text | Choice level (`rules.tiers` key: `easy`, `normal`, `hard`): more or fewer VC, reward and VC pressure. |
+| `reward` | integer ≥ 0 | RP for winning; default the level's or `rules.requisition.win`. |
+| `overrides` | [Map (`missions/<name>.json`)](#map) |  |
+
+<a id="campaign-rules"></a>
+
+## Campaign rules
+
+| Field | Type | Description |
+|---|---|---|
+| `rosterSize` | integer ≥ 1 | Soldiers in the platoon; default 8. |
+| `deploySize` | integer 1–4 | Soldiers deployed per mission (maps have 4 start positions); default 4. |
+| `startRequisition` | integer ≥ 0 | Starting RP; default 2. |
+| `xp` | object | Experience per mission (none on retreat). |
+| `xp.survive` | integer ≥ 0 | For surviving; default 1. |
+| `xp.kill` | integer ≥ 0 | Per VC killed; default 1. |
+| `xp.win` | integer ≥ 0 | For winning; default 1. |
+| `xp.heal` | integer ≥ 0 | Per Medic heal; default 1. |
+| `ranks` | array of object | Ranks by XP; default Pvt 0, PFC 3 (+1 HP), Cpl 7 (perk), Sgt 12 (perk, +1 HP). |
+| `ranks[].id` | text | **Required.** Identifier; texts from translations `campaign.ranks.<id>` or from `labels`. |
+| `ranks[].xp` | integer ≥ 0 | **Required.** XP needed. |
+| `ranks[].hp` | integer ≥ 0 | Extra hit points (adding to the previous ranks). |
+| `ranks[].perk` | boolean | A perk is chosen at this rank. |
+| `ranks[].labels` | object { language → object } | Texts per language. |
+| `ranks[].labels.<language>.name` | text | Name. |
+| `ranks[].labels.<language>.short` | text | Abbreviation before the surname. |
+| `perkChoices` | integer ≥ 1 | Perks offered at each choice; default 2. |
+| `recovery` | object | Recovery in operations. |
+| `recovery.light` | integer ≥ 0 | Operations out for a wounded soldier (HP ≤ 60%); default 1. |
+| `recovery.severe` | integer ≥ 0 | For a badly wounded one (HP < 30% or bleeding); default 2. |
+| `recovery.medevac` | integer ≥ 0 | For an evacuated one; default 3. |
+| `medevacChance` | number 0–1 | Chance a soldier fallen in a won mission is evacuated wounded instead of dead; default 1/3, 0 = permadeath. |
+| `requisition` | object | Requisition points (RP) at mission end. |
+| `requisition.win` | integer | RP for winning; default 3. |
+| `requisition.clean` | integer | Extra when nobody is wounded or fallen; default 1. |
+| `requisition.kia` | integer | Per fallen soldier; default −1. |
+| `costs` | object | HQ costs in RP. |
+| `costs.replacement` | integer ≥ 0 | Replacement (new soldier); default 2. |
+| `costs.fastHeal` | integer ≥ 0 | Fast healing (wounded available at once); default 1. |
+| `supplies` | object { supply → object } | Supplies for one operation; default `ammo` (1 RP), `artillery` (2 RP), `napalm` (3 RP). Texts from translations `campaign.supplies.<id>`. |
+| `supplies.<supply>.cost` | integer ≥ 0 | **Required.** Cost in RP. |
+| `supplies.<supply>.field` | text | Only weapons with this field (e.g. `artillery`); without it, all. |
+| `supplies.<supply>.exclude` | array of text | Weapons with one of these fields are excluded. |
+| `supplies.<supply>.ammo` | integer ≥ 0 | Extra uses for weapons with `ammo`. |
+| `supplies.<supply>.mags` | integer ≥ 0 | Extra spare magazines for weapons with `mags`. |
+| `tiers` | object { level → object } | Choice levels; default `easy` (−2 VC, 2 RP, pressure +1), `normal` (3 RP), `hard` (+2 VC, 5 RP, pressure −1). |
+| `tiers.<level>.vcCount` | integer | More (or fewer) VC. |
+| `tiers.<level>.reward` | integer ≥ 0 | RP for winning. |
+| `tiers.<level>.pressure` | integer | VC pressure change after winning. |
+| `pressureVc` | integer ≥ 0 | Extra VC per pressure point; default 1. |
+| `maxPressure` | integer ≥ 0 | Maximum pressure; default 4. |
+
+<a id="campaign-index"></a>
+
+## Campaign list (`missions/campaigns/index.json`)
+
+| Field | Type | Description |
+|---|---|---|
+| `$schema` | text | Path of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game. |
+| `campaigns` | array of text | **Required.** Campaigns in `missions/campaigns/`, in order. → file in `missions/campaigns/` (in a mod: in its folder). |
 
 <a id="tuning"></a>
 

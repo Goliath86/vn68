@@ -36,6 +36,7 @@ function checkOverwatch(enemy) {
           (owWeapon?.atk ?? owDef.attack) - owPenalty - woundAttackPenalty(ow),
         ) +
         OVERWATCH_ATK_BONUS +
+        perkSum(ow, "overwatchAtk") +
         rearAttackBonus(ow, enemy) +
         stanceAttackBonus(ow, owWeapon);
 
@@ -106,6 +107,7 @@ function checkOverwatch(enemy) {
           );
           if (G.missionType === "search_destroy")
             G.missionState.kills = (G.missionState.kills || 0) + 1;
+          creditKill(ow);
           tutorialEvent("kill", { id: enemy.id, how: "overwatch" });
           addFX(
             "death",

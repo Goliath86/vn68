@@ -81,7 +81,7 @@ function revealTunnel(tn) {
 function revealTunnelsNearUnits() {
   for (const u of G.units) {
     if (!u.alive) continue;
-    const range = UNIT_CLASSES[u.cls]?.trapSense ? 2 : 1;
+    const range = hasTrapSense(u) ? 2 : 1;
     for (const tn of G.missionState?.tunnels || []) {
       if (!tn.revealed && dist(u, tn) <= range) revealTunnel(tn);
     }
@@ -185,6 +185,7 @@ function sealTunnel(engineer, tn) {
       e.hp = 0;
       if (G.missionType === "search_destroy")
         G.missionState.kills = (G.missionState.kills || 0) + 1;
+      creditKill(engineer);
       log(t("log.vc_tunnel_trapped", { name: e.name }), "success");
     }
     document.getElementById("vc-remain").textContent = G.enemies.filter(

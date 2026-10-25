@@ -106,6 +106,7 @@ const VALIDATION_REFS = {
   missionFile: (v, cx) => _fileRef(cx, cx.base ? modPath(cx.base, v) : "missions/" + v, "error"),
   tutorialFile: (v, cx) => _fileRef(cx, "missions/tutorial/" + v, "error"),
   modDir: (v, cx) => _fileRef(cx, `${MODS_DIR}${v}/mod.json`, "error"),
+  campaignFile: (v, cx) => _fileRef(cx, cx.base ? modPath(cx.base, v) : CAMPAIGN_DIR + v, "error"),
 };
 
 function _fileRef(cx, file, level) {
@@ -549,7 +550,7 @@ function validateCatalog(list, opts = {}) {
   _walk(SCHEMA_CATALOG, list, "", cx);
   (Array.isArray(list) ? list : []).forEach((e, i) => {
     if (!_isPlain(e)) return;
-    const kinds = ["file", "generator", "tutorial"].filter((k) => e[k]);
+    const kinds = ["file", "generator", "tutorial", "campaign"].filter((k) => e[k]);
     if (kinds.length !== 1) cx.add("error", `[${i}]`, "catalog_kind");
     for (const lang of ["it", "en"]) {
       if (!e.labels?.[lang]) cx.add("warning", `[${i}].labels`, "translation_missing", { lang });
@@ -584,6 +585,68 @@ function _checkConfigMixes(cfg, path, cx) {
   for (const [k, mix] of Object.entries(cfg?.vcMix || {})) {
     if (_isPlain(mix) && !Object.values(mix).some((w) => w > 0)) cx.add("error", `${path}.${k}`, "mix_empty");
   }
+}
+
+// ── Campagne (campaign.js) ─────────────────────────────────────────────
+// opts.base = cartella della mod (percorsi delle mappe da lì);
+// opts.missionData(percorso) → mapData o null: se c'è (tools/validate.js)
+// controlla anche che il tipo di missione sia giocabile sulla mappa
+function validateCampaign(def, opts = {}) {
+  const cx = _validationContext(opts);
+  _walk(SCHEMA_CAMPAIGN, def, "", cx);
+  if (!_isPlain(def)) return cx.issues;
+  const rules = deepMerge(JSON.parse(JSON.stringify(CAMPAIGN_RULES)), _isPlain(def.rules) ? def.rules : {});
+  const ops = Array.isArray(def.operations) ? def.operations : [];
+  if (!def.procedural && !ops.length) cx.add("error", "operations", "campaign_no_ops");
+  if (Array.isArray(def.startRoster) && def.startRoster.length > rules.rosterSize)
+    cx.add("warning", "startRoster", "campaign_roster", { count: def.startRoster.length, max: rules.rosterSize });
+  const ids = new Set();
+  const texts = [];
+  const checkId = (id, path) => {
+    if (ids.has(id)) cx.add("error", path, "step_duplicate", { id });
+    ids.add(id);
+  };
+  ops.forEach((op, i) => {
+    if (!_isPlain(op)) return;
+    const opId = op.id || `op${i + 1}`;
+    checkId(opId, `operations[${i}].id`);
+    const list = Array.isArray(op.choices) ? op.choices : [op];
+    if (op.choices) texts.push(opId);
+    list.forEach((c, j) => {
+      if (!_isPlain(c)) return;
+      const path = op.choices ? `operations[${i}].choices[${j}]` : `operations[${i}]`;
+      if (op.choices) checkId(c.id || `${opId}_${j + 1}`, `${path}.id`);
+      texts.push(op.choices ? c.id || `${opId}_${j + 1}` : opId);
+      if (!c.map === !c.generator) cx.add("error", path, "campaign_choice_kind");
+      if (!c.missionType) cx.add("error", `${path}.missionType`, "required");
+      if (c.tier && !rules.tiers[c.tier])
+        cx.add("error", `${path}.tier`, "enum", { value: c.tier, allowed: Object.keys(rules.tiers).join(", ") });
+      if (c.map && c.missionType && opts.missionData) {
+        const md = opts.missionData(cx.base ? modPath(cx.base, c.map) : "missions/" + c.map);
+        if (md && !(md.supportedMissions || []).includes(c.missionType))
+          cx.add("error", `${path}.missionType`, "campaign_mission_unsupported", { type: c.missionType });
+      }
+    });
+  });
+  for (const lang of ["it", "en"]) {
+    const tr = def.translations?.[lang];
+    if (!tr) {
+      cx.add("warning", "translations", "translation_missing", { lang });
+      continue;
+    }
+    if (!tr.name) cx.add("warning", `translations.${lang}.name`, "translation_missing", { lang });
+    for (const id of texts) {
+      if (!tr.ops?.[id]?.name && !tr.ops?.[id]?.briefing)
+        cx.add("warning", `translations.${lang}.ops.${id}`, "translation_missing", { lang });
+    }
+  }
+  return cx.issues;
+}
+
+function validateCampaignIndex(index, opts = {}) {
+  const cx = _validationContext(opts);
+  _walk(SCHEMA_CAMPAIGN_INDEX, index, "", cx);
+  return cx.issues;
 }
 
 // ── Mod (mods.js) ──────────────────────────────────────────────────────

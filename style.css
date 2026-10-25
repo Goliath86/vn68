@@ -333,7 +333,7 @@ body {
 .gen-bar.hidden {
     display: none;
 }
-#resume-banner .gen-bar {
+.resume-banner .gen-bar {
     margin: 6px 0 0;
 }
 .gen-fill {
@@ -416,6 +416,211 @@ body {
     font-size: 12px;
     color: #e07a5f;
 }
+/* ── CAMPAGNA (campaign.js) ─────────────────────── */
+#campaign-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+#campaign-overlay.hidden {
+    display: none;
+}
+#campaign-box {
+    background: var(--panel-bg);
+    border: 2px solid var(--tan-dark);
+    border-radius: 4px;
+    padding: 22px 26px;
+    max-width: 720px;
+    width: 94%;
+    max-height: 92dvh;
+    overflow-y: auto;
+    text-align: center;
+}
+#campaign-box h2 {
+    font-family: var(--stamp-font);
+    font-size: 24px;
+    color: var(--tan);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+}
+#campaign-box h2.win {
+    color: var(--highlight);
+}
+#campaign-box h2.lose {
+    color: #e07a5f;
+}
+#campaign-box h3 {
+    font-family: var(--ui-font);
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--highlight);
+    margin-bottom: 8px;
+}
+#campaign-box p {
+    font-size: 12px;
+    color: var(--paper-dark);
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+.cmp-status {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    font-family: var(--ui-font);
+    font-size: 12px;
+    color: var(--paper);
+    margin-bottom: 12px;
+}
+.cmp-section {
+    text-align: left;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    margin-bottom: 12px;
+}
+.cmp-section summary {
+    font-family: var(--ui-font);
+    font-size: 13px;
+    color: var(--paper-dark);
+    cursor: pointer;
+}
+.cmp-section .modal-mission-list {
+    margin-bottom: 4px;
+}
+.cmp-hint {
+    font-size: 11px;
+    font-weight: normal;
+    color: var(--paper-dark);
+}
+.cmp-tags {
+    color: var(--paper);
+}
+.cmp-tier {
+    padding: 0 5px;
+    border-radius: 3px;
+    border: 1px solid currentColor;
+}
+.cmp-tier-easy {
+    color: #8fd16a;
+}
+.cmp-tier-normal {
+    color: var(--tan);
+}
+.cmp-tier-hard {
+    color: #e07a5f;
+}
+.cmp-good {
+    color: #8fd16a;
+}
+.cmp-warn {
+    color: #e0a040;
+}
+.cmp-bad {
+    color: #e07a5f;
+}
+.cmp-roster {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.cmp-soldier {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--paper);
+    cursor: pointer;
+}
+.cmp-soldier.deployed {
+    border-color: var(--highlight);
+    background: rgba(240, 192, 48, 0.1);
+}
+.cmp-soldier.unfit {
+    opacity: 0.75;
+    cursor: default;
+}
+.cmp-sname {
+    flex: 1;
+    min-width: 0;
+}
+.cmp-perk {
+    display: inline-block;
+    font-size: 10px;
+    color: var(--highlight);
+    margin-left: 4px;
+}
+.cmp-offer {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--highlight);
+}
+.cmp-offer .btn,
+.cmp-soldier > .btn,
+.cmp-req .btn {
+    font-size: 11px;
+    padding: 4px 8px;
+}
+.cmp-req {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 6px;
+}
+.cmp-req select {
+    background: var(--panel-bg);
+    color: var(--paper);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    padding: 4px;
+}
+.cmp-supply.active {
+    border-color: var(--highlight);
+    color: var(--highlight);
+}
+.cmp-memorial,
+.cmp-debrief {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 6px;
+}
+.cmp-fallen,
+.cmp-deb-row {
+    font-size: 12px;
+    color: var(--paper);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.cmp-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+.cmp-error:empty {
+    display: none;
+}
+@media (max-width: 600px) {
+    #campaign-box {
+        padding: 16px 12px;
+        width: calc(100% - 16px);
+    }
+    .cmp-soldier {
+        flex-wrap: wrap;
+    }
+}
+
 /* Scheda "Addestramento" nella scelta della mappa: su tutta la riga */
 .map-card.tutorial-card {
     grid-column: 1 / -1;

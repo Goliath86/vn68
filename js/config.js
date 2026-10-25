@@ -49,6 +49,13 @@ function applyConfigData(cfg) {
     ENEMY_CLASSES[cls] = deepMerge(deepMerge({}, ENEMY_CLASSES[cls] || ENEMY_CLASSES.grunt), def);
   }
   deepMerge(VC_MIX, cfg.vcMix);
+  // Campagna (campaign.js): perk modificati o nuovi (null = tolto) e nomi
+  // dei soldati del plotone
+  for (const [id, p] of Object.entries(cfg.perks || {})) {
+    if (p === null) delete PERKS[id];
+    else PERKS[id] = deepMerge(deepMerge({}, PERKS[id] || {}), p);
+  }
+  if (cfg.soldierNames) CONFIG.soldierNames = { ...CONFIG.soldierNames, ...cfg.soldierNames };
 }
 
 // Immagini di una classe per postura (unitImages): una stringa vale per

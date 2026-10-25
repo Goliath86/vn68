@@ -8,6 +8,14 @@
     }
   },
   {
+    "campaign": true,
+    "icon": "🎖",
+    "labels": {
+      "it": { "label": "Campagna", "subtitle": "Un plotone, più operazioni: ferite, caduti e gradi restano" },
+      "en": { "label": "Campaign", "subtitle": "One platoon, many operations: wounds, losses and ranks carry over" }
+    }
+  },
+  {
     "file": "rung_sat.json",
     "icon": "🌿",
     "color": "#2d5a1b",

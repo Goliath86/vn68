@@ -88,9 +88,9 @@ const FIRE_NOISE = 2;
 function weaponNoise(unit, weapon) {
   // Partite salvate prima del campo `noise`: si legge dal config attuale
   const cfg = (WEAPONS_CONFIG[unit?.cls] || []).find((w) => w.id === weapon?.id);
-  return (
-    weapon?.noise ?? cfg?.noise ?? (weapon?.aoe ? DEFAULT_AOE_NOISE : DEFAULT_NOISE)
-  );
+  const noise = weapon?.noise ?? cfg?.noise ?? (weapon?.aoe ? DEFAULT_AOE_NOISE : DEFAULT_NOISE);
+  // Perk "noise" (campagna): solo per gli spari, non per gli esplosivi
+  return weapon?.aoe ? noise : Math.max(0, noise + perkSum(unit, "noise"));
 }
 
 // Allerta un VC verso `src` (bersaglio colpito o rumore udito)
@@ -258,7 +258,7 @@ function currentWeather() {
 function unitVision(unit) {
   return Math.max(
     1,
-    UNIT_CLASSES[unit.cls].vision - nightPenalty() - unitStance(unit).vision,
+    UNIT_CLASSES[unit.cls].vision + perkSum(unit, "vision") - nightPenalty() - unitStance(unit).vision,
   );
 }
 
@@ -775,6 +775,7 @@ function scheduleArtillery(caller, weapon, tc, tr) {
     noise: weaponNoise(caller, weapon),
     callerCls: caller.cls,
     callerName: caller.name,
+    callerId: caller.id,
   });
   sfx("click");
   log(
@@ -802,7 +803,7 @@ async function resolveArtillery() {
       // poi l'esplosione col suo cratere
       blastTile(land.col, land.row);
       await resolveAoeCombat(
-        { cls: s.callerCls, name: s.callerName },
+        { cls: s.callerCls, name: s.callerName, id: s.callerId },
         { atk: s.atk, aoe: s.aoe, ...weaponLabelFields(s), sound: s.sound, noise: s.noise },
         land.col,
         land.row,
@@ -968,6 +969,7 @@ function scheduleNapalm(caller, weapon, line) {
     noise: weaponNoise(caller, weapon),
     callerCls: caller.cls,
     callerName: caller.name,
+    callerId: caller.id,
   });
   const a = line[0];
   const b = line[line.length - 1];
@@ -1007,7 +1009,7 @@ async function resolveNapalm() {
       addFX("napalm", { col, row, dir: plan.angle }, NAPALM_FX_MS);
       napalmTile(col, row);
       await resolveAoeCombat(
-        { cls: s.callerCls, name: s.callerName },
+        { cls: s.callerCls, name: s.callerName, id: s.callerId },
         { atk: s.atk, aoe: 0, napalm: true, ...weaponLabelFields(s), noise: s.noise },
         col,
         row,
@@ -1094,7 +1096,7 @@ function removeTrap(trap) {
 
 // I genieri vivi (classi con trapSense) individuano le trappole a distanza 1
 function revealTrapsAroundEngineers() {
-  for (const eng of G.units.filter((u) => u.alive && UNIT_CLASSES[u.cls]?.trapSense)) {
+  for (const eng of G.units.filter((u) => u.alive && hasTrapSense(u))) {
     for (const trap of G.missionState.traps || []) {
       if (trap.revealed || dist(eng, trap) > 1) continue;
       trap.revealed = true;

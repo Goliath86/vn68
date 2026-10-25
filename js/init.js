@@ -30,7 +30,8 @@ function finishLoading() {
   // parte solo se il giocatore è ancora nel menu
   const inMenu =
     document.getElementById("modal-overlay").style.display !== "none" ||
-    !document.getElementById("tutorial-overlay").classList.contains("hidden");
+    !document.getElementById("tutorial-overlay").classList.contains("hidden") ||
+    campaignOverlayOpen();
   if (_loadingSkipped && !inMenu) return;
   if (!CONFIG.menuMusic || AUDIO.muted) return hideLoadingScreen();
   ambientPlay(CONFIG.menuMusic);

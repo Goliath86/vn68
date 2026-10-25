@@ -44,5 +44,6 @@
         "en": { "label": "NVA Outpost", "subtitle": "Central Highlands · 1968", "theater": "MOD" }
       }
     }
-  ]
+  ],
+  "campaigns": ["campaign.json"]
 }

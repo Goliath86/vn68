@@ -51,6 +51,8 @@ function rebuildMapsFromCatalog() {
       generator: entry.generator || null,
       // Scheda "Addestramento": apre l'elenco delle lezioni (tutorial.js)
       tutorial: !!entry.tutorial,
+      // Scheda "Campagna": apre l'elenco delle campagne (campaign.js)
+      campaign: !!entry.campaign,
       label: labels.label || entry.file || entry.generator,
       subtitle: labels.subtitle || "",
       theater: labels.theater || "",

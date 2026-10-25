@@ -570,6 +570,11 @@
             </div>
         </div>
 
+        <!-- CAMPAGNA: elenco, comando (HQ), debriefing (campaign.js) -->
+        <div id="campaign-overlay" class="hidden">
+            <div id="campaign-box"></div>
+        </div>
+
         <!-- MISSION SELECT MODAL -->
         <div id="modal-overlay">
             <div id="modal-box">
@@ -702,7 +707,7 @@
         <!-- CONFIRM RETURN TO MENU -->
         <div id="confirm-overlay" class="hidden">
             <div id="confirm-box">
-                <p data-i18n="confirm.abort_mission">
+                <p id="confirm-msg" data-i18n="confirm.abort_mission">
                     Sei sicuro di voler abbandonare la missione e tornare al
                     menu?
                 </p>
@@ -822,6 +827,7 @@
         <script src="js/stats.js"></script>
         <script src="js/guerrilla.js"></script>
         <script src="js/tutorial.js"></script>
+        <script src="js/campaign.js"></script>
 
         <script src="js/initModal.js"></script>
 

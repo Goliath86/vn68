@@ -1,4 +1,4 @@
-﻿// Bot del giocatore per la simulazione headless (caricato da env.js nel
+// Bot del giocatore per la simulazione headless (caricato da env.js nel
 // contesto del gioco, dopo tutti gli script: usa le stesse funzioni globali e
 // le stesse regole dell'interfaccia, senza barare sulla nebbia di guerra
 // tranne che per cercare l'ultimo VC quando non ne vede più nessuno).
@@ -404,6 +404,46 @@ async function simUnitTurn(u, goal, runner) {
   // Ferito e sanguinante senza medico: primo soccorso
   if (u.bleeding && !G.units.some((m) => m.alive && unitSpecial(m) === "heal") && canFirstAid(u))
     firstAid(u);
+}
+
+// ── Campagna (tools/sim/run.js --campaign) ─────────────────────────────
+// Decisioni all'HQ prima di ogni operazione: perk (il primo offerto),
+// rimpiazzi finché il plotone ha meno di campaignMinRoster uomini, cura
+// accelerata se mancano soldati da schierare, missione (campaignChoice:
+// "normal" = il livello normale se c'è, "first", "hard", "random"),
+// schieramento proposto dall'HQ (campaign.js:defaultDeployment).
+// Restituisce { rest: true } o { choice, ids }.
+SIM_BOT.campaignChoice = "normal";
+SIM_BOT.campaignMinRoster = 6;
+SIM_BOT.campaignSupplies = []; // dotazioni comprate se i PR bastano
+// Ritirata (abbandono della missione) quando restano vivi al massimo tanti
+// soldati, come farebbe un giocatore; 0 = mai
+SIM_BOT.campaignRetreatAt = 1;
+
+function simCampaignHQ(st) {
+  const rules = campaignRules(st);
+  for (const s of st.roster) while (s.perkOffers.length) campaignChoosePerk(st, s.id, s.perkOffers[0][0]);
+  // Rimpiazzi: la classe base meno rappresentata
+  while (st.roster.length < SIM_BOT.campaignMinRoster && st.requisition >= rules.costs.replacement) {
+    const count = (c) => st.roster.filter((s) => s.cls === c).length;
+    const cls = [...BASE_SQUAD].sort((a, b) => count(a) - count(b))[0];
+    if (!campaignBuy(st, "replacement", cls)) break;
+  }
+  for (const s of st.roster) {
+    if (fitSoldiers(st).length >= rules.deploySize) break;
+    if (s.status === "wounded") campaignBuy(st, "fastHeal", s.id);
+  }
+  if (!fitSoldiers(st).length) return { rest: true };
+  for (const id of SIM_BOT.campaignSupplies) campaignBuy(st, id);
+  const choices = st.ops[st.opIndex].choices;
+  let choice = 0;
+  const pickMode = SIM_BOT.campaignChoice;
+  if (pickMode === "random") choice = Math.floor(Math.random() * choices.length);
+  else if (pickMode === "hard" || pickMode === "normal") {
+    const i = choices.findIndex((c) => c.tier === pickMode);
+    if (i >= 0) choice = i;
+  }
+  return { choice, ids: defaultDeployment(st) };
 }
 
 async function simPlayerTurn() {

@@ -1,0 +1,4 @@
+{
+  "$schema": "../../schemas/campaign-index.schema.json",
+  "campaigns": ["delta68.json", "dynamic.json"]
+}

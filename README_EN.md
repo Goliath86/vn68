@@ -339,6 +339,86 @@ Practical examples:
 
 ---
 
+## Campaign
+
+The **🎖 Campaign** card in the menu leads to a series of operations played by a **platoon of 8 named soldiers**, 4 of whom deploy at a time. What happens in a mission sticks:
+
+| Soldier's state at mission end | Consequence |
+|---|---|
+| Unhurt (HP above 60%) | ready for the next operation |
+| Wounded (HP ≤ 60%) | out for 1 operation |
+| Badly wounded (HP < 30% or still bleeding) | out for 2 operations |
+| Fallen | dead for good (wall of the fallen); in a **won** mission there is a 1-in-3 chance he is medevaced instead, out for 3 operations |
+
+Soldiers left at HQ recover one operation of convalescence each time the platoon plays one.
+
+**Headquarters (HQ).** Between missions you see the briefing, the platoon and the requisitions. Pick the soldiers to deploy (every ready one, up to 4) and, if the operation offers more than one, the mission. If nobody is ready, **Rest** lets an operation go by for the wounded.
+
+**Experience and ranks.** At mission end each soldier earns XP: +1 for surviving, +1 per VC killed (explosives, overwatch, artillery, napalm and sealed tunnels included), +1 if the mission is won, +1 to the Medic per heal.
+
+| Rank | XP | Bonus |
+|---|---|---|
+| Private (Pvt.) | 0 | — |
+| Private First Class (PFC) | 3 | +1 HP |
+| Corporal (Cpl.) | 7 | choice of one perk out of 2 |
+| Sergeant (Sgt.) | 12 | second perk, +1 HP |
+
+Perks: **Steady hand** (+1 ATK on overwatch, Sniper), **Tough** (+2 HP), **Quiet** (shots −1 noise), **Point man** (spots traps and tunnels like the Engineer), **Field medic** (heals 1 more HP). Perks are `config.json` data (`perks`): they can be changed or added.
+
+**Requisition points (RP).** You start with 2. A won mission gives 3 (or the mission's reward), +1 if nobody is wounded or fallen; each fallen soldier costs 1. At HQ they buy:
+
+| Purchase | Cost | Effect |
+|---|---|---|
+| Replacement | 2 RP | new private of the chosen class (up to 8 in the platoon) |
+| Fast healing | 1 RP | a wounded soldier is available at once |
+| Extra ammo | 1 RP | for the next operation: +1 spare magazine and +1 grenade/smoke each |
+| Artillery salvo | 2 RP | +1 radio use (needs the Engineer carrying it) |
+| Napalm strike | 3 RP | +1 napalm strike (needs the Engineer) |
+
+Supplies can be returned until the operation starts.
+
+**Defeat and retreat.** A failed mission can be retried, but the fallen stay fallen. Leaving the mission with ⌂ is a **retreat**: it counts as a failed mission, soldiers come back as they were at the last save, with no XP or RP. The campaign is won after the last operation and lost when, counting the wounded and the replacements you can pay for, you cannot field 4 soldiers.
+
+**Mission choices and VC pressure.** In the **Dynamic campaign** (generated from the seed, on procedural maps) each operation offers three missions: **easy** (−2 VC, 2 RP), **normal** (3 RP), **hard** (+2 VC, 5 RP). Winning an easy one raises the **VC pressure** by 1 (up to 4), a hard one lowers it: each pressure point adds a VC to the following missions. The VC grow stronger operation after operation anyway.
+
+The running campaign stays in the browser (`localStorage`); the mission in progress has its own save, separate from free games, shown in a second **resume** banner in the menu.
+
+### Creating a campaign
+
+A campaign is a JSON in `missions/campaigns/`, listed in `missions/campaigns/index.json` (`{ "campaigns": ["delta68.json", "dynamic.json"] }`):
+
+```json
+{
+  "startRoster": ["assault", "assault", "sniper", "sniper", "engineer", "engineer", "medic", "medic"],
+  "difficulty": { "reinforcementTurn": [6, 4] },
+  "operations": [
+    { "id": "op1", "map": "rung_sat.json", "missionType": "recon" },
+    { "id": "op2", "choices": [
+      { "id": "op2_pilot", "generator": "jungle", "size": "small", "missionType": "rescue_pilot" },
+      { "id": "op2_raid", "map": "rung_sat.json", "missionType": "search_destroy", "night": true, "reward": 4,
+        "overrides": { "vcCount": 7 } }
+    ] }
+  ],
+  "rules": { "medevacChance": 0 },
+  "translations": {
+    "en": { "name": "My campaign", "description": "…",
+            "ops": { "op1": { "name": "Operation Mangrove", "briefing": "…" }, "op2": { "name": "…" },
+                     "op2_pilot": { "name": "…", "briefing": "…" }, "op2_raid": { "name": "…", "briefing": "…" } } },
+    "it": { "…": "…" }
+  }
+}
+```
+
+- An **operation** is one mission (`map` in `missions/` or `generator` + `size`, `missionType`, `night`, `reward`) or a `choices` list of missions to choose from.
+- **`overrides`** changes the map fields for that operation (VC, reinforcements, composition, weapons, `tuning`…), merged like `tuning`.
+- **`difficulty`** is a curve between the first and last operation (`vcCount`, `reinforcementTurn`, `vcMix`), applied before the `overrides`.
+- **`procedural`** instead of `operations` generates the operations from the seed (count, choices, generators, mission types, night chance).
+- **`rules`** changes the rules: platoon, XP, ranks, recovery, medevac, RP, costs, supplies, levels and pressure. `"medevacChance": 0` = death is always permanent.
+
+Every field is in the [field guide](docs/FIELDS_EN.md#campaign); `node tools/validate.js --all` checks campaigns too (existing maps, mission types playable on the map, `overrides` fields). The simulator plays whole campaigns with the bot: `node tools/sim/run.js --campaign delta68 --games 20` (with `--variant` to compare rules, e.g. `"CAMPAIGN_RULES.medevacChance=0.5"`).
+
+---
+
 ## Auto-Save
 
 The game **auto-saves** at the start of every player turn using the browser's localStorage. No player action is required.
@@ -928,8 +1008,9 @@ A mod keeps classes, weapons, enemies and maps in a folder of its own, without t
 mods/
   index.json              mod list: { "mods": ["nva_regulars"] }
   nva_regulars/
-    mod.json              description, additions to config.json, maps
+    mod.json              description, additions to config.json, maps, campaigns
     avamposto.json        a map of the mod
+    campaign.json         a campaign of the mod
 ```
 
 The list in `mods/index.json` is needed because the game, as a static site, cannot read a folder's contents; its order is the order mods are applied in (when two change the same thing, the last one wins).
@@ -955,6 +1036,7 @@ The list in `mods/index.json` is needed because the game, as a static site, cann
 
 - **`config`** has the same fields as `config.json` and is added to it: classes and compositions are merged, pictures and sounds replaced by key, weapons follow the rules of the maps' `weapons` field (an array replaces the class loadout, an object changes weapons by `id`).
 - **`maps`** has the same entries as `missions/catalog.json`; `file` is the map JSON in the mod folder. Mod maps are ordinary maps and can use the mod's classes.
+- **`campaigns`** lists the mod's [campaigns](#campaign), JSON files in its folder (`"campaigns": ["campaign.json"]`); their `map` starts from there, so a game map is referenced as `"../../missions/hue_city.json"`.
 - **Paths** in `mod.json` and in its maps (pictures, sounds, music, textures, `image`) start from the mod folder; `../../` goes up to the game folder, to reuse its files (`"../../assets/ak47.mp3"`).
 
 The example mod `mods/nva_regulars/` shows every part. A mod with errors (wrong fields, nonexistent classes, missing files) is not applied: the mod menu shows the first error and the browser console the full list. `node tools/validate.js --all` checks mods and their maps too; every `mod.json` field is in the [field guide](docs/FIELDS_EN.md#mod).

@@ -147,6 +147,8 @@ function refreshMenuTexts() {
   const onMapStep = document.getElementById("modal-step-map").style.display !== "none";
   const tutorialOpen = !document.getElementById("tutorial-overlay").classList.contains("hidden");
   if (menuOpen && onMapStep && !tutorialOpen) initModal();
+  // Finestra della campagna: ridisegnata con i testi nuovi
+  if (campaignOverlayOpen()) renderCampaignView();
 }
 
 function setLang(lang) {

@@ -644,6 +644,45 @@
             }
           },
           "additionalProperties": false
+        },
+        "perks": {
+          "description": "Perk dei soldati della campagna: i campi scritti cambiano un perk esistente (`steady`, `tough`, `quiet`, `pointman`, `fieldMedic`), un nome nuovo ne aggiunge uno, `null` lo toglie\n\nCampaign soldier perks: the fields written change an existing perk (`steady`, `tough`, `quiet`, `pointman`, `fieldMedic`), a new name adds one, `null` removes it",
+          "markdownDescription": "Perk dei soldati della campagna: i campi scritti cambiano un perk esistente (`steady`, `tough`, `quiet`, `pointman`, `fieldMedic`), un nome nuovo ne aggiunge uno, `null` lo toglie\n\n*Campaign soldier perks: the fields written change an existing perk (`steady`, `tough`, `quiet`, `pointman`, `fieldMedic`), a new name adds one, `null` removes it*",
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/perk"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "soldierNames": {
+          "description": "Nomi dei soldati del plotone in campagna; senza, quelli del gioco\n\nNames of the campaign platoon soldiers; without them, the game's",
+          "markdownDescription": "Nomi dei soldati del plotone in campagna; senza, quelli del gioco\n\n*Names of the campaign platoon soldiers; without them, the game's*",
+          "type": "object",
+          "properties": {
+            "first": {
+              "description": "Nomi\n\nFirst names",
+              "markdownDescription": "Nomi\n\n*First names*",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "last": {
+              "description": "Cognomi\n\nLast names",
+              "markdownDescription": "Cognomi\n\n*Last names*",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -674,6 +713,11 @@
           "tutorial": {
             "description": "Scheda dell'addestramento (lezioni da `missions/tutorial/index.json`)\n\nTraining card (lessons from `missions/tutorial/index.json`)",
             "markdownDescription": "Scheda dell'addestramento (lezioni da `missions/tutorial/index.json`)\n\n*Training card (lessons from `missions/tutorial/index.json`)*",
+            "type": "boolean"
+          },
+          "campaign": {
+            "description": "Scheda della campagna (campagne da `missions/campaigns/index.json` e dalle mod)\n\nCampaign card (campaigns from `missions/campaigns/index.json` and the mods)",
+            "markdownDescription": "Scheda della campagna (campagne da `missions/campaigns/index.json` e dalle mod)\n\n*Campaign card (campaigns from `missions/campaigns/index.json` and the mods)*",
             "type": "boolean"
           },
           "icon": {
@@ -721,6 +765,14 @@
           }
         },
         "additionalProperties": false
+      }
+    },
+    "campaigns": {
+      "description": "Campagne aggiunte all'elenco: JSON nella cartella della mod; il loro `map` parte da lì (`../../missions/hue_city.json` = mappa del gioco)\n\nCampaigns added to the list: JSON in the mod folder; their `map` starts from there (`../../missions/hue_city.json` = game map)",
+      "markdownDescription": "Campagne aggiunte all'elenco: JSON nella cartella della mod; il loro `map` parte da lì (`../../missions/hue_city.json` = mappa del gioco)\n\n*Campaigns added to the list: JSON in the mod folder; their `map` starts from there (`../../missions/hue_city.json` = game map)*",
+      "type": "array",
+      "items": {
+        "type": "string"
       }
     }
   },
@@ -1293,6 +1345,106 @@
             "commander",
             "nva"
           ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "perk": {
+      "description": "Perk\n\nPerk",
+      "markdownDescription": "Perk\n\n*Perk*",
+      "type": "object",
+      "properties": {
+        "labels": {
+          "description": "Testi per lingua; i perk del gioco li prendono dalle traduzioni\n\nTexts per language; the game's perks take them from the translations",
+          "markdownDescription": "Testi per lingua; i perk del gioco li prendono dalle traduzioni\n\n*Texts per language; the game's perks take them from the translations*",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Nome del perk\n\nPerk name",
+                "markdownDescription": "Nome del perk\n\n*Perk name*",
+                "type": "string"
+              },
+              "desc": {
+                "description": "Effetto, nel suggerimento\n\nEffect, in the tooltip",
+                "markdownDescription": "Effetto, nel suggerimento\n\n*Effect, in the tooltip*",
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "icon": {
+          "description": "Icona (emoji)\n\nIcon (emoji)",
+          "markdownDescription": "Icona (emoji)\n\n*Icon (emoji)*",
+          "type": "string"
+        },
+        "hp": {
+          "description": "Punti ferita in più\n\nExtra hit points",
+          "markdownDescription": "Punti ferita in più\n\n*Extra hit points*",
+          "type": "integer"
+        },
+        "overwatchAtk": {
+          "description": "ATK in più in overwatch\n\nExtra ATK on overwatch",
+          "markdownDescription": "ATK in più in overwatch\n\n*Extra ATK on overwatch*",
+          "type": "integer"
+        },
+        "noise": {
+          "description": "Rumore degli spari (negativo = più silenzioso; esplosivi esclusi)\n\nGunfire noise (negative = quieter; explosives excluded)",
+          "markdownDescription": "Rumore degli spari (negativo = più silenzioso; esplosivi esclusi)\n\n*Gunfire noise (negative = quieter; explosives excluded)*",
+          "type": "integer"
+        },
+        "heal": {
+          "description": "HP in più curati dall'abilità di cura\n\nExtra HP restored by the heal ability",
+          "markdownDescription": "HP in più curati dall'abilità di cura\n\n*Extra HP restored by the heal ability*",
+          "type": "integer"
+        },
+        "vision": {
+          "description": "Raggio visivo in più\n\nExtra vision radius",
+          "markdownDescription": "Raggio visivo in più\n\n*Extra vision radius*",
+          "type": "integer"
+        },
+        "trapSense": {
+          "description": "Individua trappole e tunnel come il geniere\n\nSpots traps and tunnels like the Engineer",
+          "markdownDescription": "Individua trappole e tunnel come il geniere\n\n*Spots traps and tunnels like the Engineer*",
+          "type": "boolean"
+        },
+        "requires": {
+          "description": "Campi che la classe del soldato deve avere per riceverlo\n\nFields the soldier's class must have to get it",
+          "markdownDescription": "Campi che la classe del soldato deve avere per riceverlo\n\n*Fields the soldier's class must have to get it*",
+          "type": "object",
+          "properties": {
+            "special": {
+              "description": "Abilità della classe\n\nClass ability",
+              "markdownDescription": "Abilità della classe\n\n*Class ability*",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "suppression",
+                    "overwatch",
+                    "demolition",
+                    "heal"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "marksman": {
+              "description": "Solo tiratori scelti (o solo gli altri, con `false`)\n\nMarksmen only (or only the others, with `false`)",
+              "markdownDescription": "Solo tiratori scelti (o solo gli altri, con `false`)\n\n*Marksmen only (or only the others, with `false`)*",
+              "type": "boolean"
+            },
+            "trapSense": {
+              "description": "Solo classi con `trapSense` (o senza, con `false`)\n\nClasses with `trapSense` only (or without, with `false`)",
+              "markdownDescription": "Solo classi con `trapSense` (o senza, con `false`)\n\n*Classes with `trapSense` only (or without, with `false`)*",
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

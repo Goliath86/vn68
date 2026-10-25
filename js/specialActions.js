@@ -5,8 +5,11 @@ async function handleSpecialAction(col, row) {
   if (unitSpecial(u) === "heal") {
     const ally = G.reachable.find((t) => t.col === col && t.row === row);
     if (ally) {
-      const healed = Math.min(3, ally.maxHp - ally.hp);
+      // Perk "heal" della campagna: HP curati in più
+      const healed = Math.min(3 + perkSum(u, "heal"), ally.maxHp - ally.hp);
       ally.hp += healed;
+      // Cure contate per l'esperienza del medico (campagna)
+      if (healed > 0 || ally.bleeding) u.heals = (u.heals || 0) + 1;
       statAdd("medicHeal", healed);
       if (ally.bleeding) statAdd("bleedStopped");
       tutorialEvent("special", { cls: u.cls, kind: "heal", bleeding: !!ally.bleeding });

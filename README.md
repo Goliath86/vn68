@@ -338,6 +338,86 @@ Esempi pratici:
 
 ---
 
+## Campagna
+
+La scheda **🎖 Campagna** del menu porta a una serie di operazioni giocate da un **plotone di 8 soldati con nome**, di cui se ne schierano 4 alla volta. Quello che succede in missione resta:
+
+| Esito del soldato a fine missione | Conseguenza |
+|---|---|
+| Illeso (HP sopra il 60%) | pronto per la prossima operazione |
+| Ferito (HP ≤ 60%) | fuori 1 operazione |
+| Ferito grave (HP < 30% o emorragia in corso) | fuori 2 operazioni |
+| Caduto | morto per sempre (muro dei caduti); in una missione **vinta** ha 1 probabilità su 3 di essere invece evacuato in elicottero, fuori 3 operazioni |
+
+Chi resta al comando recupera un'operazione di convalescenza ogni volta che il plotone ne gioca una.
+
+**Comando (HQ).** Tra una missione e l'altra si vedono il briefing, il plotone e le requisizioni. Si scelgono i soldati da schierare (tutti quelli pronti, fino a 4) e, se l'operazione ne offre più d'una, la missione. Se nessuno è pronto, **Riposo** fa passare un'operazione ai feriti.
+
+**Esperienza e gradi.** A fine missione ogni soldato guadagna XP: +1 se sopravvive, +1 per ogni VC ucciso (anche con esplosivi, overwatch, artiglieria, napalm o sigillando i tunnel), +1 se la missione è vinta, +1 al medico per ogni cura.
+
+| Grado | XP | Bonus |
+|---|---|---|
+| Soldato (Pvt.) | 0 | — |
+| Soldato scelto (PFC) | 3 | +1 HP |
+| Caporale (Cpl.) | 7 | scelta di un perk tra 2 |
+| Sergente (Sgt.) | 12 | secondo perk, +1 HP |
+
+Perk: **Mano ferma** (+1 ATK in overwatch, cecchino), **Pellaccia** (+2 HP), **Silenzioso** (spari −1 di rumore), **Esploratore** (individua trappole e tunnel come il geniere), **Medico da campo** (cura 1 HP in più). I perk sono dati di `config.json` (`perks`): si possono cambiare o aggiungere.
+
+**Punti requisizione (PR).** Si parte con 2. Una missione vinta ne dà 3 (o la ricompensa indicata dalla missione), +1 se nessuno è ferito o caduto; ogni caduto costa 1. All'HQ si spendono in:
+
+| Spesa | Costo | Effetto |
+|---|---|---|
+| Rimpiazzo | 2 PR | nuovo soldato semplice della classe scelta (massimo 8 nel plotone) |
+| Cura accelerata | 1 PR | un ferito torna subito disponibile |
+| Munizioni extra | 1 PR | per la prossima operazione: +1 caricatore di riserva e +1 granata/fumogeno a testa |
+| Salva d'artiglieria | 2 PR | +1 uso della radio (serve il geniere che la porta) |
+| Attacco al napalm | 3 PR | +1 attacco al napalm (serve il geniere) |
+
+Le dotazioni si possono restituire finché l'operazione non parte.
+
+**Sconfitta e ritirata.** Una missione fallita si può ritentare, ma i caduti restano caduti. Abbandonare la missione con ⌂ è una **ritirata**: conta come missione fallita, i soldati tornano come erano all'ultimo salvataggio, senza XP né PR. La campagna è vinta dopo l'ultima operazione ed è persa quando, contando i feriti e i rimpiazzi che si possono pagare, non si arriva a 4 soldati.
+
+**Operazioni a scelta e pressione VC.** Nella **Campagna dinamica** (generata dal seed, su mappe procedurali) ogni operazione offre tre missioni: **facile** (−2 VC, 2 PR), **normale** (3 PR), **difficile** (+2 VC, 5 PR). Vincere una facile alza la **pressione VC** di 1 (fino a 4), una difficile la abbassa: ogni punto di pressione aggiunge un VC alle missioni successive. I VC crescono comunque operazione dopo operazione.
+
+La campagna in corso resta nel browser (`localStorage`); la missione in corso ha un salvataggio suo, separato da quello delle partite libere, e compare in un secondo banner **riprendi** nel menu.
+
+### Creare una campagna
+
+Una campagna è un JSON in `missions/campaigns/`, elencato in `missions/campaigns/index.json` (`{ "campaigns": ["delta68.json", "dynamic.json"] }`):
+
+```json
+{
+  "startRoster": ["assault", "assault", "sniper", "sniper", "engineer", "engineer", "medic", "medic"],
+  "difficulty": { "reinforcementTurn": [6, 4] },
+  "operations": [
+    { "id": "op1", "map": "rung_sat.json", "missionType": "recon" },
+    { "id": "op2", "choices": [
+      { "id": "op2_pilot", "generator": "jungle", "size": "small", "missionType": "rescue_pilot" },
+      { "id": "op2_raid", "map": "rung_sat.json", "missionType": "search_destroy", "night": true, "reward": 4,
+        "overrides": { "vcCount": 7 } }
+    ] }
+  ],
+  "rules": { "medevacChance": 0 },
+  "translations": {
+    "it": { "name": "La mia campagna", "description": "…",
+            "ops": { "op1": { "name": "Operazione Mangrovia", "briefing": "…" }, "op2": { "name": "…" },
+                     "op2_pilot": { "name": "…", "briefing": "…" }, "op2_raid": { "name": "…", "briefing": "…" } } },
+    "en": { "…": "…" }
+  }
+}
+```
+
+- Un'**operazione** è una missione (`map` in `missions/` oppure `generator` + `size`, `missionType`, `night`, `reward`) o un elenco `choices` di missioni tra cui scegliere.
+- **`overrides`** cambia i campi della mappa per quell'operazione (VC, rinforzi, composizione, armi, `tuning`…), uniti come il `tuning`.
+- **`difficulty`** è una curva tra la prima e l'ultima operazione (`vcCount`, `reinforcementTurn`, `vcMix`), applicata prima degli `overrides`.
+- **`procedural`** al posto di `operations` genera le operazioni dal seed (numero, scelte, generatori, tipi di missione, probabilità di notte).
+- **`rules`** cambia le regole: plotone, XP, gradi, convalescenza, evacuazione, PR, costi, dotazioni, livelli e pressione. `"medevacChance": 0` = morte sempre definitiva.
+
+Tutti i campi sono nella [guida ai campi](docs/FIELDS.md#campaign); `node tools/validate.js --all` controlla anche le campagne (mappe esistenti, tipi di missione giocabili sulla mappa, campi di `overrides`). Il simulatore gioca campagne intere col bot: `node tools/sim/run.js --campaign delta68 --games 20` (con `--variant` per confrontare regole diverse, es. `"CAMPAIGN_RULES.medevacChance=0.5"`).
+
+---
+
 ## Salvataggio automatico
 
 Il gioco **salva automaticamente** la partita all'inizio di ogni turno giocatore, usando il localStorage del browser. Non è necessaria alcuna azione da parte del giocatore.
@@ -927,8 +1007,9 @@ Una mod raccoglie in una cartella sua classi, armi, nemici e mappe, senza toccar
 mods/
   index.json              elenco delle mod: { "mods": ["nva_regulars"] }
   nva_regulars/
-    mod.json              descrizione, aggiunte a config.json, mappe
+    mod.json              descrizione, aggiunte a config.json, mappe, campagne
     avamposto.json        una mappa della mod
+    campaign.json         una campagna della mod
 ```
 
 L'elenco in `mods/index.json` serve perché il gioco, da sito statico, non può leggere il contenuto di una cartella; l'ordine è quello in cui le mod si applicano (se due cambiano la stessa cosa vince l'ultima).
@@ -954,6 +1035,7 @@ L'elenco in `mods/index.json` serve perché il gioco, da sito statico, non può 
 
 - **`config`** ha gli stessi campi di `config.json` e si aggiunge a quello: classi e composizioni vengono unite, immagini e suoni sostituiti per chiave, le armi seguono le regole del campo `weapons` delle mappe (un array sostituisce il loadout della classe, un oggetto cambia le armi per `id`).
 - **`maps`** ha le stesse voci di `missions/catalog.json`; `file` è il JSON della mappa nella cartella della mod. Le mappe delle mod sono mappe normali e possono usare le classi della mod.
+- **`campaigns`** elenca le [campagne](#campagna) della mod, JSON nella sua cartella (`"campaigns": ["campaign.json"]`); il loro `map` parte da lì, quindi una mappa del gioco si cita con `"../../missions/hue_city.json"`.
 - **I percorsi** in `mod.json` e nelle sue mappe (immagini, suoni, musiche, texture, `image`) partono dalla cartella della mod; `../../` risale alla cartella del gioco, per riusarne i file (`"../../assets/ak47.mp3"`).
 
 La mod d'esempio `mods/nva_regulars/` mostra tutte le parti. Una mod con errori (campi sbagliati, classi inesistenti, file mancanti) non viene applicata: il menu delle mod mostra il primo errore e la console del browser l'elenco completo. `node tools/validate.js --all` controlla anche le mod e le loro mappe; tutti i campi di `mod.json` sono nella [guida ai campi](docs/FIELDS.md#mod).

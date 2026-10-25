@@ -6,65 +6,15 @@ function initModal() {
   document.getElementById("btn-menu").style.display = "none";
   document.getElementById("tutorial-overlay").classList.add("hidden");
   document.getElementById("tutorial-panel").classList.add("hidden");
+  document.getElementById("campaign-overlay").classList.add("hidden");
   document.getElementById("btn-mods").style.display = MOD_LIST.length ? "" : "none";
 
-  // "Resume game" banner if a savegame exists
-  const existingBanner = document.getElementById("resume-banner");
-  if (existingBanner) existingBanner.remove();
-
-  const save = loadSave();
-  if (save) {
-    const savedDate = new Date(save.savedAt).toLocaleString();
-
-    const missionLabel =
-      MISSION_TYPES[save.missionType]?.label || save.missionType;
-    // Nome nella lingua attuale, non in quella del salvataggio
-    const mapName = save.mapData?.translations?.[LANG]?.name?.toUpperCase() ?? save.mapName;
-    // Partita salvata con mod ora spente: si riprende solo riattivandole
-    const missingMods = missingSaveMods(save).map((id) => {
-      const m = MOD_LIST.find((x) => x.id === id);
-      return m ? modLabels(m).name : id;
-    });
-
-    const banner = document.createElement("div");
-    banner.id = "resume-banner";
-    banner.style.cssText =
-      "background:#1a2a12;border:1px solid #5a8a30;border-radius:3px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;";
-    banner.innerHTML = `
-      <div style="text-align:left;line-height:1.5">
-        <div style="font-family:var(--stamp-font);font-size:13px;color:var(--tan);letter-spacing:1px">${t("modal.resume_title")}</div>
-        <div style="font-size:11px;color:var(--paper-dark)">${mapName} · ${missionLabel} · ${t("modal.resume_turn", { turn: save.turn })}</div>
-        <div style="font-size:10px;color:#556644">${savedDate}</div>
-        ${missingMods.length ? `<div style="font-size:11px;color:#d9764a">${t("mods.save_missing", { mods: missingMods.join(", ") })}</div>` : ""}
-        <div class="gen-bar hidden" id="resume-gen-bar"><div class="gen-fill" id="resume-gen-fill"></div></div>
-      </div>
-      <button class="btn" id="btn-resume" style="font-size:12px;padding:7px 16px;white-space:nowrap" ${missingMods.length ? "disabled" : ""}>${t("buttons.resume")}</button>
-    `;
-
-    // Sotto i pulsanti della lingua, sopra il titolo
-    const stepMap = document.getElementById("modal-step-map");
-    stepMap.insertBefore(banner, stepMap.querySelector("h2"));
-
-    document
-      .getElementById("btn-resume")
-      .addEventListener("click", async () => {
-        const s = loadSave();
-        if (!s) return;
-        // Terreno procedurale disegnato a passi (render.js:prebuildTerrainCache)
-        // mentre la musica sfuma, con la barra nel banner
-        const btn = document.getElementById("btn-resume");
-        const bar = document.getElementById("resume-gen-bar");
-        btn.disabled = true;
-        if (!s.mapData.image) bar.classList.remove("hidden");
-        await Promise.all([
-          ambientFadeOut(800),
-          prebuildTerrainCache(s.mapData, (p) => {
-            document.getElementById("resume-gen-fill").style.width = `${Math.round(p * 100)}%`;
-          }),
-        ]);
-        resumeGame(s);
-      });
-  }
+  // "Resume game" banner if a savegame exists: partita libera e operazione
+  // di una campagna (salvataggi separati, saveGame.js:currentSaveKey)
+  document.querySelectorAll(".resume-banner").forEach((el) => el.remove());
+  addResumeBanner(SAVE_KEY);
+  // Operazione salvata solo se la campagna la aspetta ancora
+  if (loadCampaign()?.inProgress) addResumeBanner(CAMPAIGN_SAVE_KEY);
 
   const grid = document.getElementById("map-select-grid");
   grid.innerHTML = "";
@@ -73,16 +23,17 @@ function initModal() {
   // Map cards
   MAPS.forEach((m) => {
     const card = document.createElement("div");
-    card.className = m.tutorial ? "map-card tutorial-card" : "map-card";
-    if (m.tutorial) {
-      // Addestramento: apre direttamente l'elenco delle lezioni
+    card.className = m.tutorial || m.campaign ? "map-card tutorial-card" : "map-card";
+    if (m.tutorial || m.campaign) {
+      // Addestramento e campagna: aprono direttamente la loro finestra
       card.innerHTML = `
         <div class="map-icon">${m.icon}</div>
         <div class="map-name">${m.label}</div>
         <div class="map-sub">${m.subtitle}</div>`;
       card.addEventListener("click", () => {
         sfx("click");
-        openTutorialModal();
+        if (m.campaign) openCampaignModal();
+        else openTutorialModal();
       });
       grid.appendChild(card);
       return;
@@ -120,6 +71,64 @@ function initModal() {
       .forEach((el) => el.classList.remove("active"));
     selectedMap = null;
   };
+}
+
+// Banner "riprendi" di un salvataggio (key: partita libera o campagna)
+function addResumeBanner(key) {
+  const save = loadSave(key);
+  if (!save) return;
+  const campaign = key === CAMPAIGN_SAVE_KEY;
+  const savedDate = new Date(save.savedAt).toLocaleString();
+
+  const missionLabel =
+    MISSION_TYPES[save.missionType]?.label || save.missionType;
+  // Nome nella lingua attuale, non in quella del salvataggio
+  const mapName = save.mapData?.translations?.[LANG]?.name?.toUpperCase() ?? save.mapName;
+  // Partita salvata con mod ora spente: si riprende solo riattivandole
+  const missingMods = missingSaveMods(save).map((id) => {
+    const m = MOD_LIST.find((x) => x.id === id);
+    return m ? modLabels(m).name : id;
+  });
+  const title = campaign
+    ? t("campaign.resume_banner", { op: campaignOpName(CAMPAIGN, save.missionState?.campaign?.opIndex ?? CAMPAIGN.opIndex) })
+    : t("modal.resume_title");
+
+  const banner = document.createElement("div");
+  banner.className = "resume-banner";
+  banner.style.cssText =
+    "background:#1a2a12;border:1px solid #5a8a30;border-radius:3px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;";
+  banner.innerHTML = `
+    <div style="text-align:left;line-height:1.5">
+      <div style="font-family:var(--stamp-font);font-size:13px;color:var(--tan);letter-spacing:1px">${title}</div>
+      <div style="font-size:11px;color:var(--paper-dark)">${mapName} · ${missionLabel} · ${t("modal.resume_turn", { turn: save.turn })}</div>
+      <div style="font-size:10px;color:#556644">${savedDate}</div>
+      ${missingMods.length ? `<div style="font-size:11px;color:#d9764a">${t("mods.save_missing", { mods: missingMods.join(", ") })}</div>` : ""}
+      <div class="gen-bar hidden"><div class="gen-fill"></div></div>
+    </div>
+    <button class="btn" style="font-size:12px;padding:7px 16px;white-space:nowrap" ${missingMods.length ? "disabled" : ""}>${t("buttons.resume")}</button>
+  `;
+
+  // Sotto i pulsanti della lingua, sopra il titolo
+  const stepMap = document.getElementById("modal-step-map");
+  stepMap.insertBefore(banner, stepMap.querySelector("h2"));
+
+  const btn = banner.querySelector("button");
+  btn.addEventListener("click", async () => {
+    const s = loadSave(key);
+    if (!s) return;
+    // Terreno procedurale disegnato a passi (render.js:prebuildTerrainCache)
+    // mentre la musica sfuma, con la barra nel banner
+    const bar = banner.querySelector(".gen-bar");
+    btn.disabled = true;
+    if (!s.mapData.image) bar.classList.remove("hidden");
+    await Promise.all([
+      ambientFadeOut(800),
+      prebuildTerrainCache(s.mapData, (p) => {
+        banner.querySelector(".gen-fill").style.width = `${Math.round(p * 100)}%`;
+      }),
+    ]);
+    resumeGame(s);
+  });
 }
 
 async function loadMissionStep(map) {

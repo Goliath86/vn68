@@ -81,7 +81,7 @@ function rebasePaths(node, v, base) {
 }
 
 function _rebaseRef(ref, v, base) {
-  if (ref === "file" || ref === "missionFile") return modPath(base, v);
+  if (ref === "file" || ref === "missionFile" || ref === "campaignFile") return modPath(base, v);
   if (ref === "texture") return TEXTURE_IMAGE_RE.test(v) ? modPath(base, v) : v;
   if (ref === "missionImage") return "../" + modPath(base, v);
   return v;
@@ -133,6 +133,8 @@ function applyMod(m) {
   const mod = rebasePaths(SCHEMA_MOD, JSON.parse(JSON.stringify(m.data)), `${MODS_DIR}${m.id}/`);
   applyConfigData(mod.config);
   for (const e of mod.maps || []) CATALOG.push({ ...e, mod: m.id });
+  // Campagne della mod (campaign.js): percorsi già dalla sua cartella
+  CAMPAIGN_FILES.push(...(mod.campaigns || []));
   m.active = true;
   ACTIVE_MODS.push(m.id);
 }

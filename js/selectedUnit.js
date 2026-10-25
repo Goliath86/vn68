@@ -91,6 +91,9 @@ function unitStatusChips(u, def) {
   // Missione
   if (u.carriesPilot)
     c.push(statusChip("✈", t("units.chips.pilot"), "gold", t("units.status.carry_pilot")));
+  // Perk del soldato (campagna)
+  for (const id of u.perks || [])
+    if (PERKS[id]) c.push(statusChip(PERKS[id].icon || "★", perkText(id, "name"), "gold", perkText(id, "desc")));
   return c;
 }
 

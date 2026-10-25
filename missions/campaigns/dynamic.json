@@ -1,0 +1,28 @@
+{
+  "$schema": "../../schemas/campaign.schema.json",
+  "icon": "🎲",
+  "procedural": {
+    "operations": 6,
+    "choices": 3,
+    "sizes": ["small", "medium"],
+    "nightChance": 0.25
+  },
+  "difficulty": {
+    "vcCount": [5, 10],
+    "reinforcementTurn": [7, 4],
+    "vcMix": [
+      { "grunt": 4, "sniper_vc": 1, "commander": 0.5 },
+      { "grunt": 3, "sniper_vc": 2, "commander": 1.5 }
+    ]
+  },
+  "translations": {
+    "it": {
+      "name": "Campagna dinamica",
+      "description": "Sei operazioni generate su mappe procedurali, ognuna con tre missioni a scelta. I VC si rafforzano a ogni operazione e scegliere sempre la via facile li rende più aggressivi."
+    },
+    "en": {
+      "name": "Dynamic campaign",
+      "description": "Six operations generated on procedural maps, each with three missions to choose from. The VC grow stronger at every operation, and always taking the easy way makes them more aggressive."
+    }
+  }
+}

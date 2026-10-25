@@ -8,9 +8,10 @@
 // Opzioni:
 //   <file> …        mappe, lezioni (missions/tutorial/*.json), catalog.json,
 //                   missions/tutorial/index.json, config.json, mods/index.json,
-//                   mods/<mod>/mod.json e le mappe delle mod
-//   --all           config, catalogo e sue mappe, tutorial, mod e loro mappe,
-//                   mappe procedurali,
+//                   mods/<mod>/mod.json e le mappe delle mod, campagne
+//                   (missions/campaigns/*.json e quelle delle mod)
+//   --all           config, catalogo e sue mappe, tutorial, campagne, mod e
+//                   loro mappe e campagne, mappe procedurali,
 //                   guida ai campi e JSON Schema aggiornati (tools/schema-docs.js)
 //   --seeds N       seed per generatore e dimensione con --all (default 20)
 //   --lang it|en    lingua dei messaggi (default it)
@@ -103,6 +104,15 @@ async function main() {
     }
   };
 
+  // Campagne delle mod: elencate nel campo "campaigns" del loro mod.json
+  const modCampaigns = (file) => {
+    const m = /^mods\/([^/]+)\//.exec(file);
+    const mod = m && exists(`mods/${m[1]}/mod.json`) ? readJson(`mods/${m[1]}/mod.json`) : null;
+    return (mod?.campaigns || []).map((f) => path.posix.normalize(`mods/${m[1]}/${f}`));
+  };
+  // Mappe citate dalle campagne: lette così come sono (serve supportedMissions)
+  ctx.__missionData = (p) => (exists(p) ? readJson(p) : null);
+
   let tutorialIndex = null;
   const checkFile = (file) => {
     const data = load(file);
@@ -111,10 +121,17 @@ async function main() {
     if (file === "config.json") return print(file, run(`validateConfig(__data, ${vopts})`));
     if (file === "missions/catalog.json") return print(file, run(`validateCatalog(__data, ${vopts})`));
     if (file === "mods/index.json") return print(file, run(`validateModIndex(__data, ${vopts})`));
+    if (file === "missions/campaigns/index.json") return print(file, run(`validateCampaignIndex(__data, ${vopts})`));
+    if (file.startsWith("missions/campaigns/")) {
+      return print(file, run("validateCampaign(__data, { fileExists: __exists, missionData: __missionData })"));
+    }
     // Mod: percorsi dalla sua cartella; le sue mappe con i percorsi risolti
     ctx.__base = file.slice(0, file.lastIndexOf("/") + 1);
     if (/^mods\/[^/]+\/mod\.json$/.test(file)) {
       return print(file, run(`validateMod(__data, { fileExists: __exists, base: __base })`));
+    }
+    if (modCampaigns(file).includes(file)) {
+      return print(file, run("validateCampaign(__data, { fileExists: __exists, base: __base, missionData: __missionData })"));
     }
     if (file.startsWith("mods/")) run("rebasePaths(SCHEMA_MISSION, __data, __base)");
     if (file === "missions/tutorial/index.json") {
@@ -138,6 +155,10 @@ async function main() {
     files.push("missions/tutorial/index.json");
     const index = JSON.parse(fs.readFileSync(path.join(ROOT, "missions/tutorial/index.json"), "utf8"));
     for (const l of index.lessons || []) files.push("missions/tutorial/" + l.file);
+    if (exists("missions/campaigns/index.json")) {
+      files.push("missions/campaigns/index.json");
+      for (const f of readJson("missions/campaigns/index.json")?.campaigns || []) files.push("missions/campaigns/" + f);
+    }
     if (modIds.length) files.push("mods/index.json");
     for (const id of modIds) {
       const file = `mods/${id}/mod.json`;
@@ -146,6 +167,7 @@ async function main() {
       for (const e of mod?.maps || []) {
         if (e.file) files.push(path.posix.normalize(`mods/${id}/${e.file}`));
       }
+      for (const f of mod?.campaigns || []) files.push(path.posix.normalize(`mods/${id}/${f}`));
     }
   }
   for (const f of [...new Set(files)]) checkFile(f);

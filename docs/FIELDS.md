@@ -2,7 +2,7 @@
 
 > Generata da `js/schema.js` con `node tools/schema-docs.js`: non modificarla a mano. [English version](FIELDS_EN.md)
 
-Tutti i campi letti dal gioco nei file moddabili: mappe, lezioni dell'addestramento, catalogo delle mappe, `config.json` e mod. Per come si crea una mappa e per gli esempi vedi il [README](../README.md#creare-una-nuova-missione); `node tools/validate.js --all` controlla i file con queste stesse regole.
+Tutti i campi letti dal gioco nei file moddabili: mappe, lezioni dell'addestramento, catalogo delle mappe, `config.json`, mod e campagne. Per come si crea una mappa e per gli esempi vedi il [README](../README.md#creare-una-nuova-missione); `node tools/validate.js --all` controlla i file con queste stesse regole.
 
 ## Autocompletamento nell'editor
 
@@ -22,6 +22,12 @@ I JSON Schema in `schemas/` danno suggerimenti, descrizioni e controlli mentre s
 - [Indice dell'addestramento (`missions/tutorial/index.json`)](#tutorial-index)
 - [Mod (`mods/<cartella>/mod.json`)](#mod)
 - [Elenco delle mod (`mods/index.json`)](#mod-index)
+- [Perk](#perk)
+- [Campagna (`missions/campaigns/<nome>.json`)](#campaign)
+- [Operazione: una missione (`map` o `generator` + `missionType`) oppure `choices`](#campaign-op)
+- [Missione di un'operazione](#campaign-choice)
+- [Regole della campagna](#campaign-rules)
+- [Elenco delle campagne (`missions/campaigns/index.json`)](#campaign-index)
 - [Gruppi di `tuning`](#tuning)
 
 <a id="map"></a>
@@ -286,6 +292,10 @@ Campi scritti dal gioco, accettati senza avvisi: `name`, `desc`, `specialLabel`.
 | `vcMix.spawn` | oggetto { classe VC → numero ≥ 0 } | Schieramento iniziale. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
 | `vcMix.ambush` | oggetto { classe VC → numero ≥ 0 } | Imboscata. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
 | `vcMix.reinforcement` | oggetto { classe VC → numero ≥ 0 } | Rinforzi. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
+| `perks` | oggetto { perk → [Perk](#perk) o `null` } | Perk dei soldati della campagna: i campi scritti cambiano un perk esistente (`steady`, `tough`, `quiet`, `pointman`, `fieldMedic`), un nome nuovo ne aggiunge uno, `null` lo toglie. |
+| `soldierNames` | oggetto | Nomi dei soldati del plotone in campagna; senza, quelli del gioco. |
+| `soldierNames.first` | array di testo | Nomi. |
+| `soldierNames.last` | array di testo | Cognomi. |
 
 <a id="catalog"></a>
 
@@ -298,6 +308,7 @@ Il file è un array di voci con questi campi.
 | `file` | testo | JSON della mappa in `missions/`. → file in `missions/` (in una mod: nella sua cartella). |
 | `generator` | testo | Mappa procedurale (al posto di `file`). → generatore procedurale (attuali: `jungle`, `urban`). |
 | `tutorial` | booleano | Scheda dell'addestramento (lezioni da `missions/tutorial/index.json`). |
+| `campaign` | booleano | Scheda della campagna (campagne da `missions/campaigns/index.json` e dalle mod). |
 | `icon` | testo | Icona (emoji). |
 | `color` | testo | Colore della scheda. → colore `#rrggbb`. |
 | `theaterColor` | testo | Colore dell'etichetta del teatro. → colore `#rrggbb`. |
@@ -352,7 +363,12 @@ Una mod è una cartella `mods/<cartella>/` con questo `mod.json`, elencata in [`
 | `config.vcMix.spawn` | oggetto { classe VC → numero ≥ 0 } | Schieramento iniziale. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
 | `config.vcMix.ambush` | oggetto { classe VC → numero ≥ 0 } | Imboscata. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
 | `config.vcMix.reinforcement` | oggetto { classe VC → numero ≥ 0 } | Rinforzi. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
+| `config.perks` | oggetto { perk → [Perk](#perk) o `null` } | Perk dei soldati della campagna: i campi scritti cambiano un perk esistente (`steady`, `tough`, `quiet`, `pointman`, `fieldMedic`), un nome nuovo ne aggiunge uno, `null` lo toglie. |
+| `config.soldierNames` | oggetto | Nomi dei soldati del plotone in campagna; senza, quelli del gioco. |
+| `config.soldierNames.first` | array di testo | Nomi. |
+| `config.soldierNames.last` | array di testo | Cognomi. |
 | `maps` | array di [Voce del menu delle mappe](#catalog) | Mappe aggiunte al menu, come le voci di `missions/catalog.json`; `file` è il JSON della mappa nella cartella della mod, e anche i percorsi dentro la mappa (immagine, suoni, texture) partono da lì. |
+| `campaigns` | array di testo | Campagne aggiunte all'elenco: JSON nella cartella della mod; il loro `map` parte da lì (`../../missions/hue_city.json` = mappa del gioco). → file in `missions/campaigns/` (in una mod: nella sua cartella). |
 
 <a id="mod-index"></a>
 
@@ -362,6 +378,154 @@ Una mod è una cartella `mods/<cartella>/` con questo `mod.json`, elencata in [`
 |---|---|---|
 | `$schema` | testo | Percorso del JSON Schema per l'editor (es. `../schemas/mission.schema.json`); ignorato dal gioco. |
 | `mods` | array di testo | **Obbligatorio.** Cartelle delle mod in `mods/`, nell'ordine in cui si applicano. → cartella in `mods/` con un `mod.json`. |
+
+<a id="perk"></a>
+
+## Perk
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `labels` | oggetto { lingua → oggetto } | Testi per lingua; i perk del gioco li prendono dalle traduzioni. |
+| `labels.<lingua>.name` | testo | Nome del perk. |
+| `labels.<lingua>.desc` | testo | Effetto, nel suggerimento. |
+| `icon` | testo | Icona (emoji). |
+| `hp` | intero | Punti ferita in più. |
+| `overwatchAtk` | intero | ATK in più in overwatch. |
+| `noise` | intero | Rumore degli spari (negativo = più silenzioso; esplosivi esclusi). |
+| `heal` | intero | HP in più curati dall'abilità di cura. |
+| `vision` | intero | Raggio visivo in più. |
+| `trapSense` | booleano | Individua trappole e tunnel come il geniere. |
+| `requires` | oggetto | Campi che la classe del soldato deve avere per riceverlo. |
+| `requires.special` | `suppression` \| `overwatch` \| `demolition` \| `heal` o `null` | Abilità della classe. |
+| `requires.marksman` | booleano | Solo tiratori scelti (o solo gli altri, con `false`). |
+| `requires.trapSense` | booleano | Solo classi con `trapSense` (o senza, con `false`). |
+
+<a id="campaign"></a>
+
+## Campagna (`missions/campaigns/<nome>.json`)
+
+Una campagna (`missions/campaigns/<nome>.json`, elencata in [`missions/campaigns/index.json`](#campaign-index) o nel campo `campaigns` di una mod) è una serie di [operazioni](#campaign-op) giocate da un plotone persistente. Vedi il [README](../README.md#campagna).
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `$schema` | testo | Percorso del JSON Schema per l'editor (es. `../schemas/mission.schema.json`); ignorato dal gioco. |
+| `name` | testo o oggetto { lingua → testo } |  |
+| `description` | testo o oggetto { lingua → testo } |  |
+| `icon` | testo | Icona (emoji). |
+| `startRoster` | array di testo | Classi del plotone iniziale; default 2 per classe base. → classe US (attuali: `assault`, `sniper`, `engineer`, `medic`). |
+| `rules` | [Regole della campagna](#campaign-rules) |  |
+| `operations` | array di [Operazione: una missione (`map` o `generator` + `missionType`) oppure `choices`](#campaign-op) | Operazioni in ordine (campagna fissa). |
+| `procedural` | oggetto | Campagna procedurale: operazioni generate dal seed al posto di `operations`. |
+| `procedural.operations` | intero ≥ 1 | Numero di operazioni; default 5. |
+| `procedural.choices` | intero ≥ 1 | Missioni a scelta per operazione (facile, normale, difficile); default 3. |
+| `procedural.generators` | array di testo | Generatori usati; default tutti. → generatore procedurale (attuali: `jungle`, `urban`). |
+| `procedural.sizes` | array di `small` \| `medium` \| `large` | Dimensioni; default `small` e `medium`. |
+| `procedural.missionTypes` | array di testo | Tipi di missione; default tutti. → tipo di missione (attuali: `recon`, `search_destroy`, `rescue_pilot`, `capture_objective`). |
+| `procedural.nightChance` | numero 0–1 | Probabilità di una missione notturna; default 0.25. |
+| `difficulty` | oggetto | Curva di difficoltà, applicata prima degli `overrides` di ogni operazione. |
+| `difficulty.vcCount` | array di numero (2) | VC iniziali [prima, ultima operazione], interpolati. |
+| `difficulty.reinforcementTurn` | array di numero (2) | Turni tra i rinforzi [prima, ultima]. |
+| `difficulty.vcMix` | array di oggetto { classe VC → numero ≥ 0 } (2) | Composizione VC [prima, ultima]: pesi interpolati. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
+| `translations` | oggetto { lingua → oggetto } | Testi per lingua (`it`, `en`). |
+| `translations.<lingua>.name` | testo | Nome della campagna. |
+| `translations.<lingua>.description` | testo | Descrizione nell'elenco. |
+| `translations.<lingua>.victory` | testo | Testo della vittoria finale. |
+| `translations.<lingua>.defeat` | testo | Testo della sconfitta. |
+| `translations.<lingua>.ops` | oggetto { id → oggetto } | Testi delle operazioni e delle scelte per `id`. |
+| `translations.<lingua>.ops.<id>.name` | testo | Nome dell'operazione (o della scelta). |
+| `translations.<lingua>.ops.<id>.briefing` | testo | Briefing all'HQ. |
+
+<a id="campaign-op"></a>
+
+## Operazione: una missione (`map` o `generator` + `missionType`) oppure `choices`
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `id` | testo | Identificatore: i testi stanno in `translations.<lingua>.ops.<id>`; default `op<n>` (`op<n>_<m>` per le scelte). |
+| `map` | testo | JSON della mappa in `missions/` (in una mod: dalla sua cartella). → file in `missions/` (in una mod: nella sua cartella). |
+| `generator` | testo | Mappa procedurale (al posto di `map`). → generatore procedurale (attuali: `jungle`, `urban`). |
+| `size` | `small` \| `medium` \| `large` | Dimensione della mappa procedurale; default `small`. |
+| `seed` | intero ≥ 0 | Seed della mappa procedurale; default dal seed della campagna. |
+| `missionType` | testo | Tipo di missione (tra i `supportedMissions` della mappa). → tipo di missione (attuali: `recon`, `search_destroy`, `rescue_pilot`, `capture_objective`). |
+| `night` | booleano | Missione notturna. |
+| `tier` | testo | Livello della scelta (chiave di `rules.tiers`: `easy`, `normal`, `hard`): VC in più o in meno, ricompensa e pressione VC. |
+| `reward` | intero ≥ 0 | PR per la vittoria; default quella del livello o `rules.requisition.win`. |
+| `overrides` | [Mappa (`missions/<nome>.json`)](#map) |  |
+| `choices` | array di [Missione di un'operazione](#campaign-choice) | Missioni tra cui scegliere all'HQ (al posto dei campi della missione). |
+
+<a id="campaign-choice"></a>
+
+## Missione di un'operazione
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `id` | testo | Identificatore: i testi stanno in `translations.<lingua>.ops.<id>`; default `op<n>` (`op<n>_<m>` per le scelte). |
+| `map` | testo | JSON della mappa in `missions/` (in una mod: dalla sua cartella). → file in `missions/` (in una mod: nella sua cartella). |
+| `generator` | testo | Mappa procedurale (al posto di `map`). → generatore procedurale (attuali: `jungle`, `urban`). |
+| `size` | `small` \| `medium` \| `large` | Dimensione della mappa procedurale; default `small`. |
+| `seed` | intero ≥ 0 | Seed della mappa procedurale; default dal seed della campagna. |
+| `missionType` | testo | **Obbligatorio.** Tipo di missione (tra i `supportedMissions` della mappa). → tipo di missione (attuali: `recon`, `search_destroy`, `rescue_pilot`, `capture_objective`). |
+| `night` | booleano | Missione notturna. |
+| `tier` | testo | Livello della scelta (chiave di `rules.tiers`: `easy`, `normal`, `hard`): VC in più o in meno, ricompensa e pressione VC. |
+| `reward` | intero ≥ 0 | PR per la vittoria; default quella del livello o `rules.requisition.win`. |
+| `overrides` | [Mappa (`missions/<nome>.json`)](#map) |  |
+
+<a id="campaign-rules"></a>
+
+## Regole della campagna
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `rosterSize` | intero ≥ 1 | Soldati nel plotone; default 8. |
+| `deploySize` | intero 1–4 | Soldati schierati per missione (posizioni di partenza delle mappe: 4); default 4. |
+| `startRequisition` | intero ≥ 0 | PR iniziali; default 2. |
+| `xp` | oggetto | Esperienza per missione (niente in ritirata). |
+| `xp.survive` | intero ≥ 0 | Per chi sopravvive; default 1. |
+| `xp.kill` | intero ≥ 0 | Per ogni VC ucciso; default 1. |
+| `xp.win` | intero ≥ 0 | Per la vittoria; default 1. |
+| `xp.heal` | intero ≥ 0 | Per ogni cura del medico; default 1. |
+| `ranks` | array di oggetto | Gradi in ordine di XP; default Pvt 0, PFC 3 (+1 HP), Cpl 7 (perk), Sgt 12 (perk, +1 HP). |
+| `ranks[].id` | testo | **Obbligatorio.** Identificatore; testi da translations `campaign.ranks.<id>` o da `labels`. |
+| `ranks[].xp` | intero ≥ 0 | **Obbligatorio.** XP necessari. |
+| `ranks[].hp` | intero ≥ 0 | Punti ferita in più (si sommano ai gradi precedenti). |
+| `ranks[].perk` | booleano | Al grado si sceglie un perk. |
+| `ranks[].labels` | oggetto { lingua → oggetto } | Testi per lingua. |
+| `ranks[].labels.<lingua>.name` | testo | Nome. |
+| `ranks[].labels.<lingua>.short` | testo | Abbreviazione davanti al cognome. |
+| `perkChoices` | intero ≥ 1 | Perk offerti a ogni scelta; default 2. |
+| `recovery` | oggetto | Convalescenza in operazioni. |
+| `recovery.light` | intero ≥ 0 | Operazioni fuori per un ferito (HP ≤ 60%); default 1. |
+| `recovery.severe` | intero ≥ 0 | Per un ferito grave (HP < 30% o emorragia); default 2. |
+| `recovery.medevac` | intero ≥ 0 | Per un evacuato; default 3. |
+| `medevacChance` | numero 0–1 | Probabilità che un caduto in una missione vinta sia evacuato ferito invece che morto; default 1/3, 0 = morte definitiva. |
+| `requisition` | oggetto | Punti requisizione (PR) a fine missione. |
+| `requisition.win` | intero | PR per la vittoria; default 3. |
+| `requisition.clean` | intero | In più se nessuno è ferito o caduto; default 1. |
+| `requisition.kia` | intero | Per ogni caduto; default −1. |
+| `costs` | oggetto | Costi in PR all'HQ. |
+| `costs.replacement` | intero ≥ 0 | Rimpiazzo (nuovo soldato); default 2. |
+| `costs.fastHeal` | intero ≥ 0 | Cura accelerata (ferito subito disponibile); default 1. |
+| `supplies` | oggetto { dotazione → oggetto } | Dotazioni per una sola operazione; default `ammo` (1 PR), `artillery` (2 PR), `napalm` (3 PR). Testi da translations `campaign.supplies.<id>`. |
+| `supplies.<dotazione>.cost` | intero ≥ 0 | **Obbligatorio.** Costo in PR. |
+| `supplies.<dotazione>.field` | testo | Solo le armi con questo campo (es. `artillery`); senza, tutte. |
+| `supplies.<dotazione>.exclude` | array di testo | Escluse le armi con uno di questi campi. |
+| `supplies.<dotazione>.ammo` | intero ≥ 0 | Usi in più alle armi con `ammo`. |
+| `supplies.<dotazione>.mags` | intero ≥ 0 | Caricatori di riserva in più alle armi con `mags`. |
+| `tiers` | oggetto { livello → oggetto } | Livelli delle scelte; default `easy` (−2 VC, 2 PR, pressione +1), `normal` (3 PR), `hard` (+2 VC, 5 PR, pressione −1). |
+| `tiers.<livello>.vcCount` | intero | VC in più (o in meno). |
+| `tiers.<livello>.reward` | intero ≥ 0 | PR per la vittoria. |
+| `tiers.<livello>.pressure` | intero | Variazione della pressione VC dopo la vittoria. |
+| `pressureVc` | intero ≥ 0 | VC in più per punto di pressione; default 1. |
+| `maxPressure` | intero ≥ 0 | Pressione massima; default 4. |
+
+<a id="campaign-index"></a>
+
+## Elenco delle campagne (`missions/campaigns/index.json`)
+
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `$schema` | testo | Percorso del JSON Schema per l'editor (es. `../schemas/mission.schema.json`); ignorato dal gioco. |
+| `campaigns` | array di testo | **Obbligatorio.** Campagne in `missions/campaigns/`, in ordine. → file in `missions/campaigns/` (in una mod: nella sua cartella). |
 
 <a id="tuning"></a>
 

@@ -20,32 +20,38 @@ function saveGame() {
       missionState: G.missionState,
     };
 
-    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    localStorage.setItem(currentSaveKey(), JSON.stringify(state));
   } catch (e) {
     console.warn("[save] failed:", e);
   }
 }
 
-function clearSave() {
+// Le operazioni di una campagna hanno un salvataggio loro: una partita
+// libera non sovrascrive mai quella in corso (campaign.js)
+function currentSaveKey() {
+  return G.missionState?.campaign ? CAMPAIGN_SAVE_KEY : SAVE_KEY;
+}
+
+function clearSave(key = currentSaveKey()) {
   try {
-    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(key);
   } catch (e) {}
 }
 
-function loadSave() {
+function loadSave(key = SAVE_KEY) {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
 
     const s = JSON.parse(raw);
     if (s?.version !== 1) {
-      clearSave();
+      clearSave(key);
       return null;
     }
 
     return s;
   } catch (e) {
-    clearSave();
+    clearSave(key);
     return null;
   }
 }

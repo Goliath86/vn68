@@ -1,0 +1,46 @@
+{
+  "$schema": "../../schemas/campaign.schema.json",
+  "icon": "⭐",
+  "rules": { "startRequisition": 3 },
+  "operations": [
+    {
+      "id": "outpost",
+      "map": "avamposto.json",
+      "missionType": "search_destroy"
+    },
+    {
+      "id": "ridge",
+      "generator": "jungle",
+      "size": "medium",
+      "missionType": "capture_objective",
+      "overrides": { "vcCount": 8, "vcMix": { "nva": 2 } }
+    },
+    {
+      "id": "hue",
+      "map": "../../missions/hue_city.json",
+      "missionType": "search_destroy",
+      "night": true,
+      "overrides": { "vcCount": 9, "vcMix": { "nva": 3 } }
+    }
+  ],
+  "translations": {
+    "it": {
+      "name": "Altopiani '68 (mod)",
+      "description": "Campagna d'esempio della mod: tre operazioni contro i regolari NVA, dall'avamposto della mod fino a Hue.",
+      "ops": {
+        "outpost": { "name": "Operazione Cresta Rossa", "briefing": "Un avamposto NVA controlla la valle. Eliminate la guarnigione." },
+        "ridge": { "name": "Operazione Collina 881", "briefing": "I regolari NVA si sono trincerati sulla cresta: prendete e tenete le posizioni." },
+        "hue": { "name": "Operazione Ultima Porta", "briefing": "Le unità NVA in ritirata si sono rifugiate a Hue. Colpite di notte." }
+      }
+    },
+    "en": {
+      "name": "Highlands '68 (mod)",
+      "description": "The mod's example campaign: three operations against NVA regulars, from the mod's outpost to Hue.",
+      "ops": {
+        "outpost": { "name": "Operation Red Ridge", "briefing": "An NVA outpost controls the valley. Wipe out the garrison." },
+        "ridge": { "name": "Operation Hill 881", "briefing": "NVA regulars have dug in on the ridge: take and hold the positions." },
+        "hue": { "name": "Operation Last Gate", "briefing": "Retreating NVA units have taken refuge in Hue. Strike at night." }
+      }
+    }
+  }
+}

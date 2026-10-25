@@ -200,6 +200,7 @@ function applyAttackDamage(attacker, target, dmg, targetIsUS, weapon, impact) {
     if (G.missionType === "search_destroy")
       G.missionState.kills = (G.missionState.kills || 0) + 1;
     if (weapon?.melee) statAdd("meleeKills");
+    creditKill(attacker);
     tutorialEvent("kill", { id: target.id, how: "attack" });
   }
   addFX(
@@ -638,8 +639,10 @@ async function resolveAoeCombat(
         log(t("log.unit_eliminated", { name: def.name }), "combat");
         if (!isUS && !isEnemyAttacking && G.missionType === "search_destroy")
           G.missionState.kills = (G.missionState.kills || 0) + 1;
-        if (!isUS && !isEnemyAttacking)
+        if (!isUS && !isEnemyAttacking) {
+          creditKill(attacker);
           tutorialEvent("kill", { id: def.id, how: "aoe" });
+        }
         addFX(
           "death",
           { col: def.col, row: def.row, cls: def.cls, enemy: !isUS, stance: pieceStance(def), facing: def.facing },

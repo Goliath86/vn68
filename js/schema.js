@@ -192,6 +192,27 @@ SCHEMA_ENEMY_CLASS.fields.name.d = [
   "Index into the translated VC names (0 Guerrilla, 1 VC Sniper, 3 VC Commander) or `{ \"it\", \"en\" }`",
 ];
 
+// Perk dei soldati della campagna (campaign.js:PERKS)
+const SCHEMA_PERK = _sc.obj({
+  labels: _sc.map(_sc.obj({
+    name: _sc.str({ d: ["Nome del perk", "Perk name"] }),
+    desc: _sc.str({ d: ["Effetto, nel suggerimento", "Effect, in the tooltip"] }),
+  }), { ...SCHEMA_LANGS, d: ["Testi per lingua; i perk del gioco li prendono dalle traduzioni", "Texts per language; the game's perks take them from the translations"] }),
+  icon: _sc.str({ d: ["Icona (emoji)", "Icon (emoji)"] }),
+  hp: _sc.int({ d: ["Punti ferita in più", "Extra hit points"] }),
+  overwatchAtk: _sc.int({ d: ["ATK in più in overwatch", "Extra ATK on overwatch"] }),
+  noise: _sc.int({ d: ["Rumore degli spari (negativo = più silenzioso; esplosivi esclusi)", "Gunfire noise (negative = quieter; explosives excluded)"] }),
+  heal: _sc.int({ d: ["HP in più curati dall'abilità di cura", "Extra HP restored by the heal ability"] }),
+  vision: _sc.int({ d: ["Raggio visivo in più", "Extra vision radius"] }),
+  trapSense: _sc.bool({ d: ["Individua trappole e tunnel come il geniere", "Spots traps and tunnels like the Engineer"] }),
+  requires: _sc.obj({
+    special: _sc.one(_sc.str({ allowed: ["suppression", "overwatch", "demolition", "heal"] }), { type: "null" }),
+    marksman: _sc.bool({ d: ["Solo tiratori scelti (o solo gli altri, con `false`)", "Marksmen only (or only the others, with `false`)"] }),
+    trapSense: _sc.bool({ d: ["Solo classi con `trapSense` (o senza, con `false`)", "Classes with `trapSense` only (or without, with `false`)"] }),
+  }, { d: ["Campi che la classe del soldato deve avere per riceverlo", "Fields the soldier's class must have to get it"] }),
+}, { d: ["Perk", "Perk"] });
+SCHEMA_PERK.fields.requires.fields.special.d = ["Abilità della classe", "Class ability"];
+
 const SCHEMA_VC_MIX = (d) =>
   _sc.map(_sc.num({ min: 0 }), {
     keyRef: "enemyClass",
@@ -398,6 +419,7 @@ const SCHEMA_CATALOG_ENTRY = _sc.obj({
   file: _sc.str({ ref: "missionFile", d: ["JSON della mappa in `missions/`", "Map JSON in `missions/`"] }),
   generator: _sc.str({ ref: "generator", d: ["Mappa procedurale (al posto di `file`)", "Procedural map (instead of `file`)"] }),
   tutorial: _sc.bool({ d: ["Scheda dell'addestramento (lezioni da `missions/tutorial/index.json`)", "Training card (lessons from `missions/tutorial/index.json`)"] }),
+  campaign: _sc.bool({ d: ["Scheda della campagna (campagne da `missions/campaigns/index.json` e dalle mod)", "Campaign card (campaigns from `missions/campaigns/index.json` and the mods)"] }),
   icon: _sc.str({ d: ["Icona (emoji)", "Icon (emoji)"] }),
   color: _sc.str({ ref: "color", d: ["Colore della scheda", "Card color"] }),
   theaterColor: _sc.str({ ref: "color", d: ["Colore dell'etichetta del teatro", "Theater badge color"] }),
@@ -445,7 +467,135 @@ const SCHEMA_CONFIG = _sc.obj({
     ambush: SCHEMA_VC_MIX(["Imboscata", "Ambush"]),
     reinforcement: SCHEMA_VC_MIX(["Rinforzi", "Reinforcements"]),
   }, { d: ["Composizioni VC di default per tutte le mappe", "Default VC compositions for every map"] }),
+  perks: _sc.map(_sc.one(SCHEMA_PERK, { type: "null" }), { key: ["perk", "perk"], d: ["Perk dei soldati della campagna: i campi scritti cambiano un perk esistente (`steady`, `tough`, `quiet`, `pointman`, `fieldMedic`), un nome nuovo ne aggiunge uno, `null` lo toglie", "Campaign soldier perks: the fields written change an existing perk (`steady`, `tough`, `quiet`, `pointman`, `fieldMedic`), a new name adds one, `null` removes it"] }),
+  soldierNames: _sc.obj({
+    first: _sc.arr(_sc.str(), { d: ["Nomi", "First names"] }),
+    last: _sc.arr(_sc.str(), { d: ["Cognomi", "Last names"] }),
+  }, { d: ["Nomi dei soldati del plotone in campagna; senza, quelli del gioco", "Names of the campaign platoon soldiers; without them, the game's"] }),
 }, { d: ["Configurazione globale (`config.json`)", "Global configuration (`config.json`)"] });
+
+// ── Campagna (campaign.js) ─────────────────────────────────────────────
+const SCHEMA_PAIR = (d) => _sc.arr(_sc.num(), { len: 2, d });
+// Campi della mappa che un'operazione può cambiare (uniti in profondità)
+const SCHEMA_CAMPAIGN_OVERRIDES = _sc.obj(
+  Object.fromEntries(
+    Object.entries(SCHEMA_MISSION.fields)
+      .filter(([k]) => !["$schema", "cols", "rows", "grid", "tileTypes", "squad", "tutorial", "translations"].includes(k))
+      .map(([k, f]) => [k, Array.isArray(f) ? f : { ...f, req: false }]),
+  ),
+  { d: ["Campi della mappa", "Map fields"] },
+);
+const SCHEMA_CAMPAIGN_MISSION_FIELDS = {
+  id: _sc.str({ d: ["Identificatore: i testi stanno in `translations.<lingua>.ops.<id>`; default `op<n>` (`op<n>_<m>` per le scelte)", "Identifier: texts are in `translations.<language>.ops.<id>`; default `op<n>` (`op<n>_<m>` for choices)"] }),
+  map: _sc.str({ ref: "missionFile", d: ["JSON della mappa in `missions/` (in una mod: dalla sua cartella)", "Map JSON in `missions/` (in a mod: from its folder)"] }),
+  generator: _sc.str({ ref: "generator", d: ["Mappa procedurale (al posto di `map`)", "Procedural map (instead of `map`)"] }),
+  size: _sc.str({ allowed: ["small", "medium", "large"], d: ["Dimensione della mappa procedurale; default `small`", "Procedural map size; default `small`"] }),
+  seed: _sc.int({ min: 0, d: ["Seed della mappa procedurale; default dal seed della campagna", "Procedural map seed; default from the campaign seed"] }),
+  missionType: _sc.str({ ref: "missionType", d: ["Tipo di missione (tra i `supportedMissions` della mappa)", "Mission type (among the map's `supportedMissions`)"] }),
+  night: _sc.bool({ d: ["Missione notturna", "Night mission"] }),
+  tier: _sc.str({ d: ["Livello della scelta (chiave di `rules.tiers`: `easy`, `normal`, `hard`): VC in più o in meno, ricompensa e pressione VC", "Choice level (`rules.tiers` key: `easy`, `normal`, `hard`): more or fewer VC, reward and VC pressure"] }),
+  reward: _sc.int({ min: 0, d: ["PR per la vittoria; default quella del livello o `rules.requisition.win`", "RP for winning; default the level's or `rules.requisition.win`"] }),
+  overrides: SCHEMA_CAMPAIGN_OVERRIDES,
+};
+SCHEMA_CAMPAIGN_OVERRIDES.d = [
+  "Campi della [mappa](#map) cambiati per questa operazione, uniti in profondità come `tuning` (es. `{ \"vcCount\": 9, \"reinforcementTurn\": 4 }`)",
+  "[Map](#map) fields changed for this operation, deep-merged like `tuning` (e.g. `{ \"vcCount\": 9, \"reinforcementTurn\": 4 }`)",
+];
+const SCHEMA_CAMPAIGN_CHOICE = _sc.obj(
+  { ...SCHEMA_CAMPAIGN_MISSION_FIELDS, missionType: { ...SCHEMA_CAMPAIGN_MISSION_FIELDS.missionType, req: true } },
+  { d: ["Missione di un'operazione", "Operation mission"] },
+);
+const SCHEMA_CAMPAIGN_OP = _sc.obj({
+  ...SCHEMA_CAMPAIGN_MISSION_FIELDS,
+  choices: _sc.arr(SCHEMA_CAMPAIGN_CHOICE, { minItems: 1, d: ["Missioni tra cui scegliere all'HQ (al posto dei campi della missione)", "Missions to choose from at HQ (instead of the mission fields)"] }),
+}, { d: ["Operazione: una missione (`map` o `generator` + `missionType`) oppure `choices`", "Operation: one mission (`map` or `generator` + `missionType`) or `choices`"] });
+
+const SCHEMA_CAMPAIGN_RULES = _sc.obj({
+  rosterSize: _sc.int({ min: 1, d: ["Soldati nel plotone; default 8", "Soldiers in the platoon; default 8"] }),
+  deploySize: _sc.int({ min: 1, max: 4, d: ["Soldati schierati per missione (posizioni di partenza delle mappe: 4); default 4", "Soldiers deployed per mission (maps have 4 start positions); default 4"] }),
+  startRequisition: _sc.int({ min: 0, d: ["PR iniziali; default 2", "Starting RP; default 2"] }),
+  xp: _sc.obj({
+    survive: _sc.int({ min: 0, d: ["Per chi sopravvive; default 1", "For surviving; default 1"] }),
+    kill: _sc.int({ min: 0, d: ["Per ogni VC ucciso; default 1", "Per VC killed; default 1"] }),
+    win: _sc.int({ min: 0, d: ["Per la vittoria; default 1", "For winning; default 1"] }),
+    heal: _sc.int({ min: 0, d: ["Per ogni cura del medico; default 1", "Per Medic heal; default 1"] }),
+  }, { d: ["Esperienza per missione (niente in ritirata)", "Experience per mission (none on retreat)"] }),
+  ranks: _sc.arr(_sc.obj({
+    id: _sc.str({ req: true, d: ["Identificatore; testi da translations `campaign.ranks.<id>` o da `labels`", "Identifier; texts from translations `campaign.ranks.<id>` or from `labels`"] }),
+    xp: _sc.int({ req: true, min: 0, d: ["XP necessari", "XP needed"] }),
+    hp: _sc.int({ min: 0, d: ["Punti ferita in più (si sommano ai gradi precedenti)", "Extra hit points (adding to the previous ranks)"] }),
+    perk: _sc.bool({ d: ["Al grado si sceglie un perk", "A perk is chosen at this rank"] }),
+    labels: _sc.map(_sc.obj({ name: _sc.str({ d: ["Nome", "Name"] }), short: _sc.str({ d: ["Abbreviazione davanti al cognome", "Abbreviation before the surname"] }) }), { ...SCHEMA_LANGS, d: ["Testi per lingua", "Texts per language"] }),
+  }), { minItems: 1, d: ["Gradi in ordine di XP; default Pvt 0, PFC 3 (+1 HP), Cpl 7 (perk), Sgt 12 (perk, +1 HP)", "Ranks by XP; default Pvt 0, PFC 3 (+1 HP), Cpl 7 (perk), Sgt 12 (perk, +1 HP)"] }),
+  perkChoices: _sc.int({ min: 1, d: ["Perk offerti a ogni scelta; default 2", "Perks offered at each choice; default 2"] }),
+  recovery: _sc.obj({
+    light: _sc.int({ min: 0, d: ["Operazioni fuori per un ferito (HP ≤ 60%); default 1", "Operations out for a wounded soldier (HP ≤ 60%); default 1"] }),
+    severe: _sc.int({ min: 0, d: ["Per un ferito grave (HP < 30% o emorragia); default 2", "For a badly wounded one (HP < 30% or bleeding); default 2"] }),
+    medevac: _sc.int({ min: 0, d: ["Per un evacuato; default 3", "For an evacuated one; default 3"] }),
+  }, { d: ["Convalescenza in operazioni", "Recovery in operations"] }),
+  medevacChance: SCHEMA_RATE(["Probabilità che un caduto in una missione vinta sia evacuato ferito invece che morto; default 1/3, 0 = morte definitiva", "Chance a soldier fallen in a won mission is evacuated wounded instead of dead; default 1/3, 0 = permadeath"]),
+  requisition: _sc.obj({
+    win: _sc.int({ d: ["PR per la vittoria; default 3", "RP for winning; default 3"] }),
+    clean: _sc.int({ d: ["In più se nessuno è ferito o caduto; default 1", "Extra when nobody is wounded or fallen; default 1"] }),
+    kia: _sc.int({ d: ["Per ogni caduto; default −1", "Per fallen soldier; default −1"] }),
+  }, { d: ["Punti requisizione (PR) a fine missione", "Requisition points (RP) at mission end"] }),
+  costs: _sc.obj({
+    replacement: _sc.int({ min: 0, d: ["Rimpiazzo (nuovo soldato); default 2", "Replacement (new soldier); default 2"] }),
+    fastHeal: _sc.int({ min: 0, d: ["Cura accelerata (ferito subito disponibile); default 1", "Fast healing (wounded available at once); default 1"] }),
+  }, { d: ["Costi in PR all'HQ", "HQ costs in RP"] }),
+  supplies: _sc.map(_sc.obj({
+    cost: _sc.int({ req: true, min: 0, d: ["Costo in PR", "Cost in RP"] }),
+    field: _sc.str({ d: ["Solo le armi con questo campo (es. `artillery`); senza, tutte", "Only weapons with this field (e.g. `artillery`); without it, all"] }),
+    exclude: _sc.arr(_sc.str(), { d: ["Escluse le armi con uno di questi campi", "Weapons with one of these fields are excluded"] }),
+    ammo: _sc.int({ min: 0, d: ["Usi in più alle armi con `ammo`", "Extra uses for weapons with `ammo`"] }),
+    mags: _sc.int({ min: 0, d: ["Caricatori di riserva in più alle armi con `mags`", "Extra spare magazines for weapons with `mags`"] }),
+  }), { key: ["dotazione", "supply"], d: ["Dotazioni per una sola operazione; default `ammo` (1 PR), `artillery` (2 PR), `napalm` (3 PR). Testi da translations `campaign.supplies.<id>`", "Supplies for one operation; default `ammo` (1 RP), `artillery` (2 RP), `napalm` (3 RP). Texts from translations `campaign.supplies.<id>`"] }),
+  tiers: _sc.map(_sc.obj({
+    vcCount: _sc.int({ d: ["VC in più (o in meno)", "More (or fewer) VC"] }),
+    reward: _sc.int({ min: 0, d: ["PR per la vittoria", "RP for winning"] }),
+    pressure: _sc.int({ d: ["Variazione della pressione VC dopo la vittoria", "VC pressure change after winning"] }),
+  }), { key: ["livello", "level"], d: ["Livelli delle scelte; default `easy` (−2 VC, 2 PR, pressione +1), `normal` (3 PR), `hard` (+2 VC, 5 PR, pressione −1)", "Choice levels; default `easy` (−2 VC, 2 RP, pressure +1), `normal` (3 RP), `hard` (+2 VC, 5 RP, pressure −1)"] }),
+  pressureVc: _sc.int({ min: 0, d: ["VC in più per punto di pressione; default 1", "Extra VC per pressure point; default 1"] }),
+  maxPressure: _sc.int({ min: 0, d: ["Pressione massima; default 4", "Maximum pressure; default 4"] }),
+}, { d: ["Regole della campagna", "Campaign rules"] });
+
+const SCHEMA_CAMPAIGN = _sc.obj({
+  $schema: SCHEMA_SCHEMA,
+  name: SCHEMA_TEXT(),
+  description: SCHEMA_TEXT(),
+  icon: _sc.str({ d: ["Icona (emoji)", "Icon (emoji)"] }),
+  startRoster: _sc.arr(_sc.str({ ref: "unitClass" }), { minItems: 1, d: ["Classi del plotone iniziale; default 2 per classe base", "Starting platoon classes; default 2 per base class"] }),
+  rules: SCHEMA_CAMPAIGN_RULES,
+  operations: _sc.arr(SCHEMA_CAMPAIGN_OP, { d: ["Operazioni in ordine (campagna fissa)", "Operations in order (fixed campaign)"] }),
+  procedural: _sc.obj({
+    operations: _sc.int({ min: 1, d: ["Numero di operazioni; default 5", "Number of operations; default 5"] }),
+    choices: _sc.int({ min: 1, d: ["Missioni a scelta per operazione (facile, normale, difficile); default 3", "Missions to choose from per operation (easy, normal, hard); default 3"] }),
+    generators: _sc.arr(_sc.str({ ref: "generator" }), { minItems: 1, d: ["Generatori usati; default tutti", "Generators used; default all"] }),
+    sizes: _sc.arr(_sc.str({ allowed: ["small", "medium", "large"] }), { minItems: 1, d: ["Dimensioni; default `small` e `medium`", "Sizes; default `small` and `medium`"] }),
+    missionTypes: _sc.arr(_sc.str({ ref: "missionType" }), { minItems: 1, d: ["Tipi di missione; default tutti", "Mission types; default all"] }),
+    nightChance: SCHEMA_RATE(["Probabilità di una missione notturna; default 0.25", "Chance of a night mission; default 0.25"]),
+  }, { d: ["Campagna procedurale: operazioni generate dal seed al posto di `operations`", "Procedural campaign: operations generated from the seed instead of `operations`"] }),
+  difficulty: _sc.obj({
+    vcCount: SCHEMA_PAIR(["VC iniziali [prima, ultima operazione], interpolati", "Initial VC [first, last operation], interpolated"]),
+    reinforcementTurn: SCHEMA_PAIR(["Turni tra i rinforzi [prima, ultima]", "Turns between reinforcements [first, last]"]),
+    vcMix: _sc.arr(SCHEMA_VC_MIX(), { len: 2, d: ["Composizione VC [prima, ultima]: pesi interpolati", "VC composition [first, last]: weights interpolated"] }),
+  }, { d: ["Curva di difficoltà, applicata prima degli `overrides` di ogni operazione", "Difficulty curve, applied before each operation's `overrides`"] }),
+  translations: _sc.map(_sc.obj({
+    name: _sc.str({ d: ["Nome della campagna", "Campaign name"] }),
+    description: _sc.str({ d: ["Descrizione nell'elenco", "Description in the list"] }),
+    victory: _sc.str({ d: ["Testo della vittoria finale", "Final victory text"] }),
+    defeat: _sc.str({ d: ["Testo della sconfitta", "Defeat text"] }),
+    ops: _sc.map(_sc.obj({
+      name: _sc.str({ d: ["Nome dell'operazione (o della scelta)", "Operation (or choice) name"] }),
+      briefing: _sc.str({ d: ["Briefing all'HQ", "HQ briefing"] }),
+    }), { key: ["id", "id"], d: ["Testi delle operazioni e delle scelte per `id`", "Operation and choice texts by `id`"] }),
+  }), { ...SCHEMA_LANGS, d: ["Testi per lingua (`it`, `en`)", "Texts per language (`it`, `en`)"] }),
+}, { d: ["Campagna (`missions/campaigns/<nome>.json`)", "Campaign (`missions/campaigns/<name>.json`)"] });
+
+const SCHEMA_CAMPAIGN_INDEX = _sc.obj({
+  $schema: SCHEMA_SCHEMA,
+  campaigns: _sc.arr(_sc.str({ ref: "campaignFile" }), { req: true, d: ["Campagne in `missions/campaigns/`, in ordine", "Campaigns in `missions/campaigns/`, in order"] }),
+}, { d: ["Elenco delle campagne (`missions/campaigns/index.json`)", "Campaign list (`missions/campaigns/index.json`)"] });
 
 // ── Mod (mods.js) ──────────────────────────────────────────────────────
 // I percorsi di una mod (e delle sue mappe) partono dalla sua cartella
@@ -477,6 +627,12 @@ const SCHEMA_MOD = _sc.obj({
     d: [
       "Mappe aggiunte al menu, come le voci di `missions/catalog.json`; `file` è il JSON della mappa nella cartella della mod, e anche i percorsi dentro la mappa (immagine, suoni, texture) partono da lì",
       "Maps added to the menu, like the `missions/catalog.json` entries; `file` is the map JSON in the mod folder, and paths inside the map (image, sounds, textures) start from there too",
+    ],
+  }),
+  campaigns: _sc.arr(_sc.str({ ref: "campaignFile" }), {
+    d: [
+      "Campagne aggiunte all'elenco: JSON nella cartella della mod; il loro `map` parte da lì (`../../missions/hue_city.json` = mappa del gioco)",
+      "Campaigns added to the list: JSON in the mod folder; their `map` starts from there (`../../missions/hue_city.json` = game map)",
     ],
   }),
 }, { d: ["Mod (`mods/<cartella>/mod.json`)", "Mod (`mods/<folder>/mod.json`)"] });
