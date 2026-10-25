@@ -307,6 +307,9 @@
             "move": {
               "type": "string"
             },
+            "stance": {
+              "type": "string"
+            },
             "hit": {
               "type": "string"
             },

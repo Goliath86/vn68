@@ -69,6 +69,7 @@ Censimento aggiornato al 2026-10-25. Come funziona l'audio (`js/sounds.js`):
 | `ambush` | imboscata VC | ✅ ambush.mp3 |
 | `heal` | cura / primo soccorso | ✅ bandaging.mp3 |
 | `move` | movimento di un'unità | ✅ per mappa (giungla / strada); default in config.json vuoto |
+| `stance` | cambio di postura (in piedi / accovacciato / sdraiato) | ❌ sintetizzato (fruscio) |
 | `turn_end` | fine turno giocatore | ✅ end_turn.mp3 |
 | `melee` | coltello | ✅ knife.mp3 |
 | `reload` | ricarica | ✅ reload.mp3 |
@@ -84,17 +85,19 @@ Censimento aggiornato al 2026-10-25. Come funziona l'audio (`js/sounds.js`):
 | `shoot` | arma US senza suono proprio: oggi nessuna | — solo fallback |
 | `shoot_vc` | arma VC senza suono proprio: oggi nessuna | — solo fallback |
 
-**Copertura: 15 chiavi su 18 utili hanno un asset** (dal censimento del
+**Copertura: 15 chiavi su 19 utili hanno un asset** (dal censimento del
 2026-10-18 si sono aggiunti fumogeno, `melee`, `demolition`, `disarm`, `spawn`,
 `jet`, `napalm`, `victory`, i passi urbani e la musica urbana).
 
 ## 3. Cosa manca
 
-Per non sentire più nessun suono sintetizzato in gioco servono **3 file**:
+Per non sentire più nessun suono sintetizzato in gioco servono **4 file**:
 
 1. `defeat` — jingle di missione fallita
 2. `overwatch` — attivazione di overwatch/soppressione (es. otturatore armato)
 3. `click` — click dell'interfaccia / radio
+4. `stance` — cambio di postura (fruscio della divisa, equipaggiamento che si
+   assesta); fino al 2026-10-25 usava il suono dei passi
 
 `shoot` e `shoot_vc` non servono: restano come rete di sicurezza per armi
 future senza suono.

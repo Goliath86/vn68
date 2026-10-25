@@ -53,7 +53,7 @@ const SCHEMA_SCHEMA = _sc.str({ d: ["Percorso del JSON Schema per l'editor (es. 
 
 // Effetti sonori sostituibili (sounds.js:sfx); gli spari si configurano per arma
 const SFX_KEYS = [
-  "move", "hit", "death", "miss", "ambush", "demolition", "disarm", "melee", "reload", "heal",
+  "move", "stance", "hit", "death", "miss", "ambush", "demolition", "disarm", "melee", "reload", "heal",
   "overwatch", "spawn", "turn_end", "victory", "defeat", "click", "jet", "napalm",
 ];
 const TUTORIAL_EVENTS = [

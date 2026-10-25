@@ -158,7 +158,7 @@ function changeStance(u, stance) {
   u.stanceChanged = true;
   u.stance = stance;
   tutorialEvent("stance", { cls: u.cls, stance });
-  sfx("move");
+  sfx("stance");
   log(t("log.stance_change", { name: u.name, stance: t(`stances.${stance}`) }));
   if (G.fowEnabled) recomputeVisibility();
   setActionMode(null);

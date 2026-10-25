@@ -591,6 +591,7 @@ Game sounds (victory, death, movement, etc.) can also be replaced with custom au
 {
   "sounds": {
     "move":       "assets/footstep.mp3",
+    "stance":     "",
     "hit":        "assets/hit.mp3",
     "death":      "assets/death.mp3",
     "miss":       "",
@@ -611,7 +612,7 @@ Game sounds (victory, death, movement, etc.) can also be replaced with custom au
 ```
 
 - Set to empty string `""` to keep the synthesized sound
-- `disarm` = the Engineer disarming a trap, `melee` = knife slash, `reload` = reloading
+- `disarm` = the Engineer disarming a trap, `melee` = knife slash, `reload` = reloading, `stance` = changing stance
 - Shooting sounds (`shoot`, `shoot_vc`) **do not go here** — they are defined in the `sound` field of each weapon
 - If a file fails to load, the game falls back to the synthesized sound automatically
 

@@ -79,6 +79,9 @@ function sfx(type) {
     case "move":
       _sfxMove(ac, out, t0);
       break;
+    case "stance":
+      _sfxStance(ac, out, t0);
+      break;
     case "hit":
       _sfxHit(ac, out, t0);
       break;
@@ -251,6 +254,11 @@ function _sfxMove(ac, out, t) {
   // Soft thud (footstep on earth)
   _noise(ac, "lowpass", 280, out, t, 0.05, 0.14);
   _osc(ac, "sine", 160, out, t, 0.06, 0.12, 70);
+}
+function _sfxStance(ac, out, t) {
+  // Cambio di postura: fruscio della divisa e tintinnio dell'equipaggiamento
+  _noise(ac, "bandpass", 900, out, t, 0.16, 0.12, 0.8);
+  _noise(ac, "bandpass", 3200, out, t + 0.1, 0.03, 0.08, 5);
 }
 function _sfxHit(ac, out, t) {
   // Impact

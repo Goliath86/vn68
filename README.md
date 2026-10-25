@@ -590,6 +590,7 @@ Anche i suoni di gioco (vittoria, morte, movimento, ecc.) possono essere sostitu
 {
   "sounds": {
     "move":       "assets/footstep.mp3",
+    "stance":     "",
     "hit":        "assets/hit.mp3",
     "death":      "assets/death.mp3",
     "miss":       "",
@@ -610,7 +611,7 @@ Anche i suoni di gioco (vittoria, morte, movimento, ecc.) possono essere sostitu
 ```
 
 - Lasciare il valore vuoto `""` per mantenere il suono sintetizzato
-- `disarm` = disinnesco di una trappola da parte del geniere, `melee` = fendente del coltello, `reload` = ricarica
+- `disarm` = disinnesco di una trappola da parte del geniere, `melee` = fendente del coltello, `reload` = ricarica, `stance` = cambio di postura
 - I suoni di sparo (`shoot`, `shoot_vc`) **non vanno qui** — si definiscono nel campo `sound` di ogni arma
 - Se il file non è caricabile, il gioco torna automaticamente al sintetizzato
 
