@@ -165,6 +165,9 @@
   ],
 
   "ambient": "missions/hue_city_ambient.ogg",
+  "sounds": {
+    "move": "assets/run_street.mp3"
+  },
   "ambushChance": 0.2,
   "reinforcementTurn": 4,
   "reinforcementCount": 2,

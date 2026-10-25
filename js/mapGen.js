@@ -1096,6 +1096,8 @@ function _buildUrbanMap(seed, attempt, size) {
     },
     supportedMissions: ["recon", "search_destroy", "rescue_pilot", "capture_objective"],
     ambient: "missions/hue_city_ambient.ogg",
+    // Passi sulle strade, come in Hue City (precaricati dal catalogo)
+    sounds: { move: "assets/run_street.mp3" },
     // Meteo (solo visivo): acquazzoni casuali
     rain: { chance: 0.2, minTurns: 2, maxTurns: 4 },
     ambushChance: 0.2,
