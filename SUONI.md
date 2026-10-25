@@ -64,6 +64,7 @@ passi qui sopra), poi quello di config.json, poi il sintetizzato.
 | File | Terreno | Mappe |
 |---|---|---|
 | `assets/guado.mp3` | guado (`ford`) | Rung Sat, "Zona Ignota" (mapGen.js), lezioni del tutorial (tile condivisi in `missions/tutorial/index.json`) |
+| `assets/mud.mp3` | palude (`swamp`) | Rung Sat, "Zona Ignota" (mapGen.js), lezioni del tutorial, Avamposto NVA (mod) |
 
 Terreni percorribili delle mappe attuali e suono proposto:
 

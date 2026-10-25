@@ -28,7 +28,8 @@
       "moveCost": 3,
       "coverBonus": 1,
       "color": "#4a6741",
-      "losBlock": "partial"
+      "losBlock": "partial",
+      "sound": "assets/mud.mp3"
     },
     "R": {
       "id": "river",

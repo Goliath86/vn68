@@ -2,7 +2,7 @@
   "$schema": "../../schemas/tutorial-index.schema.json",
   "tileTypes": {
     "J": { "id": "jungle", "label": "Giungla", "moveCost": 2, "coverBonus": 2, "color": "#2d5a1b", "losBlock": "partial", "burnable": true },
-    "S": { "id": "swamp", "label": "Palude", "moveCost": 3, "coverBonus": 1, "color": "#4a6741", "losBlock": "partial" },
+    "S": { "id": "swamp", "label": "Palude", "moveCost": 3, "coverBonus": 1, "color": "#4a6741", "losBlock": "partial", "sound": "assets/mud.mp3" },
     "R": { "id": "river", "label": "Fiume", "moveCost": 0, "coverBonus": 0, "color": "#1a4d7a", "impassable": true },
     "V": { "id": "village", "label": "Villaggio", "moveCost": 1, "coverBonus": 1, "color": "#8b6914", "losBlock": "partial", "burnable": true },
     "C": { "id": "clearing", "label": "Radura", "moveCost": 1, "coverBonus": 0, "color": "#7a9e40" },
