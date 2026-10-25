@@ -17,7 +17,7 @@
     "jet": "assets/fighter_jet.mp3",
     "napalm": "assets/napalm.mp3",
     "turn_end": "assets/end_turn.mp3",
-    "victory": "",
+    "victory": "assets/victory.mp3",
     "defeat": "",
     "click": ""
   },
