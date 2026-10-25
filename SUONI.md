@@ -1,12 +1,10 @@
 # Suoni di NAM '68 — asset presenti e mancanti
 
-Censimento del 2026-10-18. Come funziona l'audio (`js/sounds.js`):
+Censimento aggiornato al 2026-10-25. Come funziona l'audio (`js/sounds.js`):
 
 - **Suoni di sistema** `sfx(chiave)`: priorità *missione* (`"sounds"` nel JSON
   della mappa) > *config.json* (`"sounds"`) > **sintetizzato** con Web Audio.
-  Una chiave vuota (`""`) in config.json = sintetizzato. Qualsiasi chiave
-  dell'elenco sotto si può sovrascrivere da config.json, anche quelle che oggi
-  non compaiono lì (es. `"jet"`, `"napalm"`, `"melee"`).
+  Una chiave vuota (`""`) in config.json = sintetizzato.
 - **Suoni delle armi** `sfxShoot(classe, arma)`: campo `"sound"` dell'arma in
   config.json. Senza: arma bianca → `melee`, altrimenti `shoot` (US) /
   `shoot_vc` (VC), entrambi sintetizzati.
@@ -14,27 +12,54 @@ Censimento del 2026-10-18. Come funziona l'audio (`js/sounds.js`):
 
 ## 1. Asset audio presenti
 
-| File | Usato per | Dove è collegato |
-|---|---|---|
-| `assets/m16.mp3` | M16 (assaltatore e geniere): attacco, overwatch, soppressione | config.json → weapons.assault/engineer `rifle` |
-| `assets/sniper_us.mp3` | M14 del cecchino US | config.json → weapons.sniper `rifle` |
-| `assets/pistol.mp3` | M1911 del medico **e** TT-33 del comandante VC | config.json → weapons.medic / commander `pistol` |
-| `assets/grenade.mp3` | Granata (esplosione) **e** ogni colpo della salva d'artiglieria | config.json → weapons.assault `grenade`, engineer `radio` |
-| `assets/ak47.mp3` | AK-47 dei VC | config.json → weapons.grunt `ak47` |
-| `assets/rocket.mp3` | RPG-7 dei VC | config.json → weapons.grunt `rpg` |
-| `assets/mosin.mp3` | Mosin del cecchino VC | config.json → weapons.sniper_vc `rifle` |
-| `assets/hit.mp3` | Colpo a segno (unità ferita) | config.json → sounds.`hit` |
-| `assets/death.mp3` | Morte di un'unità (combattimento, emorragia, trappola) | config.json → sounds.`death` |
-| `assets/bullet_ricochet.mp3` | Colpo mancato | config.json → sounds.`miss` |
-| `assets/ambush.mp3` | Imboscata VC (spawn e fuoco d'agguato) | config.json → sounds.`ambush` |
-| `assets/bandaging.mp3` | Cura del medico e primo soccorso | config.json → sounds.`heal` |
-| `assets/reload.mp3` | Ricarica dell'arma (tutte le armi) | config.json → sounds.`reload` |
-| `assets/footsteps_jungle.mp3` | Passi (movimento) — **solo** mappe di giungla | sounds.`move` in rung_sat.json, mappa procedurale "Zona Ignota" (mapGen.js), lezioni del tutorial |
-| `assets/fumo_su_saigon.mp3` | Musica del menu | config.json → `menuMusic` |
-| `missions/rung_sat_ambient.mp3` | Musica d'ambiente giungla | rung_sat.json, "Zona Ignota", lezioni del tutorial |
-| `assets/end_turn.mp3` | Fine del turno del giocatore | config.json → sounds.`turn_end` |
+### Armi (campo `sound` in config.json → `weapons`)
 
-## 2. Suoni sintetizzati (20 chiavi) e copertura
+| File | Usato per |
+|---|---|
+| `assets/m16.mp3` | M16 di assaltatore e geniere (attacco, overwatch, soppressione) |
+| `assets/sniper_us.mp3` | fucile del cecchino US |
+| `assets/pistol.mp3` | pistola del medico **e** del comandante VC |
+| `assets/grenade.mp3` | granata **e** ogni colpo della salva d'artiglieria (`radio` del geniere) |
+| `assets/smoke.mp3` | fumogeno dell'assaltatore |
+| `assets/ak47.mp3` | AK-47 dei VC (e dei regolari NVA della mod) |
+| `assets/rocket.mp3` | RPG dei VC |
+| `assets/mosin.mp3` | fucile del cecchino VC |
+
+### Effetti di sistema (config.json → `sounds`)
+
+| File | Chiave | Quando suona |
+|---|---|---|
+| `assets/hit.mp3` | `hit` | colpo a segno |
+| `assets/death.mp3` | `death` | morte di un'unità (combattimento, emorragia, trappola) |
+| `assets/bullet_ricochet.mp3` | `miss` | colpo mancato |
+| `assets/ambush.mp3` | `ambush` | imboscata VC (comparsa e fuoco d'agguato) |
+| `assets/demolition.mp3` | `demolition` | demolizione, incendio del geniere, sigillo di un tunnel |
+| `assets/cracking_wood.mp3` | `disarm` | disinnesco di una trappola |
+| `assets/knife.mp3` | `melee` | coltello (tutte le classi, US e VC) |
+| `assets/bandaging.mp3` | `heal` | cura del medico e primo soccorso |
+| `assets/reload.mp3` | `reload` | ricarica dell'arma |
+| `assets/spawn.mp3` | `spawn` | arrivo dei rinforzi VC |
+| `assets/fighter_jet.mp3` | `jet` | passaggio del jet del napalm |
+| `assets/napalm.mp3` | `napalm` | fiammata del napalm (una volta per ogni tile della linea) |
+| `assets/end_turn.mp3` | `turn_end` | fine del turno del giocatore |
+| `assets/victory.mp3` | `victory` | missione compiuta (anche lezioni e operazioni di campagna) |
+
+### Passi (per mappa, `sounds.move` nel JSON della missione)
+
+| File | Mappe |
+|---|---|
+| `assets/footsteps_jungle.mp3` | Rung Sat, "Zona Ignota" (mapGen.js), tutte le lezioni del tutorial, Avamposto NVA (mod) |
+| `assets/run_street.mp3` | Hue City, "Città Ignota" (mapGen.js) |
+
+### Musiche
+
+| File | Uso |
+|---|---|
+| `assets/fumo_su_saigon.mp3` | menu (`menuMusic`) |
+| `missions/rung_sat_ambient.mp3` | ambiente giungla: Rung Sat, "Zona Ignota", lezioni del tutorial, Avamposto NVA (mod) |
+| `assets/city_battle.mp3` | ambiente urbano: Hue City, "Città Ignota" (7,3 MB, scaricata in background) |
+
+## 2. Copertura delle chiavi di sistema
 
 | Chiave | Quando suona | Asset? |
 |---|---|---|
@@ -43,50 +68,53 @@ Censimento del 2026-10-18. Come funziona l'audio (`js/sounds.js`):
 | `miss` | colpo mancato | ✅ bullet_ricochet.mp3 |
 | `ambush` | imboscata VC | ✅ ambush.mp3 |
 | `heal` | cura / primo soccorso | ✅ bandaging.mp3 |
-| `move` | movimento di un'unità | ⚠️ solo mappe giungla; Hue City e "Città Ignota" sintetizzato |
+| `move` | movimento di un'unità | ✅ per mappa (giungla / strada); default in config.json vuoto |
 | `turn_end` | fine turno giocatore | ✅ end_turn.mp3 |
-| `shoot` | arma US senza suono proprio: oggi solo il **fumogeno** | ❌ (fallback) |
-| `shoot_vc` | arma VC senza suono proprio: oggi nessuna | — (solo fallback) |
-| `melee` | coltello (assaltatore, cecchino, geniere, medico) | ❌ |
-| `reload` | ricarica dell'arma | ✅ reload.mp3 |
-| `demolition` | demolizione, incendio del geniere, sigillo di un tunnel | ❌ |
-| `disarm` | disinnesco trappola | ❌ |
-| `overwatch` | attivazione overwatch / soppressione | ❌ |
-| `spawn` | arrivo dei rinforzi VC | ❌ |
-| `jet` | passaggio del jet del napalm | ❌ |
-| `napalm` | fiammata del napalm su ogni tile | ❌ |
-| `click` | click dell'interfaccia, chiamata radio artiglieria/napalm | ❌ |
-| `victory` | fine missione vinta | ❌ |
-| `defeat` | fine missione persa | ❌ |
+| `melee` | coltello | ✅ knife.mp3 |
+| `reload` | ricarica | ✅ reload.mp3 |
+| `demolition` | demolizione, incendio, sigillo tunnel | ✅ demolition.mp3 |
+| `disarm` | disinnesco trappola | ✅ cracking_wood.mp3 |
+| `spawn` | rinforzi VC | ✅ spawn.mp3 |
+| `jet` | passaggio del jet | ✅ fighter_jet.mp3 |
+| `napalm` | fiammata del napalm | ✅ napalm.mp3 |
+| `victory` | missione vinta | ✅ victory.mp3 |
+| `defeat` | missione persa | ❌ sintetizzato |
+| `overwatch` | attivazione di overwatch / fuoco soppressivo | ❌ sintetizzato |
+| `click` | click dell'interfaccia, chiamata radio di artiglieria e napalm, scelte nel menu e nella campagna | ❌ sintetizzato |
+| `shoot` | arma US senza suono proprio: oggi nessuna | — solo fallback |
+| `shoot_vc` | arma VC senza suono proprio: oggi nessuna | — solo fallback |
 
-**Copertura: 7 chiavi su 20 hanno un asset**, `move` è coperta solo in parte.
+**Copertura: 15 chiavi su 18 utili hanno un asset** (dal censimento del
+2026-10-18 si sono aggiunti fumogeno, `melee`, `demolition`, `disarm`, `spawn`,
+`jet`, `napalm`, `victory`, i passi urbani e la musica urbana).
 
 ## 3. Cosa manca
 
-Per non sentire più nessun suono sintetizzato in gioco servono **12 suoni**:
+Per non sentire più nessun suono sintetizzato in gioco servono **3 file**:
 
-1. `move` — passi per mappe urbane/non giungla (es. `footsteps_urban.mp3`, da mettere in config.json come default; la giungla resta sovrascritta dalla missione)
-2. `melee` — coltello
-3. `demolition` — esplosione della carica / incendio
-4. `disarm` — disinnesco
-5. `overwatch` — attivazione overwatch/soppressione (es. otturatore armato)
-6. `spawn` — rinforzi VC
-7. `jet` — passaggio dell'aereo
-8. `napalm` — vampata
-9. `click` — interfaccia/radio
-10. `victory` — jingle di vittoria
-11. `defeat` — jingle di sconfitta
-12. Fumogeno — campo `"sound"` dell'arma `smoke` (oggi suona come uno sparo)
+1. `defeat` — jingle di missione fallita
+2. `overwatch` — attivazione di overwatch/soppressione (es. otturatore armato)
+3. `click` — click dell'interfaccia / radio
 
-→ **12 file da procurare**. `shoot` e `shoot_vc` non servono:
-restano come rete di sicurezza per armi future senza suono.
+`shoot` e `shoot_vc` non servono: restano come rete di sicurezza per armi
+future senza suono.
 
-Facoltativi, per varietà (oggi condividono un file):
-- artiglieria con un suono proprio invece di `grenade.mp3` (arma engineer `radio`);
-- TT-33 del comandante distinto dalla M1911 del medico.
+### Facoltativi, per varietà
 
-### Musica mancante
+- **Artiglieria** con un suono proprio invece di `grenade.mp3` (campo `sound`
+  dell'arma `radio` del geniere).
+- **Pistola del comandante VC** distinta da quella del medico.
+- **Incendio del geniere** e **sigillo dei tunnel** oggi usano `demolition`:
+  servirebbe una chiave nuova nel codice per distinguerli.
+- **VC che escono dai tunnel**: oggi nessun suono (si potrebbe riusare
+  `spawn` o aggiungerne uno).
+- **Default di `move`** in config.json (oggi vuoto): conta solo per mappe
+  nuove o delle mod che non indicano i propri passi.
+- **Napalm**: `napalm.mp3` suona una volta per ogni tile della linea; se
+  risulta troppo fitto si può far suonare una sola volta per attacco.
 
-- `missions/hue_city_ambient.ogg` è indicata da `hue_city.json` e dalla mappa
-  procedurale "Città Ignota" (mapGen.js), ma **il file non esiste**: oggi
-  quelle mappe sono senza musica d'ambiente (nessun errore, solo silenzio).
+### Campagna
+
+La campagna (HQ, debriefing) non ha suoni propri oltre a `click` e alla musica
+del menu: eventuali jingle di promozione o di fine campagna richiederebbero
+chiavi nuove.
