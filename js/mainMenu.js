@@ -290,6 +290,17 @@ function buildOptionItems(list) {
       rerender();
     },
   });
+  menuItem(list, {
+    icon: "🪖",
+    title: t("menu.unit_anim"),
+    sub: t("menu.unit_anim_desc"),
+    tag: t(G.unitAnimEnabled ? "menu.on" : "menu.off"),
+    onClick: () => {
+      sfx("click");
+      toggleUnitAnim();
+      rerender();
+    },
+  });
   if (MOD_LIST.length)
     menuItem(list, {
       icon: "🧩",

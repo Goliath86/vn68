@@ -538,7 +538,9 @@ Per aggiungere musica di sottofondo al menu iniziale, inserire il percorso del f
 
 ### Immagine del menu
 
-Su schermi ampi (almeno 900×560) il menu iniziale è a due colonne: a sinistra le voci **Riprendi**, **Addestramento**, **Missioni singole**, **Campagne** e **Opzioni** (lingua, audio, vento, mod, comandi), che si aprono con i loro elenchi; a destra un'immagine del gioco con titolo e versione, sopra cui compare il briefing della mappa scelta. Su mobile resta il menu a passi.
+> Le pedine disegnate si animano: respirano (più in fretta da ferite), si guardano intorno, perlustrano e controllano l'arma, e ricaricano davvero quando si usa la ricarica. Si spengono da **Opzioni → Animazioni dei soldati** o con l'impostazione di sistema *riduci movimento*; le immagini di unitImages hanno solo il respiro.
+
+Su schermi ampi (almeno 900×560) il menu iniziale è a due colonne: a sinistra le voci **Riprendi**, **Addestramento**, **Missioni singole**, **Campagne** e **Opzioni** (lingua, audio, vento, animazioni dei soldati, mod, comandi), che si aprono con i loro elenchi; a destra un'immagine del gioco con titolo e versione, sopra cui compare il briefing della mappa scelta. Su mobile resta il menu a passi.
 
 L'immagine di default è `assets/menu_hero.jpg` (una scena di gioco); si sostituisce con `menuImage`:
 

@@ -1702,7 +1702,16 @@ function _torsoFolds(ctx, [tx, ty, rx, ry]) {
   ctx.restore();
 }
 
+// La figura è dipinta in tre strati, così le animazioni (drawUnitSprite con
+// `anim`) possono muovere braccia e testa: corpo (gambe, busto,
+// equipaggiamento), braccia con arma e mani, testa con copricapo
 function _paintSoldier(ctx, look, stance) {
+  _paintSoldierLower(ctx, look, stance);
+  _paintSoldierArms(ctx, look, stance);
+  _paintSoldierHead(ctx, look, stance);
+}
+
+function _paintSoldierLower(ctx, look, stance) {
   const p = SOLDIER_POSES[stance];
   const [tx, ty, rx, ry] = p.torso;
   // Gambe con la cucitura dei pantaloni e la tasca sulla coscia; in fondo
@@ -1753,8 +1762,14 @@ function _paintSoldier(ctx, look, stance) {
   if (look.rig) _rig(ctx, look, p.torso);
   _backGear(ctx, look, p.back);
   _sideGear(ctx, look, p.torso);
-  // Braccia (maniche arrotolate: risvolto al gomito e avambraccio nudo),
-  // arma e mani
+  if (look.leaves) _camoLeaves(ctx, [[tx - rx * 0.8, ty + 0.01, 1.2], [tx + rx * 0.8, ty + 0.03, -0.4]]);
+}
+
+// Braccia (maniche arrotolate: risvolto al gomito e avambraccio nudo), arma
+// e mani. handL: posizione della mano sinistra al posto di quella della posa
+// (ricarica, drawUnitSprite); mag: caricatore nella mano sinistra
+function _paintSoldierArms(ctx, look, stance, handL = null, mag = false) {
+  const p = SOLDIER_POSES[stance];
   const sleeve = _shadeHex(look.cloth, -0.05);
   const arm = (pts) => {
     if (look.sleeves !== "rolled") return _limb(ctx, pts, 0.06, sleeve, 0.15);
@@ -1771,29 +1786,46 @@ function _paintSoldier(ctx, look, stance) {
     ctx.arc(x - 0.008, y - 0.008, 0.011, 0, Math.PI * 2);
     ctx.fill();
   };
+  // Braccio sinistro verso una mano spostata: gomito piegato verso l'esterno
+  const armTo = (s, h) => arm([s, [(s[0] + h[0]) / 2 - 0.05, (s[1] + h[1]) / 2 + 0.02], h]);
+  const magInHand = (h) => {
+    if (!mag) return;
+    ctx.save();
+    ctx.translate(h[0], h[1]);
+    ctx.rotate(0.5);
+    _box(ctx, 0, -0.012, 0.03, 0.06, "#2a2a26");
+    ctx.restore();
+  };
   if (look.weapon === "pistol") {
     // Pistola impugnata a due mani davanti al petto
     const g = p.grip;
-    for (const s of [p.armR[0], p.armL[0]]) arm([s, [(s[0] + g[0]) / 2 + Math.sign(s[0]) * 0.05, (s[1] + g[1]) / 2], g]);
+    const sL = p.armL[0];
+    arm([p.armR[0], [(p.armR[0][0] + g[0]) / 2 + 0.05, (p.armR[0][1] + g[1]) / 2], g]);
+    if (handL) armTo(sL, handL);
+    else arm([sL, [(sL[0] + g[0]) / 2 - 0.05, (sL[1] + g[1]) / 2], g]);
     _gun(ctx, "pistol", g[0], g[1] + 0.01, g[0], g[1] - 0.08);
     hand(g);
+    if (handL) {
+      magInHand(handL);
+      hand(handL);
+    }
   } else {
     arm(p.armR);
-    arm(p.armL);
+    if (handL) armTo(p.armL[0], handL);
+    else arm(p.armL);
     _gun(ctx, look.weapon, ...p.gun);
     hand(p.armR[2]);
-    hand(p.armL[2]);
+    magInHand(handL || p.armL[2]);
+    hand(handL || p.armL[2]);
   }
-  // Testa e copricapo (il punto piÃ¹ alto)
-  const [hx, hy] = p.head;
+}
+
+// Testa e copricapo (il punto più alto)
+function _paintSoldierHead(ctx, look, stance) {
+  const [hx, hy] = SOLDIER_POSES[stance].head;
   _dome(ctx, hx, hy, 0.085, 0.085, look.skin);
   _hat(ctx, look, hx, hy);
-  if (look.leaves) {
-    _camoLeaves(ctx, [
-      [hx - 0.08, hy - 0.05, 0.6], [hx + 0.07, hy + 0.06, -0.9], [hx + 0.02, hy - 0.11, 2.1],
-      [tx - rx * 0.8, ty + 0.01, 1.2], [tx + rx * 0.8, ty + 0.03, -0.4],
-    ]);
-  }
+  if (look.leaves) _camoLeaves(ctx, [[hx - 0.08, hy - 0.05, 0.6], [hx + 0.07, hy + 0.06, -0.9], [hx + 0.02, hy - 0.11, 2.1]]);
 }
 
 // Figura e sagoma per l'ombra in cache, a una risoluzione vicina a quella
@@ -1833,6 +1865,86 @@ function soldierSprite(lookId, stance, ts) {
   return spr;
 }
 
+// Strati della figura per le animazioni (corpo, braccia con arma, testa),
+// ognuno con il suo bordo scuro, alla stessa scala di soldierSprite
+const _SOLDIER_LAYER_CACHE = new Map();
+function soldierLayers(lookId, stance, ts) {
+  const px = Math.min(192, Math.max(16, Math.ceil(ts / 16) * 16));
+  const key = `${lookId}|${stance}|${px}`;
+  let layers = _SOLDIER_LAYER_CACHE.get(key);
+  if (layers) return layers;
+  const k = px * SOLDIER_POSES[stance].scale;
+  const look = SOLDIER_LOOKS[lookId];
+  const layer = (paint) => {
+    const fig = document.createElement("canvas");
+    fig.width = fig.height = px;
+    const c = fig.getContext("2d");
+    c.translate(px / 2, px / 2);
+    c.scale(k, k);
+    paint(c, look, stance);
+    const sil = document.createElement("canvas");
+    sil.width = sil.height = px;
+    const sc = sil.getContext("2d");
+    sc.drawImage(fig, 0, 0);
+    sc.globalCompositeOperation = "source-in";
+    sc.fillStyle = "#000";
+    sc.fillRect(0, 0, px, px);
+    const out = document.createElement("canvas");
+    out.width = out.height = px;
+    const oc = out.getContext("2d");
+    const d = Math.max(1, px / 96);
+    oc.globalAlpha = 0.55;
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) oc.drawImage(sil, dx * d, dy * d);
+    oc.globalAlpha = 1;
+    oc.drawImage(fig, 0, 0);
+    return out;
+  };
+  layers = {
+    lower: layer(_paintSoldierLower),
+    arms: layer((c, l, s) => _paintSoldierArms(c, l, s)),
+    head: layer(_paintSoldierHead),
+  };
+  _SOLDIER_LAYER_CACHE.set(key, layers);
+  return layers;
+}
+
+// Figura animata, già ruotata secondo il facing: respiro (scala attorno al
+// busto), braccia e arma ruotate/spostate attorno al busto, testa girata.
+// anim = unitAnimPose (animations.js): { breath, gunRot, gunDx, gunDy,
+// headRot, handL?, mag? } in coordinate della figura (tile, rivolta a nord)
+function _drawAnimatedSoldier(ctx, lookId, pose, ts, anim) {
+  const L = soldierLayers(lookId, pose, ts);
+  const p = SOLDIER_POSES[pose];
+  const S = ts * p.scale; // unità della figura → pixel
+  const [tx, ty] = p.torso;
+  const [hx, hy] = p.head;
+  const draw = (img) => ctx.drawImage(img, -ts / 2, -ts / 2, ts, ts);
+  ctx.save();
+  ctx.translate(tx * S, ty * S);
+  ctx.scale(anim.breath, anim.breath);
+  ctx.translate(-tx * S, -ty * S);
+  draw(L.lower);
+  // Braccia e arma attorno al centro del busto
+  ctx.save();
+  ctx.translate(tx * S, ty * S);
+  ctx.rotate(anim.gunRot);
+  ctx.translate((anim.gunDx - tx) * S, (anim.gunDy - ty) * S);
+  if (anim.handL) {
+    // Mano sinistra in movimento (ricarica): braccia ridipinte per questo fotogramma
+    ctx.scale(S, S);
+    _paintSoldierArms(ctx, SOLDIER_LOOKS[lookId], pose, anim.handL, anim.mag);
+  } else draw(L.arms);
+  ctx.restore();
+  // Testa girata sul collo
+  ctx.save();
+  ctx.translate(hx * S, hy * S);
+  ctx.rotate(anim.headRot);
+  ctx.translate(-hx * S, -hy * S);
+  draw(L.head);
+  ctx.restore();
+  ctx.restore();
+}
+
 // Aspetto della classe: campo "sprite", altrimenti il nome se Ã¨ un aspetto
 // noto, altrimenti il fuciliere della fazione
 function soldierLook(cls, isEnemy) {
@@ -1842,7 +1954,8 @@ function soldierLook(cls, isEnemy) {
 
 // Pedina dell'unitÃ  nel tile (x, y): postura e facing (0 = nord â€¦ 3 = ovest)
 // scelgono la figura e la sua rotazione; turn = rotazione extra (radianti)
-function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy, stance, facing, turn = 0) {
+// anim = posa animata (animations.js:unitAnimPose), null = figura ferma
+function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy, stance, facing, turn = 0, anim = null) {
   const pose = SOLDIER_POSES[stance] ? stance : "stand";
   const ang = (facing || 0) * (Math.PI / 2) + turn;
   ctx.save();
@@ -1853,12 +1966,15 @@ function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy, stance, facing, tur
   const img = UNIT_IMG_CACHE[cls]?.[pose];
   if (img && img.complete && img.naturalWidth > 0) {
     ctx.rotate(ang);
+    // Immagini intere: solo il respiro
+    if (anim) ctx.scale(anim.breath, anim.breath);
     ctx.drawImage(img, -ts / 2, -ts / 2, ts, ts);
     ctx.restore();
     return;
   }
 
-  const spr = soldierSprite(soldierLook(cls, isEnemy), pose, ts);
+  const lookId = soldierLook(cls, isEnemy);
+  const spr = soldierSprite(lookId, pose, ts);
   // Ombra: la sagoma ruotata, spostata sempre verso sud-est
   const off = SOLDIER_POSES[pose].shadow * ts;
   ctx.save();
@@ -1868,6 +1984,7 @@ function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy, stance, facing, tur
   ctx.drawImage(spr.shadow, -ts / 2, -ts / 2, ts, ts);
   ctx.restore();
   ctx.rotate(ang);
-  ctx.drawImage(spr.body, -ts / 2, -ts / 2, ts, ts);
+  if (anim) _drawAnimatedSoldier(ctx, lookId, pose, ts, anim);
+  else ctx.drawImage(spr.body, -ts / 2, -ts / 2, ts, ts);
   ctx.restore();
 }

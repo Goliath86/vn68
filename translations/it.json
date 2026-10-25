@@ -575,6 +575,8 @@
     "audio": "Audio",
     "wind": "Vento sulla mappa",
     "wind_desc": "Erba e chiome mosse dalle raffiche (più pesante su PC lenti)",
+    "unit_anim": "Animazioni dei soldati",
+    "unit_anim_desc": "Respiro, sguardi intorno, controllo e ricarica dell'arma",
     "mods": "Mod",
     "mods_desc": "{n} attive · classi, armi, nemici, mappe e campagne aggiuntive",
     "keys": "Comandi da tastiera",

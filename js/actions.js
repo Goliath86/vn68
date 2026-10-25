@@ -129,6 +129,9 @@ function reloadWeapon(u, w = reloadableWeapon(u)) {
   statAdd("reloads");
   tutorialEvent("reload", { cls: u.cls, weapon: w.id });
   sfx("reload");
+  // Animazione della ricarica sulla pedina (animations.js:unitAnimPose)
+  u.animReload = performance.now();
+  _startTileAnimLoop();
   log(
     t("log.reload", {
       name: u.name,

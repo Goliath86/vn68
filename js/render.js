@@ -342,7 +342,7 @@ function renderMap(animFrame = false) {
     ctx.beginPath();
     ctx.arc(x + ts * 0.5, y + ts * 0.5, ts * 0.41, 0, Math.PI * 2);
     ctx.stroke();
-    drawUnitSprite(ctx, x, y, ts, e.cls, false, true, pieceStance(e), e.facing);
+    drawUnitSprite(ctx, x, y, ts, e.cls, false, true, pieceStance(e), e.facing, 0, unitAnimPose(e, true));
     drawFacingMarker(ctx, x, y, ts, e.facing, "#ff6a40");
     const hpRatio = e.hp / e.maxHp;
     ctx.fillStyle = "#111";
@@ -376,7 +376,7 @@ function renderMap(animFrame = false) {
     ctx.fillRect(x + ts * 0.11, y + ts * 0.11, ts * 0.78, ts * 0.78);
 
     // Soldato visto dall'alto nella sua postura, rivolto dove guarda
-    drawUnitSprite(ctx, x, y, ts, u.cls, isDone, false, u.stance, u.facing);
+    drawUnitSprite(ctx, x, y, ts, u.cls, isDone, false, u.stance, u.facing, 0, unitAnimPose(u));
     drawFacingMarker(ctx, x, y, ts, u.facing, isSelected ? "#f0c030" : "#e8e0b0");
 
     // Occultamento: 🌿 nascosto ai VC, 👁 posizione svelata (sparo/avvistamento)

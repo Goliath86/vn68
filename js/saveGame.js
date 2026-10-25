@@ -92,6 +92,8 @@ async function resumeGame(save) {
   // Salvataggi precedenti ai caricatori: campi presi dal config attuale
   // (caricatore pieno); il vecchio blocco del cecchino non esiste più
   G.units.forEach((u) => {
+    // Istante della ricarica animata: riferito alla pagina precedente
+    delete u.animReload;
     delete u.hasShot;
     delete u.needReload;
     for (const w of u.weapons || []) {

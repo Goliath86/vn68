@@ -539,7 +539,9 @@ To add background music to the main menu, set the audio file path in the `menuMu
 
 ### Menu Image
 
-On wide screens (at least 900×560) the main menu has two columns: on the left the **Resume**, **Training**, **Single missions**, **Campaigns** and **Options** (language, audio, wind, mods, controls) entries, which open to show their lists; on the right a picture of the game with title and version, over which the chosen map's briefing appears. On mobile the step-by-step menu stays.
+> Drawn pieces are animated: they breathe (faster when wounded), look around, scan with and check their weapon, and actually reload when the reload action is used. Turn them off from **Options → Soldier animations** or with the system *reduce motion* setting; unitImages pictures only breathe.
+
+On wide screens (at least 900×560) the main menu has two columns: on the left the **Resume**, **Training**, **Single missions**, **Campaigns** and **Options** (language, audio, wind, soldier animations, mods, controls) entries, which open to show their lists; on the right a picture of the game with title and version, over which the chosen map's briefing appears. On mobile the step-by-step menu stays.
 
 The default picture is `assets/menu_hero.jpg` (a game scene); replace it with `menuImage`:
 

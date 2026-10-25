@@ -66,8 +66,139 @@ function _needsFastAnim() {
 
 function _needsAnimLoop() {
   return (
-    _needsFastAnim() || windActive() || weatherActive() || waterTiles().length > 0 || cratersFading()
+    _needsFastAnim() ||
+    windActive() ||
+    weatherActive() ||
+    waterTiles().length > 0 ||
+    cratersFading() ||
+    unitAnimActive()
   );
+}
+
+// ── ANIMAZIONI DEI SOLDATI ─────────────────────────────────────────────
+// Pedine disegnate (plchldSprites.js:drawUnitSprite con `anim`): respiro
+// continuo (più rapido da feriti), gesti a riposo scelti dal tempo e dall'id
+// dell'unità (nessuno stato da salvare: guardarsi intorno, perlustrare con
+// l'arma, controllarla) e la ricarica, avviata da actions.js:reloadWeapon
+// con unit.animReload = istante d'inizio. Preferenza in
+// localStorage[UNIT_ANIM_PREF_KEY]; spente con "riduci movimento".
+const UNIT_ANIM_PREF_KEY = "vn68_unit_anim";
+const UNIT_ANIM = {
+  breathPeriod: 3.4, // s, a riposo
+  breathPeriodWounded: 2.1,
+  breathAmp: 0.014, // scala del busto
+  slot: 6.5, // s: ogni unità valuta un gesto per intervallo
+  idleChance: { look: 0.3, sweep: 0.15, check: 0.15 }, // il resto: fermo
+  look: { dur: 2.4, head: 0.75 },
+  sweep: { dur: 2.6, gun: 0.3 },
+  check: { dur: 2.4, gun: -0.55, dx: -0.03, dy: 0.06, head: 0.35 },
+  reload: { dur: 1.7, gun: 0.3 },
+  proneDamp: 0.5, // sdraiati: gesti più piccoli
+};
+
+G.unitAnimEnabled = (() => {
+  try {
+    const v = localStorage.getItem(UNIT_ANIM_PREF_KEY);
+    if (v !== null) return v === "1";
+  } catch {}
+  return !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+})();
+
+function toggleUnitAnim() {
+  G.unitAnimEnabled = !G.unitAnimEnabled;
+  try {
+    localStorage.setItem(UNIT_ANIM_PREF_KEY, G.unitAnimEnabled ? "1" : "0");
+  } catch {}
+  render();
+  _startTileAnimLoop();
+}
+
+function unitAnimActive() {
+  return G.unitAnimEnabled && !!G.mapData && G.units.some((u) => u.alive);
+}
+
+// Numero pseudo-casuale stabile in [0, 1) da una stringa e un intero
+function _animHash(id, n) {
+  let h = 2166136261 ^ n;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  h = Math.imul(h ^ (h >>> 15), 2246822507);
+  return ((h ^ (h >>> 13)) >>> 0) / 4294967296;
+}
+
+// Finestra morbida: 0 ai bordi, 1 nel mezzo (salita e discesa su `edge`)
+function _animEnv(p, edge = 0.2) {
+  const s = (x) => x * x * (3 - 2 * x);
+  return p < edge ? s(p / edge) : p > 1 - edge ? s((1 - p) / edge) : 1;
+}
+
+const _lerp2 = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+
+// Posa del momento per un'unità (US o VC); null = figura ferma
+function unitAnimPose(u, isEnemy = false) {
+  if (!G.unitAnimEnabled || !u?.alive) return null;
+  const now = performance.now();
+  const t = now / 1000;
+  const id = String(u.id);
+  const wounded = !isEnemy && u.maxHp && u.hp / u.maxHp <= WOUND_THRESHOLD;
+  const period = wounded ? UNIT_ANIM.breathPeriodWounded : UNIT_ANIM.breathPeriod;
+  const pose = {
+    breath: 1 + UNIT_ANIM.breathAmp * Math.sin((2 * Math.PI * t) / period + _animHash(id, 0) * 6.28),
+    gunRot: 0,
+    gunDx: 0,
+    gunDy: 0,
+    headRot: 0,
+  };
+  const damp = u.stance === "prone" ? UNIT_ANIM.proneDamp : 1;
+  // Ricarica in corso: la mano sinistra va alla giberna e torna col caricatore
+  const R = UNIT_ANIM.reload;
+  const rp = u.animReload ? (now - u.animReload) / 1000 / R.dur : 2;
+  if (rp >= 0 && rp < 1) {
+    const sp = SOLDIER_POSES[SOLDIER_POSES[u.stance] ? u.stance : "stand"];
+    const look = SOLDIER_LOOKS[soldierLook(u.cls, isEnemy)];
+    const grip = look?.weapon === "pistol" ? sp.grip : sp.armL[2];
+    const [gx, gy, mx, my] = sp.gun;
+    const well = look?.weapon === "pistol" ? [sp.grip[0], sp.grip[1] + 0.02] : _lerp2([gx, gy], [mx, my], 0.33);
+    const pouch = [sp.torso[0] - sp.torso[2] * 0.75, sp.torso[1] + sp.torso[3] * 0.7];
+    const seg = (a, b, k) => _lerp2(a, b, k * k * (3 - 2 * k));
+    let handL;
+    if (rp < 0.2) handL = seg(grip, well, rp / 0.2);
+    else if (rp < 0.45) handL = seg(well, pouch, (rp - 0.2) / 0.25);
+    else if (rp < 0.7) handL = seg(pouch, well, (rp - 0.45) / 0.25);
+    else if (rp < 0.82) handL = well;
+    else handL = seg(well, grip, (rp - 0.82) / 0.18);
+    pose.handL = handL;
+    pose.mag = rp > 0.2 && rp < 0.72;
+    pose.gunRot = R.gun * damp * _animEnv(rp, 0.15);
+    // Colpo secco del caricatore inserito
+    if (rp > 0.7 && rp < 0.8) pose.gunDy = 0.015 * Math.sin(((rp - 0.7) / 0.1) * Math.PI);
+    pose.headRot = 0.25 * _animEnv(rp, 0.2);
+    return pose;
+  }
+  // Gesti a riposo: uno per intervallo, all'inizio dell'intervallo
+  const slotT = t + _animHash(id, 1) * UNIT_ANIM.slot;
+  const slot = Math.floor(slotT / UNIT_ANIM.slot);
+  const into = slotT - slot * UNIT_ANIM.slot - 0.5;
+  const r = _animHash(id, slot + 7);
+  const ch = UNIT_ANIM.idleChance;
+  const kind = r < ch.look ? "look" : r < ch.look + ch.sweep ? "sweep" : r < ch.look + ch.sweep + ch.check ? "check" : null;
+  // I VC in agguato o mimetizzati restano immobili, a parte il respiro
+  if (!kind || (isEnemy && (u.ambush || kind === "check"))) return pose;
+  const A = UNIT_ANIM[kind];
+  if (into < 0 || into > A.dur) return pose;
+  const p = into / A.dur;
+  const env = _animEnv(p);
+  const dir = _animHash(id, slot + 13) < 0.5 ? 1 : -1;
+  if (kind === "look") pose.headRot = A.head * damp * dir * Math.sin(2 * Math.PI * p) * env;
+  else if (kind === "sweep") {
+    pose.gunRot = A.gun * damp * dir * Math.sin(2 * Math.PI * p) * env;
+    pose.headRot = pose.gunRot * 0.8;
+  } else {
+    pose.gunRot = A.gun * damp * env;
+    pose.gunDx = A.dx * env;
+    pose.gunDy = A.dy * damp * env;
+    pose.headRot = A.head * damp * env;
+  }
+  return pose;
 }
 
 function _startTileAnimLoop() {

@@ -570,6 +570,8 @@
     "audio": "Audio",
     "wind": "Wind on the map",
     "wind_desc": "Grass and canopy moved by gusts (heavier on slow PCs)",
+    "unit_anim": "Soldier animations",
+    "unit_anim_desc": "Breathing, looking around, checking and reloading the weapon",
     "mods": "Mods",
     "mods_desc": "{n} active · extra classes, weapons, enemies, maps and campaigns",
     "keys": "Keyboard controls",
