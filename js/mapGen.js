@@ -1095,7 +1095,7 @@ function _buildUrbanMap(seed, attempt, size) {
       capture_objective: [{ ...hq, label: it.objectives.capture_objective[0].label, holdTurns: 2 }],
     },
     supportedMissions: ["recon", "search_destroy", "rescue_pilot", "capture_objective"],
-    ambient: "missions/hue_city_ambient.ogg",
+    ambient: "assets/city_battle.mp3",
     // Passi sulle strade, come in Hue City (precaricati dal catalogo)
     sounds: { move: "assets/run_street.mp3" },
     // Meteo (solo visivo): acquazzoni casuali

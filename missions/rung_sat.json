@@ -2,10 +2,6 @@
   "$schema": "../schemas/mission.schema.json",
   "name": "Rung Sat Special Zone",
   "description": "An operation in the Mekong Delta mangroves. Hostile terrain, reduced visibility.",
-  "image": "rung_sat_ext.webp",
-  "width": 1024,
-  "height": 768,
-  "tileSize": 64,
   "cols": 16,
   "rows": 12,
 

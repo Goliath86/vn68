@@ -164,7 +164,7 @@
     "capture_objective"
   ],
 
-  "ambient": "missions/hue_city_ambient.ogg",
+  "ambient": "assets/city_battle.mp3",
   "sounds": {
     "move": "assets/run_street.mp3"
   },
