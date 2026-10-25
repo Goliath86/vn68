@@ -8,7 +8,7 @@
     "miss": "assets/bullet_ricochet.mp3",
     "ambush": "assets/ambush.mp3",
     "demolition": "assets/demolition.mp3",
-    "disarm": "",
+    "disarm": "assets/cracking_wood.mp3",
     "heal": "assets/bandaging.mp3",
     "reload": "assets/reload.mp3",
     "overwatch": "",
