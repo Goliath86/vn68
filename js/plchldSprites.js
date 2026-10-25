@@ -1,7 +1,7 @@
-// â”€â”€ TILE TEXTURE DETAILS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── TILE TEXTURE DETAILS ───────────────────────────────────────────────
 // Disegnati una sola volta nella cache del terreno (render.js:getTerrainCache),
 // quindi possono essere ricchi. Usano solo velature chiare/scure sopra il
-// `color` del JSON missione, cosÃ¬ la tinta resta config-driven. Variazione
+// `color` del JSON missione, così la tinta resta config-driven. Variazione
 // deterministica per tile (seed da col/row); i pattern continui (mattoni,
 // onde, lastricato) usano coordinate di mondo per combaciare tra tile vicini.
 const _dk = (a) => `rgba(0,0,0,${a.toFixed(3)})`;
@@ -13,7 +13,7 @@ function _tileRng(col, row) {
   return () => _hash01(seed + i++ * 17.31);
 }
 
-// Velatura con segno: t in [-0.5, 0.5] â†’ scura se negativo, chiara se positivo
+// Velatura con segno: t in [-0.5, 0.5] → scura se negativo, chiara se positivo
 function _tint(t, dark, light) {
   return t < 0 ? _dk(-t * dark) : _lt(t * light);
 }
@@ -85,7 +85,7 @@ function _grass(ctx, x, y, ts, rng, n) {
   }
 }
 
-// Chioma/cespuglio a strati: ombra â†’ base â†’ lobi â†’ luce
+// Chioma/cespuglio a strati: ombra → base → lobi → luce
 function _foliage(ctx, cx, cy, r, rng, cols, shadow = true) {
   if (shadow) _disc(ctx, cx + r * 0.25, cy + r * 0.35, r * 1.05, _dk(0.32));
   _disc(ctx, cx, cy, r, cols[0]);
@@ -96,7 +96,7 @@ function _foliage(ctx, cx, cy, r, rng, cols, shadow = true) {
   _disc(ctx, cx - r * 0.3, cy - r * 0.35, r * 0.4, cols[2]);
 }
 
-// Mattoni allineati al mondo: le mura di piÃ¹ tile formano un'unica tessitura
+// Mattoni allineati al mondo: le mura di più tile formano un'unica tessitura
 function _tdBricks(ctx, x, y, ts, rng, cracked) {
   const bh = ts / 6;
   const bw = ts / 3;
@@ -116,7 +116,7 @@ function _tdBricks(ctx, x, y, ts, rng, cracked) {
     }
   }
   _grain(ctx, x, y, ts, rng, 10, 0.12);
-  // macchie di umiditÃ 
+  // macchie di umidità
   for (let i = 0; i < 2; i++) {
     if (rng() < 0.5) continue;
     _oval(ctx, x + rng() * ts, y + rng() * ts, ts * (0.1 + rng() * 0.12), ts * (0.06 + rng() * 0.06), _dk(0.1));
@@ -218,7 +218,7 @@ function _tdBuilding(ctx, x, y, ts, rng) {
   ctx.strokeRect(x + p, y + p, w, w);
 }
 
-// Tetto a padiglione a piÃ¹ ordini, finiture dorate
+// Tetto a padiglione a più ordini, finiture dorate
 function _tdTemple(ctx, x, y, ts, rng) {
   const cx = x + ts / 2;
   const cy = y + ts / 2;
@@ -316,7 +316,7 @@ function _log(ctx, x1, y1, x2, y2, w, rng) {
   line(w * 0.25, w * 0.35);
   ctx.strokeStyle = `rgb(${88 + Math.round(rng() * 20)},64,40)`;
   line(0, 0);
-  ctx.strokeStyle = _dk(0.25); // metÃ  in ombra
+  ctx.strokeStyle = _dk(0.25); // metà in ombra
   ctx.lineWidth = w * 0.45;
   line(Math.sin(ang) * -w * 0.22, Math.cos(ang) * w * 0.22);
   ctx.strokeStyle = _lt(0.14);
@@ -337,7 +337,7 @@ function _log(ctx, x1, y1, x2, y2, w, rng) {
     ctx.lineTo(px + Math.cos(ang) * l, py + Math.sin(ang) * l);
     ctx.stroke();
   }
-  // sezione del taglio all'estremitÃ 
+  // sezione del taglio all'estremità
   ctx.save();
   ctx.translate(x2, y2);
   ctx.rotate(ang);
@@ -378,7 +378,7 @@ function _tdObstacle(ctx, x, y, ts, rng) {
     const cy = y + ts / 2;
     const l = ts * 0.38;
     _log(ctx, cx - Math.cos(a) * l, cy - Math.sin(a) * l, cx + Math.cos(a) * l, cy + Math.sin(a) * l, ts * 0.17, rng);
-    // secondo tronco accatastato di traverso, piÃ¹ corto
+    // secondo tronco accatastato di traverso, più corto
     const b = a + Math.PI / 2 + (rng() - 0.5) * 0.8;
     const l2 = ts * 0.28;
     const ox = (rng() - 0.5) * ts * 0.2;
@@ -417,7 +417,7 @@ function _tdClearing(ctx, x, y, ts, rng) {
 }
 
 // Solo il sottobosco: le chiome sono una passata a parte senza clip
-// (drawJungleCanopy), cosÃ¬ sporgono dal tile e la giungla non ha bordi quadrati
+// (drawJungleCanopy), così sporgono dal tile e la giungla non ha bordi quadrati
 function _tdJungle(ctx, x, y, ts, rng) {
   ctx.fillStyle = _dk(0.25); // sottobosco in ombra
   ctx.fillRect(x, y, ts, ts);
@@ -617,7 +617,7 @@ function _tdDebris(ctx, x, y, ts, rng) {
   }
 }
 
-// Segnale dell'obiettivo (TILE_OBJECTS): il fondo Ã¨ il lastricato
+// Segnale dell'obiettivo (TILE_OBJECTS): il fondo è il lastricato
 function _objectiveMarker(ctx, x, y, ts) {
   ctx.strokeStyle = "rgba(255,200,30,0.55)";
   ctx.lineWidth = 1.5;
@@ -637,7 +637,7 @@ function _objectiveMarker(ctx, x, y, ts) {
   _disc(ctx, x + ts * 0.5, y + ts * 0.5, ts * 0.06, "rgba(255,200,30,0.55)");
 }
 
-// Sentiero sinuoso che entra ed esce a metÃ  dei lati alto/basso
+// Sentiero sinuoso che entra ed esce a metà dei lati alto/basso
 function _tdTrail(ctx, x, y, ts, rng) {
   _grass(ctx, x, y, ts, rng, 14);
   const c1 = x + ts * (0.25 + rng() * 0.5);
@@ -791,23 +791,23 @@ const TILE_DETAILS = {
 };
 
 // Elementi in rilievo sul fondo del tile: disegnati da drawTileObjects dopo
-// le fusioni tra terreni (drawTerrainTransitions), cosÃ¬ il terreno vicino che
+// le fusioni tra terreni (drawTerrainTransitions), così il terreno vicino che
 // sconfina nel tile passa sotto e non li sbiadisce
 const TILE_OBJECTS = {
   village: _villageHuts,
   objective: _objectiveMarker,
 };
 
-// â”€â”€ ASPETTO DEI TILE ("texture" nel tileType) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Tutto ciÃ² che Ã¨ solo disegno (texture, fusioni, rive, ombre, chiome, erba
+// ── ASPETTO DEI TILE ("texture" nel tileType) ─────────────────────────
+// Tutto ciò che è solo disegno (texture, fusioni, rive, ombre, chiome, erba
 // al vento, onde, nebbia, uccelli, crateri) dipende dall'aspetto del tile, non
 // dal suo id: "texture": "jungle" fa disegnare un tile nuovo come la giungla.
 // Un percorso d'immagine ("assets/risaia.png") viene invece disegnato sopra
 // il `color` del tile (le parti trasparenti lasciano vedere il colore) e per
 // il resto conta come terreno generico (altezza da losBlock).
 const TEXTURE_IMAGE_RE = /\.(png|jpe?g|webp|gif)$/i;
-const _textureImages = new Map(); // percorso â†’ Image
-const _unknownLooks = new Set(); // aspetti sconosciuti giÃ  segnalati
+const _textureImages = new Map(); // percorso → Image
+const _unknownLooks = new Set(); // aspetti sconosciuti già segnalati
 
 function _textureImagePath(def) {
   const tx = def?.texture;
@@ -827,7 +827,7 @@ function tileLook(def) {
 
 // Immagini delle texture della mappa: caricate dall'avvio della missione
 // (game.js:useMission, render.js:prebuildTerrainCache); se una arriva a
-// cache del terreno giÃ  costruita, la cache viene rifatta
+// cache del terreno già costruita, la cache viene rifatta
 function loadTileTextures(md) {
   const paths = [...new Set(Object.values(md?.tileTypes || {}).map(_textureImagePath).filter(Boolean))];
   return Promise.all(
@@ -866,7 +866,7 @@ function _paintDetails(ctx, def, x, y, ts, rng, surface = false) {
     ctx.drawImage(img, x, y, ts, ts);
     return;
   }
-  // lieve variazione di luminositÃ  per tile: rompe l'uniformitÃ  della griglia
+  // lieve variazione di luminosità per tile: rompe l'uniformità della griglia
   ctx.fillStyle = _tint(rng() - 0.5, 0.1, 0.05);
   ctx.fillRect(x, y, ts, ts);
   const look = tileLook(def);
@@ -885,21 +885,21 @@ function drawTileDetails(ctx, tileDef, x, y, ts, col = 0, row = 0) {
   ctx.restore();
 }
 
-// ctx giÃ  limitato al tile (drawTerrainTransitions) o tile isolato
+// ctx già limitato al tile (drawTerrainTransitions) o tile isolato
 // (render.js:renderBlastedTiles); seme proprio, indipendente dal fondo
 function drawTileObjects(ctx, tileDef, x, y, ts, col = 0, row = 0) {
   const draw = !_tileImage(tileDef) && TILE_OBJECTS[tileLook(tileDef)];
   if (draw) draw(ctx, x, y, ts, _tileRng(col + 0.37, row + 0.61));
 }
 
-// â”€â”€ TRANSIZIONI E OMBRE TRA TILE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Passata eseguita dopo aver disegnato tutti i tile; ogni effetto Ã¨ disegnato
+// ── TRANSIZIONI E OMBRE TRA TILE ───────────────────────────────────────
+// Passata eseguita dopo aver disegnato tutti i tile; ogni effetto è disegnato
 // nel tile che lo "riceve": fusioni tra terreni diversi, rive del fiume, ombre
 // a sud-est dei tile alti (luce da nord-ovest, coerente con i disegni dei
-// tile). Id sconosciuti: altezza da losBlock "full", prioritÃ  0.
+// tile). Id sconosciuti: altezza da losBlock "full", priorità 0.
 //
-// Fusione: tra due terreni "a terra" vicini, quello a prioritÃ  piÃ¹ alta (a
-// paritÃ  decide l'id, cosÃ¬ ne invade sempre uno solo) entra nell'altro. Nel
+// Fusione: tra due terreni "a terra" vicini, quello a priorità più alta (a
+// parità decide l'id, così ne invade sempre uno solo) entra nell'altro. Nel
 // tile che riceve si ridisegna la texture del vicino e la si mostra attraverso
 // una maschera alfa piena sul lato di contatto e sfumata verso l'interno, con
 // frangia irregolare; gli angoli toccati solo in diagonale ricevono uno spicchio.
@@ -916,15 +916,15 @@ const TILE_BLEED_PRIORITY = {
   plaza: 1,
   objective: 0,
 };
-// ProfonditÃ  della fusione (frazione di tile) per terreno che invade;
-// i lastricati entrano poco, la giungla ha giÃ  le chiome che sporgono
+// Profondità della fusione (frazione di tile) per terreno che invade;
+// i lastricati entrano poco, la giungla ha già le chiome che sporgono
 const TILE_BLEND_DEPTH = { jungle: 0.3, swamp: 0.55, debris: 0.28, street: 0.22, plaza: 0.2, objective: 0.2 };
 const TILE_BLEND_DEPTH_DEFAULT = 0.4;
 // Tetto per terreno che riceve: il tracciato del sentiero resta leggibile
 const TILE_BLEND_MAX_IN = { trail: 0.38 };
 // Texture usata quando il terreno invade un vicino: solo il fondo, senza gli
-// elementi che non devono comparire a metÃ  nel tile accanto (aia, tracciato;
-// capanne e segnale dell'obiettivo sono giÃ  a parte in TILE_OBJECTS)
+// elementi che non devono comparire a metà nel tile accanto (aia, tracciato;
+// capanne e segnale dell'obiettivo sono già a parte in TILE_OBJECTS)
 const TILE_SURFACE = {
   village: (ctx, x, y, ts, rng) => _grass(ctx, x, y, ts, rng, 10),
   trail: (ctx, x, y, ts, rng) => _grain(ctx, x, y, ts, rng, 14, 0.1),
@@ -932,7 +932,7 @@ const TILE_SURFACE = {
 const TILE_HEIGHT = {
   wall: 0.32,
   wall_breach: 0.32,
-  // Massi/tronchi bassi su erba: hanno giÃ  le loro ombre, il tile no
+  // Massi/tronchi bassi su erba: hanno già le loro ombre, il tile no
   // (0 esplicito: altrimenti varrebbe il default di losBlock "full")
   obstacle: 0,
   building: 0.3,
@@ -990,7 +990,7 @@ function _outranks(a, b) {
   return pa !== pb ? pa > pb : a.id > b.id;
 }
 
-// Chiazza morbida per la maschera (alfa al centro â†’ 0 sul bordo)
+// Chiazza morbida per la maschera (alfa al centro → 0 sul bordo)
 function _softBlob(ctx, cx, cy, r, a) {
   const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
   g.addColorStop(0, `rgba(0,0,0,${a})`);
@@ -1000,7 +1000,7 @@ function _softBlob(ctx, cx, cy, r, a) {
 }
 
 // Maschera del lato `d`: gradiente + frangia di chiazze. Le chiazze stanno su
-// una griglia di mondo lungo il lato, cosÃ¬ la frangia prosegue senza salti nei
+// una griglia di mondo lungo il lato, così la frangia prosegue senza salti nei
 // tile che condividono la stessa linea di contatto
 function _maskEdge(ctx, x, y, ts, d, len) {
   _edgeGradient(ctx, x, y, ts, d, len, [
@@ -1033,7 +1033,7 @@ function _blendCanvas(c, px) {
 }
 
 function _drawSoftEdges(ctx, defAt, def, c, r, ts) {
-  const invaders = new Map(); // id â†’ { def, sides, corners }
+  const invaders = new Map(); // id → { def, sides, corners }
   // stesso aspetto (es. id nuovo con "texture" uguale al vicino): niente fusione
   const same = (a, b) => a.id === b.id || (tileLook(a) === tileLook(b) && !_tileImage(a) && !_tileImage(b));
   const take = (n) => {
@@ -1052,12 +1052,12 @@ function _drawSoftEdges(ctx, defAt, def, c, r, ts) {
   }
   if (!invaders.size) return;
 
-  const k = ctx.getTransform().a; // densitÃ  della cache del terreno
+  const k = ctx.getTransform().a; // densità della cache del terreno
   const px = Math.ceil(ts * k);
   const x = c * ts;
   const y = r * ts;
   const cap = TILE_BLEND_MAX_IN[tileLook(def)] ?? 1;
-  // dal piÃ¹ debole al piÃ¹ forte: il terreno dominante resta sopra
+  // dal più debole al più forte: il terreno dominante resta sopra
   const list = [...invaders.values()].sort((p, q) => (_outranks(p.def, q.def) ? 1 : -1));
   for (const { def: n, sides, corners } of list) {
     _blendTex = _blendCanvas(_blendTex, px);
@@ -1107,7 +1107,7 @@ function _drawCastShadow(ctx, x, y, ts, hN, hW, hNW) {
   if (hW) _edgeGradient(ctx, x, y, ts, 3, ts * hW, [[0, _dk(0.4)], [1, _dk(0)]]);
   if (hN) _edgeGradient(ctx, x, y, ts, 0, ts * hN, [[0, _dk(0.4)], [1, _dk(0)]]);
   if (hNW && !hW && !hN) {
-    // solo l'angolo: il tile alto Ã¨ in diagonale
+    // solo l'angolo: il tile alto è in diagonale
     const g = ctx.createRadialGradient(x, y, 0, x, y, ts * hNW);
     g.addColorStop(0, _dk(0.35));
     g.addColorStop(1, _dk(0));
@@ -1153,12 +1153,12 @@ function drawTerrainTransitions(ctx, md, ts, r0 = 0, r1 = md.rows, c0 = 0, c1 = 
   }
 }
 
-// â”€â”€ CHIOME DELLA GIUNGLA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── CHIOME DELLA GIUNGLA ───────────────────────────────────────────────
 // Passata finale senza clip (dopo le transizioni): le chiome degli alberi
 // escono dal tile. Verso altra giungla (o il bordo mappa) si fondono
 // liberamente; verso terreni diversi sporgono al massimo di CANOPY_OVERHANG
-// tile, per non far sembrare coperto un tile che non lo Ã¨. Tutte le chiome
-// della mappa sono disegnate da nord a sud, cosÃ¬ si sovrappongono in modo
+// tile, per non far sembrare coperto un tile che non lo è. Tutte le chiome
+// della mappa sono disegnate da nord a sud, così si sovrappongono in modo
 // coerente anche tra tile diversi.
 const CANOPY_OVERHANG = 0.14;
 const CANOPY_COLS = ["rgba(25,60,18,0.92)", "rgba(50,105,30,0.72)", "rgba(140,200,80,0.28)"];
@@ -1168,7 +1168,7 @@ function jungleCrowns(md, ts) {
   const isJungle = (c, r) =>
     c < 0 || r < 0 || c >= md.cols || r >= md.rows || tileLook(md.tileTypes[md.grid[r][c]]) === "jungle";
   // Intervallo del centro di una chioma lungo un asse: fino al bordo verso la
-  // giungla, rientrato di (estensione âˆ’ sporgenza) verso altri terreni
+  // giungla, rientrato di (estensione − sporgenza) verso altri terreni
   const span = (start, re, openLo, openHi) => {
     const lo = openLo ? start : start + re - CANOPY_OVERHANG * ts;
     const hi = openHi ? start + ts : start + ts - re + CANOPY_OVERHANG * ts;
@@ -1181,7 +1181,7 @@ function jungleCrowns(md, ts) {
       const rng = _tileRng(c + 0.13, r + 0.29);
       const n = 6 + Math.floor(rng() * 2);
       for (let i = 0; i < n; i++) {
-        // ogni tanto un albero emergente, piÃ¹ grande, rompe la griglia
+        // ogni tanto un albero emergente, più grande, rompe la griglia
         const rad = ts * (rng() < 0.12 ? 0.3 + rng() * 0.08 : 0.15 + rng() * 0.12);
         const re = rad * 1.1; // estensione dei lobi oltre il raggio
         const [x0, x1] = span(c * ts, re, isJungle(c - 1, r), isJungle(c + 1, r));
@@ -1199,7 +1199,7 @@ function drawJungleCanopy(ctx, md, ts, crowns = jungleCrowns(md, ts)) {
   }
 }
 
-// â”€â”€ CHIOME AL VENTO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── CHIOME AL VENTO ────────────────────────────────────────────────────
 // Col vento le chiome non stanno nella cache del terreno: ridisegnarne
 // migliaia di cerchi a ogni fotogramma costerebbe troppo, quindi si
 // preparano una volta CANOPY_VARIANTS chiome tipo (raggio CANOPY_SPRITE_R) e
@@ -1248,7 +1248,7 @@ function windCanopy(md, ts) {
   }));
 }
 
-// â”€â”€ SPRITES PERSONAGGI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── SPRITES PERSONAGGI ─────────────────────────────────────────────────────
 
 function _poly(ctx, pts) {
   ctx.beginPath();
@@ -1269,10 +1269,10 @@ function _star5(ctx, cx, cy, r) {
 
 // --- Pedine: soldati visti dall'alto ---
 // Ogni aspetto (scelto con il campo "sprite" della classe, altrimenti col suo
-// nome) dice uniforme, copricapo, equipaggiamento e arma. Il soldato Ã¨
+// nome) dice uniforme, copricapo, equipaggiamento e arma. Il soldato è
 // disegnato rivolto a nord in coordinate di tile (-0.5..0.5) per ognuna
 // delle tre posture, messo in cache come immagine insieme alla sua sagoma
-// (l'ombra) e ruotato da drawUnitSprite secondo il facing dell'unitÃ .
+// (l'ombra) e ruotato da drawUnitSprite secondo il facing dell'unità.
 // rig = cinghie sul busto (us: bretelle e cinturone; chicom: giberne sul
 // petto; belt: solo cintura); sleeves "rolled" = maniche arrotolate;
 // feet "sandals" = sandali invece degli scarponi
@@ -1289,10 +1289,10 @@ const SOLDIER_LOOKS = {
   nva: { cloth: "#4f5934", skin: "#c49565", hat: "pith", hatCol: "#5a663a", weapon: "ak", rig: "chicom", gear: ["pack"] },
 };
 
-// Per postura: ombra (tile verso sud-est, piÃ¹ corta vicino al suolo), scala e
+// Per postura: ombra (tile verso sud-est, più corta vicino al suolo), scala e
 // punti del corpo nella figura rivolta a nord. torso [x, y, rx, ry]; legs
-// [punti, "boot" | "knee"]; gun [calcio x, y, volata x, y]; arm* spalla â†’
-// gomito â†’ mano; grip = mani sulla pistola; back = centro di zaino/radio
+// [punti, "boot" | "knee"]; gun [calcio x, y, volata x, y]; arm* spalla →
+// gomito → mano; grip = mani sulla pistola; back = centro di zaino/radio
 const SOLDIER_POSES = {
   stand: {
     shadow: 0.07,
@@ -1389,8 +1389,8 @@ function _blobs(ctx, col, pts) {
     ctx.fill();
   }
 }
-// Volume tondeggiante: piÃ¹ chiaro al centro (la luce non dipende da dove
-// guarda l'unitÃ ), contorno scuro
+// Volume tondeggiante: più chiaro al centro (la luce non dipende da dove
+// guarda l'unità), contorno scuro
 function _dome(ctx, x, y, rx, ry, col, rot = 0) {
   const g = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
   g.addColorStop(0, _shadeHex(col, 0.2));
@@ -1829,7 +1829,7 @@ function _paintSoldierHead(ctx, look, stance) {
 }
 
 // Figura e sagoma per l'ombra in cache, a una risoluzione vicina a quella
-// del tile (multipli di 16 px) cosÃ¬ resta nitida a ogni zoom
+// del tile (multipli di 16 px) così resta nitida a ogni zoom
 const _SOLDIER_CACHE = new Map();
 function soldierSprite(lookId, stance, ts) {
   const px = Math.min(192, Math.max(16, Math.ceil(ts / 16) * 16));
@@ -1945,14 +1945,14 @@ function _drawAnimatedSoldier(ctx, lookId, pose, ts, anim) {
   ctx.restore();
 }
 
-// Aspetto della classe: campo "sprite", altrimenti il nome se Ã¨ un aspetto
+// Aspetto della classe: campo "sprite", altrimenti il nome se è un aspetto
 // noto, altrimenti il fuciliere della fazione
 function soldierLook(cls, isEnemy) {
   const base = (isEnemy ? ENEMY_CLASSES : UNIT_CLASSES)[cls]?.sprite ?? cls;
   return SOLDIER_LOOKS[base] ? base : isEnemy ? "grunt" : "assault";
 }
 
-// Pedina dell'unitÃ  nel tile (x, y): postura e facing (0 = nord â€¦ 3 = ovest)
+// Pedina dell'unità nel tile (x, y): postura e facing (0 = nord … 3 = ovest)
 // scelgono la figura e la sua rotazione; turn = rotazione extra (radianti)
 // anim = posa animata (animations.js:unitAnimPose), null = figura ferma
 function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy, stance, facing, turn = 0, anim = null) {
