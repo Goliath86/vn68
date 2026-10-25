@@ -13,7 +13,7 @@
     "melee": "assets/knife.mp3",
     "heal": "assets/bandaging.mp3",
     "reload": "assets/reload.mp3",
-    "overwatch": "",
+    "overwatch": "assets/overwatch.mp3",
     "spawn": "assets/spawn.mp3",
     "jet": "assets/fighter_jet.mp3",
     "napalm": "assets/napalm.mp3",

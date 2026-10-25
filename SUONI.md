@@ -38,6 +38,7 @@ Censimento aggiornato al 2026-10-25. Come funziona l'audio (`js/sounds.js`):
 | `assets/knife.mp3` | `melee` | coltello (tutte le classi, US e VC) |
 | `assets/bandaging.mp3` | `heal` | cura del medico e primo soccorso |
 | `assets/reload.mp3` | `reload` | ricarica dell'arma |
+| `assets/overwatch.mp3` | `overwatch` | attivazione di overwatch **e** di fuoco soppressivo |
 | `assets/spawn.mp3` | `spawn` | arrivo dei rinforzi VC |
 | `assets/fighter_jet.mp3` | `jet` | passaggio del jet del napalm |
 | `assets/napalm.mp3` | `napalm` | fiammata del napalm (una volta per ogni tile della linea) |
@@ -107,21 +108,20 @@ Le mappe procedurali costruiscono i loro `tileTypes` nel codice
 | `napalm` | fiammata del napalm | ✅ napalm.mp3 |
 | `victory` | missione vinta | ✅ victory.mp3 |
 | `defeat` | missione persa | ✅ defeat.mp3 |
-| `overwatch` | attivazione di overwatch / fuoco soppressivo | ❌ sintetizzato |
+| `overwatch` | attivazione di overwatch / fuoco soppressivo | ✅ overwatch.mp3 |
 | `click` | click dell'interfaccia, chiamata radio di artiglieria e napalm, scelte nel menu e nella campagna | ❌ sintetizzato |
 | `shoot` | arma US senza suono proprio: oggi nessuna | — solo fallback |
 | `shoot_vc` | arma VC senza suono proprio: oggi nessuna | — solo fallback |
 
-**Copertura: 17 chiavi su 19 utili hanno un asset** (dal censimento del
+**Copertura: 18 chiavi su 19 utili hanno un asset** (dal censimento del
 2026-10-18 si sono aggiunti fumogeno, `melee`, `demolition`, `disarm`, `spawn`,
-`jet`, `napalm`, `victory`, i passi urbani e la musica urbana).
+`jet`, `napalm`, `victory`, `overwatch`, i passi urbani e la musica urbana).
 
 ## 3. Cosa manca
 
-Per non sentire più nessun suono sintetizzato in gioco servono **2 file**:
+Per non sentire più nessun suono sintetizzato in gioco serve **1 file**:
 
-1. `overwatch` — attivazione di overwatch/soppressione (es. otturatore armato)
-2. `click` — click dell'interfaccia / radio
+1. `click` — click dell'interfaccia / radio
 
 `shoot` e `shoot_vc` non servono: restano come rete di sicurezza per armi
 future senza suono.
