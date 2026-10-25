@@ -154,7 +154,7 @@ Fields written by the game, accepted without warnings: `procedural`, `seed`, `si
 | `coverBonus` | number ≥ 0 | Defense bonus to its occupant. |
 | `color` | text | Procedural drawing color (#rrggbb). → `#rrggbb` color. |
 | `texture` | text | Maps without `image` only. Tile look: the name of a terrain the game already draws (`jungle`, `swamp`, `clearing`, `river`, `building`…) draws the `id` like that terrain with all its effects (canopy, waves, wind-blown grass, mist, shadows), tinted by `color`; or the path of an image (PNG/JPG/WebP/GIF) drawn over `color`. Visual only. → known terrain or image path (current: `scorched`, `wall`, `obstacle`, `wall_breach`, `building`, `temple`, `garden`, `clearing`, `jungle`, `swamp`, `river`, `bridge`, `ford`, `street`, `urban`, `plaza`, `objective`, `debris`, `trail`, `village`, `bunker`). |
-| `sound` | text | Footsteps on this terrain (e.g. ford, swamp, street): each move plays the one of the terrain crossed most; without it, the map's or `config.json`'s `move` sound. → file path from the game folder (in a mod and its maps: from the mod folder). |
+| `sound` | text | Footsteps on this terrain (e.g. ford, swamp, street): each move plays the one of the terrain crossed most among those with their own sound (one tile is enough); if none has one, the map's or `config.json`'s `move` sound. → file path from the game folder (in a mod and its maps: from the mod folder). |
 | `impassable` | boolean | Blocks movement (walls, rivers). |
 | `losBlock` | `full` \| `partial` | `full` = blocks sight, `partial` = −1 to vision range per tile crossed. |
 | `burnable` | boolean | The Engineer can set it on fire (burns for 2 turns). |

@@ -87,7 +87,8 @@
       "label": "Guado",
       "moveCost": 2,
       "coverBonus": 0,
-      "color": "#2e7a9e"
+      "color": "#2e7a9e",
+      "sound": "assets/guado.mp3"
     },
     "O": {
       "id": "objective",

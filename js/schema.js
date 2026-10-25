@@ -232,8 +232,8 @@ const SCHEMA_TILE_TYPE = _sc.obj({
     "Maps without `image` only. Tile look: the name of a terrain the game already draws (`jungle`, `swamp`, `clearing`, `river`, `building`…) draws the `id` like that terrain with all its effects (canopy, waves, wind-blown grass, mist, shadows), tinted by `color`; or the path of an image (PNG/JPG/WebP/GIF) drawn over `color`. Visual only",
   ] }),
   sound: _sc.str({ ref: "file", d: [
-    "Passi su questo terreno (es. guado, palude, strada): a ogni movimento suona quello del terreno attraversato di più; senza, il suono `move` della mappa o di `config.json`",
-    "Footsteps on this terrain (e.g. ford, swamp, street): each move plays the one of the terrain crossed most; without it, the map's or `config.json`'s `move` sound",
+    "Passi su questo terreno (es. guado, palude, strada): a ogni movimento suona quello del terreno attraversato di più tra quelli con un suono proprio (basta un tile); se nessuno ne ha, il suono `move` della mappa o di `config.json`",
+    "Footsteps on this terrain (e.g. ford, swamp, street): each move plays the one of the terrain crossed most among those with their own sound (one tile is enough); if none has one, the map's or `config.json`'s `move` sound",
   ] }),
   impassable: _sc.bool({ d: ["Blocca il movimento (muri, fiumi)", "Blocks movement (walls, rivers)"] }),
   losBlock: _sc.str({ allowed: ["full", "partial"], d: ["`full` = blocca la vista, `partial` = −1 al raggio visivo per ogni tile attraversato", "`full` = blocks sight, `partial` = −1 to vision range per tile crossed"] }),

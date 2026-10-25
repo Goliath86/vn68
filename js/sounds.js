@@ -29,9 +29,10 @@ function loadMissionSounds(mapData) {
   }
 }
 
-// Passi di un movimento lungo `path` ([{col,row}…], partenza inclusa): il
-// suono del terreno su cui si cammina di più (a parità, quello più vicino
-// all'arrivo), dal campo "sound" del tileType; senza, il suono "move"
+// Passi di un movimento lungo `path` ([{col,row}…], partenza inclusa): tra i
+// terreni attraversati che hanno un suono proprio (campo "sound" del
+// tileType), quello su cui si cammina di più (a parità, quello più vicino
+// all'arrivo), così anche un solo tile di guado si sente; senza, il suono "move"
 const TILE_SND_CACHE = {}; // percorso → HTMLAudioElement
 
 function sfxSteps(path) {
@@ -39,7 +40,8 @@ function sfxSteps(path) {
   let best = null;
   let bestN = 0;
   for (const p of path.slice(1)) {
-    const snd = getTileAt(p.col, p.row)?.sound || "";
+    const snd = getTileAt(p.col, p.row)?.sound;
+    if (!snd) continue;
     const n = (counts.get(snd) || 0) + 1;
     counts.set(snd, n);
     if (n >= bestN) {

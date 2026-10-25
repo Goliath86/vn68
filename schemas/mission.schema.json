@@ -1201,8 +1201,8 @@
           ]
         },
         "sound": {
-          "description": "Passi su questo terreno (es. guado, palude, strada): a ogni movimento suona quello del terreno attraversato di più; senza, il suono `move` della mappa o di `config.json`\n\nFootsteps on this terrain (e.g. ford, swamp, street): each move plays the one of the terrain crossed most; without it, the map's or `config.json`'s `move` sound",
-          "markdownDescription": "Passi su questo terreno (es. guado, palude, strada): a ogni movimento suona quello del terreno attraversato di più; senza, il suono `move` della mappa o di `config.json`\n\n*Footsteps on this terrain (e.g. ford, swamp, street): each move plays the one of the terrain crossed most; without it, the map's or `config.json`'s `move` sound*",
+          "description": "Passi su questo terreno (es. guado, palude, strada): a ogni movimento suona quello del terreno attraversato di più tra quelli con un suono proprio (basta un tile); se nessuno ne ha, il suono `move` della mappa o di `config.json`\n\nFootsteps on this terrain (e.g. ford, swamp, street): each move plays the one of the terrain crossed most among those with their own sound (one tile is enough); if none has one, the map's or `config.json`'s `move` sound",
+          "markdownDescription": "Passi su questo terreno (es. guado, palude, strada): a ogni movimento suona quello del terreno attraversato di più tra quelli con un suono proprio (basta un tile); se nessuno ne ha, il suono `move` della mappa o di `config.json`\n\n*Footsteps on this terrain (e.g. ford, swamp, street): each move plays the one of the terrain crossed most among those with their own sound (one tile is enough); if none has one, the map's or `config.json`'s `move` sound*",
           "type": "string"
         },
         "impassable": {

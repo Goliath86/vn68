@@ -55,10 +55,15 @@ Censimento aggiornato al 2026-10-25. Come funziona l'audio (`js/sounds.js`):
 ### Passi per tipo di terreno (campo `sound` del tileType)
 
 Ogni tipo di tile può avere un suono di passi suo (`"sound": "assets/…"` nei
-`tileTypes` della mappa). A ogni movimento suona quello del terreno
-attraversato di più (a parità, quello più vicino all'arrivo); un terreno senza
-`sound` usa `sounds.move` della mappa (i passi qui sopra), poi quello di
-config.json, poi il sintetizzato. Oggi **nessun tile ha un suono proprio**.
+`tileTypes` della mappa). A ogni movimento suona, tra i terreni attraversati
+che hanno un suono proprio, quello su cui si cammina di più (a parità, quello
+più vicino all'arrivo): basta un tile di guado perché si senta l'acqua. Se
+nessun terreno del percorso ha un suono si usa `sounds.move` della mappa (i
+passi qui sopra), poi quello di config.json, poi il sintetizzato.
+
+| File | Terreno | Mappe |
+|---|---|---|
+| `assets/guado.mp3` | guado (`ford`) | Rung Sat, "Zona Ignota" (mapGen.js), lezioni del tutorial (tile condivisi in `missions/tutorial/index.json`) |
 
 Terreni percorribili delle mappe attuali e suono proposto:
 

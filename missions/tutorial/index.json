@@ -9,7 +9,7 @@
     "T": { "id": "trail", "label": "Sentiero", "moveCost": 1, "coverBonus": 0, "color": "#a08060" },
     "B": { "id": "bunker", "label": "Bunker VC", "moveCost": 1, "coverBonus": 3, "color": "#5a4a30", "demolishable": true, "demolishResult": "J", "losBlock": "full" },
     "X": { "id": "obstacle", "label": "Ostacolo", "moveCost": 0, "coverBonus": 0, "color": "#333333", "impassable": true, "demolishable": true, "demolishResult": "C", "losBlock": "full" },
-    "F": { "id": "ford", "label": "Guado", "moveCost": 2, "coverBonus": 0, "color": "#2e7a9e" },
+    "F": { "id": "ford", "label": "Guado", "moveCost": 2, "coverBonus": 0, "color": "#2e7a9e", "sound": "assets/guado.mp3" },
     "O": { "id": "objective", "label": "Obiettivo", "moveCost": 1, "coverBonus": 0, "color": "#cc9900" },
     "P": { "id": "pilot", "label": "Pilota abbattuto", "moveCost": 1, "coverBonus": 0, "color": "#cc6600" }
   },
