@@ -281,6 +281,7 @@ Campi scritti dal gioco, accettati senza avvisi: `name`, `desc`, `specialLabel`.
 |---|---|---|
 | `$schema` | testo | Percorso del JSON Schema per l'editor (es. `../schemas/mission.schema.json`); ignorato dal gioco. |
 | `menuMusic` | testo | Musica del menu. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
+| `menuImage` | testo | Immagine a destra nel menu desktop (sfumata in basso e a sinistra per il titolo); default `assets/menu_hero.jpg`. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 | `unitImages` | oggetto { classe → testo o oggetto } | Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
 | `unitImages.<classe>.stand` | testo | In piedi (anche per le posture non indicate). → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 | `unitImages.<classe>.crouch` | testo | Accovacciato. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
@@ -352,6 +353,7 @@ Una mod è una cartella `mods/<cartella>/` con questo `mod.json`, elencata in [`
 | `version` | testo | Versione. |
 | `config` | oggetto | Aggiunte a `config.json`, con gli stessi campi: classi e composizioni unite, immagini e suoni sostituiti per chiave. I percorsi dei file partono dalla cartella della mod; `../../` risale alla cartella del gioco (es. `../../assets/footsteps_jungle.mp3`). |
 | `config.menuMusic` | testo | Musica del menu. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
+| `config.menuImage` | testo | Immagine a destra nel menu desktop (sfumata in basso e a sinistra per il titolo); default `assets/menu_hero.jpg`. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 | `config.unitImages` | oggetto { classe → testo o oggetto } | Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
 | `config.unitImages.<classe>.stand` | testo | In piedi (anche per le posture non indicate). → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 | `config.unitImages.<classe>.crouch` | testo | Accovacciato. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |

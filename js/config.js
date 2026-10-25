@@ -26,6 +26,7 @@ async function loadConfig() {
 function applyConfigData(cfg) {
   if (!cfg || typeof cfg !== "object") return;
   if (cfg.menuMusic) CONFIG.menuMusic = cfg.menuMusic;
+  if (cfg.menuImage) CONFIG.menuImage = cfg.menuImage;
   if (cfg.unitImages) CONFIG.unitImages = { ...CONFIG.unitImages, ...cfg.unitImages };
   if (cfg.sounds) CONFIG.sounds = { ...CONFIG.sounds, ...cfg.sounds };
   for (const [cls, ws] of Object.entries(cfg.weapons || {})) {
@@ -72,6 +73,8 @@ function configAssetPaths() {
   const weaponSounds = Object.values(WEAPONS_CONFIG).flatMap((ws) => ws.map((w) => w.sound));
   return [
     CONFIG.menuMusic,
+    // Immagine del menu desktop (mainMenu.js), anche quella di default
+    CONFIG.menuImage || "assets/menu_hero.jpg",
     ...Object.values(CONFIG.unitImages || {}).flatMap((v) => Object.values(unitImagePaths(v))),
     ...Object.values(CONFIG.sounds || {}),
     ...weaponSounds,

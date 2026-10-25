@@ -578,6 +578,20 @@
         <!-- MISSION SELECT MODAL -->
         <div id="modal-overlay">
             <div id="modal-box">
+                <!-- MENU DESKTOP: voci a sinistra, immagine e titolo a destra,
+                     briefing in una scheda sopra l'immagine (mainMenu.js) -->
+                <div id="menu-desktop" class="hidden">
+                    <nav id="menu-nav"></nav>
+                    <div id="menu-main">
+                        <div id="menu-hero">
+                            <div class="menu-hero-title">NAM '68</div>
+                            <div class="menu-hero-sub" data-i18n="menu.tagline">Wargame tattico · Vietnam 1968</div>
+                        </div>
+                        <div class="game-version menu-version"></div>
+                        <div id="menu-panel" class="hidden"></div>
+                    </div>
+                </div>
+
                 <!-- STEP 1: selezione mappa -->
                 <div id="modal-step-map">
                     <!-- Lingua anche dal menu: su mobile l'header non ha i pulsanti IT/EN -->
@@ -830,6 +844,7 @@
         <script src="js/campaign.js"></script>
 
         <script src="js/initModal.js"></script>
+        <script src="js/mainMenu.js"></script>
 
         <script src="js/tabs.js"></script>
 

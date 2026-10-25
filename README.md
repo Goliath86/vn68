@@ -536,6 +536,20 @@ Per aggiungere musica di sottofondo al menu iniziale, inserire il percorso del f
 - Quando si preme "Inizia Missione", la musica fa un **fade-out di 800 ms** prima che la partita parta
 - Lasciare la stringa vuota `""` o omettere il campo per nessuna musica al menu
 
+### Immagine del menu
+
+Su schermi ampi (almeno 900×560) il menu iniziale è a due colonne: a sinistra le voci **Riprendi**, **Addestramento**, **Missioni singole**, **Campagne** e **Opzioni** (lingua, audio, vento, mod, comandi), che si aprono con i loro elenchi; a destra un'immagine del gioco con titolo e versione, sopra cui compare il briefing della mappa scelta. Su mobile resta il menu a passi.
+
+L'immagine di default è `assets/menu_hero.jpg` (una scena di gioco); si sostituisce con `menuImage`:
+
+```json
+{
+  "menuImage": "assets/mia_copertina.jpg"
+}
+```
+
+Viene ritagliata per riempire il riquadro e scurita in basso e a sinistra per far leggere il titolo: meglio un'immagine orizzontale, con il soggetto al centro.
+
 ### Immagini unità
 
 Di base ogni pedina è un soldato visto dall'alto disegnato dal gioco: l'aspetto dipende dalla classe (elmetto e M16 per l'assalto, cappello boonie e fucile con ottica per il cecchino, radio sulla schiena per il geniere, croce rossa per il medico, cappello conico per i VC, elmetto di sughero per il comandante), la figura cambia con la postura (in piedi, accovacciato, sdraiato) e ruota verso dove guarda l'unità. Una classe nuova sceglie l'aspetto con il campo `sprite`.

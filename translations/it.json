@@ -564,6 +564,24 @@
     "map_invalid": "{file}: {count} errori, la mappa non si può giocare."
   },
 
+  "menu": {
+    "tagline": "Wargame tattico · Vietnam 1968",
+    "resume": "Riprendi",
+    "missions": "Missioni singole",
+    "campaigns": "Campagne",
+    "options": "Opzioni",
+    "campaign_continue": "Continua: {name}",
+    "language": "Lingua",
+    "audio": "Audio",
+    "wind": "Vento sulla mappa",
+    "wind_desc": "Erba e chiome mosse dalle raffiche (più pesante su PC lenti)",
+    "mods": "Mod",
+    "mods_desc": "{n} attive · classi, armi, nemici, mappe e campagne aggiuntive",
+    "keys": "Comandi da tastiera",
+    "on": "SÌ",
+    "off": "NO"
+  },
+
   "campaign": {
     "title": "CAMPAGNA",
     "subtitle": "Guida un plotone di 8 uomini attraverso una serie di operazioni: ne schieri 4 alla volta, e ferite, caduti, gradi ed esperienza restano da una missione all'altra.",

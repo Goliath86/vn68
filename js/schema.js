@@ -451,6 +451,7 @@ const SCHEMA_TUTORIAL_INDEX = _sc.obj({
 const SCHEMA_CONFIG = _sc.obj({
   $schema: SCHEMA_SCHEMA,
   menuMusic: _sc.str({ ref: "file", d: ["Musica del menu", "Menu music"] }),
+  menuImage: _sc.str({ ref: "file", d: ["Immagine a destra nel menu desktop (sfumata in basso e a sinistra per il titolo); default `assets/menu_hero.jpg`", "Picture on the right of the desktop menu (faded at the bottom and left for the title); default `assets/menu_hero.jpg`"] }),
   unitImages: _sc.map(
     _sc.one(
       _sc.str({ ref: "file", d: ["Una sola immagine per tutte le posture", "One picture for every stance"] }),

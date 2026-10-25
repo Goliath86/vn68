@@ -71,27 +71,46 @@ function initModal() {
       .forEach((el) => el.classList.remove("active"));
     selectedMap = null;
   };
+
+  // Schermi ampi: menu a due colonne (mainMenu.js), che riusa il briefing
+  setupMenuLayout();
+}
+
+// Dati di un salvataggio per il banner "riprendi" (e il menu desktop,
+// mainMenu.js): titolo, mappa, missione, data, mod mancanti
+function saveInfo(save, key) {
+  const campaign = key === CAMPAIGN_SAVE_KEY;
+  // Partita salvata con mod ora spente: si riprende solo riattivandole
+  const missingMods = missingSaveMods(save).map((id) => {
+    const m = MOD_LIST.find((x) => x.id === id);
+    return m ? modLabels(m).name : id;
+  });
+  return {
+    title: campaign
+      ? t("campaign.resume_banner", { op: campaignOpName(CAMPAIGN, save.missionState?.campaign?.opIndex ?? CAMPAIGN.opIndex) })
+      : t("modal.resume_title"),
+    // Nome nella lingua attuale, non in quella del salvataggio
+    mapName: save.mapData?.translations?.[LANG]?.name?.toUpperCase() ?? save.mapName,
+    missionLabel: MISSION_TYPES[save.missionType]?.label || save.missionType,
+    savedDate: new Date(save.savedAt).toLocaleString(),
+    missingMods,
+  };
+}
+
+// Riprende un salvataggio: terreno procedurale disegnato a passi
+// (render.js:prebuildTerrainCache) mentre la musica sfuma
+async function resumeFromSave(key, onProgress) {
+  const s = loadSave(key);
+  if (!s) return;
+  await Promise.all([ambientFadeOut(800), prebuildTerrainCache(s.mapData, onProgress)]);
+  resumeGame(s);
 }
 
 // Banner "riprendi" di un salvataggio (key: partita libera o campagna)
 function addResumeBanner(key) {
   const save = loadSave(key);
   if (!save) return;
-  const campaign = key === CAMPAIGN_SAVE_KEY;
-  const savedDate = new Date(save.savedAt).toLocaleString();
-
-  const missionLabel =
-    MISSION_TYPES[save.missionType]?.label || save.missionType;
-  // Nome nella lingua attuale, non in quella del salvataggio
-  const mapName = save.mapData?.translations?.[LANG]?.name?.toUpperCase() ?? save.mapName;
-  // Partita salvata con mod ora spente: si riprende solo riattivandole
-  const missingMods = missingSaveMods(save).map((id) => {
-    const m = MOD_LIST.find((x) => x.id === id);
-    return m ? modLabels(m).name : id;
-  });
-  const title = campaign
-    ? t("campaign.resume_banner", { op: campaignOpName(CAMPAIGN, save.missionState?.campaign?.opIndex ?? CAMPAIGN.opIndex) })
-    : t("modal.resume_title");
+  const { title, mapName, missionLabel, savedDate, missingMods } = saveInfo(save, key);
 
   const banner = document.createElement("div");
   banner.className = "resume-banner";
@@ -114,20 +133,13 @@ function addResumeBanner(key) {
 
   const btn = banner.querySelector("button");
   btn.addEventListener("click", async () => {
-    const s = loadSave(key);
-    if (!s) return;
-    // Terreno procedurale disegnato a passi (render.js:prebuildTerrainCache)
-    // mentre la musica sfuma, con la barra nel banner
+    // Barra di avanzamento nel banner (solo terreno procedurale)
     const bar = banner.querySelector(".gen-bar");
     btn.disabled = true;
-    if (!s.mapData.image) bar.classList.remove("hidden");
-    await Promise.all([
-      ambientFadeOut(800),
-      prebuildTerrainCache(s.mapData, (p) => {
-        banner.querySelector(".gen-fill").style.width = `${Math.round(p * 100)}%`;
-      }),
-    ]);
-    resumeGame(s);
+    if (!save.mapData.image) bar.classList.remove("hidden");
+    await resumeFromSave(key, (p) => {
+      banner.querySelector(".gen-fill").style.width = `${Math.round(p * 100)}%`;
+    });
   });
 }
 

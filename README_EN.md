@@ -537,6 +537,20 @@ To add background music to the main menu, set the audio file path in the `menuMu
 - When "Start Mission" is pressed, the music fades out over **800 ms** before the game begins
 - Set to empty string `""` or omit the field for no menu music
 
+### Menu Image
+
+On wide screens (at least 900×560) the main menu has two columns: on the left the **Resume**, **Training**, **Single missions**, **Campaigns** and **Options** (language, audio, wind, mods, controls) entries, which open to show their lists; on the right a picture of the game with title and version, over which the chosen map's briefing appears. On mobile the step-by-step menu stays.
+
+The default picture is `assets/menu_hero.jpg` (a game scene); replace it with `menuImage`:
+
+```json
+{
+  "menuImage": "assets/my_cover.jpg"
+}
+```
+
+It is cropped to fill the area and darkened at the bottom and left so the title stays readable: a landscape picture with the subject in the middle works best.
+
 ### Unit Images
 
 By default every piece is a soldier seen from above, drawn by the game: the look depends on the class (helmet and M16 for the assault, boonie hat and scoped rifle for the sniper, radio on the back for the engineer, red cross for the medic, conical hat for the VC, pith helmet for the commander), the figure changes with the stance (standing, crouching, prone) and turns toward where the unit faces. A new class picks its look with the `sprite` field.

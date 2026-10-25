@@ -559,6 +559,24 @@
     "map_invalid": "{file}: {count} errors, the map cannot be played."
   },
 
+  "menu": {
+    "tagline": "Tactical wargame · Vietnam 1968",
+    "resume": "Resume",
+    "missions": "Single missions",
+    "campaigns": "Campaigns",
+    "options": "Options",
+    "campaign_continue": "Continue: {name}",
+    "language": "Language",
+    "audio": "Audio",
+    "wind": "Wind on the map",
+    "wind_desc": "Grass and canopy moved by gusts (heavier on slow PCs)",
+    "mods": "Mods",
+    "mods_desc": "{n} active · extra classes, weapons, enemies, maps and campaigns",
+    "keys": "Keyboard controls",
+    "on": "ON",
+    "off": "OFF"
+  },
+
   "campaign": {
     "title": "CAMPAIGN",
     "subtitle": "Lead an 8-man platoon through a series of operations: you deploy 4 at a time, and wounds, losses, ranks and experience carry over from one mission to the next.",

@@ -52,6 +52,11 @@
           "markdownDescription": "Musica del menu\n\n*Menu music*",
           "type": "string"
         },
+        "menuImage": {
+          "description": "Immagine a destra nel menu desktop (sfumata in basso e a sinistra per il titolo); default `assets/menu_hero.jpg`\n\nPicture on the right of the desktop menu (faded at the bottom and left for the title); default `assets/menu_hero.jpg`",
+          "markdownDescription": "Immagine a destra nel menu desktop (sfumata in basso e a sinistra per il titolo); default `assets/menu_hero.jpg`\n\n*Picture on the right of the desktop menu (faded at the bottom and left for the title); default `assets/menu_hero.jpg`*",
+          "type": "string"
+        },
         "unitImages": {
           "description": "Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi)\n\nPiece picture per class (US or VC): the soldier seen from above **facing north**, transparent background, rotated by the game toward where the unit faces; without it, a drawn soldier (see the classes' `sprite`)",
           "markdownDescription": "Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi)\n\n*Piece picture per class (US or VC): the soldier seen from above **facing north**, transparent background, rotated by the game toward where the unit faces; without it, a drawn soldier (see the classes' `sprite`)*",

@@ -281,6 +281,7 @@ Fields written by the game, accepted without warnings: `name`, `desc`, `specialL
 |---|---|---|
 | `$schema` | text | Path of the JSON Schema for the editor (e.g. `../schemas/mission.schema.json`); ignored by the game. |
 | `menuMusic` | text | Menu music. → file path from the game folder (in a mod and its maps: from the mod folder). |
+| `menuImage` | text | Picture on the right of the desktop menu (faded at the bottom and left for the title); default `assets/menu_hero.jpg`. → file path from the game folder (in a mod and its maps: from the mod folder). |
 | `unitImages` | object { class → text or object } | Piece picture per class (US or VC): the soldier seen from above **facing north**, transparent background, rotated by the game toward where the unit faces; without it, a drawn soldier (see the classes' `sprite`). → US or VC class (current: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
 | `unitImages.<class>.stand` | text | Standing (also for the stances not given). → file path from the game folder (in a mod and its maps: from the mod folder). |
 | `unitImages.<class>.crouch` | text | Crouching. → file path from the game folder (in a mod and its maps: from the mod folder). |
@@ -352,6 +353,7 @@ A mod is a `mods/<folder>/` folder with this `mod.json`, listed in [`mods/index.
 | `version` | text | Version. |
 | `config` | object | Additions to `config.json`, with the same fields: classes and compositions merged, pictures and sounds replaced by key. File paths start from the mod folder; `../../` goes up to the game folder (e.g. `../../assets/footsteps_jungle.mp3`). |
 | `config.menuMusic` | text | Menu music. → file path from the game folder (in a mod and its maps: from the mod folder). |
+| `config.menuImage` | text | Picture on the right of the desktop menu (faded at the bottom and left for the title); default `assets/menu_hero.jpg`. → file path from the game folder (in a mod and its maps: from the mod folder). |
 | `config.unitImages` | object { class → text or object } | Piece picture per class (US or VC): the soldier seen from above **facing north**, transparent background, rotated by the game toward where the unit faces; without it, a drawn soldier (see the classes' `sprite`). → US or VC class (current: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
 | `config.unitImages.<class>.stand` | text | Standing (also for the stances not given). → file path from the game folder (in a mod and its maps: from the mod folder). |
 | `config.unitImages.<class>.crouch` | text | Crouching. → file path from the game folder (in a mod and its maps: from the mod folder). |

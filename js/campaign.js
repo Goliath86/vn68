@@ -689,7 +689,8 @@ const _esc = (s) =>
 let _cmpView = "list";
 let _cmpUi = { choice: null, deploy: new Set(), replaceCls: "assault", confirmNew: null, error: null };
 
-async function openCampaignModal() {
+// view: "list" per aprire l'elenco anche con una campagna in corso
+async function openCampaignModal(view = null) {
   document.getElementById("modal-overlay").style.display = "none";
   document.getElementById("btn-menu").style.display = "none";
   document.getElementById("tutorial-panel").classList.add("hidden");
@@ -704,6 +705,7 @@ async function openCampaignModal() {
   if (!CAMPAIGN) _cmpView = "list";
   else if (CAMPAIGN.debrief) _cmpView = "debrief";
   else _cmpView = CAMPAIGN.result ? "end" : "hq";
+  if (view === "list") _cmpView = "list";
   renderCampaignView();
 }
 
