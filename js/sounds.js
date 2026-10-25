@@ -17,6 +17,42 @@ function loadMissionSounds(mapData) {
     };
     WEAPON_SND_CACHE[path] = a;
   }
+  // Passi per tipo di terreno (campo "sound" dei tileTypes, sfxSteps)
+  for (const def of Object.values(mapData.tileTypes || {})) {
+    const path = def?.sound;
+    if (!path || TILE_SND_CACHE[path]) continue;
+    const a = new Audio(assetUrl(path));
+    a.onerror = () => {
+      delete TILE_SND_CACHE[path];
+    };
+    TILE_SND_CACHE[path] = a;
+  }
+}
+
+// Passi di un movimento lungo `path` ([{col,row}…], partenza inclusa): il
+// suono del terreno su cui si cammina di più (a parità, quello più vicino
+// all'arrivo), dal campo "sound" del tileType; senza, il suono "move"
+const TILE_SND_CACHE = {}; // percorso → HTMLAudioElement
+
+function sfxSteps(path) {
+  const counts = new Map();
+  let best = null;
+  let bestN = 0;
+  for (const p of path.slice(1)) {
+    const snd = getTileAt(p.col, p.row)?.sound || "";
+    const n = (counts.get(snd) || 0) + 1;
+    counts.set(snd, n);
+    if (n >= bestN) {
+      best = snd;
+      bestN = n;
+    }
+  }
+  const a = best && TILE_SND_CACHE[best];
+  if (!a) return sfx("move");
+  if (AUDIO.muted) return;
+  const clone = a.cloneNode();
+  clone.volume = AUDIO.sfxVol;
+  clone.play().catch(() => sfx("move"));
 }
 
 const AUDIO = {

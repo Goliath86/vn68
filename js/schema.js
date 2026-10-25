@@ -231,6 +231,10 @@ const SCHEMA_TILE_TYPE = _sc.obj({
     "Solo mappe senza `image`. Aspetto del tile: il nome di un terreno già disegnato dal gioco (`jungle`, `swamp`, `clearing`, `river`, `building`…) disegna l'`id` come quel terreno con tutti i suoi effetti (chiome, onde, erba al vento, nebbia, ombre), con la tinta di `color`; oppure il percorso di un'immagine (PNG/JPG/WebP/GIF) disegnata sopra `color`. Solo grafica",
     "Maps without `image` only. Tile look: the name of a terrain the game already draws (`jungle`, `swamp`, `clearing`, `river`, `building`…) draws the `id` like that terrain with all its effects (canopy, waves, wind-blown grass, mist, shadows), tinted by `color`; or the path of an image (PNG/JPG/WebP/GIF) drawn over `color`. Visual only",
   ] }),
+  sound: _sc.str({ ref: "file", d: [
+    "Passi su questo terreno (es. guado, palude, strada): a ogni movimento suona quello del terreno attraversato di più; senza, il suono `move` della mappa o di `config.json`",
+    "Footsteps on this terrain (e.g. ford, swamp, street): each move plays the one of the terrain crossed most; without it, the map's or `config.json`'s `move` sound",
+  ] }),
   impassable: _sc.bool({ d: ["Blocca il movimento (muri, fiumi)", "Blocks movement (walls, rivers)"] }),
   losBlock: _sc.str({ allowed: ["full", "partial"], d: ["`full` = blocca la vista, `partial` = −1 al raggio visivo per ogni tile attraversato", "`full` = blocks sight, `partial` = −1 to vision range per tile crossed"] }),
   burnable: _sc.bool({ d: ["Il geniere può incendiarlo (fuoco per 2 turni)", "The Engineer can set it on fire (burns for 2 turns)"] }),

@@ -1200,6 +1200,11 @@
             "bunker"
           ]
         },
+        "sound": {
+          "description": "Passi su questo terreno (es. guado, palude, strada): a ogni movimento suona quello del terreno attraversato di più; senza, il suono `move` della mappa o di `config.json`\n\nFootsteps on this terrain (e.g. ford, swamp, street): each move plays the one of the terrain crossed most; without it, the map's or `config.json`'s `move` sound",
+          "markdownDescription": "Passi su questo terreno (es. guado, palude, strada): a ogni movimento suona quello del terreno attraversato di più; senza, il suono `move` della mappa o di `config.json`\n\n*Footsteps on this terrain (e.g. ford, swamp, street): each move plays the one of the terrain crossed most; without it, the map's or `config.json`'s `move` sound*",
+          "type": "string"
+        },
         "impassable": {
           "description": "Blocca il movimento (muri, fiumi)\n\nBlocks movement (walls, rivers)",
           "markdownDescription": "Blocca il movimento (muri, fiumi)\n\n*Blocks movement (walls, rivers)*",

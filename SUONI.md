@@ -51,6 +51,33 @@ Censimento aggiornato al 2026-10-25. Come funziona l'audio (`js/sounds.js`):
 | `assets/footsteps_jungle.mp3` | Rung Sat, "Zona Ignota" (mapGen.js), tutte le lezioni del tutorial, Avamposto NVA (mod) |
 | `assets/run_street.mp3` | Hue City, "Città Ignota" (mapGen.js) |
 
+### Passi per tipo di terreno (campo `sound` del tileType)
+
+Ogni tipo di tile può avere un suono di passi suo (`"sound": "assets/…"` nei
+`tileTypes` della mappa). A ogni movimento suona quello del terreno
+attraversato di più (a parità, quello più vicino all'arrivo); un terreno senza
+`sound` usa `sounds.move` della mappa (i passi qui sopra), poi quello di
+config.json, poi il sintetizzato. Oggi **nessun tile ha un suono proprio**.
+
+Terreni percorribili delle mappe attuali e suono proposto:
+
+| Terreno (`id`) | Mappe | Proposta |
+|---|---|---|
+| `jungle` | giungla | resta `footsteps_jungle.mp3` (default della mappa) |
+| `trail`, `clearing`, `village`, `pilot` | giungla | terra battuta / erba bassa |
+| `swamp` | giungla | fango, risucchio |
+| `ford` | giungla | acqua bassa, sciacquio |
+| `bunker` | giungla | terra smossa / sacchi di sabbia |
+| `street`, `plaza` | urbane | resta `run_street.mp3` (default della mappa) |
+| `bridge` | urbane | passi su legno o pietra rimbombante |
+| `garden` | urbane | erba / ghiaia |
+| `building`, `temple` | urbane | passi al chiuso su pavimento |
+| `debris` | urbane, artiglieria | macerie, calcinacci |
+| `objective` | tutte | stesso suono del terreno intorno |
+
+Le mappe procedurali costruiscono i loro `tileTypes` nel codice
+(`js/mapGen.js`): i suoni per terreno vanno aggiunti anche lì.
+
 ### Musiche
 
 | File | Uso |

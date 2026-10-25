@@ -6,8 +6,6 @@
  * @param {number} apCost AP cost of the move
  */
 async function moveUnit(unit, toCol, toRow, apCost) {
-  sfx("move");
-
   const fromCol = unit.col, fromRow = unit.row;
   // Stato prima del movimento, per consentire l'annullamento (vedi undoLastMove)
   const prevAp = unit.ap;
@@ -27,6 +25,9 @@ async function moveUnit(unit, toCol, toRow, apCost) {
     toRow = trapHit.row;
     apCost = Math.min(apCost, trapHit.cost + moveActionExtra(unit));
   }
+
+  // Passi: suono del terreno attraversato (sounds.js:sfxSteps)
+  sfxSteps(_movePath(fromCol, fromRow, toCol, toRow));
 
   unit.col = toCol;
   unit.row = toRow;

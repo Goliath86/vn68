@@ -29,6 +29,7 @@ async function catalogAssetPaths() {
         missionImagePath(md),
         ...Object.values(md.tileTypes || {}).map((d) => !md.image && _textureImagePath(d)),
         ...Object.values(md.sounds || {}),
+        ...Object.values(md.tileTypes || {}).map((d) => d.sound),
         ...missionWeaponSounds(md),
       ])
       .filter(Boolean),
