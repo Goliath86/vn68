@@ -32,7 +32,7 @@ Censimento del 2026-10-18. Come funziona l'audio (`js/sounds.js`):
 | `assets/footsteps_jungle.mp3` | Passi (movimento) — **solo** mappe di giungla | sounds.`move` in rung_sat.json, mappa procedurale "Zona Ignota" (mapGen.js), lezioni del tutorial |
 | `assets/fumo_su_saigon.mp3` | Musica del menu | config.json → `menuMusic` |
 | `missions/rung_sat_ambient.mp3` | Musica d'ambiente giungla | rung_sat.json, "Zona Ignota", lezioni del tutorial |
-| `assets/end_turn.mp3` | **Nessuno** — presente ma non collegato | (andrebbe in config.json → sounds.`turn_end`) |
+| `assets/end_turn.mp3` | Fine del turno del giocatore | config.json → sounds.`turn_end` |
 
 ## 2. Suoni sintetizzati (20 chiavi) e copertura
 
@@ -44,7 +44,7 @@ Censimento del 2026-10-18. Come funziona l'audio (`js/sounds.js`):
 | `ambush` | imboscata VC | ✅ ambush.mp3 |
 | `heal` | cura / primo soccorso | ✅ bandaging.mp3 |
 | `move` | movimento di un'unità | ⚠️ solo mappe giungla; Hue City e "Città Ignota" sintetizzato |
-| `turn_end` | fine turno giocatore | ⚠️ file end_turn.mp3 c'è ma non è collegato |
+| `turn_end` | fine turno giocatore | ✅ end_turn.mp3 |
 | `shoot` | arma US senza suono proprio: oggi solo il **fumogeno** | ❌ (fallback) |
 | `shoot_vc` | arma VC senza suono proprio: oggi nessuna | — (solo fallback) |
 | `melee` | coltello (assaltatore, cecchino, geniere, medico) | ❌ |
@@ -59,27 +59,26 @@ Censimento del 2026-10-18. Come funziona l'audio (`js/sounds.js`):
 | `victory` | fine missione vinta | ❌ |
 | `defeat` | fine missione persa | ❌ |
 
-**Copertura: 6 chiavi su 20 hanno un asset**, `move` è coperta solo in parte.
+**Copertura: 7 chiavi su 20 hanno un asset**, `move` è coperta solo in parte.
 
 ## 3. Cosa manca
 
-Per non sentire più nessun suono sintetizzato in gioco servono **13 suoni**:
+Per non sentire più nessun suono sintetizzato in gioco servono **12 suoni**:
 
-1. `turn_end` — **già presente** (assets/end_turn.mp3): basta scriverlo in config.json
-2. `move` — passi per mappe urbane/non giungla (es. `footsteps_urban.mp3`, da mettere in config.json come default; la giungla resta sovrascritta dalla missione)
-3. `melee` — coltello
-4. `demolition` — esplosione della carica / incendio
-5. `disarm` — disinnesco
-6. `overwatch` — attivazione overwatch/soppressione (es. otturatore armato)
-7. `spawn` — rinforzi VC
-8. `jet` — passaggio dell'aereo
-9. `napalm` — vampata
-10. `click` — interfaccia/radio
-11. `victory` — jingle di vittoria
-12. `defeat` — jingle di sconfitta
-13. Fumogeno — campo `"sound"` dell'arma `smoke` (oggi suona come uno sparo)
+1. `move` — passi per mappe urbane/non giungla (es. `footsteps_urban.mp3`, da mettere in config.json come default; la giungla resta sovrascritta dalla missione)
+2. `melee` — coltello
+3. `demolition` — esplosione della carica / incendio
+4. `disarm` — disinnesco
+5. `overwatch` — attivazione overwatch/soppressione (es. otturatore armato)
+6. `spawn` — rinforzi VC
+7. `jet` — passaggio dell'aereo
+8. `napalm` — vampata
+9. `click` — interfaccia/radio
+10. `victory` — jingle di vittoria
+11. `defeat` — jingle di sconfitta
+12. Fumogeno — campo `"sound"` dell'arma `smoke` (oggi suona come uno sparo)
 
-→ **12 file da procurare** + 1 da collegare. `shoot` e `shoot_vc` non servono:
+→ **12 file da procurare**. `shoot` e `shoot_vc` non servono:
 restano come rete di sicurezza per armi future senza suono.
 
 Facoltativi, per varietà (oggi condividono un file):
