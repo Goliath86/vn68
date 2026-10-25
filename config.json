@@ -54,7 +54,8 @@
         "ammo": 1,
         "aoe": 1,
         "smoke": 2,
-        "noise": 1
+        "noise": 1,
+        "sound": "assets/smoke.mp3"
       },
       {
         "id": "knife",
