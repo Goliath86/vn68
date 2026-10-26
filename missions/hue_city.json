@@ -43,7 +43,8 @@
       "moveCost": 1,
       "coverBonus": 2,
       "color": "#7a5c28",
-      "losBlock": "partial"
+      "losBlock": "partial",
+      "sound": "assets/indoor.mp3"
     },
     "G": {
       "id": "garden",
@@ -51,14 +52,16 @@
       "moveCost": 1,
       "coverBonus": 1,
       "color": "#3a5a20",
-      "burnable": true
+      "burnable": true,
+      "sound": "assets/grass.mp3"
     },
     "U": {
       "id": "street",
       "label": "Strada Urbana",
       "moveCost": 1,
       "coverBonus": 0,
-      "color": "#5a5040"
+      "color": "#5a5040",
+      "sound": "assets/run_street.mp3"
     },
     "R": {
       "id": "river",
@@ -73,7 +76,8 @@
       "label": "Ponte",
       "moveCost": 2,
       "coverBonus": 0,
-      "color": "#8a7050"
+      "color": "#8a7050",
+      "sound": "assets/bridge.mp3"
     },
     "B": {
       "id": "building",
@@ -81,7 +85,8 @@
       "moveCost": 1,
       "coverBonus": 3,
       "color": "#3a3030",
-      "losBlock": "full"
+      "losBlock": "full",
+      "sound": "assets/indoor.mp3"
     },
     "D": {
       "id": "debris",
@@ -89,14 +94,16 @@
       "moveCost": 2,
       "coverBonus": 2,
       "color": "#6a5040",
-      "losBlock": "partial"
+      "losBlock": "partial",
+      "sound": "assets/rubble.mp3"
     },
     "P": {
       "id": "plaza",
       "label": "Piazza",
       "moveCost": 1,
       "coverBonus": 0,
-      "color": "#9a8060"
+      "color": "#9a8060",
+      "sound": "assets/run_street.mp3"
     },
     "O": {
       "id": "objective",

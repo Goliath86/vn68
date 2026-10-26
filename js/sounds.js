@@ -18,21 +18,23 @@ function loadMissionSounds(mapData) {
     WEAPON_SND_CACHE[path] = a;
   }
   // Passi per tipo di terreno (campo "sound" dei tileTypes, sfxSteps)
-  for (const def of Object.values(mapData.tileTypes || {})) {
-    const path = def?.sound;
-    if (!path || TILE_SND_CACHE[path]) continue;
-    const a = new Audio(assetUrl(path));
-    a.onerror = () => {
-      delete TILE_SND_CACHE[path];
-    };
-    TILE_SND_CACHE[path] = a;
-  }
+  for (const def of Object.values(mapData.tileTypes || {})) loadTileSound(def?.sound);
+}
+
+// Anche per i tile aggiunti in partita (mechanics.js:blastTileKey)
+function loadTileSound(path) {
+  if (!path || TILE_SND_CACHE[path]) return;
+  const a = new Audio(assetUrl(path));
+  a.onerror = () => {
+    delete TILE_SND_CACHE[path];
+  };
+  TILE_SND_CACHE[path] = a;
 }
 
 // Passi di un movimento lungo `path` ([{col,row}…], partenza inclusa): tra i
 // terreni attraversati che hanno un suono proprio (campo "sound" del
 // tileType), quello su cui si cammina di più (a parità, quello più vicino
-// all'arrivo), così anche un solo tile di guado si sente; senza, il suono "move"
+// all'arrivo); senza, il suono "move"
 const TILE_SND_CACHE = {}; // percorso → HTMLAudioElement
 
 function sfxSteps(path) {

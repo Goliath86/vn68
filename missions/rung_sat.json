@@ -20,7 +20,8 @@
       "coverBonus": 2,
       "color": "#2d5a1b",
       "losBlock": "partial",
-      "burnable": true
+      "burnable": true,
+      "sound": "assets/footsteps_jungle.mp3"
     },
     "S": {
       "id": "swamp",
@@ -46,21 +47,24 @@
       "coverBonus": 1,
       "color": "#8b6914",
       "losBlock": "partial",
-      "burnable": true
+      "burnable": true,
+      "sound": "assets/dirt.mp3"
     },
     "C": {
       "id": "clearing",
       "label": "Radura",
       "moveCost": 1,
       "coverBonus": 0,
-      "color": "#7a9e40"
+      "color": "#7a9e40",
+      "sound": "assets/grass.mp3"
     },
     "T": {
       "id": "trail",
       "label": "Sentiero",
       "moveCost": 1,
       "coverBonus": 0,
-      "color": "#a08060"
+      "color": "#a08060",
+      "sound": "assets/dirt.mp3"
     },
     "B": {
       "id": "bunker",
@@ -70,7 +74,8 @@
       "color": "#5a4a30",
       "demolishable": true,
       "demolishResult": "J",
-      "losBlock": "full"
+      "losBlock": "full",
+      "sound": "assets/dirt.mp3"
     },
     "X": {
       "id": "obstacle",

@@ -178,13 +178,13 @@ function _procTranslations(texts, seed, reconKeys, captureKey, variant) {
 
 // ── GIUNGLA (delta del Mekong) ─────────────────────────────────────────
 const JUNGLE_TILE_TYPES = {
-  J: { id: "jungle", label: "Giungla", moveCost: 2, coverBonus: 2, color: "#2d5a1b", losBlock: "partial", burnable: true },
+  J: { id: "jungle", label: "Giungla", moveCost: 2, coverBonus: 2, color: "#2d5a1b", losBlock: "partial", burnable: true, sound: "assets/footsteps_jungle.mp3" },
   S: { id: "swamp", label: "Palude", moveCost: 3, coverBonus: 1, color: "#4a6741", losBlock: "partial", sound: "assets/mud.mp3" },
   R: { id: "river", label: "Fiume", moveCost: 0, coverBonus: 0, color: "#1a4d7a", impassable: true },
-  V: { id: "village", label: "Villaggio", moveCost: 1, coverBonus: 1, color: "#8b6914", losBlock: "partial", burnable: true },
-  C: { id: "clearing", label: "Radura", moveCost: 1, coverBonus: 0, color: "#7a9e40" },
-  T: { id: "trail", label: "Sentiero", moveCost: 1, coverBonus: 0, color: "#a08060" },
-  B: { id: "bunker", label: "Bunker VC", moveCost: 1, coverBonus: 3, color: "#5a4a30", demolishable: true, demolishResult: "J", losBlock: "full" },
+  V: { id: "village", label: "Villaggio", moveCost: 1, coverBonus: 1, color: "#8b6914", losBlock: "partial", burnable: true, sound: "assets/dirt.mp3" },
+  C: { id: "clearing", label: "Radura", moveCost: 1, coverBonus: 0, color: "#7a9e40", sound: "assets/grass.mp3" },
+  T: { id: "trail", label: "Sentiero", moveCost: 1, coverBonus: 0, color: "#a08060", sound: "assets/dirt.mp3" },
+  B: { id: "bunker", label: "Bunker VC", moveCost: 1, coverBonus: 3, color: "#5a4a30", demolishable: true, demolishResult: "J", losBlock: "full", sound: "assets/dirt.mp3" },
   X: { id: "obstacle", label: "Ostacolo", moveCost: 0, coverBonus: 0, color: "#333333", impassable: true, demolishable: true, demolishResult: "C", losBlock: "full" },
   F: { id: "ford", label: "Guado", moveCost: 2, coverBonus: 0, color: "#2e7a9e", sound: "assets/guado.mp3" },
 };
@@ -660,14 +660,14 @@ function _buildJungleMap(seed, attempt, size) {
 const URBAN_TILE_TYPES = {
   W: { id: "wall", label: "Mura", moveCost: 0, coverBonus: 0, color: "#4a4030", impassable: true, losBlock: "full" },
   M: { id: "wall_breach", label: "Muro Demolibile", moveCost: 0, coverBonus: 0, color: "#5a4830", impassable: true, demolishable: true, demolishResult: "D", losBlock: "full" },
-  T: { id: "temple", label: "Pagoda", moveCost: 1, coverBonus: 2, color: "#7a5c28", losBlock: "partial" },
-  G: { id: "garden", label: "Giardino", moveCost: 1, coverBonus: 1, color: "#3a5a20", burnable: true },
-  U: { id: "street", label: "Strada", moveCost: 1, coverBonus: 0, color: "#5a5040" },
+  T: { id: "temple", label: "Pagoda", moveCost: 1, coverBonus: 2, color: "#7a5c28", losBlock: "partial", sound: "assets/indoor.mp3" },
+  G: { id: "garden", label: "Giardino", moveCost: 1, coverBonus: 1, color: "#3a5a20", burnable: true, sound: "assets/grass.mp3" },
+  U: { id: "street", label: "Strada", moveCost: 1, coverBonus: 0, color: "#5a5040", sound: "assets/run_street.mp3" },
   R: { id: "river", label: "Fiume", moveCost: 0, coverBonus: 0, color: "#1a4d7a", impassable: true },
-  F: { id: "bridge", label: "Ponte", moveCost: 2, coverBonus: 0, color: "#8a7050" },
-  B: { id: "building", label: "Edificio", moveCost: 1, coverBonus: 3, color: "#3a3030", losBlock: "full" },
-  D: { id: "debris", label: "Macerie", moveCost: 2, coverBonus: 2, color: "#6a5040", losBlock: "partial" },
-  P: { id: "plaza", label: "Piazza", moveCost: 1, coverBonus: 0, color: "#9a8060" },
+  F: { id: "bridge", label: "Ponte", moveCost: 2, coverBonus: 0, color: "#8a7050", sound: "assets/bridge.mp3" },
+  B: { id: "building", label: "Edificio", moveCost: 1, coverBonus: 3, color: "#3a3030", losBlock: "full", sound: "assets/indoor.mp3" },
+  D: { id: "debris", label: "Macerie", moveCost: 2, coverBonus: 2, color: "#6a5040", losBlock: "partial", sound: "assets/rubble.mp3" },
+  P: { id: "plaza", label: "Piazza", moveCost: 1, coverBonus: 0, color: "#9a8060", sound: "assets/run_street.mp3" },
   O: { id: "objective", label: "Comando NVA", moveCost: 1, coverBonus: 0, color: "#cc9900" },
 };
 

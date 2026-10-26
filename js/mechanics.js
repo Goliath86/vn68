@@ -825,11 +825,11 @@ async function resolveArtillery() {
 const BLAST_RUBBLE_IDS = new Set(["building", "temple", "wall", "wall_breach", "bunker"]);
 const BLAST_TILE_TYPES = {
   scorched: {
-    type: { id: "scorched", label: "Terra bruciata", moveCost: 1, coverBonus: 1, color: "#3b3328" },
+    type: { id: "scorched", label: "Terra bruciata", moveCost: 1, coverBonus: 1, color: "#3b3328", sound: "assets/ash.mp3" },
     text: { it: "Terra bruciata", en: "Scorched earth" },
   },
   debris: {
-    type: { id: "debris", label: "Macerie", moveCost: 2, coverBonus: 2, color: "#6a5040", losBlock: "partial" },
+    type: { id: "debris", label: "Macerie", moveCost: 2, coverBonus: 2, color: "#6a5040", losBlock: "partial", sound: "assets/rubble.mp3" },
     text: { it: "Macerie", en: "Rubble" },
   },
 };
@@ -843,6 +843,7 @@ function blastTileKey(id) {
   const key = def && [..."ZYXWVUQKLNHE0123456789"].find((k) => !md.tileTypes[k]);
   if (!key) return null;
   md.tileTypes[key] = { ...def.type };
+  loadTileSound(def.type.sound);
   md.translations ||= {};
   for (const [lang, label] of Object.entries(def.text)) {
     const tr = (md.translations[lang] ||= {});
