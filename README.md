@@ -746,12 +746,13 @@ In `config.json`, `vcMix` ha tre composizioni: `spawn` (schieramento iniziale), 
 | Muovere | Click sulla cella (area chiara con contorno azzurro attorno al soldato selezionato: al passaggio del mouse percorso e costo in AP), oppure "Muovi" / `M` | Tab AZIONI → Muovi → tap cella |
 | Attaccare | Click sul VC bordato di rosso (arma principale, probabilità sopra), oppure "Attacca" / `A` / scheda arma | Tab AZIONI → Attacca → tap nemico |
 | Cambiare soldato | Click su un altro soldato, anche durante un'azione | Tap sulla card |
+| Ruotare (gratis, una volta per turno) | Click destro verso dove guardare, oppure ⟳ / `R` | Icona ⟳ → tap freccia |
 | Abilità speciale | Click su "Speciale" oppure `S` | Tab AZIONI → Speciale |
 | Fine turno | Pulsante "Fine Turno" oppure `Invio` (conferma se qualche unità ha ancora AP) | Tab AZIONI → Fine Turno |
-| Annulla azione | `Esc` | — |
+| Annulla azione | `Esc` o click destro | — |
 | Annulla ultimo movimento | Pulsante "↶ Annulla movimento" oppure `U` / `Ctrl+Z` | Tab AZIONI → Annulla movimento |
 | Unità successiva con AP | `Tab` (`Shift+Tab` per la precedente) | — |
-| Panoramica mappa | Click + trascina | 1 dito + trascina |
+| Panoramica mappa | Tasto destro (o centrale) + trascina | 1 dito + trascina |
 | Zoom | Rotella del mouse | Pinch con 2 dita |
 | Lanciare dado | Pulsante "LANCIA DADO" | Tab DADO |
 | Torna al menu | Bottone **⌂** nell'header | Bottone **⌂** nell'header |

@@ -42,6 +42,7 @@ const G = {
   camY: 0,
   dragging: false,
   dragStart: null,
+  rightDown: null, // posizione della pressione del tasto destro (camera.js:onMouseUp)
   // tooltip
   hoveredTile: null,
   unitMoving: false, // movimento di un soldato in corso (unitMovement.js:moveUnit)

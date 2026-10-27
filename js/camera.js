@@ -2,10 +2,21 @@ function onMouseDown(e) {
   if (e.button !== 2 && e.button !== 1) return; // solo tasto destro/medio per pan
   G.dragging = true;
   G.dragStart = { x: e.clientX - G.camX, y: e.clientY - G.camY };
+  // Tasto destro rilasciato quasi fermo: è un click (ruota il soldato), non un pan
+  G.rightDown = e.button === 2 ? { x: e.clientX, y: e.clientY } : null;
   e.preventDefault();
 }
-function onMouseUp() {
+const RIGHT_CLICK_SLOP = 5; // px di trascinamento oltre cui il destro è un pan
+function onMouseUp(e) {
   G.dragging = false;
+  const rd = G.rightDown;
+  G.rightDown = null;
+  if (
+    e.button === 2 &&
+    rd &&
+    Math.hypot(e.clientX - rd.x, e.clientY - rd.y) <= RIGHT_CLICK_SLOP
+  )
+    onCanvasRightClick(e);
 }
 function onCanvasMove(e) {
   // Nessuna missione caricata (menu iniziale): niente mappa da esplorare

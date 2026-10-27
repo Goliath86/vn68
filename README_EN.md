@@ -747,12 +747,13 @@ In `config.json`, `vcMix` holds three compositions: `spawn` (initial deployment)
 | Move | Click the cell (light area with a light-blue outline around the selected soldier: hovering shows path and AP cost), or "Move" / `M` | ACTIONS tab → Move → tap cell |
 | Attack | Click the red-framed VC (main weapon, hit chance above), or "Attack" / `A` / weapon card | ACTIONS tab → Attack → tap enemy |
 | Switch soldier | Click another soldier, even during an action | Tap the card |
+| Turn (free, once per turn) | Right-click where to face, or ⟳ / `R` | ⟳ icon → tap arrow |
 | Special ability | Click "Special" or press `S` | ACTIONS tab → Special |
 | End turn | "End Turn" button or `Enter` (asks for confirmation if some unit still has AP) | ACTIONS tab → End Turn |
-| Cancel action | `Esc` | — |
+| Cancel action | `Esc` or right-click | — |
 | Undo last move | "↶ Undo move" button or `U` / `Ctrl+Z` | ACTIONS tab → Undo move |
 | Next unit with AP | `Tab` (`Shift+Tab` for previous) | — |
-| Pan map | Click + drag | 1 finger + drag |
+| Pan map | Right (or middle) button + drag | 1 finger + drag |
 | Zoom | Mouse wheel | 2-finger pinch |
 | Roll dice | "ROLL DICE" button | DICE tab |
 | Return to menu | **⌂** button in header | **⌂** button in header |

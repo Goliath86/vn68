@@ -348,6 +348,7 @@ const HOTKEY_HELP = [
   ]],
   ["mouse", [
     [["mouse_left"], "click"],
+    [["mouse_right_click"], "right_click"],
     [["mouse_right"], "pan"],
     [["mouse_wheel"], "zoom"],
   ]],

@@ -166,6 +166,23 @@ function setupCanvas() {
   })();
 }
 
+// Click destro (senza trascinare): annulla la modalità corrente e ruota il
+// soldato selezionato verso il tile (gratis, una volta per turno)
+function onCanvasRightClick(e) {
+  if (!G.mapData || G.phase !== "player" || G.throwing || G.unitMoving || G.pendingDice)
+    return;
+  const { col, row } = screenToTile(e.clientX, e.clientY);
+  if (col < 0 || row < 0 || col >= G.mapData.cols || row >= G.mapData.rows)
+    return;
+  const u = G.selectedUnit;
+  const f = u?.alive && !u.rotated ? facingToward(u, { col, row }) : null;
+  if (f !== null && f !== (u.facing ?? 0)) {
+    sfx("click");
+    rotateUnit(u, col, row);
+  }
+  setActionMode(null);
+}
+
 // Attacco diretto dell'unità selezionata, con l'arma corrente, su `target`
 function fireAtTarget(target) {
   const w = G.currentWeapon;

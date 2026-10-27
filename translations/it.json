@@ -315,6 +315,8 @@
     "cancel": "Annulla l'azione in corso",
     "end_turn": "Fine turno (nella conferma: Invio sì, Esc no)",
     "mouse_left": "Click sinistro",
+    "mouse_right_click": "Click destro",
+    "right_click": "Ruota il soldato verso quel punto, annulla l'azione",
     "mouse_right": "Trascina destro/centrale",
     "mouse_wheel": "Rotellina",
     "click": "Seleziona unità, muovi, scegli il bersaglio",

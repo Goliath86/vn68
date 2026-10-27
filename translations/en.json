@@ -310,6 +310,8 @@
     "cancel": "Cancel current action",
     "end_turn": "End turn (in the prompt: Enter yes, Esc no)",
     "mouse_left": "Left click",
+    "mouse_right_click": "Right click",
+    "right_click": "Turn the soldier toward that point, cancel the action",
     "mouse_right": "Right/middle drag",
     "mouse_wheel": "Wheel",
     "click": "Select unit, move, pick target",
