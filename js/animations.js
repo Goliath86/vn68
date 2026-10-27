@@ -694,6 +694,20 @@ function addBlastShake(col, row, aoe, delayMs = 0) {
   _startTileAnimLoop();
 }
 
+// Chioma scossa da chi attraversa la giungla: scossone piccolo e locale
+// (STEP_FX.rustle), stesse regole di quello delle esplosioni
+function addRustleShake(col, row) {
+  if (!windActive()) return;
+  _blasts.push({
+    x: (col + 0.5) * TILE,
+    y: (row + 0.5) * TILE,
+    reach: STEP_FX.rustle.reach * TILE,
+    push: STEP_FX.rustle.push,
+    t0: performance.now() / 1000,
+  });
+  _startTileAnimLoop();
+}
+
 // Spostamento (in raggi della chioma) e intensità dello scossone in un punto
 function blastShakeAt(wx, wy, t) {
   let dx = 0,
@@ -709,12 +723,17 @@ function blastShakeAt(wx, wy, t) {
     const fall = (1 - d / b.reach) ** 1.5;
     // Parte dal massimo (colpo secco), poi molla smorzata
     const env = Math.exp(-local / BLAST_SHAKE.decay) * Math.cos(Math.PI * 2 * BLAST_SHAKE.freq * local);
-    const amount = BLAST_SHAKE.push * fall * env;
+    const push = b.push ?? BLAST_SHAKE.push;
+    const amount = push * fall * env;
     if (d > 1) {
       dx += (ox / d) * amount;
       dy += (oy / d) * amount;
+    } else {
+      // Al centro (chi passa sotto la chioma): dondolio in una direzione fissa
+      dx += amount * 0.7;
+      dy += amount * 0.7;
     }
-    k = Math.max(k, Math.abs(env) * fall);
+    k = Math.max(k, Math.abs(env) * fall * (push / BLAST_SHAKE.push));
   }
   return { dx, dy, k };
 }
@@ -1644,10 +1663,21 @@ function _drawEffect(ctx, ts, fx, p) {
   ctx.save();
   if (_fxNeedsFowClip(fx)) _clipToVisible(ctx, ts);
   switch (fx.type) {
+    case "splash": {
+      _drawSplash(ctx, ts, fx, p);
+      break;
+    }
+
+    case "rustle": {
+      _drawRustle(ctx, ts, fx, p);
+      break;
+    }
+
     case "move": {
       // Polvere dei passi (da animateEnemyMove): sbuffi bassi ai piedi
-      // che si allargano e svaniscono; più grande all'arrivo (data.big)
-      const { col, row, big } = fx.data;
+      // che si allargano e svaniscono; più grande all'arrivo (data.big).
+      // Colore secondo il terreno (data.rgb, stepFx)
+      const { col, row, big, rgb = "160,140,105" } = fx.data;
       const { x, y } = tileToScreen(col, row);
       const cx = x + ts * 0.5,
         fy = y + ts * 0.82;
@@ -1662,7 +1692,7 @@ function _drawEffect(ctx, ts, fx, p) {
           cx + Math.cos(a) * d,
           fy + Math.sin(a) * d * 0.35 - ts * 0.04 * p,
           ts * ((big ? 0.1 : 0.07) + (big ? 0.12 : 0.07) * p),
-          "160,140,105",
+          rgb,
           (big ? 0.45 : 0.35) * (1 - p),
         );
       }
@@ -1902,6 +1932,101 @@ function _drawNapalm(ctx, ts, d, p) {
     _smokePuff(ctx, px, py - ts * 0.3 * p, r, `255,${g},${b}`, 0.6 * fireA);
   }
   ctx.restore();
+}
+
+// ── TERRENO AL PASSAGGIO ───────────────────────────────────────────────
+// Effetto dei passi secondo il terreno del tile (ai.js:_moveDust, solo tile
+// visibili): spruzzi e cerchi nell'acqua (fiume, guado, palude), foglie che
+// cadono e chioma che si scuote in giungla, altrove polvere del colore del
+// suolo. Il terreno conta per aspetto (tileLook), non per id
+const STEP_FX = {
+  water: new Set(["river", "ford", "swamp"]),
+  foliage: new Set(["jungle"]),
+  dust: { street: "150,146,138", urban: "150,146,138", plaza: "150,146,138", objective: "150,146,138", debris: "140,134,124", building: "140,134,124", scorched: "70,62,55" },
+  splashMs: 750,
+  rustleMs: 1000,
+  rustle: { reach: 0.9, push: 0.16 }, // scossone della chioma (vento attivo)
+  leafColors: ["#7aa64a", "#9cbf5a", "#5c8a34", "#b8a24a"], // chiare: si staccano dalla giungla scura
+};
+
+function stepFx(col, row, big) {
+  const look = tileLook(getTileAt(col, row));
+  if (STEP_FX.water.has(look)) {
+    addFX("splash", { col, row, big, swamp: look === "swamp" }, STEP_FX.splashMs);
+  } else if (STEP_FX.foliage.has(look)) {
+    addFX("rustle", { col, row, big }, STEP_FX.rustleMs);
+    addRustleShake(col, row);
+  } else {
+    addFX("move", { col, row, big, rgb: STEP_FX.dust[look] }, big ? 650 : 450);
+  }
+}
+
+// Spruzzi ai piedi e cerchi che si allargano; palude: acqua torbida
+function _drawSplash(ctx, ts, fx, p) {
+  const { col, row, big, swamp } = fx.data;
+  const { x, y } = tileToScreen(col, row);
+  const cx = x + ts * 0.5,
+    cy = y + ts * 0.62;
+  const seed = Math.floor(fx.t0) % 997;
+  const ring = swamp ? "150,160,110" : "215,235,240";
+  const drop = swamp ? "120,128,85" : "225,240,245";
+  ctx.lineWidth = Math.max(1, ts * 0.02);
+  // Cerchi concentrici, il secondo un attimo dopo
+  for (let i = 0; i < (big ? 3 : 2); i++) {
+    const q = (p - i * 0.18) / (1 - i * 0.18);
+    if (q <= 0) continue;
+    const r = ts * (0.1 + (big ? 0.42 : 0.32) * (1 - (1 - q) ** 2));
+    ctx.strokeStyle = `rgba(${ring},${(0.7 * (1 - q)).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, r, r * 0.55, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  // Gocce che saltano su e ricadono
+  const q = Math.min(1, p / 0.55);
+  if (q < 1) {
+    ctx.fillStyle = `rgba(${drop},${(0.9 * (1 - q)).toFixed(3)})`;
+    const n = big ? 10 : 7;
+    for (let i = 0; i < n; i++) {
+      const h = seed + i * 13;
+      const a = _hash01(h) * Math.PI * 2;
+      const d = ts * (0.08 + _hash01(h + 1) * 0.22) * q;
+      const up = ts * (0.12 + _hash01(h + 2) * 0.16) * Math.sin(Math.PI * q);
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d * 0.55 - up, Math.max(1.2, ts * (0.02 + _hash01(h + 3) * 0.012)), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+// Foglie che si staccano dalla chioma: saltano fuori, poi scendono
+// ondeggiando e ruotando, e svaniscono
+function _drawRustle(ctx, ts, fx, p) {
+  const { col, row, big } = fx.data;
+  const { x, y } = tileToScreen(col, row);
+  const cx = x + ts * 0.5,
+    cy = y + ts * 0.45;
+  const seed = Math.floor(fx.t0) % 997;
+  const n = big ? 7 : 4;
+  const alpha = Math.min(1, p / 0.1) * (p > 0.7 ? (1 - p) / 0.3 : 1);
+  for (let i = 0; i < n; i++) {
+    const h = seed + i * 17;
+    const a = _hash01(h) * Math.PI * 2;
+    const out = ts * (0.15 + _hash01(h + 1) * 0.3) * (1 - (1 - Math.min(1, p * 1.6)) ** 2);
+    const fall = ts * 0.25 * p * p;
+    const sway = Math.sin(p * 9 + h) * ts * 0.05;
+    const lx = cx + Math.cos(a) * out + sway,
+      ly = cy + Math.sin(a) * out * 0.6 + fall;
+    const s = ts * (0.035 + _hash01(h + 2) * 0.02);
+    ctx.save();
+    ctx.translate(lx, ly);
+    ctx.rotate(a + p * (4 + _hash01(h + 3) * 6));
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = STEP_FX.leafColors[i % STEP_FX.leafColors.length];
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s, s * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 }
 
 // ── BIRDS — stormo che si alza dalla giungla ───────────────────────────

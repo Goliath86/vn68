@@ -532,9 +532,10 @@ function _movePath(fromCol, fromRow, toCol, toRow) {
   return path;
 }
 
+// Polvere, spruzzi o foglie secondo il terreno (animations.js:stepFx)
 function _moveDust(col, row, big) {
   if (!isTileVisible(col, row)) return;
-  addFX("move", { col, row, big }, big ? 650 : 450);
+  stepFx(col, row, big);
 }
 
 function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
