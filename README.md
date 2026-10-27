@@ -538,7 +538,7 @@ Per aggiungere musica di sottofondo al menu iniziale, inserire il percorso del f
 
 ### Immagine del menu
 
-> Le pedine disegnate si animano: respirano (più in fretta da ferite), si guardano intorno, perlustrano e controllano l'arma, e ricaricano davvero quando si usa la ricarica. Si spengono da **Opzioni → Animazioni dei soldati** o con l'impostazione di sistema *riduci movimento*; le immagini di unitImages hanno solo il respiro.
+> Le pedine disegnate si animano: respirano (più in fretta da ferite), si guardano intorno, perlustrano e controllano l'arma, e ricaricano davvero quando si usa la ricarica. Spostandosi camminano (in piedi a passo pieno, accovacciati a passi corti, sdraiati strisciando) e si girano con una rotazione morbida; il passo è più lento in giungla, palude e guado e per chi è accovacciato o sdraiato, e da **Opzioni → Velocità dei movimenti** si può dimezzare la durata. I VC che si muovono solo nella nebbia non fanno attendere. Le animazioni si spengono da **Opzioni → Animazioni dei soldati** o con l'impostazione di sistema *riduci movimento*; le immagini di unitImages hanno solo respiro e oscillazione.
 
 Su schermi ampi (almeno 900×560) il menu iniziale è a due colonne: a sinistra le voci **Riprendi**, **Addestramento**, **Missioni singole**, **Campagne** e **Opzioni** (lingua, audio, vento, animazioni dei soldati, mod, comandi), che si aprono con i loro elenchi; a destra un'immagine del gioco con titolo e versione, sopra cui compare il briefing della mappa scelta. Su mobile resta il menu a passi.
 

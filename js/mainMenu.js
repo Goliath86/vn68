@@ -301,6 +301,17 @@ function buildOptionItems(list) {
       rerender();
     },
   });
+  menuItem(list, {
+    icon: "🥾",
+    title: t("menu.move_speed"),
+    sub: t("menu.move_speed_desc"),
+    tag: t(G.moveSpeedFast ? "menu.speed_fast" : "menu.speed_normal"),
+    onClick: () => {
+      sfx("click");
+      toggleMoveSpeed();
+      rerender();
+    },
+  });
   if (MOD_LIST.length)
     menuItem(list, {
       icon: "🧩",

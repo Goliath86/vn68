@@ -503,11 +503,22 @@ function spawnAmbush(count, zones) {
 }
 
 // Animazione di movimento (VC e unità US): segue il percorso tile per tile
-// invece di tagliare in diagonale, con un saltello per passo e polvere sui
+// invece di tagliare in diagonale, con le gambe che camminano (fase del passo
+// ad animations.js:setUnitWalk), un leggero saltello per passo e polvere sui
 // tile visibili (non sui tile nel FOW: non deve tradire VC nascosti).
-const MOVE_STEP_MS = 120;
-const MOVE_MAX_MS = 720;
-const MOVE_HOP = 0.06; // altezza saltello, in frazioni di tile
+// Ogni passo dura stepMs più costMs per ogni AP oltre il primo del tile in cui
+// entra (giungla, palude, guado più lenti), moltiplicato per la postura;
+// oltre maxMs tutto il percorso accelera. Velocità "veloce" delle Opzioni:
+// tempi × fastFactor (animations.js:moveAnimFactor)
+const MOVE_ANIM = {
+  stepMs: 200,
+  costMs: 110,
+  maxMs: 1500,
+  stance: { stand: 1, crouch: 1.3, prone: 1.7 },
+  cyclesPerTile: { stand: 1, crouch: 1.2, prone: 0.8 }, // cicli del passo per tile
+  hop: { stand: 0.03, crouch: 0.015, prone: 0 }, // saltello, in frazioni di tile
+  fastFactor: 0.5,
+};
 
 function _movePath(fromCol, fromRow, toCol, toRow) {
   const steps = Math.abs(toCol - fromCol) + Math.abs(toRow - fromRow);
@@ -530,30 +541,63 @@ function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
   if (fromCol === toCol && fromRow === toRow) return Promise.resolve();
   const path = _movePath(fromCol, fromRow, toCol, toRow);
   const segs = path.length - 1;
-  const duration = Math.min(segs * MOVE_STEP_MS, MOVE_MAX_MS);
-  const t0 = performance.now();
-  let lastIdx = 0;
   // Stormo di uccelli che si alza da un tile giungla del percorso (animations.js)
   const birdIdx = birdFlushStep(path);
   const enter = (i) => {
     if (i === birdIdx) flushBirds(path[i], path[i - 1]);
   };
+  const finish = () => {
+    enemy.facing = facingToward(path[segs - 1], path[segs]) ?? enemy.facing;
+    enemy.vx = toCol;
+    enemy.vy = toRow;
+    setUnitWalk(enemy, null);
+  };
+  // VC che non passa da nessun tile visibile: niente da vedere, niente attesa
+  // (gli uccelli si alzano comunque: si vedono sopra la nebbia)
+  if (ENEMY_CLASSES[enemy.cls] && !path.some((p) => isTileVisible(p.col, p.row))) {
+    for (let i = 1; i <= segs; i++) enter(i);
+    finish();
+    return Promise.resolve();
+  }
+
+  const stance = ENEMY_CLASSES[enemy.cls] ? pieceStance(enemy) : enemy.stance || "stand";
+  const slow = (MOVE_ANIM.stance[stance] ?? 1) * moveAnimFactor();
+  const segMs = path.slice(1).map((p) => {
+    const cost = getTileAt(p.col, p.row)?.moveCost || 1;
+    return (MOVE_ANIM.stepMs + MOVE_ANIM.costMs * (cost - 1)) * slow;
+  });
+  const total = segMs.reduce((a, b) => a + b, 0);
+  const k = Math.min(1, (MOVE_ANIM.maxMs * moveAnimFactor()) / total);
+  const ends = []; // istante (ms) in cui finisce ogni passo
+  segMs.reduce((acc, ms) => (ends.push(acc + ms * k), acc + ms * k), 0);
+  const duration = ends[segs - 1];
+  const cycles = MOVE_ANIM.cyclesPerTile[stance] ?? 1;
+  const hop = MOVE_ANIM.hop[stance] ?? 0;
+
+  const t0 = performance.now();
+  let lastIdx = 0;
   enemy.vx = fromCol;
   enemy.vy = fromRow;
   _moveDust(fromCol, fromRow, false);
   return new Promise((resolve) => {
     function frame(now) {
       const p = Math.min(1, (now - t0) / duration);
-      const ease = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
-      const s = ease * segs;
-      const idx = Math.min(segs - 1, Math.floor(s));
-      const f = s - idx;
+      // Avvio e arresto morbidi solo agli estremi del percorso
+      // (accelera nel primo 15%, frena nell'ultimo; 0.85 = strada a fine corsa)
+      const ease = p < 0.15 ? (p * p) / 0.3 : p > 0.85 ? 0.85 - ((1 - p) * (1 - p)) / 0.3 : p - 0.075;
+      const tau = (ease / 0.85) * duration;
+      let idx = 0;
+      while (idx < segs - 1 && tau >= ends[idx]) idx++;
+      const start = idx ? ends[idx - 1] : 0;
+      const f = Math.min(1, Math.max(0, (tau - start) / (ends[idx] - start)));
+      const s = idx + f; // tile percorsi
       const a = path[idx],
         b = path[idx + 1];
       // L'unità guarda nella direzione del passo in corso (a fine movimento: l'ultimo)
       enemy.facing = facingToward(a, b) ?? enemy.facing;
       enemy.vx = a.col + (b.col - a.col) * f;
-      enemy.vy = a.row + (b.row - a.row) * f - MOVE_HOP * Math.abs(Math.sin(s * Math.PI));
+      enemy.vy = a.row + (b.row - a.row) * f - hop * Math.abs(Math.sin(s * cycles * 2 * Math.PI));
+      setUnitWalk(enemy, s * cycles);
       // Polvere ogni volta che si entra in un nuovo tile
       const reached = Math.floor(s + 1e-6);
       while (lastIdx < reached && lastIdx < segs - 1) {
@@ -564,8 +608,7 @@ function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
       render();
       if (p < 1) requestAnimationFrame(frame);
       else {
-        enemy.vx = toCol;
-        enemy.vy = toRow;
+        finish();
         _moveDust(toCol, toRow, true);
         enter(segs);
         render();

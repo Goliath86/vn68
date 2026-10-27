@@ -1712,12 +1712,16 @@ function _paintSoldier(ctx, look, stance) {
 }
 
 function _paintSoldierLower(ctx, look, stance) {
-  const p = SOLDIER_POSES[stance];
-  const [tx, ty, rx, ry] = p.torso;
-  // Gambe con la cucitura dei pantaloni e la tasca sulla coscia; in fondo
-  // scarpone (suola e tomaia) o sandalo, oppure il ginocchio piegato
+  _paintSoldierLegs(ctx, look, stance);
+  _paintSoldierTorso(ctx, look, stance);
+}
+
+// Gambe con la cucitura dei pantaloni e la tasca sulla coscia; in fondo
+// scarpone (suola e tomaia) o sandalo, oppure il ginocchio piegato.
+// legs: gambe al posto di quelle della posa (camminata, soldierWalkLegs)
+function _paintSoldierLegs(ctx, look, stance, legs = SOLDIER_POSES[stance].legs) {
   const trousers = _shadeHex(look.cloth, -0.12);
-  for (const [pts, end] of p.legs) {
+  for (const [pts, end] of legs) {
     _limb(ctx, pts, 0.078, trousers, 0.12);
     const [a, b] = pts.slice(-2);
     const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
@@ -1743,7 +1747,12 @@ function _paintSoldierLower(ctx, look, stance) {
       _dome(ctx, b[0], b[1], 0.026, 0.026, _shadeHex(look.cloth, -0.18));
     }
   }
-  // Busto, mimetica e equipaggiamento
+}
+
+// Busto, mimetica e equipaggiamento
+function _paintSoldierTorso(ctx, look, stance) {
+  const p = SOLDIER_POSES[stance];
+  const [tx, ty, rx, ry] = p.torso;
   _dome(ctx, tx, ty, rx, ry, look.cloth);
   if (look.camo) {
     ctx.save();
@@ -1865,42 +1874,48 @@ function soldierSprite(lookId, stance, ts) {
   return spr;
 }
 
-// Strati della figura per le animazioni (corpo, braccia con arma, testa),
-// ognuno con il suo bordo scuro, alla stessa scala di soldierSprite
+// Strato della figura (canvas px × px, rivolta a nord) col suo bordo scuro,
+// alla stessa scala di soldierSprite
+function _soldierLayer(px, lookId, stance, paint) {
+  const k = px * SOLDIER_POSES[stance].scale;
+  const fig = document.createElement("canvas");
+  fig.width = fig.height = px;
+  const c = fig.getContext("2d");
+  c.translate(px / 2, px / 2);
+  c.scale(k, k);
+  paint(c, SOLDIER_LOOKS[lookId], stance);
+  const sil = document.createElement("canvas");
+  sil.width = sil.height = px;
+  const sc = sil.getContext("2d");
+  sc.drawImage(fig, 0, 0);
+  sc.globalCompositeOperation = "source-in";
+  sc.fillStyle = "#000";
+  sc.fillRect(0, 0, px, px);
+  const out = document.createElement("canvas");
+  out.width = out.height = px;
+  const oc = out.getContext("2d");
+  const d = Math.max(1, px / 96);
+  oc.globalAlpha = 0.55;
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) oc.drawImage(sil, dx * d, dy * d);
+  oc.globalAlpha = 1;
+  oc.drawImage(fig, 0, 0);
+  return out;
+}
+
+const _soldierPx = (ts) => Math.min(192, Math.max(16, Math.ceil(ts / 16) * 16));
+
+// Strati della figura per le animazioni (gambe, busto, braccia con arma,
+// testa), ognuno con il suo bordo scuro
 const _SOLDIER_LAYER_CACHE = new Map();
 function soldierLayers(lookId, stance, ts) {
-  const px = Math.min(192, Math.max(16, Math.ceil(ts / 16) * 16));
+  const px = _soldierPx(ts);
   const key = `${lookId}|${stance}|${px}`;
   let layers = _SOLDIER_LAYER_CACHE.get(key);
   if (layers) return layers;
-  const k = px * SOLDIER_POSES[stance].scale;
-  const look = SOLDIER_LOOKS[lookId];
-  const layer = (paint) => {
-    const fig = document.createElement("canvas");
-    fig.width = fig.height = px;
-    const c = fig.getContext("2d");
-    c.translate(px / 2, px / 2);
-    c.scale(k, k);
-    paint(c, look, stance);
-    const sil = document.createElement("canvas");
-    sil.width = sil.height = px;
-    const sc = sil.getContext("2d");
-    sc.drawImage(fig, 0, 0);
-    sc.globalCompositeOperation = "source-in";
-    sc.fillStyle = "#000";
-    sc.fillRect(0, 0, px, px);
-    const out = document.createElement("canvas");
-    out.width = out.height = px;
-    const oc = out.getContext("2d");
-    const d = Math.max(1, px / 96);
-    oc.globalAlpha = 0.55;
-    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) oc.drawImage(sil, dx * d, dy * d);
-    oc.globalAlpha = 1;
-    oc.drawImage(fig, 0, 0);
-    return out;
-  };
+  const layer = (paint) => _soldierLayer(px, lookId, stance, paint);
   layers = {
-    lower: layer(_paintSoldierLower),
+    legs: layer((c, l, s) => _paintSoldierLegs(c, l, s)),
+    torso: layer(_paintSoldierTorso),
     arms: layer((c, l, s) => _paintSoldierArms(c, l, s)),
     head: layer(_paintSoldierHead),
   };
@@ -1908,10 +1923,54 @@ function soldierLayers(lookId, stance, ts) {
   return layers;
 }
 
+// ── CAMMINATA ──────────────────────────────────────────────────────────
+// Gambe in movimento viste dall'alto, per fase del passo (0..1 = un ciclo,
+// un passo per gamba): in piedi i piedi vanno avanti e indietro sotto il
+// busto, accovacciati passi corti a ginocchia larghe, sdraiati una gamba
+// alla volta si piega verso il fianco per spingere (strisciata)
+const WALK_FRAMES = 8; // fotogrammi in cache per ciclo
+
+function soldierWalkLegs(stance, phase) {
+  const s = Math.sin(2 * Math.PI * phase);
+  if (stance === "prone") {
+    const leg = (sx, b) => [
+      [[0.05 * sx, 0.12], [(0.09 + 0.12 * b) * sx, 0.275 - 0.03 * b], [(0.13 + 0.07 * b) * sx, 0.43 - 0.14 * b]],
+      "boot",
+    ];
+    return [leg(-1, Math.max(0, s)), leg(1, Math.max(0, -s))];
+  }
+  if (stance === "crouch") {
+    const leg = (sx, d) => {
+      const foot = [0.115 * sx, 0.14 + d];
+      return [[[0.07 * sx, 0.08], [0.14 * sx, (0.08 + foot[1]) / 2 - 0.03], foot], "boot"];
+    };
+    return [leg(-1, -0.19 * s), leg(1, 0.19 * s)];
+  }
+  // Falcata ampia: il piede avanti sporge oltre il busto, quello dietro sotto
+  return [
+    [[[-0.07, 0.04], [-0.09, 0.035 - 0.17 * s]], "boot"],
+    [[[0.07, 0.04], [0.09, 0.035 + 0.17 * s]], "boot"],
+  ];
+}
+
+const _WALK_CACHE = new Map();
+function soldierWalkFrame(lookId, stance, ts, phase) {
+  const px = _soldierPx(ts);
+  const key = `${lookId}|${stance}|${px}`;
+  let frames = _WALK_CACHE.get(key);
+  if (!frames) _WALK_CACHE.set(key, (frames = []));
+  const i = ((Math.floor(phase * WALK_FRAMES) % WALK_FRAMES) + WALK_FRAMES) % WALK_FRAMES;
+  frames[i] ??= _soldierLayer(px, lookId, stance, (c, l, s) =>
+    _paintSoldierLegs(c, l, s, soldierWalkLegs(s, i / WALK_FRAMES)),
+  );
+  return frames[i];
+}
+
 // Figura animata, già ruotata secondo il facing: respiro (scala attorno al
 // busto), braccia e arma ruotate/spostate attorno al busto, testa girata.
 // anim = unitAnimPose (animations.js): { breath, gunRot, gunDx, gunDy,
-// headRot, handL?, mag? } in coordinate della figura (tile, rivolta a nord)
+// headRot, handL?, mag?, walk?, bodyRot? } in coordinate della figura
+// (tile, rivolta a nord); walk = fase del passo, bodyRot = torsione del busto
 function _drawAnimatedSoldier(ctx, lookId, pose, ts, anim) {
   const L = soldierLayers(lookId, pose, ts);
   const p = SOLDIER_POSES[pose];
@@ -1923,7 +1982,13 @@ function _drawAnimatedSoldier(ctx, lookId, pose, ts, anim) {
   ctx.translate(tx * S, ty * S);
   ctx.scale(anim.breath, anim.breath);
   ctx.translate(-tx * S, -ty * S);
-  draw(L.lower);
+  draw(anim.walk != null ? soldierWalkFrame(lookId, pose, ts, anim.walk) : L.legs);
+  if (anim.bodyRot) {
+    ctx.translate(tx * S, ty * S);
+    ctx.rotate(anim.bodyRot);
+    ctx.translate(-tx * S, -ty * S);
+  }
+  draw(L.torso);
   // Braccia e arma attorno al centro del busto
   ctx.save();
   ctx.translate(tx * S, ty * S);
@@ -1957,7 +2022,8 @@ function soldierLook(cls, isEnemy) {
 // anim = posa animata (animations.js:unitAnimPose), null = figura ferma
 function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy, stance, facing, turn = 0, anim = null) {
   const pose = SOLDIER_POSES[stance] ? stance : "stand";
-  const ang = (facing || 0) * (Math.PI / 2) + turn;
+  // anim.turn: rotazione ancora da compiere verso il facing (girata morbida)
+  const ang = (facing || 0) * (Math.PI / 2) + turn + (anim?.turn || 0);
   ctx.save();
   if (isDone && !isEnemy) ctx.globalAlpha *= 0.6;
   ctx.translate(x + ts / 2, y + ts / 2);
@@ -1966,8 +2032,11 @@ function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy, stance, facing, tur
   const img = UNIT_IMG_CACHE[cls]?.[pose];
   if (img && img.complete && img.naturalWidth > 0) {
     ctx.rotate(ang);
-    // Immagini intere: solo il respiro
-    if (anim) ctx.scale(anim.breath, anim.breath);
+    // Immagini intere: solo respiro e torsione della camminata
+    if (anim) {
+      ctx.rotate(anim.bodyRot || 0);
+      ctx.scale(anim.breath, anim.breath);
+    }
     ctx.drawImage(img, -ts / 2, -ts / 2, ts, ts);
     ctx.restore();
     return;

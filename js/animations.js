@@ -94,7 +94,49 @@ const UNIT_ANIM = {
   check: { dur: 2.4, gun: -0.55, dx: -0.03, dy: 0.06, head: 0.35 },
   reload: { dur: 1.7, gun: 0.3 },
   proneDamp: 0.5, // sdraiati: gesti più piccoli
+  turnMs: 170, // girata morbida verso il nuovo facing
+  // Camminata per postura: bob = beccheggio (scala a ogni passo), sway =
+  // oscillazione di braccia e arma, twist = torsione del busto (radianti)
+  walk: {
+    stand: { bob: 0.03, sway: 0.06, twist: 0.04 },
+    crouch: { bob: 0.018, sway: 0.04, twist: 0.03 },
+    prone: { bob: 0, sway: 0.06, twist: 0.08 },
+  },
 };
+
+// Stato delle animazioni non salvato (fuori dagli oggetti unità, che finiscono
+// nel salvataggio): fase del passo durante un movimento (ai.js:
+// animateEnemyMove) e girata in corso
+const _unitWalk = new WeakMap(); // unità → fase del passo (giri, cresce col percorso)
+const _unitTurn = new WeakMap(); // unità → { facing, from, t0 }
+
+function setUnitWalk(u, phase) {
+  if (phase == null) _unitWalk.delete(u);
+  else _unitWalk.set(u, phase);
+}
+
+// Rotazione (radianti) che manca per arrivare al facing attuale: al cambio
+// di facing la figura parte dall'angolo mostrato e gira per il verso breve
+function _unitTurnOffset(u, now) {
+  const f = u.facing ?? 0;
+  const st = _unitTurn.get(u);
+  if (!st) {
+    _unitTurn.set(u, { facing: f, from: 0, t0: 0 });
+    return 0;
+  }
+  const left = (s) => s.from * (1 - _easeInOut(Math.min(1, (now - s.t0) / UNIT_ANIM.turnMs)));
+  if (st.facing !== f) {
+    let d = (st.facing - f) * (Math.PI / 2) + left(st);
+    d = Math.atan2(Math.sin(d), Math.cos(d)); // verso breve
+    _unitTurn.set(u, { facing: f, from: d, t0: now });
+    return d;
+  }
+  return left(st);
+}
+
+function _easeInOut(k) {
+  return k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+}
 
 G.unitAnimEnabled = (() => {
   try {
@@ -103,6 +145,27 @@ G.unitAnimEnabled = (() => {
   } catch {}
   return !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 })();
+
+// Velocità del movimento delle pedine (ai.js:animateEnemyMove): normale o
+// veloce, preferenza in localStorage[MOVE_SPEED_PREF_KEY], dalle Opzioni
+const MOVE_SPEED_PREF_KEY = "vn68_move_speed";
+G.moveSpeedFast = (() => {
+  try {
+    return localStorage.getItem(MOVE_SPEED_PREF_KEY) === "fast";
+  } catch {}
+  return false;
+})();
+
+function toggleMoveSpeed() {
+  G.moveSpeedFast = !G.moveSpeedFast;
+  try {
+    localStorage.setItem(MOVE_SPEED_PREF_KEY, G.moveSpeedFast ? "fast" : "normal");
+  } catch {}
+}
+
+function moveAnimFactor() {
+  return G.moveSpeedFast ? MOVE_ANIM.fastFactor : 1;
+}
 
 function toggleUnitAnim() {
   G.unitAnimEnabled = !G.unitAnimEnabled;
@@ -147,7 +210,22 @@ function unitAnimPose(u, isEnemy = false) {
     gunDx: 0,
     gunDy: 0,
     headRot: 0,
+    turn: _unitTurnOffset(u, now),
   };
+  // In cammino: passo, beccheggio, braccia e busto che oscillano col passo
+  const walk = _unitWalk.get(u);
+  if (walk != null) {
+    const stance = isEnemy ? pieceStance(u) : u.stance;
+    const W = UNIT_ANIM.walk[stance] || UNIT_ANIM.walk.stand;
+    const s = Math.sin(2 * Math.PI * walk);
+    pose.walk = walk;
+    pose.breath *= 1 + W.bob * Math.abs(s);
+    pose.gunRot = W.sway * s;
+    pose.gunDx = 0.01 * s;
+    pose.bodyRot = W.twist * s;
+    pose.headRot = -0.5 * W.twist * s;
+    return pose;
+  }
   const damp = u.stance === "prone" ? UNIT_ANIM.proneDamp : 1;
   // Ricarica in corso: la mano sinistra va alla giberna e torna col caricatore
   const R = UNIT_ANIM.reload;
