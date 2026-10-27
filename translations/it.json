@@ -505,7 +505,9 @@
     "tunnel": " · 🕳 Ingresso di tunnel (il geniere può sigillarlo)",
     "tunnel_sealed": " · Tunnel sigillato",
     "trap": " | ⚠ Trappola: {trap}",
-    "smoke": " | Fumo ({turns}T)"
+    "smoke": " | Fumo ({turns}T)",
+    "seen_by": "\n👁 Visto da: {names}",
+    "seen_by_none": "\n👁 Nessun soldato lo vede direttamente"
   },
 
   "odds": {

@@ -30,8 +30,9 @@ function setupCanvas() {
   G.canvas.addEventListener("mouseleave", () => {
     document.getElementById("tile-tooltip").style.display = "none";
     // Il raggio di mira sparisce quando il mouse esce dalla mappa
+    const prev = G.hoveredTile;
     G.hoveredTile = null;
-    if (hoverPreviewMode()) render();
+    if (hoverPreviewMode() || hasSpotLines(prev)) render();
   });
   G.canvas.addEventListener("wheel", onWheel, { passive: true });
 

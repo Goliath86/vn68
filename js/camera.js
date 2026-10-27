@@ -36,8 +36,10 @@ function onCanvasMove(e) {
   const prev = G.hoveredTile;
   if (!prev || prev.col !== col || prev.row !== row) {
     G.hoveredTile = { col, row };
-    // Napalm: anteprima della linea fino al tile sotto il mouse
-    if (hoverPreviewMode()) render();
+    // Napalm: anteprima della linea fino al tile sotto il mouse; linee di
+    // avvistamento entrando o uscendo da un soldato o da un VC
+    if (hoverPreviewMode() || hasSpotLines(prev) || hasSpotLines(G.hoveredTile))
+      render();
   }
   if (col >= 0 && row >= 0 && col < G.mapData.cols && row < G.mapData.rows) {
     showTooltip(e, col, row);
@@ -47,6 +49,13 @@ function onCanvasMove(e) {
 }
 function isAimRayMode() {
   return G.actionMode === "attack" && !isAreaWeapon(G.currentWeapon);
+}
+// Sul tile c'è un soldato o un VC visibile: col mouse sopra si disegnano le
+// linee di avvistamento (render.js:drawSpotLines)
+function hasSpotLines(tile) {
+  if (!tile || G.actionMode !== null) return false;
+  const at = (o) => o.alive && o.col === tile.col && o.row === tile.row;
+  return G.units.some(at) || G.enemies.some((e) => at(e) && isEnemyVisible(e));
 }
 // Modalità in cui il disegno dipende dal tile sotto il mouse
 function hoverPreviewMode() {

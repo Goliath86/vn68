@@ -73,6 +73,16 @@ function showTooltip(e, col, row) {
     // Seconda riga: da dove vengono ATK e DEF
     txt += "\n" + oddsBreakdownText(b);
   }
+  // Quali soldati vedono il VC (🎯 = anche a tiro: actions.js:spotStatus)
+  if (enemy && G.phase === "player") {
+    const names = G.units
+      .map((u) => [u, spotStatus(u, enemy)])
+      .filter(([, st]) => st)
+      .map(([u, st]) => (st === "fire" ? `${u.name} 🎯` : u.name));
+    txt += names.length
+      ? t("tooltip.seen_by", { names: names.join(", ") })
+      : t("tooltip.seen_by_none");
+  }
   tt.textContent = txt;
   tt.style.display = "block";
   const rect = G.canvas.getBoundingClientRect();

@@ -62,19 +62,42 @@ function recomputeVisibility() {
   if (!G.mapData) return;
   for (const u of G.units) {
     if (!u.alive) continue;
-    const vision = unitVision(u);
-    const rMin = Math.max(0, u.row - vision),
-      rMax = Math.min(G.mapData.rows - 1, u.row + vision);
-    const cMin = Math.max(0, u.col - vision),
-      cMax = Math.min(G.mapData.cols - 1, u.col + vision);
-    for (let r = rMin; r <= rMax; r++) {
-      for (let c = cMin; c <= cMax; c++) {
-        const k = `${c},${r}`;
-        if (!G.visibleTiles.has(k) && isTileVisibleFromUnit(u, c, r))
-          G.visibleTiles.add(k);
-      }
+    for (const k of computeUnitVisibleTiles(u)) G.visibleTiles.add(k);
+  }
+}
+
+// Chiavi "col,row" dei tile che `u` vede davvero (cono, terreno, fumo)
+function computeUnitVisibleTiles(u) {
+  const tiles = new Set();
+  const vision = unitVision(u);
+  const rMin = Math.max(0, u.row - vision),
+    rMax = Math.min(G.mapData.rows - 1, u.row + vision);
+  const cMin = Math.max(0, u.col - vision),
+    cMax = Math.min(G.mapData.cols - 1, u.col + vision);
+  for (let r = rMin; r <= rMax; r++) {
+    for (let c = cMin; c <= cMax; c++) {
+      if (isTileVisibleFromUnit(u, c, r)) tiles.add(`${c},${r}`);
     }
   }
+  return tiles;
+}
+
+// Come sopra, in cache per il disegno del campo visivo (render.js); la chiave
+// copre posizione, orientamento e postura, il resto (fumo, terreno distrutto)
+// lo invalida updateUI
+const _unitVisionCache = new Map();
+
+function invalidateUnitVisionCache() {
+  _unitVisionCache.clear();
+}
+
+function unitVisibleTiles(u) {
+  const key = `${u.col},${u.row},${u.facing},${u.stance},${G.turn}`;
+  const c = _unitVisionCache.get(u.id);
+  if (c?.key === key) return c.tiles;
+  const tiles = computeUnitVisibleTiles(u);
+  _unitVisionCache.set(u.id, { key, tiles });
+  return tiles;
 }
 
 function isTileVisible(col, row) {

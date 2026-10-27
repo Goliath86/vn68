@@ -771,6 +771,59 @@ function drawCrosshair(ctx, ts, e) {
 // probabilità di colpire; sotto il mouse il percorso col costo in AP, oppure
 // il raggio di mira sul VC
 const QUICK_RGB = "150,225,255";
+// Campo visivo del soldato selezionato e linee di avvistamento (lilla, per
+// non confondersi con l'area di movimento azzurra)
+const VISION_RGB = "205,165,255";
+const SPOT_FIRE_RGB = "255,215,90";
+
+// Mouse su un VC visibile: linee dai soldati che lo vedono; su un soldato:
+// linee verso i VC che vede. Piene se il VC è anche a tiro, tratteggiate se
+// è solo visto (actions.js:spotStatus)
+function drawSpotLines(ctx, ts) {
+  const hov = G.hoveredTile;
+  if (!hov || G.actionMode !== null || G.phase !== "player") return;
+  const at = (o) => o.alive && o.col === hov.col && o.row === hov.row;
+  const enemy = G.enemies.find((e) => at(e) && isEnemyVisible(e));
+  const unit = !enemy && G.units.find(at);
+  if (!enemy && !unit) return;
+  const pairs = enemy
+    ? G.units.map((u) => [u, enemy])
+    : G.enemies.filter((e) => e.alive && isEnemyVisible(e)).map((e) => [unit, e]);
+
+  ctx.save();
+  ctx.lineCap = "round";
+  for (const [u, e] of pairs) {
+    const st = spotStatus(u, e);
+    if (!st) continue;
+    const { x: ux, y: uy } = tileToScreen(u.col, u.row);
+    const { x: ex, y: ey } = tileToScreen(e.col, e.row);
+    const sx = ux + ts / 2,
+      sy = uy + ts / 2,
+      tx = ex + ts / 2,
+      ty = ey + ts / 2;
+    const rgb = st === "fire" ? SPOT_FIRE_RGB : VISION_RGB;
+    ctx.setLineDash(st === "fire" ? [] : [ts * 0.12, ts * 0.1]);
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(tx, ty);
+    ctx.strokeStyle = "rgba(0,0,0,0.5)";
+    ctx.lineWidth = Math.max(3.5, ts * 0.08);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(${rgb},0.95)`;
+    ctx.lineWidth = Math.max(1.5, ts * 0.035);
+    ctx.stroke();
+    // Occhio sul soldato che vede
+    ctx.setLineDash([]);
+    ctx.fillStyle = `rgb(${rgb})`;
+    ctx.strokeStyle = "rgba(0,0,0,0.7)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(sx, sy, Math.max(3, ts * 0.07), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
 
 function drawQuickActions(ctx, ts, qa) {
   const u = G.selectedUnit;
@@ -1042,7 +1095,7 @@ function renderOverlay() {
         ? facingToward(u, hov)
         : u.facing;
     const { x: ux, y: uy } = tileToScreen(u.col, u.row);
-    ctx.strokeStyle = "rgba(170,220,255,0.8)";
+    ctx.strokeStyle = `rgba(${VISION_RGB},0.8)`;
     ctx.lineWidth = 2;
     strokeVisionOutline(ctx, u, ux, uy, ts, previewFacing);
     ctx.lineWidth = 1.5;
@@ -1073,6 +1126,8 @@ function renderOverlay() {
 
   // Click contestuale: dove può andare o sparare il soldato selezionato
   const qa = quickActions();
+  // Sotto: il raggio di mira del click contestuale resta in vista
+  drawSpotLines(ctx, ts);
   if (qa) drawQuickActions(ctx, ts, qa);
 
   // Selezione unità corrente
@@ -1085,10 +1140,25 @@ function renderOverlay() {
     ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
     ctx.setLineDash([]);
 
-    // Area visiva a cono dell'unità (fronte pieno, lati -1, 2 tile dietro)
-    ctx.strokeStyle = "rgba(170,220,255,0.6)";
-    ctx.lineWidth = 1.5;
+    // Area visiva: tratteggiato il cono teorico (fronte pieno, lati -1,
+    // 2 tile dietro), pieno il campo reale tolti terreno e fumo
+    ctx.save();
+    ctx.strokeStyle = `rgba(${VISION_RGB},0.4)`;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
     strokeVisionOutline(ctx, u, x, y, ts);
+    ctx.restore();
+    const seen = unitVisibleTiles(u);
+    const seenShape = (dc, dr) => seen.has(`${u.col + dc},${u.row + dr}`);
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "rgba(0,0,0,0.5)";
+    ctx.lineWidth = Math.max(3, ts * 0.06);
+    strokeShapeOutline(ctx, x, y, ts, unitVision(u), seenShape);
+    ctx.strokeStyle = `rgba(${VISION_RGB},0.95)`;
+    ctx.lineWidth = Math.max(1.5, ts * 0.028);
+    strokeShapeOutline(ctx, x, y, ts, unitVision(u), seenShape);
+    ctx.restore();
 
     // Contorno raggio attacco: gittata dell'arma (come in combattimento)
     ctx.strokeStyle = "rgba(240,192,48,0.28)";

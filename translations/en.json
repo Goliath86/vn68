@@ -500,7 +500,9 @@
     "tunnel": " · 🕳 Tunnel entrance (the engineer can seal it)",
     "tunnel_sealed": " · Sealed tunnel",
     "trap": " | ⚠ Trap: {trap}",
-    "smoke": " | Smoke ({turns}T)"
+    "smoke": " | Smoke ({turns}T)",
+    "seen_by": "\n👁 Seen by: {names}",
+    "seen_by_none": "\n👁 No soldier sees it directly"
   },
 
   "odds": {

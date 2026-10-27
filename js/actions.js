@@ -112,6 +112,21 @@ function directTargets(u, weapon) {
   );
 }
 
+// Il soldato `u` vede il VC `e`? "fire" se lo ha anche a tiro con l'arma
+// predefinita (gittata, linea di tiro libera), "seen" se lo vede soltanto,
+// null se non lo vede (linee di avvistamento in render.js, tooltip)
+function spotStatus(u, e) {
+  if (!u.alive || !unitSeesEnemy(u, e)) return null;
+  const w = defaultAttackWeapon(u);
+  const range = w?.range ?? UNIT_CLASSES[u.cls].range;
+  const inFire =
+    canAttack(u) &&
+    !isAreaWeapon(w) &&
+    dist(u, e) <= range &&
+    !allyBlockingFire(u, e);
+  return inFire ? "fire" : "seen";
+}
+
 // ── CLICK CONTESTUALE (desktop) ─────────────────────────────────────────
 // Soldato selezionato e nessuna azione scelta: il click su un tile
 // raggiungibile lo muove, quello su un VC in tiro spara con l'arma
