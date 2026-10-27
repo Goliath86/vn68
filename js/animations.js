@@ -229,6 +229,112 @@ function _unitFxAnim(type, d, duration, t0) {
   }
 }
 
+// Rinculo di un colpo singolo senza effetto "shot" (lanciarazzi:
+// combat.js:resolveAoeCombat)
+function unitRecoil(u, rounds = 1) {
+  if (!u) return;
+  const now = performance.now();
+  _unitFire.set(u, { t0: now, rounds, stagger: 80, melee: false });
+  _unitFxBusy(now + rounds * 80 + UNIT_ANIM.recoil.lungeMs + 200);
+}
+
+// ── GESTI DELLE AZIONI ─────────────────────────────────────────────────
+// La mano sinistra (l'unica che si muove, plchldSprites.js:
+// _paintSoldierArms) esegue l'azione con un oggetto in mano, l'arma si
+// sposta di lato: lancio della granata (caricamento dietro la spalla, poi
+// rilascio in avanti: il volo parte a releaseMs, combat.js:throwAoe), radio
+// all'orecchio (artiglieria, napalm), fasciatura (medico, primo soccorso),
+// lavoro del geniere sul tile davanti (disinnesco, tunnel, incendio,
+// demolizione). Posizioni in coordinate della figura (tile, rivolta a nord)
+const UNIT_GESTURE = {
+  throw: { ms: 520, releaseMs: 230 },
+  radio: { ms: 1800 },
+  bandage: { ms: 1500 },
+  work: { ms: 1300 },
+};
+const _unitGesture = new WeakMap(); // unità → { kind, t0 }
+
+function unitGesture(u, kind) {
+  if (!u || !UNIT_GESTURE[kind]) return;
+  const now = performance.now();
+  _unitGesture.set(u, { kind, t0: now });
+  _unitFxBusy(now + UNIT_GESTURE[kind].ms);
+}
+
+// Attesa prima che parta l'effetto dell'azione (il lancio vero e proprio):
+// 0 senza animazioni
+function gestureLeadMs(kind) {
+  return G.unitAnimEnabled && kind === "throw" ? UNIT_GESTURE.throw.releaseMs : 0;
+}
+
+function _applyGesture(u, isEnemy, stance, pose, now) {
+  const g = _unitGesture.get(u);
+  if (!g) return false;
+  const G_ = UNIT_GESTURE[g.kind];
+  const dt = now - g.t0;
+  if (dt >= G_.ms) {
+    _unitGesture.delete(u);
+    return false;
+  }
+  const k = Math.max(0, dt / G_.ms);
+  const sp = SOLDIER_POSES[SOLDIER_POSES[stance] ? stance : "stand"];
+  const look = SOLDIER_LOOKS[soldierLook(u.cls, isEnemy)];
+  const grip = look?.weapon === "pistol" ? sp.grip : sp.armL[2];
+  const [shx, shy] = sp.armL[0]; // spalla sinistra
+  const [hx, hy] = sp.head;
+  const env = _animEnv(k, 0.15);
+  const to = (target, w) => _lerp2(grip, target, w);
+
+  if (g.kind === "throw") {
+    const r = G_.releaseMs / G_.ms;
+    const back = [shx - 0.05, shy + 0.17];
+    const front = [shx + 0.1, shy - 0.34];
+    if (k < r) {
+      const e = _easeInOut(k / r);
+      pose.handL = _lerp2(grip, back, e);
+      pose.item = "grenade";
+      pose.gunRot = 0.45 * e;
+      pose.bodyRot = -0.28 * e;
+    } else {
+      const q = (k - r) / (1 - r);
+      const swing = Math.min(1, q / 0.35); // braccio che scatta in avanti
+      const settle = q > 0.35 ? _easeInOut((q - 0.35) / 0.65) : 0;
+      pose.handL = _lerp2(_lerp2(back, front, 1 - (1 - swing) ** 3), grip, settle);
+      pose.gunRot = 0.45 * (1 - settle);
+      pose.bodyRot = (-0.28 + 0.45 * swing) * (1 - settle);
+    }
+  } else if (g.kind === "radio") {
+    pose.handL = to([hx - 0.14, hy - 0.01], env);
+    pose.item = env > 0.6 ? "radio" : null;
+    pose.headRot = -0.25 * env;
+    pose.gunRot = 0.15 * env;
+  } else if (g.kind === "bandage") {
+    const wob = [0.05 * Math.sin(k * Math.PI * 7), 0.03 * Math.cos(k * Math.PI * 7)];
+    const base = [-0.02 + wob[0] * env, sp.torso[1] - 0.24 + wob[1] * env];
+    pose.handL = to(base, env);
+    pose.item = env > 0.5 ? "bandage" : null;
+    pose.gunRot = 0.7 * env;
+    pose.headRot = 0.1 * env;
+  } else if (g.kind === "work") {
+    const jit = 0.02 * Math.sin(k * Math.PI * 12);
+    pose.handL = to([0.02 + jit, sp.torso[1] - 0.27], env);
+    pose.item = env > 0.5 ? "tool" : null;
+    pose.gunRot = 0.6 * env;
+    pose.bodyRot = 0.06 * env * Math.sin(k * Math.PI * 4);
+  }
+  // Le braccia ruotano con l'arma (gunRot attorno al busto): la mano va
+  // contro-ruotata per restare dove l'azione la vuole rispetto al corpo
+  if (pose.handL && pose.gunRot) {
+    const [tx, ty] = sp.torso;
+    const c = Math.cos(-pose.gunRot),
+      s = Math.sin(-pose.gunRot);
+    const dx = pose.handL[0] - tx,
+      dy = pose.handL[1] - ty;
+    pose.handL = [tx + dx * c - dy * s, ty + dx * s + dy * c];
+  }
+  return true;
+}
+
 // Ritardo (ms) con cui far partire uno sparo perché il tiratore finisca di
 // girarsi verso il bersaglio (combat.js:resolveCombat); 0 se è già girato,
 // senza animazioni o se è un VC che non si vede
@@ -360,13 +466,17 @@ function unitAnimPose(u, isEnemy = false) {
     headRot: 0,
     turn: _unitTurnOffset(u, now),
   };
-  _applyStanceChange(u, isEnemy ? pieceStance(u) : u.stance || "stand", pose, now);
+  const stance = isEnemy ? pieceStance(u) : u.stance || "stand";
+  _applyStanceChange(u, stance, pose, now);
   const walk = _unitWalk.get(u);
-  // Sparo (rinculo, affondo del coltello) o colpo appena preso (sobbalzo)
-  if (walk == null && _applyFireHit(u, pose, now)) return pose;
+  // Sparo (rinculo, affondo del coltello) o colpo appena preso (sobbalzo);
+  // gesto di un'azione (lancio, radio, fasciatura, lavoro del geniere)
+  if (walk == null) {
+    const gesture = _applyGesture(u, isEnemy, stance, pose, now);
+    if (_applyFireHit(u, pose, now) || gesture) return pose;
+  }
   // In cammino: passo, beccheggio, braccia e busto che oscillano col passo
   if (walk != null) {
-    const stance = isEnemy ? pieceStance(u) : u.stance;
     const W = UNIT_ANIM.walk[stance] || UNIT_ANIM.walk.stand;
     const s = Math.sin(2 * Math.PI * walk);
     pose.walk = walk;

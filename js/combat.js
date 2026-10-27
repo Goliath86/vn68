@@ -514,6 +514,9 @@ async function throwAoe(attacker, weapon, tc, tr) {
   if (weapon.thrown) {
     G.throwing = true;
     updateUI();
+    // Braccio che carica dietro la spalla: la granata parte al rilascio
+    unitGesture(attacker, "throw");
+    await sleep(gestureLeadMs("throw"));
     const plan = planGrenadeThrow(attacker, { col: tc, row: tr }, land);
     addFX("grenade", plan, plan.ms);
     await sleep(plan.ms);
@@ -561,6 +564,8 @@ async function resolveAoeCombat(
     sfx("napalm");
   } else {
     sfxShoot(attacker.cls, weapon);
+    // Lanciarazzi e simili: rinculo di chi spara (le granate sono già partite)
+    if (!weapon.thrown && !hitHidden) unitRecoil(attacker);
     // big: cratere più largo per l'artiglieria (animations.js:addCrater)
     addFX("explosion", { col: tc, row: tr, aoe: weapon.aoe, big: hitHidden }, 1300);
   }

@@ -1776,7 +1776,8 @@ function _paintSoldierTorso(ctx, look, stance) {
 
 // Braccia (maniche arrotolate: risvolto al gomito e avambraccio nudo), arma
 // e mani. handL: posizione della mano sinistra al posto di quella della posa
-// (ricarica, drawUnitSprite); mag: caricatore nella mano sinistra
+// (ricarica e gesti, drawUnitSprite); mag: oggetto nella mano sinistra,
+// true/"mag" = caricatore, oppure "grenade", "radio", "bandage", "tool"
 function _paintSoldierArms(ctx, look, stance, handL = null, mag = false) {
   const p = SOLDIER_POSES[stance];
   const sleeve = _shadeHex(look.cloth, -0.05);
@@ -1801,8 +1802,22 @@ function _paintSoldierArms(ctx, look, stance, handL = null, mag = false) {
     if (!mag) return;
     ctx.save();
     ctx.translate(h[0], h[1]);
-    ctx.rotate(0.5);
-    _box(ctx, 0, -0.012, 0.03, 0.06, "#2a2a26");
+    if (mag === "grenade") {
+      _dome(ctx, 0, -0.022, 0.028, 0.032, "#3d4a2a");
+      _lines(ctx, [[0.012, -0.05, 0.026, -0.02]], 0.008, "#8a8a80");
+    } else if (mag === "radio") {
+      // Cornetta della radio da campo, dalla mano verso l'orecchio
+      ctx.rotate(-0.4);
+      _box(ctx, 0, -0.02, 0.028, 0.075, "#22241e");
+    } else if (mag === "bandage") {
+      _dome(ctx, 0, -0.02, 0.032, 0.026, "#e8e4d8");
+      _lines(ctx, [[-0.03, -0.02, -0.08, 0.01]], 0.014, "#ddd8ca");
+    } else if (mag === "tool") {
+      _lines(ctx, [[0, -0.01, 0.01, -0.07], [0.012, -0.01, 0.024, -0.065]], 0.012, "#6a6a66");
+    } else {
+      ctx.rotate(0.5);
+      _box(ctx, 0, -0.012, 0.03, 0.06, "#2a2a26");
+    }
     ctx.restore();
   };
   if (look.weapon === "pistol") {
@@ -1997,7 +2012,7 @@ function _drawAnimatedSoldier(ctx, lookId, pose, ts, anim) {
   if (anim.handL) {
     // Mano sinistra in movimento (ricarica): braccia ridipinte per questo fotogramma
     ctx.scale(S, S);
-    _paintSoldierArms(ctx, SOLDIER_LOOKS[lookId], pose, anim.handL, anim.mag);
+    _paintSoldierArms(ctx, SOLDIER_LOOKS[lookId], pose, anim.handL, anim.item ?? anim.mag);
   } else draw(L.arms);
   ctx.restore();
   // Testa girata sul collo

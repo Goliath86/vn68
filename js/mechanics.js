@@ -588,6 +588,7 @@ function firstAid(u) {
     log(t("log.unit_recovered", { name: u.name }), "success");
   }
   sfx("heal");
+  unitGesture(u, "bandage");
   addFX("heal", { col: u.col, row: u.row, amount: healed }, 1400);
   log(
     t(u.bleeding ? "log.first_aid_bleeding" : "log.first_aid", {
@@ -778,6 +779,7 @@ function scheduleArtillery(caller, weapon, tc, tr) {
     callerId: caller.id,
   });
   sfx("click");
+  unitGesture(caller, "radio");
   log(
     t("log.artillery_called", { name: caller.name, col: tc, row: tr }),
     "system",
@@ -975,6 +977,7 @@ function scheduleNapalm(caller, weapon, line) {
   const a = line[0];
   const b = line[line.length - 1];
   sfx("click");
+  unitGesture(caller, "radio");
   log(t("log.napalm_called", { name: caller.name, c1: a.col, r1: a.row, c2: b.col, r2: b.row }), "system");
   updateUI();
   render();

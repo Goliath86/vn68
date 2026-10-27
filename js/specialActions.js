@@ -24,6 +24,7 @@ async function handleSpecialAction(col, row) {
       }
       u.ap -= 1;
       u.specialUsed = true;
+      unitGesture(u, "bandage");
       sfx("heal");
       addFX(
         "heal",
@@ -60,6 +61,8 @@ async function handleSpecialAction(col, row) {
     // incendio, demolizione)
     faceToward(u, target);
     if (G.fowEnabled) recomputeVisibility();
+    // Mani al lavoro sul tile davanti (animations.js)
+    unitGesture(u, "work");
 
     // Trappola individuata: disinnesco (ha la precedenza su demolizione/incendio)
     const trap = trapAt(target.col, target.row);
