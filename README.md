@@ -743,8 +743,9 @@ In `config.json`, `vcMix` ha tre composizioni: `spawn` (schieramento iniziale), 
 | Azione | Desktop | Mobile |
 |---|---|---|
 | Selezionare unità | Click sull'unità o sulla card nel pannello | Tap sulla card tab SQUADRA |
-| Muovere | Click su "Muovi" oppure `M` | Tab AZIONI → Muovi → tap cella |
-| Attaccare | Click su "Attacca" oppure `A` | Tab AZIONI → Attacca → tap nemico |
+| Muovere | Click sulla cella (area chiara con contorno azzurro attorno al soldato selezionato: al passaggio del mouse percorso e costo in AP), oppure "Muovi" / `M` | Tab AZIONI → Muovi → tap cella |
+| Attaccare | Click sul VC bordato di rosso (arma principale, probabilità sopra), oppure "Attacca" / `A` / scheda arma | Tab AZIONI → Attacca → tap nemico |
+| Cambiare soldato | Click su un altro soldato, anche durante un'azione | Tap sulla card |
 | Abilità speciale | Click su "Speciale" oppure `S` | Tab AZIONI → Speciale |
 | Fine turno | Pulsante "Fine Turno" oppure `Invio` (conferma se qualche unità ha ancora AP) | Tab AZIONI → Fine Turno |
 | Annulla azione | `Esc` | — |

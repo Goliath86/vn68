@@ -44,6 +44,7 @@ const G = {
   dragStart: null,
   // tooltip
   hoveredTile: null,
+  unitMoving: false, // movimento di un soldato in corso (unitMovement.js:moveUnit)
   // effetti grafici attivi
   effects: [],
   // fog of war

@@ -6,6 +6,17 @@
  * @param {number} apCost AP cost of the move
  */
 async function moveUnit(unit, toCol, toRow, apCost) {
+  // Durante il movimento (animazione, agguato) i click sulla mappa sono ignorati
+  G.unitMoving = true;
+  try {
+    await _moveUnit(unit, toCol, toRow, apCost);
+  } finally {
+    G.unitMoving = false;
+    render();
+  }
+}
+
+async function _moveUnit(unit, toCol, toRow, apCost) {
   const fromCol = unit.col, fromRow = unit.row;
   // Stato prima del movimento, per consentire l'annullamento (vedi undoLastMove)
   const prevAp = unit.ap;

@@ -744,8 +744,9 @@ In `config.json`, `vcMix` holds three compositions: `spawn` (initial deployment)
 | Action | Desktop | Mobile |
 |---|---|---|
 | Select unit | Click the unit or the card in the panel | Tap the card in the SQUAD tab |
-| Move | Click "Move" or press `M` | ACTIONS tab → Move → tap cell |
-| Attack | Click "Attack" or press `A` | ACTIONS tab → Attack → tap enemy |
+| Move | Click the cell (light area with a light-blue outline around the selected soldier: hovering shows path and AP cost), or "Move" / `M` | ACTIONS tab → Move → tap cell |
+| Attack | Click the red-framed VC (main weapon, hit chance above), or "Attack" / `A` / weapon card | ACTIONS tab → Attack → tap enemy |
+| Switch soldier | Click another soldier, even during an action | Tap the card |
 | Special ability | Click "Special" or press `S` | ACTIONS tab → Special |
 | End turn | "End Turn" button or `Enter` (asks for confirmation if some unit still has AP) | ACTIONS tab → End Turn |
 | Cancel action | `Esc` | — |

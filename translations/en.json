@@ -136,7 +136,8 @@
     "ally": "✕ {name} is in the line of fire",
     "los": "✕ Line of sight blocked",
     "vision": "✕ Out of field of view",
-    "range": "✕ Out of range"
+    "range": "✕ Out of range",
+    "move_cost": "{ap} AP"
   },
 
   "stances": {

@@ -37,17 +37,7 @@ function setActionMode(mode, weapon = null) {
         }
       }
     } else {
-      // Singolo bersaglio: solo nemici vivi in gittata e in linea di vista
-      // dell'unità che spara (non basta che li veda un compagno), senza
-      // compagni in piedi o accucciati sulla linea di tiro
-      G.attackable = G.enemies.filter(
-        (e) =>
-          e.alive &&
-          dist(u, e) <= range &&
-          isEnemyVisible(e) &&
-          unitSeesEnemy(u, e) &&
-          !allyBlockingFire(u, e),
-      );
+      G.attackable = directTargets(u, weapon);
     }
   }
 
@@ -105,6 +95,80 @@ function setActionMode(mode, weapon = null) {
   render();
 
   updateUI();
+}
+
+// Bersagli di un attacco diretto: solo nemici vivi in gittata e in linea di
+// vista dell'unità che spara (non basta che li veda un compagno), senza
+// compagni in piedi o accucciati sulla linea di tiro
+function directTargets(u, weapon) {
+  const range = weapon?.range ?? UNIT_CLASSES[u.cls].range;
+  return G.enemies.filter(
+    (e) =>
+      e.alive &&
+      dist(u, e) <= range &&
+      isEnemyVisible(e) &&
+      unitSeesEnemy(u, e) &&
+      !allyBlockingFire(u, e),
+  );
+}
+
+// ── CLICK CONTESTUALE (desktop) ─────────────────────────────────────────
+// Soldato selezionato e nessuna azione scelta: il click su un tile
+// raggiungibile lo muove, quello su un VC in tiro spara con l'arma
+// predefinita (canvas.js:onCanvasClick); al passaggio del mouse percorso e
+// costo in AP, o raggio di mira (render.js:drawQuickActions). Solo col mouse:
+// su touch manca l'anteprima e restano i bottoni Muovi/Attacca.
+// In cache: la chiave copre posizione e AP, il resto lo invalida updateUI
+let _quickActions = null;
+
+function invalidateQuickActions() {
+  _quickActions = null;
+}
+
+function quickActions() {
+  const u = G.selectedUnit;
+  if (
+    G.actionMode !== null ||
+    G.phase !== "player" ||
+    G.pendingDice ||
+    G.throwing ||
+    G.unitMoving ||
+    !u?.alive ||
+    u.ap < 1 ||
+    !aimRayEnabled()
+  )
+    return null;
+  const key = `${u.id},${u.col},${u.row},${u.ap},${G.turn}`;
+  if (_quickActions?.key === key) return _quickActions;
+
+  const reach = getReachable(u, u.ap);
+  const weapon = defaultAttackWeapon(u);
+  const targets =
+    canAttack(u) && !isAreaWeapon(weapon) ? directTargets(u, weapon) : [];
+  _quickActions = {
+    key,
+    weapon,
+    reach: Object.keys(reach)
+      .map((k) => {
+        const [col, row] = k.split(",").map(Number);
+        return { col, row, cost: reach[k] };
+      })
+      .filter((r) => r.col !== u.col || r.row !== u.row),
+    targets,
+    odds: new Map(targets.map((e) => [e, attackOdds(u, e, weapon).pHit])),
+    path: null, // { col, row, tiles }: percorso verso il tile sotto il mouse
+  };
+  return _quickActions;
+}
+
+// Percorso che farà il soldato fino a (col,row): lo stesso dell'animazione
+// (ai.js:_movePath), ricalcolato solo quando cambia il tile puntato
+function quickPath(qa, col, row) {
+  if (qa.path?.col !== col || qa.path?.row !== row) {
+    const u = G.selectedUnit;
+    qa.path = { col, row, tiles: _movePath(u.col, u.row, col, row) };
+  }
+  return qa.path.tiles;
 }
 
 // Ricarica: riempie il caricatore di `w` (default: la prima arma

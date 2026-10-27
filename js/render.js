@@ -736,6 +736,110 @@ function drawOddsLabel(ctx, ts, x, y, label, color) {
   ctx.restore();
 }
 
+// Mirino sul tile di un nemico colpibile
+function drawCrosshair(ctx, ts, e) {
+  const { x, y } = tileToScreen(e.col, e.row);
+  const cx = x + ts / 2,
+    cy = y + ts / 2;
+  const ro = ts * 0.3,
+    ri = ts * 0.09,
+    gap = ts * 0.05;
+  ctx.strokeStyle = "rgba(255,60,60,0.95)";
+  ctx.lineWidth = Math.max(1.5, ts * 0.045);
+  ctx.beginPath();
+  ctx.arc(cx, cy, ro, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx, cy, ri, 0, Math.PI * 2);
+  ctx.stroke();
+  const i2 = ri + gap,
+    o2 = ro - gap;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - o2);
+  ctx.lineTo(cx, cy - i2);
+  ctx.moveTo(cx, cy + i2);
+  ctx.lineTo(cx, cy + o2);
+  ctx.moveTo(cx - o2, cy);
+  ctx.lineTo(cx - i2, cy);
+  ctx.moveTo(cx + i2, cy);
+  ctx.lineTo(cx + o2, cy);
+  ctx.stroke();
+}
+
+// Click contestuale (actions.js:quickActions): area raggiungibile (velo chiaro
+// e contorno azzurro, leggibili anche sulle mappe verdi) e VC in tiro con la
+// probabilità di colpire; sotto il mouse il percorso col costo in AP, oppure
+// il raggio di mira sul VC
+const QUICK_RGB = "150,225,255";
+
+function drawQuickActions(ctx, ts, qa) {
+  const u = G.selectedUnit;
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,0.12)";
+  for (const r of qa.reach) {
+    const { x, y } = tileToScreen(r.col, r.row);
+    ctx.fillRect(x, y, ts, ts);
+  }
+  // Contorno dell'area (il tile del soldato ne fa parte): lati dei tile
+  // raggiungibili che non confinano con un altro tile dell'area
+  const inArea = new Set(qa.reach.map((r) => `${r.col},${r.row}`));
+  inArea.add(`${u.col},${u.row}`);
+  ctx.beginPath();
+  for (const k of inArea) {
+    const [c, r] = k.split(",").map(Number);
+    const { x, y } = tileToScreen(c, r);
+    if (!inArea.has(`${c},${r - 1}`)) { ctx.moveTo(x, y); ctx.lineTo(x + ts, y); }
+    if (!inArea.has(`${c},${r + 1}`)) { ctx.moveTo(x, y + ts); ctx.lineTo(x + ts, y + ts); }
+    if (!inArea.has(`${c - 1},${r}`)) { ctx.moveTo(x, y); ctx.lineTo(x, y + ts); }
+    if (!inArea.has(`${c + 1},${r}`)) { ctx.moveTo(x + ts, y); ctx.lineTo(x + ts, y + ts); }
+  }
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "rgba(0,0,0,0.55)";
+  ctx.lineWidth = Math.max(3, ts * 0.07);
+  ctx.stroke();
+  ctx.strokeStyle = `rgba(${QUICK_RGB},0.95)`;
+  ctx.lineWidth = Math.max(1.5, ts * 0.03);
+  ctx.stroke();
+  for (const e of qa.targets) {
+    const { x, y } = tileToScreen(e.col, e.row);
+    ctx.strokeStyle = "rgba(255,80,80,0.75)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 2, y + 2, ts - 4, ts - 4);
+    drawCrosshair(ctx, ts, e);
+    const pHit = qa.odds.get(e);
+    drawOddsLabel(ctx, ts, x, y, `${Math.round(pHit * 100)}%`, oddsColor(pHit));
+  }
+
+  const hov = G.hoveredTile;
+  const dest = hov && qa.reach.find((r) => r.col === hov.col && r.row === hov.row);
+  if (dest) {
+    const tiles = quickPath(qa, dest.col, dest.row);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    tiles.forEach((p, i) => {
+      const { x, y } = tileToScreen(p.col, p.row);
+      if (i) ctx.lineTo(x + ts / 2, y + ts / 2);
+      else ctx.moveTo(x + ts / 2, y + ts / 2);
+    });
+    ctx.strokeStyle = "rgba(0,0,0,0.45)";
+    ctx.lineWidth = Math.max(4, ts * 0.1);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(${QUICK_RGB},0.95)`;
+    ctx.lineWidth = Math.max(2, ts * 0.05);
+    ctx.stroke();
+    const { x, y } = tileToScreen(dest.col, dest.row);
+    ctx.fillStyle = `rgba(${QUICK_RGB},0.3)`;
+    ctx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
+    ctx.strokeStyle = `rgba(${QUICK_RGB},0.95)`;
+    ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
+    drawOddsLabel(ctx, ts, x, y, t("aim.move_cost", { ap: dest.cost }), `rgb(${QUICK_RGB})`);
+  } else if (hov && qa.targets.some((e) => e.col === hov.col && e.row === hov.row)) {
+    drawAimRay(ctx, ts, u, hov, qa.weapon);
+  }
+  ctx.restore();
+}
+
 function renderOverlay() {
   const ctx = G.oCtx;
   const ts = TILE * G.scale;
@@ -804,35 +908,7 @@ function renderOverlay() {
 
       // Mirino su ogni nemico attaccabile
       ctx.save();
-      for (const e of G.attackable) {
-        const { x, y } = tileToScreen(e.col, e.row);
-        const cx = x + ts / 2,
-          cy = y + ts / 2;
-        const ro = ts * 0.3,
-          ri = ts * 0.09,
-          gap = ts * 0.05;
-        const lw = Math.max(1.5, ts * 0.045);
-        ctx.strokeStyle = "rgba(255,60,60,0.95)";
-        ctx.lineWidth = lw;
-        ctx.beginPath();
-        ctx.arc(cx, cy, ro, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(cx, cy, ri, 0, Math.PI * 2);
-        ctx.stroke();
-        const i2 = ri + gap,
-          o2 = ro - gap;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - o2);
-        ctx.lineTo(cx, cy - i2);
-        ctx.moveTo(cx, cy + i2);
-        ctx.lineTo(cx, cy + o2);
-        ctx.moveTo(cx - o2, cy);
-        ctx.lineTo(cx - i2, cy);
-        ctx.moveTo(cx + i2, cy);
-        ctx.lineTo(cx + o2, cy);
-        ctx.stroke();
-      }
+      for (const e of G.attackable) drawCrosshair(ctx, ts, e);
       // Probabilità di colpire sopra ogni bersaglio (visibile anche su mobile,
       // senza hover), colorata per fascia (combat.js:oddsColor)
       if (G.selectedUnit) {
@@ -994,6 +1070,10 @@ function renderOverlay() {
       ctx.restore();
     }
   }
+
+  // Click contestuale: dove può andare o sparare il soldato selezionato
+  const qa = quickActions();
+  if (qa) drawQuickActions(ctx, ts, qa);
 
   // Selezione unità corrente
   if (G.selectedUnit && G.selectedUnit.alive && G.actionMode === null) {

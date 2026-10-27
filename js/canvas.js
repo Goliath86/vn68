@@ -31,7 +31,7 @@ function setupCanvas() {
     document.getElementById("tile-tooltip").style.display = "none";
     // Il raggio di mira sparisce quando il mouse esce dalla mappa
     G.hoveredTile = null;
-    if (isAimRayMode()) render();
+    if (hoverPreviewMode()) render();
   });
   G.canvas.addEventListener("wheel", onWheel, { passive: true });
 
@@ -179,11 +179,17 @@ function fireAtTarget(target) {
 }
 
 function onCanvasClick(e) {
-  if (G.phase !== "player" || G.throwing) return;
+  if (G.phase !== "player" || G.throwing || G.unitMoving) return;
 
   const { col, row } = screenToTile(e.clientX, e.clientY);
   if (col < 0 || row < 0 || col >= G.mapData.cols || row >= G.mapData.rows)
     return;
+
+  // Un proprio soldato cliccato fuori dai bersagli della modalità corrente
+  // annulla la modalità e lo seleziona (sotto)
+  const clickedUnit = G.units.find(
+    (u) => u.alive && u.col === col && u.row === row,
+  );
 
   if (G.actionMode === "move") {
     const reach = G.reachable.find((r) => r.col === col && r.row === row);
@@ -191,16 +197,17 @@ function onCanvasClick(e) {
       moveUnit(G.selectedUnit, col, row, reach.cost);
     }
     setActionMode(null);
-    return;
+    if (reach || !clickedUnit) return;
   }
 
   if (G.actionMode === "rotate") {
-    if (G.reachable.some((r) => r.col === col && r.row === row)) {
+    const valid = G.reachable.some((r) => r.col === col && r.row === row);
+    if (valid) {
       sfx("click");
       rotateUnit(G.selectedUnit, col, row);
     }
     setActionMode(null);
-    return;
+    if (valid || !clickedUnit) return;
   }
 
   // In modalità attesa conferma AoE o scelta postura: click su canvas annulla
@@ -239,11 +246,11 @@ function onCanvasClick(e) {
         G.actionMode = "aoe_confirm";
         render();
         updateUI();
-      } else {
-        setActionMode(null);
-        updateUI();
+        return;
       }
-      return;
+      setActionMode(null);
+      updateUI();
+      if (!clickedUnit) return;
     }
 
     // Singolo bersaglio. Senza hover (touch) il primo tap punta e mostra la
@@ -262,7 +269,7 @@ function onCanvasClick(e) {
     }
 
     setActionMode(null);
-    return;
+    if (!clickedUnit) return;
   }
 
   // In modalità speciale
@@ -275,10 +282,24 @@ function onCanvasClick(e) {
     return;
   }
 
+  // Click contestuale (actions.js:quickActions): muove o spara senza
+  // scegliere prima l'azione
+  const qa = !clickedUnit && quickActions();
+  if (qa) {
+    const reach = qa.reach.find((r) => r.col === col && r.row === row);
+    if (reach) {
+      moveUnit(G.selectedUnit, col, row, reach.cost);
+      return;
+    }
+    const target = qa.targets.find((e) => e.col === col && e.row === row);
+    if (target) {
+      setActionMode("attack", qa.weapon);
+      fireAtTarget(target);
+      return;
+    }
+  }
+
   // Selezione unità
-  const clickedUnit = G.units.find(
-    (u) => u.alive && u.col === col && u.row === row,
-  );
   if (clickedUnit) {
     G.selectedUnit = clickedUnit;
     tutorialEvent("select", { cls: clickedUnit.cls, col: col, row: row });

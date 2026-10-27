@@ -51,15 +51,19 @@ function showTooltip(e, col, row) {
     (s) => s.col === col && s.row === row,
   );
   if (smoke) txt += t("tooltip.smoke", { turns: smoke.turnsLeft });
-  // In modalità attacco (bersaglio singolo): anteprima probabilità di colpire
-  if (
+  // In modalità attacco (bersaglio singolo) o sui VC del click contestuale:
+  // anteprima probabilità di colpire
+  const qa = quickActions();
+  const aimed =
     enemy &&
-    G.actionMode === "attack" &&
-    !isAreaWeapon(G.currentWeapon) &&
     G.selectedUnit &&
-    G.attackable.includes(enemy)
-  ) {
-    const { pHit, expDmg, pKill, b } = attackOdds(G.selectedUnit, enemy, G.currentWeapon);
+    ((G.actionMode === "attack" &&
+      !isAreaWeapon(G.currentWeapon) &&
+      G.attackable.includes(enemy)) ||
+      qa?.targets.includes(enemy));
+  if (aimed) {
+    const weapon = qa ? qa.weapon : G.currentWeapon;
+    const { pHit, expDmg, pKill, b } = attackOdds(G.selectedUnit, enemy, weapon);
     txt += t("tooltip.hit_odds", {
       pct: Math.round(pHit * 100),
       dmg: expDmg.toFixed(1),

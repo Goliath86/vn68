@@ -20,12 +20,13 @@ function onCanvasMove(e) {
   // Tooltip
   const { col, row } = screenToTile(e.clientX, e.clientY);
   // Tile sotto il mouse: serve all'anteprima della visione in modalità
-  // rotazione e al raggio di mira in modalità attacco
+  // rotazione, al raggio di mira in modalità attacco e all'anteprima del
+  // click contestuale (percorso o mira)
   const prev = G.hoveredTile;
   if (!prev || prev.col !== col || prev.row !== row) {
     G.hoveredTile = { col, row };
     // Napalm: anteprima della linea fino al tile sotto il mouse
-    if (G.actionMode === "rotate" || isAimRayMode() || napalmPickingEnd()) render();
+    if (hoverPreviewMode()) render();
   }
   if (col >= 0 && row >= 0 && col < G.mapData.cols && row < G.mapData.rows) {
     showTooltip(e, col, row);
@@ -35,6 +36,15 @@ function onCanvasMove(e) {
 }
 function isAimRayMode() {
   return G.actionMode === "attack" && !isAreaWeapon(G.currentWeapon);
+}
+// Modalità in cui il disegno dipende dal tile sotto il mouse
+function hoverPreviewMode() {
+  return (
+    G.actionMode === "rotate" ||
+    isAimRayMode() ||
+    napalmPickingEnd() ||
+    !!quickActions()
+  );
 }
 
 function onWheel(e) {

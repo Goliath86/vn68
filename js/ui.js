@@ -171,6 +171,7 @@ function updateWeatherPanel() {
 }
 
 function updateUI() {
+  invalidateQuickActions();
   updateUnitList();
   updateSelInfo();
   updateActionButtons();

@@ -136,7 +136,8 @@
     "ally": "✕ {name} è sulla linea di tiro",
     "los": "✕ Linea di vista bloccata",
     "vision": "✕ Fuori dal campo visivo",
-    "range": "✕ Fuori gittata"
+    "range": "✕ Fuori gittata",
+    "move_cost": "{ap} AP"
   },
 
   "stances": {
