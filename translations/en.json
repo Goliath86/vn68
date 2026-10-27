@@ -140,6 +140,19 @@
     "move_cost": "{ap} AP"
   },
 
+  "outline": {
+    "move": "MOVEMENT",
+    "vision": "FIELD OF VIEW",
+    "cone": "VISION CONE",
+    "range": "RANGE",
+    "noise": "NOISE",
+    "suppression": "SUPPRESSION",
+    "overwatch": "OVERWATCH",
+    "artillery": "ARTILLERY",
+    "salvo": "SALVO AREA",
+    "scatter": "SCATTER"
+  },
+
   "stances": {
     "stand": "Standing",
     "crouch": "Crouched",

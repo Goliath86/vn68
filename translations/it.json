@@ -140,6 +140,19 @@
     "move_cost": "{ap} AP"
   },
 
+  "outline": {
+    "move": "MOVIMENTO",
+    "vision": "CAMPO VISIVO",
+    "cone": "CONO VISIVO",
+    "range": "GITTATA",
+    "noise": "RUMORE",
+    "suppression": "SOPPRESSIONE",
+    "overwatch": "OVERWATCH",
+    "artillery": "ARTIGLIERIA",
+    "salvo": "AREA DELLA SALVA",
+    "scatter": "DEVIAZIONE"
+  },
+
   "stances": {
     "stand": "In piedi",
     "crouch": "Accucciato",

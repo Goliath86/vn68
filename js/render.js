@@ -788,6 +788,7 @@ const QUICK_RGB = "150,225,255";
 // non confondersi con l'area di movimento azzurra)
 const VISION_RGB = "205,165,255";
 const SPOT_FIRE_RGB = "255,215,90";
+const RANGE_RGB = "240,192,48"; // gittata dell'arma del soldato selezionato
 // Opacità del velo sui tile visti solo dai compagni del selezionato
 // (renderMap; la nebbia di guerra è 0.72)
 const SQUAD_ONLY_VEIL = 0.42;
@@ -853,10 +854,12 @@ function drawQuickActions(ctx, ts, qa) {
   // raggiungibili che non confinano con un altro tile dell'area
   const inArea = new Set(qa.reach.map((r) => `${r.col},${r.row}`));
   inArea.add(`${u.col},${u.row}`);
+  const areaCells = [];
   ctx.beginPath();
   for (const k of inArea) {
     const [c, r] = k.split(",").map(Number);
     const { x, y } = tileToScreen(c, r);
+    areaCells.push({ x, y });
     if (!inArea.has(`${c},${r - 1}`)) { ctx.moveTo(x, y); ctx.lineTo(x + ts, y); }
     if (!inArea.has(`${c},${r + 1}`)) { ctx.moveTo(x, y + ts); ctx.lineTo(x + ts, y + ts); }
     if (!inArea.has(`${c - 1},${r}`)) { ctx.moveTo(x, y); ctx.lineTo(x, y + ts); }
@@ -869,6 +872,7 @@ function drawQuickActions(ctx, ts, qa) {
   ctx.strokeStyle = `rgba(${QUICK_RGB},0.95)`;
   ctx.lineWidth = Math.max(1.5, ts * 0.03);
   ctx.stroke();
+  labelOutline(ctx, ts, areaCells, "move", QUICK_RGB, "bottom");
   for (const e of qa.targets) {
     const { x, y } = tileToScreen(e.col, e.row);
     ctx.strokeStyle = "rgba(255,80,80,0.75)";
@@ -1062,6 +1066,7 @@ function renderOverlay() {
         ctx.lineWidth = 2;
         ctx.strokeRect(bx - s * ts + 1, by - s * ts + 1, (2 * s + 1) * ts - 2, (2 * s + 1) * ts - 2);
         ctx.restore();
+        labelOutline(ctx, ts, squareTopCells(bx, by, s, ts), spread ? "salvo" : "scatter", "255,235,160", "top");
       }
       // Raggio del rumore dell'esplosione, dal punto d'impatto
       if (G.selectedUnit)
@@ -1113,7 +1118,8 @@ function renderOverlay() {
     const { x: ux, y: uy } = tileToScreen(u.col, u.row);
     ctx.strokeStyle = `rgba(${VISION_RGB},0.8)`;
     ctx.lineWidth = 2;
-    strokeVisionOutline(ctx, u, ux, uy, ts, previewFacing);
+    const cone = strokeVisionOutline(ctx, u, ux, uy, ts, previewFacing);
+    labelOutline(ctx, ts, cone, "cone", VISION_RGB, "top");
     ctx.lineWidth = 1.5;
     for (const r of G.reachable) {
       const { x, y } = tileToScreen(r.col, r.row);
@@ -1162,7 +1168,7 @@ function renderOverlay() {
     ctx.strokeStyle = `rgba(${VISION_RGB},0.4)`;
     ctx.lineWidth = 1;
     ctx.setLineDash([3, 4]);
-    strokeVisionOutline(ctx, u, x, y, ts);
+    const cone = strokeVisionOutline(ctx, u, x, y, ts);
     ctx.restore();
     const seen = unitVisibleTiles(u);
     const seenShape = (dc, dr) => seen.has(`${u.col + dc},${u.row + dr}`);
@@ -1173,13 +1179,17 @@ function renderOverlay() {
     strokeShapeOutline(ctx, x, y, ts, unitVision(u), seenShape);
     ctx.strokeStyle = `rgba(${VISION_RGB},0.95)`;
     ctx.lineWidth = Math.max(1.5, ts * 0.028);
-    strokeShapeOutline(ctx, x, y, ts, unitVision(u), seenShape);
+    const vision = strokeShapeOutline(ctx, x, y, ts, unitVision(u), seenShape);
     ctx.restore();
 
     // Contorno raggio attacco: gittata dell'arma (come in combattimento)
-    ctx.strokeStyle = "rgba(240,192,48,0.28)";
+    ctx.strokeStyle = `rgba(${RANGE_RGB},0.28)`;
     ctx.lineWidth = 1;
-    strokeRangeOutline(ctx, x, y, ts, unitFireRange(u));
+    const range = strokeRangeOutline(ctx, x, y, ts, unitFireRange(u));
+
+    labelOutline(ctx, ts, vision, "vision", VISION_RGB, "top");
+    labelOutline(ctx, ts, cone, "cone", VISION_RGB, "left");
+    labelOutline(ctx, ts, range, "range", RANGE_RGB, "right");
   }
 
   // Zone soppressione (assalti in fuoco soppressivo): fronte e lati
@@ -1189,10 +1199,11 @@ function renderOverlay() {
     ctx.strokeStyle = "rgba(255,165,50,0.55)";
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 3]);
-    strokeShapeOutline(ctx, sx, sy, ts, unitFireRange(sup), (dc, dr) =>
+    const cells = strokeShapeOutline(ctx, sx, sy, ts, unitFireRange(sup), (dc, dr) =>
       suppressionCovers(sup, { col: sup.col + dc, row: sup.row + dr }),
     );
     ctx.setLineDash([]);
+    labelOutline(ctx, ts, cells, "suppression", "255,165,50", "top");
   }
 
   // Overwatch: cono frontale entro la gittata
@@ -1202,10 +1213,11 @@ function renderOverlay() {
     ctx.strokeStyle = "rgba(170,221,255,0.6)";
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 3]);
-    strokeShapeOutline(ctx, ox, oy, ts, unitFireRange(ow), (dc, dr) =>
+    const cells = strokeShapeOutline(ctx, ox, oy, ts, unitFireRange(ow), (dc, dr) =>
       facingSector(ow, { col: ow.col + dc, row: ow.row + dr }) === "front",
     );
     ctx.setLineDash([]);
+    labelOutline(ctx, ts, cells, "overwatch", "170,221,255", "top");
   }
 
   // Artiglieria richiesta: area della salva in arrivo, più scura dove cadono
@@ -1227,6 +1239,7 @@ function renderOverlay() {
     const { x: ax, y: ay } = tileToScreen(s.col, s.row);
     ctx.strokeRect(ax - spread * ts + 1, ay - spread * ts + 1, (2 * spread + 1) * ts - 2, (2 * spread + 1) * ts - 2);
     ctx.setLineDash([]);
+    labelOutline(ctx, ts, squareTopCells(ax, ay, spread, ts), "artillery", "255,60,40", "top");
     ctx.font = `${Math.round(ts * 0.42)}px serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -1297,19 +1310,22 @@ function salvoDist(c, r, tc, tr, s) {
 // Traccia il bordo esterno dei tile entro `range` (distanza Manhattan, coerente con dist())
 // attorno al tile con angolo schermo (x, y). Stile/dash vanno impostati dal chiamante.
 function strokeRangeOutline(ctx, x, y, ts, range) {
-  strokeShapeOutline(ctx, x, y, ts, range, () => true);
+  return strokeShapeOutline(ctx, x, y, ts, range, () => true);
 }
 
-// Come sopra, limitato ai tile (offset dc, dr dall'unità) per cui `inShape` è vero
+// Come sopra, limitato ai tile (offset dc, dr dall'unità) per cui `inShape` è vero.
+// Restituisce gli angoli schermo dei tile della forma (per labelOutline)
 function strokeShapeOutline(ctx, x, y, ts, range, inShape) {
   const inRange = (dc, dr) =>
     Math.abs(dc) + Math.abs(dr) <= range && inShape(dc, dr);
+  const cells = [];
   ctx.beginPath();
   for (let dc = -range; dc <= range; dc++) {
     for (let dr = -range; dr <= range; dr++) {
       if (!inRange(dc, dr)) continue;
       const tx = x + dc * ts,
         ty = y + dr * ts;
+      cells.push({ x: tx, y: ty });
       if (!inRange(dc, dr - 1)) {
         ctx.moveTo(tx, ty);
         ctx.lineTo(tx + ts, ty);
@@ -1329,23 +1345,77 @@ function strokeShapeOutline(ctx, x, y, ts, range, inShape) {
     }
   }
   ctx.stroke();
+  return cells;
+}
+
+// Tile della riga superiore di un quadrato di lato 2s+1 centrato sul tile con
+// angolo (x, y): l'etichetta va a metà del lato alto
+function squareTopCells(x, y, s, ts) {
+  const cells = [];
+  for (let i = -s; i <= s; i++) cells.push({ x: x + i * ts, y: y - s * ts });
+  return cells;
+}
+
+// Etichetta di un contorno: scritta piccola nel colore della linea, appena
+// fuori dal bordo, a metà del lato `side` (top/bottom/left/right) della forma
+// `cells` (angoli schermo dei tile). Contorni diversi usano lati diversi per
+// non sovrapporsi; con lo zoom troppo lontano non si scrive
+const OUTLINE_LABEL_MIN_TS = 30;
+
+function labelOutline(ctx, ts, cells, key, rgb, side = "top") {
+  if (!cells?.length || ts < OUTLINE_LABEL_MIN_TS) return;
+  const vertical = side === "top" || side === "bottom";
+  const pos = (c) => (vertical ? c.y : c.x);
+  const along = (c) => (vertical ? c.x : c.y);
+  const edge = (side === "top" || side === "left" ? Math.min : Math.max)(...cells.map(pos));
+  const line = cells.filter((c) => Math.abs(pos(c) - edge) < 0.5).sort((a, b) => along(a) - along(b));
+  const c = line[Math.floor((line.length - 1) / 2)];
+  const text = t(`outline.${key}`);
+
+  ctx.save();
+  ctx.font = `bold ${Math.round(Math.max(9, ts * 0.16))}px 'Oswald'`;
+  const w = ctx.measureText(text).width;
+  const h = Math.max(9, ts * 0.16);
+  let x, y;
+  if (side === "top" || side === "bottom") {
+    x = c.x + ts / 2 - w / 2;
+    y = side === "top" ? c.y - 3 - h : c.y + ts + 3;
+  } else {
+    x = side === "left" ? c.x - 4 - w : c.x + ts + 4;
+    y = c.y + ts / 2 - h / 2;
+  }
+  // Dentro la mappa visibile
+  x = clamp(x, 4, G.oCanvas.width - w - 4);
+  y = clamp(y, 4, G.oCanvas.height - h - 4);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.lineWidth = 3;
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "rgba(0,0,0,0.85)";
+  ctx.fillStyle = `rgb(${rgb})`;
+  ctx.strokeText(text, x, y);
+  ctx.fillText(text, x, y);
+  ctx.restore();
 }
 
 // Contorno grigio tratteggiato del raggio di rumore attorno a un tile
+const NOISE_RGB = "220,215,195";
+
 function strokeNoiseOutline(ctx, x, y, ts, radius) {
   ctx.save();
-  ctx.strokeStyle = "rgba(220,215,195,0.5)";
+  ctx.strokeStyle = `rgba(${NOISE_RGB},0.5)`;
   ctx.lineWidth = 1.5;
   ctx.setLineDash([2, 4]);
-  strokeRangeOutline(ctx, x, y, ts, radius);
+  const cells = strokeRangeOutline(ctx, x, y, ts, radius);
   ctx.restore();
+  labelOutline(ctx, ts, cells, "noise", NOISE_RGB, "bottom");
 }
 
 // Contorno dell'area visiva a cono di un'unità (forma geometrica, senza LOS),
 // eventualmente per un orientamento diverso da quello attuale
 function strokeVisionOutline(ctx, u, x, y, ts, facing = u.facing) {
   const at = (dc, dr) => ({ col: u.col + dc, row: u.row + dr });
-  strokeShapeOutline(ctx, x, y, ts, unitVision(u), (dc, dr) =>
+  return strokeShapeOutline(ctx, x, y, ts, unitVision(u), (dc, dr) =>
     Math.abs(dc) + Math.abs(dr) <= unitVisionToward(u, at(dc, dr), facing),
   );
 }
