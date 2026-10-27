@@ -345,7 +345,9 @@ function renderMap(animFrame = false) {
     if (!e.alive) continue;
     // FOW, tunnel e cecchini mimetizzati (guerrilla.js)
     if (!isEnemyVisible(e)) continue;
-    const { x, y } = tileToScreen(e.vx ?? e.col, e.vy ?? e.row);
+    // Il sobbalzo del colpo (pose.dx/dy) sposta tutta la pedina
+    const pose = unitAnimPose(e, true);
+    const { x, y } = pieceScreenPos(e, pose, ts);
     ctx.fillStyle = "rgba(100,15,15,0.68)";
     ctx.beginPath();
     ctx.arc(x + ts * 0.5, y + ts * 0.5, ts * 0.41, 0, Math.PI * 2);
@@ -355,7 +357,7 @@ function renderMap(animFrame = false) {
     ctx.beginPath();
     ctx.arc(x + ts * 0.5, y + ts * 0.5, ts * 0.41, 0, Math.PI * 2);
     ctx.stroke();
-    drawUnitSprite(ctx, x, y, ts, e.cls, false, true, pieceStance(e), e.facing, 0, unitAnimPose(e, true));
+    drawUnitSprite(ctx, x, y, ts, e.cls, false, true, pieceStance(e), e.facing, 0, pose);
     drawFacingMarker(ctx, x, y, ts, e.facing, "#ff6a40");
     const hpRatio = e.hp / e.maxHp;
     ctx.fillStyle = "#111";
@@ -377,8 +379,8 @@ function renderMap(animFrame = false) {
   // Unità alleate
   for (const u of G.units) {
     if (!u.alive) continue;
-    //const { x, y } = tileToScreen(u.col, u.row);
-    const { x, y } = tileToScreen(u.vx ?? u.col, u.vy ?? u.row);
+    const pose = unitAnimPose(u);
+    const { x, y } = pieceScreenPos(u, pose, ts);
     const isSelected = G.selectedUnit && G.selectedUnit.id === u.id;
     const isDone = u.ap <= 0;
 
@@ -389,7 +391,7 @@ function renderMap(animFrame = false) {
     ctx.fillRect(x + ts * 0.11, y + ts * 0.11, ts * 0.78, ts * 0.78);
 
     // Soldato visto dall'alto nella sua postura, rivolto dove guarda
-    drawUnitSprite(ctx, x, y, ts, u.cls, isDone, false, u.stance, u.facing, 0, unitAnimPose(u));
+    drawUnitSprite(ctx, x, y, ts, u.cls, isDone, false, u.stance, u.facing, 0, pose);
     drawFacingMarker(ctx, x, y, ts, u.facing, isSelected ? "#f0c030" : "#e8e0b0");
 
     // Occultamento: 🌿 nascosto ai VC, 👁 posizione svelata (sparo/avvistamento)
@@ -635,6 +637,13 @@ function drawAimRay(ctx, ts, u, hov, weapon) {
     ctx.fillText(label, ex, hy + ts + 2);
   }
   ctx.restore();
+}
+
+// Angolo schermo della pedina: posizione animata del movimento (vx/vy) più
+// il sobbalzo del colpo subito (pose.dx/dy, animations.js:_applyFireHit)
+function pieceScreenPos(o, pose, ts) {
+  const { x, y } = tileToScreen(o.vx ?? o.col, o.vy ?? o.row);
+  return { x: x + (pose?.dx || 0) * ts, y: y + (pose?.dy || 0) * ts };
 }
 
 // Postura disegnata della pedina: quella dei soldati; i VC non ne hanno una,

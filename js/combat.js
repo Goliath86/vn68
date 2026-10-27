@@ -72,10 +72,15 @@ async function resolveCombat(
   statAttack(!isEnemy, diceOdds(atkVal, defVal, defender.hp).pHit, dmg, sector);
 
   const sniper = isMarksman(attacker);
+  // Il tiratore si gira verso il bersaglio prima di sparare: con le
+  // animazioni sparo ed effetti partono a girata finita (animations.js)
+  const lead = aimTurnLead(attacker, defender, isEnemy);
+  faceToward(attacker, defender);
   // Colpo/mancato/morte (effetti e suoni) partono all'arrivo del tracciante
   // (corpo a corpo: a metà del fendente)
-  const impact = melee ? MELEE_IMPACT_MS : shotImpactDelay(sniper);
-  sfxShoot(attacker.cls, weapon);
+  const impact = lead + (melee ? MELEE_IMPACT_MS : shotImpactDelay(sniper));
+  if (lead) setTimeout(() => sfxShoot(attacker.cls, weapon), lead);
+  else sfxShoot(attacker.cls, weapon);
   addFX(
     melee ? "slash" : "shot",
     {
@@ -89,6 +94,7 @@ async function resolveCombat(
       rounds: weapon?.rounds,
     },
     melee ? MELEE_FX_MS : SHOT_FX_MS,
+    lead,
   );
 
   const defBreakdown =

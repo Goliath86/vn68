@@ -6,6 +6,8 @@ let _fxLoopActive = false;
 // delay (ms, opzionale): l'effetto parte più tardi, es. all'arrivo del tracciante
 function addFX(type, data, duration, delay = 0) {
   G.effects.push({ type, data, duration, t0: performance.now() + delay });
+  // Rinculo del tiratore e sobbalzo del colpito (pose in unitAnimPose)
+  _unitFxAnim(type, data, duration, performance.now() + delay);
   // Ogni esplosione (granate, RPG, artiglieria, mine) scuote gli alberi
   // vicini e lascia un cratere
   if (type === "explosion") {
@@ -59,6 +61,8 @@ function _needsFastAnim() {
   return (
     _getTileAnims().length > 0 ||
     _unitsPulsing() ||
+    // Rinculo, sobbalzo o girata in corso: a 30 fps sarebbero a scatti
+    performance.now() < _unitFxBusyUntil ||
     // Tile evidenziato dall'istruttore del tutorial (lampeggia)
     (tutorialActive() && !!currentTutorialStep()?.highlight)
   );
@@ -95,6 +99,15 @@ const UNIT_ANIM = {
   reload: { dur: 1.7, gun: 0.3 },
   proneDamp: 0.5, // sdraiati: gesti più piccoli
   turnMs: 170, // girata morbida verso il nuovo facing
+  breathAmpWounded: 0.026, // ferito grave: respiro affannato, più ampio
+  shakenTremor: 0.02, // scosso: tremito dell'arma (radianti)
+  // Rinculo a ogni colpo della raffica: l'arma arretra (kick, tile) e scarta
+  // (jitter, radianti), poi torna in decayMs; coltello: affondo in lungeMs
+  recoil: { kick: 0.06, jitter: 0.06, decayMs: 70, lungeMs: 260, lunge: 0.09 },
+  // Colpito: la figura sobbalza lontano dal tiratore (push, tile) e si torce
+  // Picco in fretta, poi ritorno lento: resta visibile dopo il lampo
+  // d'impatto di _drawHit, che copre il tile per i primi ~160 ms
+  flinch: { ms: 620, peak: 0.1, push: 0.16, twist: 0.22 },
   // Camminata per postura: bob = beccheggio (scala a ogni passo), sway =
   // oscillazione di braccia e arma, twist = torsione del busto (radianti)
   walk: {
@@ -109,6 +122,12 @@ const UNIT_ANIM = {
 // animateEnemyMove) e girata in corso
 const _unitWalk = new WeakMap(); // unità → fase del passo (giri, cresce col percorso)
 const _unitTurn = new WeakMap(); // unità → { facing, from, t0 }
+let _unitFxBusyUntil = 0; // fino a quando serve il ciclo d'animazione veloce
+
+function _unitFxBusy(until) {
+  _unitFxBusyUntil = Math.max(_unitFxBusyUntil, until);
+  _startTileAnimLoop();
+}
 
 function setUnitWalk(u, phase) {
   if (phase == null) _unitWalk.delete(u);
@@ -129,6 +148,7 @@ function _unitTurnOffset(u, now) {
     let d = (st.facing - f) * (Math.PI / 2) + left(st);
     d = Math.atan2(Math.sin(d), Math.cos(d)); // verso breve
     _unitTurn.set(u, { facing: f, from: d, t0: now });
+    _unitFxBusy(now + UNIT_ANIM.turnMs);
     return d;
   }
   return left(st);
@@ -136,6 +156,104 @@ function _unitTurnOffset(u, now) {
 
 function _easeInOut(k) {
   return k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+}
+
+// Spari e colpi a segno (da addFX): chi spara rincula colpo per colpo con la
+// cadenza dei traccianti di _drawShot, chi è colpito sobbalza. L'unità è
+// quella sul tile d'origine o d'arrivo dell'effetto
+const _unitFire = new WeakMap(); // unità → { t0, rounds, stagger, melee }
+const _unitHit = new WeakMap(); // unità → { t0, dx, dy } (verso del sobbalzo)
+
+function _unitAt(col, row) {
+  const at = (o) => o.alive && o.col === col && o.row === row;
+  return G.units.find(at) || G.enemies.find(at) || null;
+}
+
+function _unitFxAnim(type, d, duration, t0) {
+  if (!d || !G.mapData) return;
+  let fire = null;
+  if (type === "shot") fire = [d.fromCol, d.fromRow, d.rounds ?? (d.sniper ? 1 : 3), duration];
+  else if (type === "overwatch") fire = [d.owCol, d.owRow, d.rounds ?? (d.sniper ? 1 : 3), OW_SHOT_MS];
+  else if (type === "suppression") fire = [d.supCol, d.supRow, 5, SUP_SHOT_MS];
+  else if (type === "slash") fire = [d.fromCol, d.fromRow, 1, duration];
+  if (fire) {
+    const u = _unitAt(fire[0], fire[1]);
+    const rounds = clamp(Math.round(fire[2]), 1, 5);
+    if (u) {
+      _unitFire.set(u, { t0, rounds, stagger: 0.12 * fire[3], melee: type === "slash" });
+      _unitFxBusy(t0 + rounds * 0.12 * fire[3] + UNIT_ANIM.recoil.lungeMs + 200);
+    }
+  }
+  if (type === "hit") {
+    const u = _unitAt(d.col, d.row);
+    if (!u) return;
+    // Lontano da chi ha sparato; senza tiratore (esplosioni, trappole) a caso
+    let dx = d.col - (d.fromCol ?? d.col),
+      dy = d.row - (d.fromRow ?? d.row);
+    if (!dx && !dy) {
+      const a = Math.random() * Math.PI * 2;
+      dx = Math.cos(a);
+      dy = Math.sin(a);
+    }
+    const len = Math.hypot(dx, dy);
+    _unitHit.set(u, { t0, dx: dx / len, dy: dy / len });
+    _unitFxBusy(t0 + UNIT_ANIM.flinch.ms);
+  }
+}
+
+// Ritardo (ms) con cui far partire uno sparo perché il tiratore finisca di
+// girarsi verso il bersaglio (combat.js:resolveCombat); 0 se è già girato,
+// senza animazioni o se è un VC che non si vede
+function aimTurnLead(shooter, target, isEnemy) {
+  if (!G.unitAnimEnabled) return 0;
+  const f = facingToward(shooter, target);
+  if (f === null || f === (shooter.facing ?? 0)) return 0;
+  if (isEnemy && !isEnemyVisible(shooter)) return 0;
+  return UNIT_ANIM.turnMs;
+}
+
+// Rinculo/affondo e sobbalzo nella posa (aggiunti a quella del momento)
+function _applyFireHit(u, pose, now) {
+  const F = _unitFire.get(u);
+  let busy = false;
+  if (F) {
+    const R = UNIT_ANIM.recoil;
+    const dt = now - F.t0;
+    if (dt > F.rounds * F.stagger + R.lungeMs + 200) _unitFire.delete(u);
+    else if (dt >= 0) {
+      busy = true;
+      if (F.melee) {
+        const k = Math.min(1, dt / R.lungeMs);
+        pose.gunDy -= R.lunge * Math.sin(Math.PI * k);
+        pose.bodyRot = (pose.bodyRot || 0) + 0.12 * Math.sin(Math.PI * k);
+      } else {
+        let kick = 0;
+        for (let i = 0; i < F.rounds; i++) {
+          const di = dt - i * F.stagger;
+          if (di >= 0) kick += Math.min(1, di / 12) * Math.exp(-di / R.decayMs);
+        }
+        pose.gunDy += R.kick * kick;
+        pose.gunRot += R.jitter * kick * (Math.floor(dt / F.stagger) % 2 ? 1 : -1);
+        pose.bodyRot = (pose.bodyRot || 0) - 0.3 * R.jitter * kick;
+      }
+    }
+  }
+  const H = _unitHit.get(u);
+  if (H) {
+    const Fl = UNIT_ANIM.flinch;
+    const k = (now - H.t0) / Fl.ms;
+    if (k >= 1) _unitHit.delete(u);
+    else if (k >= 0) {
+      busy = true;
+      // Colpo secco, poi ritorno lento
+      const a = k < Fl.peak ? k / Fl.peak : 1 - _easeInOut((k - Fl.peak) / (1 - Fl.peak));
+      pose.dx = H.dx * Fl.push * a;
+      pose.dy = H.dy * Fl.push * a;
+      pose.bodyRot = (pose.bodyRot || 0) + Fl.twist * a * (H.dx - H.dy >= 0 ? 1 : -1);
+      pose.headRot += 0.3 * a;
+    }
+  }
+  return busy;
 }
 
 G.unitAnimEnabled = (() => {
@@ -204,16 +322,20 @@ function unitAnimPose(u, isEnemy = false) {
   const id = String(u.id);
   const wounded = !isEnemy && u.maxHp && u.hp / u.maxHp <= WOUND_THRESHOLD;
   const period = wounded ? UNIT_ANIM.breathPeriodWounded : UNIT_ANIM.breathPeriod;
+  const amp = wounded ? UNIT_ANIM.breathAmpWounded : UNIT_ANIM.breathAmp;
   const pose = {
-    breath: 1 + UNIT_ANIM.breathAmp * Math.sin((2 * Math.PI * t) / period + _animHash(id, 0) * 6.28),
-    gunRot: 0,
+    breath: 1 + amp * Math.sin((2 * Math.PI * t) / period + _animHash(id, 0) * 6.28),
+    // Scosso (panico): l'arma trema
+    gunRot: !isEnemy && u.shaken ? UNIT_ANIM.shakenTremor * Math.sin(t * 31 + _animHash(id, 2) * 6.28) : 0,
     gunDx: 0,
     gunDy: 0,
     headRot: 0,
     turn: _unitTurnOffset(u, now),
   };
-  // In cammino: passo, beccheggio, braccia e busto che oscillano col passo
   const walk = _unitWalk.get(u);
+  // Sparo (rinculo, affondo del coltello) o colpo appena preso (sobbalzo)
+  if (walk == null && _applyFireHit(u, pose, now)) return pose;
+  // In cammino: passo, beccheggio, braccia e busto che oscillano col passo
   if (walk != null) {
     const stance = isEnemy ? pieceStance(u) : u.stance;
     const W = UNIT_ANIM.walk[stance] || UNIT_ANIM.walk.stand;
