@@ -321,6 +321,19 @@ function renderMap(animFrame = false) {
         }
       }
     }
+    // Soldato selezionato: velo leggero sui tile visti dai compagni ma non
+    // da lui, così si distingue il suo campo visivo da quello della squadra
+    const sel = G.selectedUnit;
+    if (sel?.alive && G.phase === "player") {
+      const own = unitVisibleTiles(sel);
+      ctx.fillStyle = `rgba(0,0,0,${SQUAD_ONLY_VEIL})`;
+      for (const k of G.visibleTiles) {
+        if (own.has(k)) continue;
+        const [c, r] = k.split(",").map(Number);
+        const { x, y } = tileToScreen(c, r);
+        ctx.fillRect(x, y, ts, ts);
+      }
+    }
   }
 
   // Animazioni tile (smoke, fire, fog) — dopo il FOW: il fumo è visibile
@@ -775,6 +788,9 @@ const QUICK_RGB = "150,225,255";
 // non confondersi con l'area di movimento azzurra)
 const VISION_RGB = "205,165,255";
 const SPOT_FIRE_RGB = "255,215,90";
+// Opacità del velo sui tile visti solo dai compagni del selezionato
+// (renderMap; la nebbia di guerra è 0.72)
+const SQUAD_ONLY_VEIL = 0.42;
 
 // Mouse su un VC visibile: linee dai soldati che lo vedono; su un soldato:
 // linee verso i VC che vede. Piene se il VC è anche a tiro, tratteggiate se
