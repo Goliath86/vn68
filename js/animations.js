@@ -1720,6 +1720,9 @@ function flushBirds(at, from) {
     });
   }
   addFX("birds", { col: at.col, row: at.row, dir, birds }, BIRDS.ms);
+  // Frullo d'ali: assets/birds.mp3 o il suono "birds" della config/mappa,
+  // muto se il file non c'è (config.js:OPTIONAL_SOUNDS)
+  sfx("birds");
 }
 
 function _drawBirds(ctx, ts, d, p) {

@@ -139,6 +139,9 @@
         },
         "napalm": {
           "type": "string"
+        },
+        "birds": {
+          "type": "string"
         }
       },
       "additionalProperties": false

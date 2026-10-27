@@ -1,4 +1,8 @@
-let CONFIG = {}; // config.json unito alle mod attive (applyConfigData)
+// Suoni senza sintesi di riserva, cercati comunque fra gli asset: se il file
+// manca restano muti (config.json, una mod o la mappa possono cambiare il
+// percorso nel campo "sounds"; "" li spegne)
+const OPTIONAL_SOUNDS = { birds: "assets/birds.mp3" };
+let CONFIG = { sounds: { ...OPTIONAL_SOUNDS } }; // config.json unito alle mod attive (applyConfigData)
 let CONFIG_FILE = null; // config.json così com'è, per il validatore
 let WEAPONS_CONFIG = {}; // cls → [{id, label, atk, range, ammo?, aoe?, maxCarriers?}]
 const UNIT_IMG_CACHE = {}; // cls → { stand, crouch, prone } HTMLImageElement (pre-caricati)

@@ -630,6 +630,7 @@ Anche i suoni di gioco (vittoria, morte, movimento, ecc.) possono essere sostitu
 - `disarm` = disinnesco di una trappola da parte del geniere, `melee` = fendente del coltello, `reload` = ricarica, `stance` = cambio di postura
 - I suoni di sparo (`shoot`, `shoot_vc`) **non vanno qui** — si definiscono nel campo `sound` di ogni arma
 - Se il file non è caricabile, il gioco torna automaticamente al sintetizzato
+- `birds` = stormo di uccelli che si alza dalla giungla: non ha un suono sintetizzato. Anche senza indicarlo cerca `assets/birds.mp3`; se il file non c'è (o il valore è `""`) resta muto
 
 ### Effetti sonori specifici per missione
 

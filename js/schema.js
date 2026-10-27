@@ -54,7 +54,7 @@ const SCHEMA_SCHEMA = _sc.str({ d: ["Percorso del JSON Schema per l'editor (es. 
 // Effetti sonori sostituibili (sounds.js:sfx); gli spari si configurano per arma
 const SFX_KEYS = [
   "move", "stance", "hit", "death", "miss", "ambush", "demolition", "disarm", "melee", "reload", "heal",
-  "overwatch", "spawn", "turn_end", "victory", "defeat", "click", "jet", "napalm",
+  "overwatch", "spawn", "turn_end", "victory", "defeat", "click", "jet", "napalm", "birds",
 ];
 const TUTORIAL_EVENTS = [
   "select", "move", "rotate", "stance", "attack", "kill", "aoe", "reload", "firstaid", "special",
@@ -463,7 +463,7 @@ const SCHEMA_CONFIG = _sc.obj({
     ),
     { keyRef: "anyClass", key: ["classe", "class"], d: ["Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi)", "Piece picture per class (US or VC): the soldier seen from above **facing north**, transparent background, rotated by the game toward where the unit faces; without it, a drawn soldier (see the classes' `sprite`)"] },
   ),
-  sounds: _sc.map(_sc.str({ ref: "file" }), { keyValues: SFX_KEYS, key: ["effetto", "effect"], d: ["Effetti sonori; senza, suoni sintetizzati", "Sound effects; without them, synthesized sounds"] }),
+  sounds: _sc.map(_sc.str({ ref: "file" }), { keyValues: SFX_KEYS, key: ["effetto", "effect"], d: ["Effetti sonori; senza, suoni sintetizzati. `birds` (stormo che si alza dalla giungla) non ha un suono sintetizzato: di default cerca `assets/birds.mp3` e, se manca, resta muto", "Sound effects; without them, synthesized sounds. `birds` (flock rising from the jungle) has no synthesized sound: by default it looks for `assets/birds.mp3` and stays silent if it is missing"] }),
   weapons: SCHEMA_WEAPON_LOADOUTS(["Loadout per classe (US o VC); senza, ATK e gittata della classe", "Loadout per class (US or VC); without it, the class ATK and range"]),
   unitClasses: _sc.map(SCHEMA_UNIT_CLASS, { key: ["classe", "class"], d: ["Classi US: i campi scritti cambiano una classe esistente; un nome nuovo aggiunge una classe, che parte dalle statistiche dell'assalto e compare nel briefing (armi in `weapons`, immagine in `unitImages`)", "US classes: the fields written change an existing class; a new name adds a class, starting from the Assault's stats and shown in the briefing (weapons in `weapons`, picture in `unitImages`)"] }),
   enemyClasses: _sc.map(SCHEMA_ENEMY_CLASS, { key: ["classe", "class"], d: ["Classi VC: i campi scritti cambiano una classe esistente; un nome nuovo aggiunge una classe, che parte dai valori del guerrigliero e compare in partita solo se inserita in una composizione (`vcMix`)", "VC classes: the fields written change an existing class; a new name adds a class, starting from the guerrilla's values and appearing in game only when put in a composition (`vcMix`)"] }),

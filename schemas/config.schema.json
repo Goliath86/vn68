@@ -269,8 +269,8 @@
       }
     },
     "sounds": {
-      "description": "Effetti sonori; senza, suoni sintetizzati\n\nSound effects; without them, synthesized sounds",
-      "markdownDescription": "Effetti sonori; senza, suoni sintetizzati\n\n*Sound effects; without them, synthesized sounds*",
+      "description": "Effetti sonori; senza, suoni sintetizzati. `birds` (stormo che si alza dalla giungla) non ha un suono sintetizzato: di default cerca `assets/birds.mp3` e, se manca, resta muto\n\nSound effects; without them, synthesized sounds. `birds` (flock rising from the jungle) has no synthesized sound: by default it looks for `assets/birds.mp3` and stays silent if it is missing",
+      "markdownDescription": "Effetti sonori; senza, suoni sintetizzati. `birds` (stormo che si alza dalla giungla) non ha un suono sintetizzato: di default cerca `assets/birds.mp3` e, se manca, resta muto\n\n*Sound effects; without them, synthesized sounds. `birds` (flock rising from the jungle) has no synthesized sound: by default it looks for `assets/birds.mp3` and stays silent if it is missing*",
       "type": "object",
       "properties": {
         "move": {
@@ -328,6 +328,9 @@
           "type": "string"
         },
         "napalm": {
+          "type": "string"
+        },
+        "birds": {
           "type": "string"
         }
       },

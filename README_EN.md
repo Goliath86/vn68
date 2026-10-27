@@ -631,6 +631,7 @@ Game sounds (victory, death, movement, etc.) can also be replaced with custom au
 - `disarm` = the Engineer disarming a trap, `melee` = knife slash, `reload` = reloading, `stance` = changing stance
 - Shooting sounds (`shoot`, `shoot_vc`) **do not go here** — they are defined in the `sound` field of each weapon
 - If a file fails to load, the game falls back to the synthesized sound automatically
+- `birds` = flock of birds rising from the jungle: it has no synthesized sound. Even when not listed it looks for `assets/birds.mp3`; if the file is missing (or the value is `""`) it stays silent
 
 ### Mission-Specific Sound Effects
 
