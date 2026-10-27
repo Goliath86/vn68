@@ -99,6 +99,7 @@ const UNIT_ANIM = {
   reload: { dur: 1.7, gun: 0.3 },
   proneDamp: 0.5, // sdraiati: gesti più piccoli
   turnMs: 170, // girata morbida verso il nuovo facing
+  stanceMs: 300, // cambio di postura: dissolvenza tra le due figure
   breathAmpWounded: 0.026, // ferito grave: respiro affannato, più ampio
   shakenTremor: 0.02, // scosso: tremito dell'arma (radianti)
   // Rinculo a ogni colpo della raffica: l'arma arretra (kick, tile) e scarta
@@ -122,6 +123,7 @@ const UNIT_ANIM = {
 // animateEnemyMove) e girata in corso
 const _unitWalk = new WeakMap(); // unità → fase del passo (giri, cresce col percorso)
 const _unitTurn = new WeakMap(); // unità → { facing, from, t0 }
+const _unitStance = new WeakMap(); // unità → { stance, from, t0 } postura disegnata
 let _unitFxBusyUntil = 0; // fino a quando serve il ciclo d'animazione veloce
 
 function _unitFxBusy(until) {
@@ -152,6 +154,32 @@ function _unitTurnOffset(u, now) {
     return d;
   }
   return left(st);
+}
+
+// Cambio di postura: al cambio della postura disegnata parte una dissolvenza
+// dalla figura di prima (a metà di un cambio: da quella che dominava).
+// Imposta pose.stanceFrom e pose.stanceK (0..1) per drawUnitSprite
+function _applyStanceChange(u, stance, pose, now) {
+  const st = _unitStance.get(u);
+  if (!st) {
+    _unitStance.set(u, { stance, from: null, t0: 0 });
+    return;
+  }
+  if (st.stance !== stance) {
+    const k = st.from ? (now - st.t0) / UNIT_ANIM.stanceMs : 1;
+    const from = k < 0.5 && st.from ? st.from : st.stance;
+    _unitStance.set(u, { stance, from: from === stance ? null : from, t0: now });
+    _unitFxBusy(now + UNIT_ANIM.stanceMs);
+    return _applyStanceChange(u, stance, pose, now);
+  }
+  if (!st.from) return;
+  const k = (now - st.t0) / UNIT_ANIM.stanceMs;
+  if (k >= 1) {
+    st.from = null;
+    return;
+  }
+  pose.stanceFrom = st.from;
+  pose.stanceK = _easeInOut(Math.max(0, k));
 }
 
 function _easeInOut(k) {
@@ -332,6 +360,7 @@ function unitAnimPose(u, isEnemy = false) {
     headRot: 0,
     turn: _unitTurnOffset(u, now),
   };
+  _applyStanceChange(u, isEnemy ? pieceStance(u) : u.stance || "stand", pose, now);
   const walk = _unitWalk.get(u);
   // Sparo (rinculo, affondo del coltello) o colpo appena preso (sobbalzo)
   if (walk == null && _applyFireHit(u, pose, now)) return pose;

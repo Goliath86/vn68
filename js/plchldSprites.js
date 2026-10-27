@@ -2027,15 +2027,34 @@ function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy, stance, facing, tur
   ctx.save();
   if (isDone && !isEnemy) ctx.globalAlpha *= 0.6;
   ctx.translate(x + ts / 2, y + ts / 2);
+  // Cambio di postura in corso (anim.stanceFrom, anim.stanceK 0..1): la
+  // figura di prima sfuma in quella nuova, ombra compresa
+  const from =
+    anim?.stanceFrom && anim.stanceFrom !== pose && SOLDIER_POSES[anim.stanceFrom] ? anim.stanceFrom : null;
+  // Dissolvenza concentrata a metà (meno fotogrammi con due figure) e la
+  // pedina che si contrae un poco mentre cambia, come chi si abbassa
+  const k = from ? clamp((anim.stanceK - 0.25) / 0.5, 0, 1) : 1;
+  if (from) {
+    const squash = 1 - 0.07 * Math.sin(Math.PI * anim.stanceK);
+    ctx.scale(squash, squash);
+  }
+  const ready = (im) => im && im.complete && im.naturalWidth > 0;
 
   // Immagine da config.json (unitImages), rivolta a nord come la figura
   const img = UNIT_IMG_CACHE[cls]?.[pose];
-  if (img && img.complete && img.naturalWidth > 0) {
+  if (ready(img)) {
     ctx.rotate(ang);
     // Immagini intere: solo respiro e torsione della camminata
     if (anim) {
       ctx.rotate(anim.bodyRot || 0);
       ctx.scale(anim.breath, anim.breath);
+    }
+    const prev = from && UNIT_IMG_CACHE[cls]?.[from];
+    if (ready(prev) && prev !== img) {
+      const a = ctx.globalAlpha;
+      ctx.globalAlpha = a * (1 - k);
+      ctx.drawImage(prev, -ts / 2, -ts / 2, ts, ts);
+      ctx.globalAlpha = a * k;
     }
     ctx.drawImage(img, -ts / 2, -ts / 2, ts, ts);
     ctx.restore();
@@ -2043,17 +2062,25 @@ function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy, stance, facing, tur
   }
 
   const lookId = soldierLook(cls, isEnemy);
-  const spr = soldierSprite(lookId, pose, ts);
-  // Ombra: la sagoma ruotata, spostata sempre verso sud-est
-  const off = SOLDIER_POSES[pose].shadow * ts;
-  ctx.save();
-  ctx.translate(off, off);
-  ctx.rotate(ang);
-  ctx.globalAlpha *= 0.35;
-  ctx.drawImage(spr.shadow, -ts / 2, -ts / 2, ts, ts);
-  ctx.restore();
-  ctx.rotate(ang);
-  if (anim) _drawAnimatedSoldier(ctx, lookId, pose, ts, anim);
-  else ctx.drawImage(spr.body, -ts / 2, -ts / 2, ts, ts);
+  const figure = (p, alpha) => {
+    if (alpha <= 0) return;
+    const spr = soldierSprite(lookId, p, ts);
+    ctx.save();
+    ctx.globalAlpha *= alpha;
+    // Ombra: la sagoma ruotata, spostata sempre verso sud-est
+    const off = SOLDIER_POSES[p].shadow * ts;
+    ctx.save();
+    ctx.translate(off, off);
+    ctx.rotate(ang);
+    ctx.globalAlpha *= 0.35;
+    ctx.drawImage(spr.shadow, -ts / 2, -ts / 2, ts, ts);
+    ctx.restore();
+    ctx.rotate(ang);
+    if (anim) _drawAnimatedSoldier(ctx, lookId, p, ts, anim);
+    else ctx.drawImage(spr.body, -ts / 2, -ts / 2, ts, ts);
+    ctx.restore();
+  };
+  if (from) figure(from, 1 - k);
+  figure(pose, k);
   ctx.restore();
 }
