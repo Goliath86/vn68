@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.5 — 2026-10-28
+
+### New
+- **Contextual click on desktop**: without picking an action, clicking a reachable tile moves the soldier and clicking a VC in range fires, with a path and cost preview. Right-click cancels the action and turns the soldier toward the spot.
+- **Field of view**: outline of what the selected soldier actually sees, a veil on tiles seen only by squadmates, "who sees whom" lines when hovering soldiers and VC. Colored labels on map outlines.
+- **Animations**: soldier walking with smooth turning and adjustable movement speed, recoil when firing and flinch when hit, animated stance changes, gestures for throwing, radio, bandaging and engineer work.
+- **Terrain that reacts to footsteps**: splashes in water, rustling foliage in the jungle, dust elsewhere.
+
+### Audio
+- Different footsteps for each terrain type (ford, swamp and more), overwatch and suppressive fire sound, bird flocks.
 ## 1.1.0 — 2026-10-25
 
 ### New

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.5 — 28/10/2026
+
+### Novità
+- **Click contestuale su desktop**: senza scegliere l'azione, un click su un tile raggiungibile muove il soldato e un click su un VC a tiro spara, con anteprima di percorso e costo. Il click destro annulla l'azione e ruota il soldato verso il punto.
+- **Campo visivo**: contorno di ciò che vede davvero il soldato selezionato, velo sui tile visti solo dai compagni, linee "chi vede chi" passando col mouse su soldati e VC. Etichette colorate sui contorni della mappa.
+- **Animazioni**: camminata dei soldati con girata morbida e velocità dei movimenti regolabile, rinculo allo sparo e sobbalzo del colpito, cambio di postura animato, gesti per lancio, radio, bende e lavori del geniere.
+- **Terreno che reagisce ai passi**: schizzi nell'acqua, fronde che si muovono nella giungla, polvere sul resto.
+
+### Audio
+- Passi diversi per ogni tipo di terreno (guado, palude e altri), suono dell'overwatch e del fuoco soppressivo, stormo di uccelli.
 ## 1.1.0 — 25/10/2026
 
 ### Novità
