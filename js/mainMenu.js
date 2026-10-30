@@ -312,6 +312,15 @@ function buildOptionItems(list) {
       rerender();
     },
   });
+  menuItem(list, {
+    icon: "▦",
+    title: t("overlay.menu"),
+    sub: t("overlay.menu_desc"),
+    onClick: () => {
+      sfx("click");
+      openOverlayPrefs();
+    },
+  });
   if (MOD_LIST.length)
     menuItem(list, {
       icon: "🧩",

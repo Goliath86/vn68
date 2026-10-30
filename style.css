@@ -1833,6 +1833,72 @@ body {
     margin-top: 10px;
 }
 
+/* Aree sulla mappa (overlayPrefs.js) */
+#overlay-prefs-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+}
+#overlay-prefs-overlay.hidden {
+    display: none;
+}
+#overlay-prefs-box {
+    background: var(--panel-bg);
+    border: 2px solid var(--tan-dark);
+    border-radius: 4px;
+    padding: 22px 28px;
+    max-width: 520px;
+    width: 90%;
+    max-height: 90dvh;
+    overflow-y: auto;
+    text-align: center;
+}
+#overlay-prefs-box h2 {
+    font-family: var(--stamp-font);
+    font-size: 22px;
+    color: var(--tan);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+.ovp-row {
+    display: grid;
+    grid-template-columns: 1fr 64px 64px;
+    align-items: center;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    padding: 6px 0;
+}
+.ovp-row > span:not(.ovp-text) {
+    text-align: center;
+}
+.ovp-head {
+    font-family: var(--stamp-font);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--paper-dark);
+}
+.ovp-text {
+    display: flex;
+    flex-direction: column;
+}
+.ovp-row input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+.ovp-row input:disabled {
+    cursor: default;
+    opacity: 0.4;
+}
+#overlay-prefs-reset,
+#overlay-prefs-close {
+    margin-top: 10px;
+}
+
 /* ── TOOLTIP ─────────────────────────────────────── */
 #tile-tooltip {
     position: absolute;
@@ -2348,7 +2414,8 @@ body {
 #btn-menu,
 #btn-mute,
 #btn-fow,
-#btn-wind {
+#btn-wind,
+#btn-overlay-prefs {
     background: none;
     border: 1px solid var(--border);
     border-radius: 2px;
@@ -2364,7 +2431,8 @@ body {
 #btn-menu:hover,
 #btn-mute:hover,
 #btn-fow:hover,
-#btn-wind:hover {
+#btn-wind:hover,
+#btn-overlay-prefs:hover {
     border-color: var(--tan);
 }
 #btn-fow.fow-on,

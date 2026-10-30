@@ -153,6 +153,31 @@
     "scatter": "DEVIAZIONE"
   },
 
+  "overlay": {
+    "menu": "Aree sulla mappa",
+    "menu_desc": "Quali contorni e scritte mostrare alla selezione di un soldato",
+    "button_title": "Aree e scritte sulla mappa",
+    "title": "AREE SULLA MAPPA",
+    "note": "Scegli quali aree evidenziare e quali scritte mostrare. Le scelte restano salvate.",
+    "area": "AREA",
+    "label": "SCRITTA",
+    "reset": "↺ RIPRISTINA",
+    "close": "✕ CHIUDI",
+    "areas": {
+      "move": { "name": "Movimento", "desc": "Tile raggiungibili con gli AP rimasti" },
+      "targets": { "name": "Bersagli d'attacco", "desc": "Nemici a tiro con mirino e linee di fuoco, area di tiro delle armi ad area; scritta = probabilità di colpire" },
+      "vision": { "name": "Campo visivo", "desc": "Tile che il soldato vede davvero (terreno e fumo inclusi)" },
+      "cone": { "name": "Cono visivo", "desc": "Area visiva teorica dell'orientamento, anche nella rotazione" },
+      "range": { "name": "Gittata", "desc": "Portata dell'arma equipaggiata" },
+      "noise": { "name": "Rumore", "desc": "Fin dove i VC sentono lo sparo o l'esplosione" },
+      "overwatch": { "name": "Overwatch", "desc": "Cono frontale dei soldati in overwatch" },
+      "suppression": { "name": "Soppressione", "desc": "Zona coperta dal fuoco soppressivo" },
+      "scatter": { "name": "Deviazione", "desc": "Dove può deviare la granata o cadere la salva, in mira" },
+      "artillery": { "name": "Supporto in arrivo", "desc": "Artiglieria e napalm già richiesti" },
+      "spot": { "name": "Chi vede chi", "desc": "Linee al passaggio del mouse su un soldato o un VC" }
+    }
+  },
+
   "stances": {
     "stand": "In piedi",
     "crouch": "Accucciato",

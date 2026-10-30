@@ -71,6 +71,14 @@
                 </button>
 
                 <button id="btn-wind" onclick="toggleWind()">🍃</button>
+
+                <button
+                    id="btn-overlay-prefs"
+                    data-i18n-title="overlay.button_title"
+                    title="Aree sulla mappa"
+                >
+                    ▦
+                </button>
             </div>
         </div>
 
@@ -743,6 +751,19 @@
             </div>
         </div>
 
+        <!-- AREE SULLA MAPPA (overlayPrefs.js:openOverlayPrefs) -->
+        <div id="overlay-prefs-overlay" class="hidden">
+            <div id="overlay-prefs-box">
+                <h2 data-i18n="overlay.title">AREE SULLA MAPPA</h2>
+                <p class="mods-note" data-i18n="overlay.note">
+                    Quali aree e scritte mostrare quando selezioni un soldato.
+                </p>
+                <div id="overlay-prefs-list"></div>
+                <button class="btn" id="overlay-prefs-reset" data-i18n="overlay.reset">↺ RIPRISTINA</button>
+                <button class="btn" id="overlay-prefs-close" data-i18n="overlay.close">✕ CHIUDI</button>
+            </div>
+        </div>
+
         <!-- MOD (mods.js:openModsMenu) -->
         <div id="mods-overlay" class="hidden">
             <div id="mods-box">
@@ -830,6 +851,8 @@
         <script src="js/plchldSprites.js"></script>
 
         <script src="js/overwatch.js"></script>
+
+        <script src="js/overlayPrefs.js"></script>
 
         <script src="js/render.js"></script>
 

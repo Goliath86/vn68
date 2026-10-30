@@ -44,7 +44,7 @@ Tutti i file in `js/` sono script classici concatenati via `<script>` tag in `in
 ```
 config.js → constants.js → canvas.js → sounds.js → fowLos.js → utils.js →
 maps.js → mapGen.js → i18n.js → schema.js → validate.js → mods.js → alea.js → weapons.js → actions.js → specialActions.js →
-plchldSprites.js → overwatch.js → render.js → saveGame.js → combat.js →
+plchldSprites.js → overwatch.js → overlayPrefs.js → render.js → saveGame.js → combat.js →
 mechanics.js → stats.js → guerrilla.js → tutorial.js → campaign.js → initModal.js → mainMenu.js → tabs.js → backModal.js → pathfind.js → camera.js →
 animations.js → ai.js → game.js → suppression.js → log.js → tooltip.js →
 ui.js → selectedUnit.js → init.js → unitList.js → unitMovement.js
@@ -77,6 +77,7 @@ Altre costanti in `constants.js`: `TILE=64`, `AP_PER_TURN=3`, `SAVE_KEY`, `UNIT_
 | `actions.js` | `setActionMode()` — entra/esce da modalità muovi/attacca/speciale; `directTargets(u, arma)` = bersagli di un attacco diretto; **click contestuale** desktop (`quickActions()`: senza modalità attiva, click su tile raggiungibile = muove, su VC in tiro = spara con `defaultAttackWeapon`; in cache, invalidata da `updateUI`; disegno e anteprima percorso/costo in `render.js:drawQuickActions`, click in `canvas.js:onCanvasClick`, che seleziona un altro soldato anche durante una modalità; `G.unitMoving` blocca i click durante `unitMovement.js:moveUnit`) |
 | `specialActions.js` | logica delle 4 abilità speciali (soppressione, overwatch, demolizione/incendio, cura) e `confirmAoeAttack()` |
 | `overwatch.js` | `checkOverwatch(enemy)` — trigger overwatch durante la fase nemica |
+| `overlayPrefs.js` | aree evidenziate sulla mappa: `OVERLAY_AREAS` (move/targets/vision/cone/range/noise/overwatch/suppression/scatter/artillery/spot), `overlayOn(id)` = area da disegnare (controllato in `render.js:renderOverlay`/`drawQuickActions`/`strokeNoiseOutline`/`drawSpotLines`), `overlayLabelOn(key)` = scritta del contorno (controllato in `labelOutline`; `OVERLAY_LABEL_AREA` per le chiavi con altro nome, es. `salvo` → `scatter`); scelte in `localStorage[vn68_overlay]`, modale `openOverlayPrefs` da Opzioni del menu desktop o bottone ▦ dell'header; un'area nuova va aggiunta a `OVERLAY_AREAS` + `translations overlay.areas.*` |
 | `suppression.js` | `checkSuppression(enemy)` — trigger fuoco soppressivo durante la fase nemica |
 | `render.js` | rendering principale: `render()`, `renderMap()`, `renderOverlay()` (evidenziazioni move/attack/AoE; ogni contorno ha un'etichetta del suo colore con `labelOutline(ctx, ts, celle, chiave, rgb, lato)` — celle = valore restituito da `strokeShapeOutline`, testi in `translations outline.*`, lati diversi per contorni diversi), `renderUnitsOnMap()`, `renderMissionMarkers()` |
 | `saveGame.js` | `saveGame()`/`loadSave()`/`clearSave()` — persistenza `localStorage`, chiave `SAVE_KEY` |

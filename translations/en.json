@@ -153,6 +153,31 @@
     "scatter": "SCATTER"
   },
 
+  "overlay": {
+    "menu": "Map overlays",
+    "menu_desc": "Which outlines and labels to show when a soldier is selected",
+    "button_title": "Map overlays and labels",
+    "title": "MAP OVERLAYS",
+    "note": "Choose which areas to highlight and which labels to show. Your choices are saved.",
+    "area": "AREA",
+    "label": "LABEL",
+    "reset": "↺ RESET",
+    "close": "✕ CLOSE",
+    "areas": {
+      "move": { "name": "Movement", "desc": "Tiles reachable with the remaining AP" },
+      "targets": { "name": "Attack targets", "desc": "Enemies in reach with crosshair and lines of fire, area weapons' target zone; label = hit chance" },
+      "vision": { "name": "Field of view", "desc": "Tiles the soldier actually sees (terrain and smoke included)" },
+      "cone": { "name": "Vision cone", "desc": "Theoretical vision area of the facing, also while rotating" },
+      "range": { "name": "Range", "desc": "Reach of the equipped weapon" },
+      "noise": { "name": "Noise", "desc": "How far VC hear the shot or explosion" },
+      "overwatch": { "name": "Overwatch", "desc": "Front cone of soldiers on overwatch" },
+      "suppression": { "name": "Suppression", "desc": "Zone covered by suppressive fire" },
+      "scatter": { "name": "Scatter", "desc": "Where the grenade may stray or the salvo land, while aiming" },
+      "artillery": { "name": "Incoming support", "desc": "Artillery and napalm already called in" },
+      "spot": { "name": "Who sees whom", "desc": "Lines when hovering a soldier or a VC" }
+    }
+  },
+
   "stances": {
     "stand": "Standing",
     "crouch": "Crouched",

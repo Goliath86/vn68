@@ -807,7 +807,7 @@ const SQUAD_ONLY_VEIL = 0.42;
 // è solo visto (actions.js:spotStatus)
 function drawSpotLines(ctx, ts) {
   const hov = G.hoveredTile;
-  if (!hov || G.actionMode !== null || G.phase !== "player") return;
+  if (!hov || G.actionMode !== null || G.phase !== "player" || !overlayOn("spot")) return;
   const at = (o) => o.alive && o.col === hov.col && o.row === hov.row;
   const enemy = G.enemies.find((e) => at(e) && isEnemyVisible(e));
   const unit = !enemy && G.units.find(at);
@@ -854,42 +854,16 @@ function drawSpotLines(ctx, ts) {
 function drawQuickActions(ctx, ts, qa) {
   const u = G.selectedUnit;
   ctx.save();
-  ctx.fillStyle = "rgba(255,255,255,0.12)";
-  for (const r of qa.reach) {
-    const { x, y } = tileToScreen(r.col, r.row);
-    ctx.fillRect(x, y, ts, ts);
-  }
-  // Contorno dell'area (il tile del soldato ne fa parte): lati dei tile
-  // raggiungibili che non confinano con un altro tile dell'area
-  const inArea = new Set(qa.reach.map((r) => `${r.col},${r.row}`));
-  inArea.add(`${u.col},${u.row}`);
-  const areaCells = [];
-  ctx.beginPath();
-  for (const k of inArea) {
-    const [c, r] = k.split(",").map(Number);
-    const { x, y } = tileToScreen(c, r);
-    areaCells.push({ x, y });
-    if (!inArea.has(`${c},${r - 1}`)) { ctx.moveTo(x, y); ctx.lineTo(x + ts, y); }
-    if (!inArea.has(`${c},${r + 1}`)) { ctx.moveTo(x, y + ts); ctx.lineTo(x + ts, y + ts); }
-    if (!inArea.has(`${c - 1},${r}`)) { ctx.moveTo(x, y); ctx.lineTo(x, y + ts); }
-    if (!inArea.has(`${c + 1},${r}`)) { ctx.moveTo(x + ts, y); ctx.lineTo(x + ts, y + ts); }
-  }
-  ctx.lineCap = "round";
-  ctx.strokeStyle = "rgba(0,0,0,0.55)";
-  ctx.lineWidth = Math.max(3, ts * 0.07);
-  ctx.stroke();
-  ctx.strokeStyle = `rgba(${QUICK_RGB},0.95)`;
-  ctx.lineWidth = Math.max(1.5, ts * 0.03);
-  ctx.stroke();
-  labelOutline(ctx, ts, areaCells, "move", QUICK_RGB, "bottom");
-  for (const e of qa.targets) {
+  if (overlayOn("move")) drawQuickMoveArea(ctx, ts, qa, u);
+  for (const e of overlayOn("targets") ? qa.targets : []) {
     const { x, y } = tileToScreen(e.col, e.row);
     ctx.strokeStyle = "rgba(255,80,80,0.75)";
     ctx.lineWidth = 2;
     ctx.strokeRect(x + 2, y + 2, ts - 4, ts - 4);
     drawCrosshair(ctx, ts, e);
     const pHit = qa.odds.get(e);
-    drawOddsLabel(ctx, ts, x, y, `${Math.round(pHit * 100)}%`, oddsColor(pHit));
+    if (overlayLabelOn("targets"))
+      drawOddsLabel(ctx, ts, x, y, `${Math.round(pHit * 100)}%`, oddsColor(pHit));
   }
 
   const hov = G.hoveredTile;
@@ -922,13 +896,45 @@ function drawQuickActions(ctx, ts, qa) {
   ctx.restore();
 }
 
+// Area di movimento del click contestuale: tile velati e contorno esterno
+function drawQuickMoveArea(ctx, ts, qa, u) {
+  ctx.fillStyle = "rgba(255,255,255,0.12)";
+  for (const r of qa.reach) {
+    const { x, y } = tileToScreen(r.col, r.row);
+    ctx.fillRect(x, y, ts, ts);
+  }
+  // Contorno dell'area (il tile del soldato ne fa parte): lati dei tile
+  // raggiungibili che non confinano con un altro tile dell'area
+  const inArea = new Set(qa.reach.map((r) => `${r.col},${r.row}`));
+  inArea.add(`${u.col},${u.row}`);
+  const areaCells = [];
+  ctx.beginPath();
+  for (const k of inArea) {
+    const [c, r] = k.split(",").map(Number);
+    const { x, y } = tileToScreen(c, r);
+    areaCells.push({ x, y });
+    if (!inArea.has(`${c},${r - 1}`)) { ctx.moveTo(x, y); ctx.lineTo(x + ts, y); }
+    if (!inArea.has(`${c},${r + 1}`)) { ctx.moveTo(x, y + ts); ctx.lineTo(x + ts, y + ts); }
+    if (!inArea.has(`${c - 1},${r}`)) { ctx.moveTo(x, y); ctx.lineTo(x, y + ts); }
+    if (!inArea.has(`${c + 1},${r}`)) { ctx.moveTo(x + ts, y); ctx.lineTo(x + ts, y + ts); }
+  }
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "rgba(0,0,0,0.55)";
+  ctx.lineWidth = Math.max(3, ts * 0.07);
+  ctx.stroke();
+  ctx.strokeStyle = `rgba(${QUICK_RGB},0.95)`;
+  ctx.lineWidth = Math.max(1.5, ts * 0.03);
+  ctx.stroke();
+  labelOutline(ctx, ts, areaCells, "move", QUICK_RGB, "bottom");
+}
+
 function renderOverlay() {
   const ctx = G.oCtx;
   const ts = TILE * G.scale;
   ctx.clearRect(0, 0, G.oCanvas.width, G.oCanvas.height);
 
   // Celle raggiungibili (movimento)
-  if (G.actionMode === "move") {
+  if (G.actionMode === "move" && overlayOn("move")) {
     ctx.fillStyle = "rgba(74,180,74,0.3)";
     ctx.strokeStyle = "rgba(74,200,74,0.7)";
     ctx.lineWidth = 1.5;
@@ -942,6 +948,8 @@ function renderOverlay() {
   // Celle attaccabili
   if (G.actionMode === "attack") {
     const isAoe = isAreaWeapon(G.currentWeapon);
+    // Bersagli e area di tiro (spegnibili da Opzioni → Aree sulla mappa)
+    const targets = overlayOn("targets") ? G.attackable : [];
     if (isAoe) {
       // Napalm, dopo il primo click: tile d'inizio marcato e linea in
       // anteprima fino al tile sotto il mouse (se è una fine valida)
@@ -957,14 +965,14 @@ function renderOverlay() {
       ctx.fillStyle = "rgba(255,140,0,0.18)";
       ctx.strokeStyle = "rgba(255,180,0,0.5)";
       ctx.lineWidth = 1;
-      for (const t of G.attackable) {
+      for (const t of targets) {
         const { x, y } = tileToScreen(t.col, t.row);
         ctx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
         ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
       }
       // Evidenzia le tile che hanno nemici nel range di tiro
       ctx.fillStyle = "rgba(255,100,0,0.3)";
-      for (const t of G.attackable) {
+      for (const t of targets) {
         if (
           G.enemies.some(
             (e) =>
@@ -982,7 +990,7 @@ function renderOverlay() {
       ctx.fillStyle = "rgba(200,40,40,0.35)";
       ctx.strokeStyle = "rgba(255,80,80,0.8)";
       ctx.lineWidth = 2;
-      for (const e of G.attackable) {
+      for (const e of targets) {
         const { x, y } = tileToScreen(e.col, e.row);
         ctx.fillRect(x + 1, y + 1, ts - 2, ts - 2);
         ctx.strokeRect(x + 1, y + 1, ts - 2, ts - 2);
@@ -990,11 +998,11 @@ function renderOverlay() {
 
       // Mirino su ogni nemico attaccabile
       ctx.save();
-      for (const e of G.attackable) drawCrosshair(ctx, ts, e);
+      for (const e of targets) drawCrosshair(ctx, ts, e);
       // Probabilità di colpire sopra ogni bersaglio (visibile anche su mobile,
       // senza hover), colorata per fascia (combat.js:oddsColor)
-      if (G.selectedUnit) {
-        for (const e of G.attackable) {
+      if (G.selectedUnit && overlayLabelOn("targets")) {
+        for (const e of targets) {
           const { x, y } = tileToScreen(e.col, e.row);
           const { pHit } = attackOdds(G.selectedUnit, e, G.currentWeapon);
           drawOddsLabel(ctx, ts, x, y, `${Math.round(pHit * 100)}%`, oddsColor(pHit));
@@ -1019,7 +1027,7 @@ function renderOverlay() {
         ctx.strokeStyle = "rgba(255,200,50,0.5)";
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 3]);
-        for (const e of G.attackable) {
+        for (const e of targets) {
           const { x: ex, y: ey } = tileToScreen(e.col, e.row);
           ctx.beginPath();
           ctx.moveTo(sx + ts / 2, sy + ts / 2);
@@ -1067,7 +1075,7 @@ function renderOverlay() {
       const { x: bx, y: by } = tileToScreen(tc, tr);
       // Granate: quadrato tratteggiato in cui il lancio può deviare (combat.js:throwLanding);
       // artiglieria: quadrato in cui cadono i colpi della salva (mechanics.js)
-      if (spread || w.scatter) {
+      if ((spread || w.scatter) && overlayOn("scatter")) {
         const s = spread || w.scatter;
         ctx.save();
         ctx.setLineDash([ts * 0.12, ts * 0.08]);
@@ -1098,6 +1106,7 @@ function renderOverlay() {
         ctx.lineWidth = 3;
         ctx.strokeRect(x + 3, y + 3, ts - 6, ts - 6);
       }
+      if (!overlayLabelOn("targets")) continue;
       const label = `${o.isUS ? "⚠ " : ""}${Math.round(o.pHit * 100)}%`;
       drawOddsLabel(ctx, ts, x, y, label, o.isUS ? "#ff7a6a" : oddsColor(o.pHit));
     }
@@ -1125,10 +1134,12 @@ function renderOverlay() {
         ? facingToward(u, hov)
         : u.facing;
     const { x: ux, y: uy } = tileToScreen(u.col, u.row);
-    ctx.strokeStyle = `rgba(${VISION_RGB},0.8)`;
-    ctx.lineWidth = 2;
-    const cone = strokeVisionOutline(ctx, u, ux, uy, ts, previewFacing);
-    labelOutline(ctx, ts, cone, "cone", VISION_RGB, "top");
+    if (overlayOn("cone")) {
+      ctx.strokeStyle = `rgba(${VISION_RGB},0.8)`;
+      ctx.lineWidth = 2;
+      const cone = strokeVisionOutline(ctx, u, ux, uy, ts, previewFacing);
+      labelOutline(ctx, ts, cone, "cone", VISION_RGB, "top");
+    }
     ctx.lineWidth = 1.5;
     for (const r of G.reachable) {
       const { x, y } = tileToScreen(r.col, r.row);
@@ -1173,28 +1184,35 @@ function renderOverlay() {
 
     // Area visiva: tratteggiato il cono teorico (fronte pieno, lati -1,
     // 2 tile dietro), pieno il campo reale tolti terreno e fumo
-    ctx.save();
-    ctx.strokeStyle = `rgba(${VISION_RGB},0.4)`;
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 4]);
-    const cone = strokeVisionOutline(ctx, u, x, y, ts);
-    ctx.restore();
-    const seen = unitVisibleTiles(u);
-    const seenShape = (dc, dr) => seen.has(`${u.col + dc},${u.row + dr}`);
-    ctx.save();
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "rgba(0,0,0,0.5)";
-    ctx.lineWidth = Math.max(3, ts * 0.06);
-    strokeShapeOutline(ctx, x, y, ts, unitVision(u), seenShape);
-    ctx.strokeStyle = `rgba(${VISION_RGB},0.95)`;
-    ctx.lineWidth = Math.max(1.5, ts * 0.028);
-    const vision = strokeShapeOutline(ctx, x, y, ts, unitVision(u), seenShape);
-    ctx.restore();
+    let cone, vision, range;
+    if (overlayOn("cone")) {
+      ctx.save();
+      ctx.strokeStyle = `rgba(${VISION_RGB},0.4)`;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 4]);
+      cone = strokeVisionOutline(ctx, u, x, y, ts);
+      ctx.restore();
+    }
+    if (overlayOn("vision")) {
+      const seen = unitVisibleTiles(u);
+      const seenShape = (dc, dr) => seen.has(`${u.col + dc},${u.row + dr}`);
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "rgba(0,0,0,0.5)";
+      ctx.lineWidth = Math.max(3, ts * 0.06);
+      strokeShapeOutline(ctx, x, y, ts, unitVision(u), seenShape);
+      ctx.strokeStyle = `rgba(${VISION_RGB},0.95)`;
+      ctx.lineWidth = Math.max(1.5, ts * 0.028);
+      vision = strokeShapeOutline(ctx, x, y, ts, unitVision(u), seenShape);
+      ctx.restore();
+    }
 
     // Contorno raggio attacco: gittata dell'arma (come in combattimento)
-    ctx.strokeStyle = `rgba(${RANGE_RGB},0.28)`;
-    ctx.lineWidth = 1;
-    const range = strokeRangeOutline(ctx, x, y, ts, unitFireRange(u));
+    if (overlayOn("range")) {
+      ctx.strokeStyle = `rgba(${RANGE_RGB},0.28)`;
+      ctx.lineWidth = 1;
+      range = strokeRangeOutline(ctx, x, y, ts, unitFireRange(u));
+    }
 
     labelOutline(ctx, ts, vision, "vision", VISION_RGB, "top");
     labelOutline(ctx, ts, cone, "cone", VISION_RGB, "left");
@@ -1203,7 +1221,7 @@ function renderOverlay() {
 
   // Zone soppressione (assalti in fuoco soppressivo): fronte e lati
   for (const sup of G.suppressList) {
-    if (!sup.alive) continue;
+    if (!sup.alive || !overlayOn("suppression")) continue;
     const { x: sx, y: sy } = tileToScreen(sup.col, sup.row);
     ctx.strokeStyle = "rgba(255,165,50,0.55)";
     ctx.lineWidth = 1.5;
@@ -1217,7 +1235,7 @@ function renderOverlay() {
 
   // Overwatch: cono frontale entro la gittata
   for (const ow of G.overwatchList) {
-    if (!ow.alive || ow.overwatchFired) continue;
+    if (!ow.alive || ow.overwatchFired || !overlayOn("overwatch")) continue;
     const { x: ox, y: oy } = tileToScreen(ow.col, ow.row);
     ctx.strokeStyle = "rgba(170,221,255,0.6)";
     ctx.lineWidth = 1.5;
@@ -1231,7 +1249,7 @@ function renderOverlay() {
 
   // Artiglieria richiesta: area della salva in arrivo, più scura dove cadono
   // i colpi (quadrato di dispersione), più chiara dove arrivano le schegge
-  for (const s of G.missionState?.artillery || []) {
+  for (const s of overlayOn("artillery") ? G.missionState?.artillery || [] : []) {
     const spread = s.scatter ?? ARTILLERY.scatter;
     ctx.strokeStyle = "rgba(255,60,40,0.85)";
     ctx.lineWidth = 1.5;
@@ -1256,7 +1274,8 @@ function renderOverlay() {
   }
 
   // Napalm richiesto: linea e direzione dell'attacco aereo in arrivo
-  for (const s of G.missionState?.napalm || []) drawNapalmLine(ctx, ts, s.line, false, true);
+  if (overlayOn("artillery"))
+    for (const s of G.missionState?.napalm || []) drawNapalmLine(ctx, ts, s.line, false, true);
 
   // Effetti grafici
   renderEffects(ctx, ts);
@@ -1372,7 +1391,7 @@ function squareTopCells(x, y, s, ts) {
 const OUTLINE_LABEL_MIN_TS = 30;
 
 function labelOutline(ctx, ts, cells, key, rgb, side = "top") {
-  if (!cells?.length || ts < OUTLINE_LABEL_MIN_TS) return;
+  if (!cells?.length || ts < OUTLINE_LABEL_MIN_TS || !overlayLabelOn(key)) return;
   const vertical = side === "top" || side === "bottom";
   const pos = (c) => (vertical ? c.y : c.x);
   const along = (c) => (vertical ? c.x : c.y);
@@ -1411,6 +1430,7 @@ function labelOutline(ctx, ts, cells, key, rgb, side = "top") {
 const NOISE_RGB = "220,215,195";
 
 function strokeNoiseOutline(ctx, x, y, ts, radius) {
+  if (!overlayOn("noise")) return;
   ctx.save();
   ctx.strokeStyle = `rgba(${NOISE_RGB},0.5)`;
   ctx.lineWidth = 1.5;
