@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.2.0 — 2026-11-01
+
+### New
+- **VC mortarman**: a new enemy that stays in position. Every turn it fires a mortar round at soldiers seen by any VC, never at one adjacent to a VC; the round is inaccurate (5×5 square around the target) and explodes leaving a crater. You hear the launch, the squad shouts "INCOMING!" and the round's shadow shows where it will land. If a soldier gets within pistol range it leaves the mortar and fights back with its Makarov. It appears on one procedural map in two.
+- **Remains of the fallen**: where a soldier or a VC falls, the weapon, headgear, pack or radio, a dark stain and a few spent casings stay behind; on death the headgear flies off. Blood drops behind bleeding soldiers, bandages left on the ground after treatment.
+- **Badly wounded soldiers**: they limp and, when standing still, keep a gauze pressed to their side with the weapon lowered.
+- **Bullet impacts**: missed shots kick up splashes, dirt, leaves or chips depending on the terrain they hit; in the jungle the foliage moves along the shot.
+- **Map overlays**: from Options or the ▦ button you choose which areas to highlight and which labels to show. Field of view, vision cone and range are off by default.
+
+### Audio
+- Mortar round launch and "INCOMING!" shout: optional `assets/mortar.mp3` and `assets/incoming.mp3` files, otherwise a synthesized thump and whistle.
+
+### Modding
+- VC role `mortar`, class `mortar_vc`, weapon field `mortar`, map field `vcMortars` to place fixed mortarmen; `mortar` and `incoming` sounds.
+
+### Other
+- End-of-mission stats: VC mortar rounds and rounds off target.
+
 ## 1.1.5 — 2026-10-28
 
 ### New
