@@ -5,7 +5,8 @@ let _fxLoopActive = false;
 
 // delay (ms, opzionale): l'effetto parte più tardi, es. all'arrivo del tracciante
 function addFX(type, data, duration, delay = 0) {
-  G.effects.push({ type, data, duration, t0: performance.now() + delay });
+  const fx = { type, data, duration, t0: performance.now() + delay };
+  G.effects.push(fx);
   // Rinculo del tiratore e sobbalzo del colpito (pose in unitAnimPose)
   _unitFxAnim(type, data, duration, performance.now() + delay);
   // Ogni esplosione (granate, RPG, artiglieria, mine) scuote gli alberi
@@ -13,6 +14,13 @@ function addFX(type, data, duration, delay = 0) {
   if (type === "explosion") {
     addBlastShake(data.col, data.row, data.aoe ?? 0, delay);
     addCrater(data.col, data.row, !!data.big, delay);
+  }
+  // Proiettili: foglie lungo la traiettoria in giungla e impatti dei colpi
+  // mancati secondo il terreno (stesso t0 dell'effetto: ne dipende il seme)
+  const spec = _shotSpec(type, data);
+  if (spec) {
+    shotFoliage(spec, fx.t0);
+    shotImpacts(spec, fx.t0);
   }
   if (!_fxLoopActive) {
     _fxLoopActive = true;
@@ -806,14 +814,15 @@ function addBlastShake(col, row, aoe, delayMs = 0) {
 
 // Chioma scossa da chi attraversa la giungla: scossone piccolo e locale
 // (STEP_FX.rustle), stesse regole di quello delle esplosioni
-function addRustleShake(col, row) {
+// (anche dai proiettili che la attraversano: push più piccolo, in ritardo)
+function addRustleShake(col, row, push = STEP_FX.rustle.push, delayMs = 0) {
   if (!windActive()) return;
   _blasts.push({
     x: (col + 0.5) * TILE,
     y: (row + 0.5) * TILE,
     reach: STEP_FX.rustle.reach * TILE,
-    push: STEP_FX.rustle.push,
-    t0: performance.now() / 1000,
+    push,
+    t0: (performance.now() + delayMs) / 1000,
   });
   _startTileAnimLoop();
 }
@@ -1814,6 +1823,13 @@ function _drawEffect(ctx, ts, fx, p) {
       break;
     }
 
+    case "impact": {
+      const { col, row, fx: ox, fy: oy, kind, h, ux, uy } = fx.data;
+      const { x, y } = tileToScreen(col, row);
+      _drawBulletImpact(ctx, ts, x + ox * ts, y + oy * ts, kind, p, h, ux, uy);
+      break;
+    }
+
     case "slash": {
       _drawSlash(ctx, ts, fx, p);
       break;
@@ -2116,7 +2132,7 @@ function _drawRustle(ctx, ts, fx, p) {
   const cx = x + ts * 0.5,
     cy = y + ts * 0.45;
   const seed = Math.floor(fx.t0) % 997;
-  const n = big ? 7 : 4;
+  const n = fx.data.n ?? (big ? 7 : 4);
   const alpha = Math.min(1, p / 0.1) * (p > 0.7 ? (1 - p) / 0.3 : 1);
   for (let i = 0; i < n; i++) {
     const h = seed + i * 17;
@@ -2476,12 +2492,9 @@ function _drawShot(ctx, ts, fx, p) {
     const local = p - t0;
     if (local < 0) continue;
     const h = seed + i * 19;
-    // Punto d'arrivo: vicino al centro se colpisce, deviato e oltre se manca
-    const spread = hit ? 0.08 : 0.3 + _hash01(h) * 0.15;
-    const side = (_hash01(h + 1) - 0.5) * 2 * spread * ts;
-    const over = hit ? 0 : ts * (0.25 + _hash01(h + 2) * 0.3);
-    const ix = ex + nx * side + ux * over,
-      iy = ey + ny * side + uy * over;
+    const o = _shotRoundOffset(h, hit, fx.data.wide);
+    const ix = ex + (nx * o.side + ux * o.over) * ts,
+      iy = ey + (ny * o.side + uy * o.over) * ts;
 
     // Vampata alla bocca dell'arma
     ctx.globalCompositeOperation = "lighter";
@@ -2539,19 +2552,196 @@ function _drawShot(ctx, ts, fx, p) {
         ctx.lineTo(ix + Math.cos(a) * d1, iy + Math.sin(a) * d1);
         ctx.stroke();
       }
-    } else {
-      // Polvere sollevata dal proiettile che finisce a terra
-      ctx.globalCompositeOperation = "source-over";
-      _smokePuff(ctx, ix, iy, ts * (0.08 + 0.14 * r), "150,128,92", 0.55 * (1 - r));
-      ctx.fillStyle = `rgba(90,70,45,${(0.8 * (1 - r)).toFixed(3)})`;
-      for (let k = 0; k < 3; k++) {
-        const a = _hash01(h + 9 + k) * Math.PI * 2,
-          d = ts * 0.18 * r;
-        ctx.fillRect(ix + Math.cos(a) * d - 1, iy + Math.sin(a) * d - 1, 2, 2);
-      }
     }
+    // Colpo mancato: l'impatto sul terreno è un effetto a parte ("impact",
+    // da shotImpacts) con la durata del suo terreno
   }
   ctx.restore();
+}
+
+// Punto d'arrivo del proiettile i, in tile rispetto al centro del bersaglio
+// (side = di lato, over = oltre lungo la linea di tiro): vicino al centro se
+// colpisce, deviato e oltre se manca; la soppressione (wide) sparge i colpi
+// anche sui tile accanto al VC
+function _shotRoundOffset(h, hit, wide) {
+  const spread = hit ? 0.08 : wide ? 0.35 + _hash01(h) * 0.5 : 0.3 + _hash01(h) * 0.15;
+  return {
+    side: (_hash01(h + 1) - 0.5) * 2 * spread,
+    over: hit ? 0 : wide ? -0.2 + _hash01(h + 2) * 0.8 : 0.25 + _hash01(h + 2) * 0.3,
+  };
+}
+
+// Dati di sparo comuni a shot/overwatch/suppression (stessi traccianti)
+function _shotSpec(type, d) {
+  if (type === "shot")
+    return { from: [d.fromCol, d.fromRow], to: [d.toCol, d.toRow], ms: SHOT_FX_MS, sniper: d.sniper, hit: d.hit, rounds: d.rounds ?? (d.sniper ? 1 : 3), wide: false };
+  if (type === "overwatch")
+    return { from: [d.owCol, d.owRow], to: [d.tCol, d.tRow], ms: OW_SHOT_MS, sniper: d.sniper, hit: d.hit, rounds: d.rounds ?? (d.sniper ? 1 : 3), wide: false };
+  if (type === "suppression")
+    return { from: [d.supCol, d.supRow], to: [d.tCol, d.tRow], ms: SUP_SHOT_MS, sniper: false, hit: false, rounds: 5, wide: true };
+  return null;
+}
+
+// Un effetto "impact" per ogni proiettile mancato, all'arrivo del suo
+// tracciante, sul tile dove cade davvero (il bersaglio, accanto o dietro).
+// t0: inizio dello sparo (lo stesso dell'effetto, da cui dipende il seme)
+function shotImpacts(spec, t0) {
+  if (spec.hit) return;
+  const [fc, fr] = spec.from,
+    [tc, tr] = spec.to;
+  const len = Math.hypot(tc - fc, tr - fr) || 1;
+  const ux = (tc - fc) / len,
+    uy = (tr - fr) / len;
+  const seed = Math.floor(t0) % 997;
+  const rounds = clamp(Math.round(spec.rounds), 1, 5);
+  const travel = spec.sniper ? SHOT_TRAVEL_SNIPER : SHOT_TRAVEL;
+  const delay = t0 - performance.now();
+  for (let i = 0; i < rounds; i++) {
+    const h = seed + i * 19;
+    const o = _shotRoundOffset(h, false, spec.wide);
+    const wx = tc + 0.5 - uy * o.side + ux * o.over,
+      wy = tr + 0.5 + ux * o.side + uy * o.over;
+    const col = Math.floor(wx),
+      row = Math.floor(wy);
+    if (!isTileVisible(col, row)) continue;
+    const kind = impactKind(col, row);
+    addFX("impact", { col, row, fx: wx - col, fy: wy - row, kind, h, ux, uy }, IMPACT_FX.ms[kind], delay + (i * 0.12 + travel) * spec.ms);
+  }
+}
+
+// ── IMPATTI DEI PROIETTILI ─────────────────────────────────────────────
+// Il colpo mancato cambia secondo il terreno dove cade (tileLook, come i
+// passi in STEP_FX): zampilli nell'acqua, foglie tagliate in giungla, erba
+// che salta, schegge e calcinaccio sui muri, scintille sul selciato, zolle
+// sulla terra. Solo visivo, solo sui tile visibili. I proiettili che
+// attraversano la giungla tra tiratore e bersaglio fanno cadere qualche
+// foglia (shotFoliage, chiamato da addFX per shot/overwatch/suppression)
+const IMPACT_FX = {
+  looks: {
+    river: "water", ford: "water", swamp: "swamp",
+    jungle: "foliage",
+    clearing: "grass", garden: "grass",
+    wall: "masonry", wall_breach: "masonry", building: "masonry", temple: "masonry", bunker: "masonry", obstacle: "masonry", debris: "masonry",
+    street: "pavement", urban: "pavement", plaza: "pavement", objective: "pavement", bridge: "pavement",
+  },
+  dirtRgb: "150,128,92", // terra (trail, village, aspetti sconosciuti); scorched da STEP_FX.dust
+  water: { rgb: "225,240,245", jets: 3, height: 0.26 },
+  swamp: { rgb: "120,128,85", jets: 2, height: 0.16 },
+  grass: { rgb: "170,160,110", blades: ["#8fb257", "#6f9a3e", "#a9c46a"] },
+  masonry: { rgb: "175,168,155", chips: "#8a8478" },
+  pavement: { rgb: "150,146,138" },
+  ms: { water: 700, swamp: 700, foliage: 1000, grass: 600, masonry: 600, pavement: 500, dirt: 600, scorched: 600 },
+  // Foglie lungo la traiettoria: per tile di giungla attraversato
+  pathLeaves: 3,
+  pathPush: 0.08, // scossone della chioma (vento attivo), più piccolo dei passi
+  leafMs: 900,
+};
+
+function impactKind(col, row) {
+  const look = tileLook(getTileAt(col, row));
+  return IMPACT_FX.looks[look] || (look === "scorched" ? "scorched" : "dirt");
+}
+
+function impactRgb(kind) {
+  if (kind === "scorched") return STEP_FX.dust.scorched;
+  if (kind === "foliage") return IMPACT_FX.grass.rgb;
+  return IMPACT_FX[kind]?.rgb || IMPACT_FX.dirtRgb;
+}
+
+// r: avanzamento 0→1 dell'impatto; h: seme del proiettile; (ux,uy): verso
+function _drawBulletImpact(ctx, ts, ix, iy, kind, r, h, ux, uy) {
+  const fade = 1 - r;
+  if (kind === "water" || kind === "swamp") {
+    // Zampilli verticali sottili e un cerchio piccolo che si allarga
+    const W = IMPACT_FX[kind];
+    ctx.lineWidth = Math.max(1, ts * 0.016);
+    ctx.strokeStyle = `rgba(${W.rgb},${(0.7 * fade).toFixed(3)})`;
+    const rr = ts * (0.04 + 0.14 * r);
+    ctx.beginPath();
+    ctx.ellipse(ix, iy, rr, rr * 0.55, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.lineCap = "round";
+    ctx.lineWidth = Math.max(1, ts * 0.02);
+    for (let k = 0; k < W.jets; k++) {
+      const ox = (k - (W.jets - 1) / 2) * ts * 0.035 + (_hash01(h + 31 + k) - 0.5) * ts * 0.02;
+      const top = ts * W.height * (0.6 + _hash01(h + 35 + k) * 0.4) * Math.sin(Math.PI * Math.min(1, r * 1.2));
+      ctx.beginPath();
+      ctx.moveTo(ix + ox, iy);
+      ctx.lineTo(ix + ox * 1.4, iy - top);
+      ctx.stroke();
+    }
+    return;
+  }
+  if (kind === "foliage" || kind === "grass") {
+    // Foglie tagliate (giungla) o fili d'erba (radura) che saltano e ricadono
+    const foliage = kind === "foliage";
+    const cols = foliage ? STEP_FX.leafColors : IMPACT_FX.grass.blades;
+    if (!foliage) _smokePuff(ctx, ix, iy, ts * (0.05 + 0.08 * r), IMPACT_FX.grass.rgb, 0.4 * fade);
+    for (let k = 0; k < 4; k++) {
+      const a = _hash01(h + 41 + k) * Math.PI * 2;
+      const d = ts * (0.06 + _hash01(h + 45 + k) * 0.12) * Math.min(1, r * 1.5);
+      const up = ts * 0.12 * Math.sin(Math.PI * Math.min(1, r * 1.3));
+      ctx.save();
+      ctx.translate(ix + Math.cos(a) * d, iy + Math.sin(a) * d * 0.6 - up);
+      ctx.rotate(a + r * 6);
+      ctx.globalAlpha = fade;
+      ctx.fillStyle = cols[k % cols.length];
+      ctx.beginPath();
+      if (foliage) ctx.ellipse(0, 0, ts * 0.03, ts * 0.013, 0, 0, Math.PI * 2);
+      else ctx.rect(-ts * 0.025, -ts * 0.004, ts * 0.05, ts * 0.008);
+      ctx.fill();
+      ctx.restore();
+    }
+    return;
+  }
+  if (kind === "masonry" || kind === "pavement") {
+    // Scintilla, polvere di calcinaccio e schegge che rimbalzano indietro
+    const M = IMPACT_FX[kind];
+    _smokePuff(ctx, ix, iy, ts * (0.07 + 0.15 * r), M.rgb, 0.55 * fade);
+    if (r < 0.3) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      _smokePuff(ctx, ix, iy, ts * 0.08, "255,225,160", 0.9 * (1 - r / 0.3));
+      ctx.restore();
+    }
+    if (kind === "masonry") {
+      ctx.fillStyle = M.chips;
+      ctx.globalAlpha = fade;
+      for (let k = 0; k < 4; k++) {
+        const a = Math.atan2(-uy, -ux) + (_hash01(h + 51 + k) - 0.5) * 2.6;
+        const d = ts * (0.08 + _hash01(h + 55 + k) * 0.14) * Math.min(1, r * 1.4);
+        const s = Math.max(1.5, ts * 0.022);
+        ctx.fillRect(ix + Math.cos(a) * d - s / 2, iy + Math.sin(a) * d - s / 2 + ts * 0.06 * r * r, s, s);
+      }
+      ctx.globalAlpha = 1;
+    }
+    return;
+  }
+  // Terra: zolle e polvere del colore del suolo
+  const rgb = kind === "scorched" ? STEP_FX.dust.scorched : IMPACT_FX.dirtRgb;
+  _smokePuff(ctx, ix, iy, ts * (0.08 + 0.14 * r), rgb, 0.55 * fade);
+  ctx.fillStyle = `rgba(90,70,45,${(0.8 * fade).toFixed(3)})`;
+  for (let k = 0; k < 3; k++) {
+    const a = _hash01(h + 9 + k) * Math.PI * 2,
+      d = ts * 0.18 * r;
+    ctx.fillRect(ix + Math.cos(a) * d - 1, iy + Math.sin(a) * d - 1, 2, 2);
+  }
+}
+
+// Foglie che cadono dai tile di giungla attraversati dalla raffica, nel
+// momento in cui passa il primo tracciante (tiratore e bersaglio esclusi)
+function shotFoliage(spec, t0) {
+  const line = getLineTiles(spec.from[0], spec.from[1], spec.to[0], spec.to[1]);
+  const travelMs = (spec.sniper ? SHOT_TRAVEL_SNIPER : SHOT_TRAVEL) * spec.ms;
+  const delay = t0 - performance.now();
+  for (let i = 0; i < line.length - 1; i++) {
+    const { col, row } = line[i];
+    if (IMPACT_FX.looks[tileLook(getTileAt(col, row))] !== "foliage") continue;
+    if (!isTileVisible(col, row)) continue;
+    const at = delay + travelMs * ((i + 1) / line.length);
+    addFX("rustle", { col, row, n: IMPACT_FX.pathLeaves }, IMPACT_FX.leafMs, at);
+    addRustleShake(col, row, IMPACT_FX.pathPush, at);
+  }
 }
 
 // ── SPOT — avvistamento / allerta ───────────────────────────────────────
@@ -2972,6 +3162,7 @@ function _drawSuppression(ctx, ts, fx, p) {
           enemy: false,
           hit: false,
           rounds: 5,
+          wide: true,
         },
       },
       sp,
@@ -3174,9 +3365,9 @@ function _drawMiss(ctx, ts, fx, p) {
       }
     }
 
-    // Polvere nel punto d'impatto
+    // Polvere (o spruzzo) nel punto d'impatto, del colore del terreno
     const dp = Math.min(1, p / 0.5);
-    _smokePuff(ctx, ix, iy, ts * (0.06 + 0.12 * dp), "150,128,92", 0.5 * (1 - dp));
+    _smokePuff(ctx, ix, iy, ts * (0.06 + 0.12 * dp), impactRgb(impactKind(col, row)), 0.5 * (1 - dp));
 
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
