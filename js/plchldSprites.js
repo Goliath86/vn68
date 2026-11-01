@@ -2032,10 +2032,47 @@ function soldierLook(cls, isEnemy) {
   return SOLDIER_LOOKS[base] ? base : isEnemy ? "grunt" : "assault";
 }
 
+// Stesso aspetto senza copricapo (il caduto a cui vola via l'elmetto,
+// animations.js:_drawDeath): registrato in SOLDIER_LOOKS alla prima richiesta
+function bareLook(lookId) {
+  const id = `${lookId}~bare`;
+  if (!SOLDIER_LOOKS[id] && SOLDIER_LOOKS[lookId]) SOLDIER_LOOKS[id] = { ...SOLDIER_LOOKS[lookId], hat: "none", leaves: false };
+  return SOLDIER_LOOKS[id] ? id : lookId;
+}
+
+// Caduto senza copricapo (animations.js:_drawDeath, il copricapo vola via):
+// gambe, busto e braccia della figura, testa scoperta; con un'immagine di
+// config.json la pedina resta quella intera
+function drawHatlessUnit(ctx, x, y, ts, cls, isEnemy, stance, facing, turn = 0) {
+  const pose = SOLDIER_POSES[stance] ? stance : "stand";
+  const img = UNIT_IMG_CACHE[cls]?.[pose];
+  if (img && img.complete && img.naturalWidth > 0) return drawUnitSprite(ctx, x, y, ts, cls, false, isEnemy, stance, facing, turn);
+  const lookId = soldierLook(cls, isEnemy);
+  const L = soldierLayers(lookId, pose, ts);
+  const p = SOLDIER_POSES[pose];
+  ctx.save();
+  ctx.translate(x + ts / 2, y + ts / 2);
+  ctx.rotate((facing || 0) * (Math.PI / 2) + turn);
+  for (const im of [L.legs, L.torso, L.arms]) ctx.drawImage(im, -ts / 2, -ts / 2, ts, ts);
+  const S = ts * p.scale;
+  ctx.scale(S, S);
+  const [hx, hy] = p.head;
+  ctx.fillStyle = _SO;
+  ctx.beginPath();
+  ctx.arc(hx, hy, 0.085 + _SW, 0, Math.PI * 2);
+  ctx.fill();
+  _dome(ctx, hx, hy, 0.085, 0.085, SOLDIER_LOOKS[lookId].skin);
+  _dome(ctx, hx, hy + 0.015, 0.072, 0.066, "#1e1a14"); // capelli (nuca a sud)
+  ctx.restore();
+}
+
 // Pedina dell'unità nel tile (x, y): postura e facing (0 = nord … 3 = ovest)
 // scelgono la figura e la sua rotazione; turn = rotazione extra (radianti)
-// anim = posa animata (animations.js:unitAnimPose), null = figura ferma
+// anim = posa animata (animations.js:unitAnimPose), null = figura ferma;
+// { bare: true } = figura ferma senza copricapo
 function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy, stance, facing, turn = 0, anim = null) {
+  const bare = !!anim?.bare;
+  if (bare) anim = null;
   const pose = SOLDIER_POSES[stance] ? stance : "stand";
   // anim.turn: rotazione ancora da compiere verso il facing (girata morbida)
   const ang = (facing || 0) * (Math.PI / 2) + turn + (anim?.turn || 0);
@@ -2076,7 +2113,7 @@ function drawUnitSprite(ctx, x, y, ts, cls, isDone, isEnemy, stance, facing, tur
     return;
   }
 
-  const lookId = soldierLook(cls, isEnemy);
+  const lookId = bare ? bareLook(soldierLook(cls, isEnemy)) : soldierLook(cls, isEnemy);
   const figure = (p, alpha) => {
     if (alpha <= 0) return;
     const spr = soldierSprite(lookId, p, ts);

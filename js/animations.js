@@ -15,6 +15,10 @@ function addFX(type, data, duration, delay = 0) {
     addBlastShake(data.col, data.row, data.aoe ?? 0, delay);
     addCrater(data.col, data.row, !!data.big, delay);
   }
+  // Il caduto lascia a terra arma, copricapo, zaino e una macchia scura
+  if (type === "death") addKiaRemains(data, delay, duration);
+  // Cura (medico, primo soccorso): bende e involucri restano a terra
+  if (type === "heal") addAidLitter(data.col, data.row, delay + duration * 0.5);
   // Proiettili: foglie lungo la traiettoria in giungla e impatti dei colpi
   // mancati secondo il terreno (stesso t0 dell'effetto: ne dipende il seme)
   const spec = _shotSpec(type, data);
@@ -83,6 +87,7 @@ function _needsAnimLoop() {
     weatherActive() ||
     waterTiles().length > 0 ||
     cratersFading() ||
+    remainsFading() ||
     unitAnimActive()
   );
 }
@@ -124,6 +129,12 @@ const UNIT_ANIM = {
     crouch: { bob: 0.018, sway: 0.04, twist: 0.03 },
     prone: { bob: 0, sway: 0.06, twist: 0.08 },
   },
+  // Ferito grave (mechanics.js:woundLevel 2): zoppica (passo che cede su una
+  // gamba: dip = abbassamento, lean = inclinazione del busto; slow = tempo
+  // del movimento × slow in ai.js:animateEnemyMove) e a riposo tiene la mano
+  // sinistra con la garza premuta sul fianco, arma abbassata (gun, radianti)
+  limp: { dip: 0.05, lean: 0.12, slow: 1.3 },
+  woundHold: { gun: 0.22 },
 };
 
 // Stato delle animazioni non salvato (fuori dagli oggetti unità, che finiscono
@@ -493,6 +504,13 @@ function unitAnimPose(u, isEnemy = false) {
     pose.gunDx = 0.01 * s;
     pose.bodyRot = W.twist * s;
     pose.headRot = -0.5 * W.twist * s;
+    if (!isEnemy && woundLevel(u) >= 2) {
+      // Zoppica: il passo cede su una gamba sola
+      const Lp = UNIT_ANIM.limp,
+        give = Math.max(0, -s);
+      pose.breath *= 1 - Lp.dip * give;
+      pose.bodyRot += Lp.lean * give;
+    }
     return pose;
   }
   const damp = u.stance === "prone" ? UNIT_ANIM.proneDamp : 1;
@@ -521,6 +539,15 @@ function unitAnimPose(u, isEnemy = false) {
     pose.headRot = 0.25 * _animEnv(rp, 0.2);
     return pose;
   }
+  // Ferito grave: garza premuta sul fianco con la sinistra, arma abbassata
+  // (i gesti a riposo sotto muovono ancora testa e arma)
+  if (!isEnemy && woundLevel(u) >= 2) {
+    const sp = SOLDIER_POSES[SOLDIER_POSES[u.stance] ? u.stance : "stand"];
+    const [tx, ty, rx, ry] = sp.torso;
+    pose.handL = [tx - rx * 0.6, ty + ry * 0.25];
+    pose.item = "bandage";
+    pose.gunRot += UNIT_ANIM.woundHold.gun * damp;
+  }
   // Gesti a riposo: uno per intervallo, all'inizio dell'intervallo
   const slotT = t + _animHash(id, 1) * UNIT_ANIM.slot;
   const slot = Math.floor(slotT / UNIT_ANIM.slot);
@@ -537,10 +564,11 @@ function unitAnimPose(u, isEnemy = false) {
   const dir = _animHash(id, slot + 13) < 0.5 ? 1 : -1;
   if (kind === "look") pose.headRot = A.head * damp * dir * Math.sin(2 * Math.PI * p) * env;
   else if (kind === "sweep") {
-    pose.gunRot = A.gun * damp * dir * Math.sin(2 * Math.PI * p) * env;
-    pose.headRot = pose.gunRot * 0.8;
+    const sweep = A.gun * damp * dir * Math.sin(2 * Math.PI * p) * env;
+    pose.gunRot += sweep;
+    pose.headRot = sweep * 0.8;
   } else {
-    pose.gunRot = A.gun * damp * env;
+    pose.gunRot += A.gun * damp * env;
     pose.gunDx = A.dx * env;
     pose.gunDy = A.dy * damp * env;
     pose.headRot = A.head * damp * env;
@@ -781,6 +809,268 @@ function renderCraters(ctx) {
     const oy = (_hash01(cr.seed * 0.73) - 0.5) * TILE * 0.15;
     ctx.globalAlpha = a;
     ctx.drawImage(cv, (cr.col + 0.5) * TILE + ox - ext, (cr.row + 0.5) * TILE + oy - ext, ext * 2, ext * 2);
+  }
+  ctx.restore();
+}
+
+// ── RESTI SUL TERRENO ──────────────────────────────────────────────────
+// Ciò che resta dove cade un soldato (US o VC): macchia scura, arma,
+// copricapo rotolato via, zaino/radio/lanciarazzi/borsa del medico e qualche
+// bossolo (il corpo svanisce con l'effetto "death"); le gocce di sangue di
+// chi si muove con l'emorragia; bende e involucri dopo una cura.
+// G.missionState.remains [{ kind: "kia"|"blood"|"aid", col, row, seed, … }]
+// (salvato). Sprite disegnato una volta per resto, sotto le pedine e sopra
+// le chiome come i crateri. Un VC ucciso nel FOW lascia i resti solo quando
+// il tile si vede (seen). Solo visivo; disegno dall'aspetto della classe
+// (plchldSprites.js:SOLDIER_LOOKS), con i pennelli delle pedine
+const REMAINS = {
+  max: 80, // per missione: oltre, si tolgono i più vecchi (prima le gocce)
+  fadeInMs: 350,
+  bornAt: 0.42, // frazione dell'effetto "death" in cui il corpo tocca terra
+  hatFly: [0.06, 0.42], // volo del copricapo nell'effetto "death"
+  stainRgb: "62,6,4",
+  blood: "rgba(92,10,8,0.75)",
+  backGear: ["pack", "radio", "rpg"], // gear di _backGear che cade a terra
+  casings: [2, 5],
+};
+const _remainSprites = new WeakMap(); // resto → canvas (solo runtime)
+const _remainBorn = new WeakMap(); // resto → istante di comparsa
+let _remainFadeUntil = 0;
+
+function remainsFading() {
+  return performance.now() < _remainFadeUntil;
+}
+
+function _remainsAllowed(col, row) {
+  const tile = getTileAt(col, row);
+  return !!tile && !tile.impassable && !WATER_IDS.has(tileLook(tile));
+}
+
+function _addRemain(rm, delayMs = 0) {
+  if (!G.missionState || !_remainsAllowed(rm.col, rm.row)) return null;
+  const list = (G.missionState.remains ||= []);
+  list.push(rm);
+  while (list.length > REMAINS.max) {
+    const i = list.findIndex((r) => r.kind === "blood");
+    list.splice(i >= 0 ? i : 0, 1);
+  }
+  const born = performance.now() + delayMs;
+  _remainBorn.set(rm, born);
+  _remainFadeUntil = Math.max(_remainFadeUntil, born + REMAINS.fadeInMs);
+  _startTileAnimLoop();
+  return rm;
+}
+
+// Lato su cui cade il corpo: lo stesso di _drawDeath
+const _deathDir = (col, row) => (_hash01(col * 31 + row * 57) < 0.5 ? -1 : 1);
+
+// Da addFX("death"): resti del caduto quando il corpo tocca terra
+// (d.remain: il resto, per il volo del copricapo in _drawDeath)
+function addKiaRemains(d, delayMs, durationMs) {
+  if (!d.cls) return;
+  d.remain = _addRemain(
+    {
+      kind: "kia",
+      col: d.col,
+      row: d.row,
+      seed: Math.floor(Math.random() * 1e6),
+      look: soldierLook(d.cls, !!d.enemy),
+      dir: _deathDir(d.col, d.row),
+      seen: isTileVisible(d.col, d.row),
+    },
+    delayMs + durationMs * REMAINS.bornAt,
+  );
+}
+
+// Gocce di chi entra in un tile perdendo sangue (ai.js:animateEnemyMove);
+// una traccia per tile, orientata nel verso del passo
+function addBloodTrail(from, to) {
+  const list = G.missionState?.remains || [];
+  if (list.some((r) => r.kind === "blood" && r.col === to.col && r.row === to.row)) return;
+  _addRemain({
+    kind: "blood",
+    col: to.col,
+    row: to.row,
+    seed: Math.floor(Math.random() * 1e6),
+    ang: Math.atan2(to.row - from.row, to.col - from.col),
+    seen: true,
+  });
+}
+
+// Bende e involucri lasciati dove si è curato un ferito (medico, primo soccorso)
+// (uno per tile)
+function addAidLitter(col, row, delayMs = 0) {
+  if ((G.missionState?.remains || []).some((r) => r.kind === "aid" && r.col === col && r.row === row)) return;
+  _addRemain({ kind: "aid", col, row, seed: Math.floor(Math.random() * 1e6), seen: true }, delayMs);
+}
+
+// Posizioni degli oggetti del caduto (tile, dal centro): le usa sia lo
+// sprite dei resti sia il volo del copricapo in _drawDeath
+function kiaLayout(rm) {
+  let n = rm.seed;
+  const rng = () => _hash01(n++ * 1.618);
+  const dir = rm.dir || 1;
+  const body = [dir * 0.22, 0.22];
+  const hat = [-dir * (0.12 + rng() * 0.14), -0.2 + rng() * 0.22, rng() * Math.PI * 2];
+  const gc = [dir * (0.02 + rng() * 0.1), 0.04 + rng() * 0.14];
+  const ga = (rng() - 0.5) * 1.6 + (rng() < 0.5 ? 0 : Math.PI);
+  const gl = 0.25;
+  const gun = [gc[0] - Math.cos(ga) * gl, gc[1] - Math.sin(ga) * gl, gc[0] + Math.cos(ga) * gl, gc[1] + Math.sin(ga) * gl];
+  const pack = [dir * (0.26 + rng() * 0.08), -0.16 + rng() * 0.14, rng() * Math.PI * 2];
+  const flip = rng() < 0.5; // elmetto rovesciato
+  const casings = [];
+  const nc = REMAINS.casings[0] + Math.floor(rng() * (REMAINS.casings[1] - REMAINS.casings[0] + 1));
+  for (let i = 0; i < nc; i++) casings.push([(rng() - 0.5) * 0.6, (rng() - 0.5) * 0.6, rng() * 3]);
+  return { body, hat, gun, pack, flip, casings };
+}
+
+// Copricapo a terra (o in volo) centrato in (0,0), ruotato di rot
+function paintDroppedHat(ctx, look, rot, flip) {
+  ctx.save();
+  ctx.rotate(rot);
+  if (flip && look.hat === "helmet") {
+    // Elmetto rovesciato: si vede l'interno col sottogola
+    _dome(ctx, 0, 0, 0.125, 0.125, _shadeHex(look.hatCol, -0.2));
+    _dome(ctx, 0.008, 0.008, 0.1, 0.1, "#2a2a1c");
+    _lines(ctx, [[-0.07, 0.02, 0.07, 0.02], [0, -0.07, 0, 0.07]], 0.012, "#5a5236");
+    _lines(ctx, [[-0.09, 0.05, -0.02, 0.15], [0.09, 0.05, 0.03, 0.16]], 0.008, "#3e3a26");
+  } else _hat(ctx, look, 0, 0);
+  ctx.restore();
+}
+
+function _remainSprite(rm) {
+  let cv = _remainSprites.get(rm);
+  if (cv) return cv;
+  const dens = 2,
+    ext = 0.6; // tile attorno al centro
+  cv = document.createElement("canvas");
+  cv.width = cv.height = Math.ceil(TILE * ext * 2 * dens);
+  const g = cv.getContext("2d");
+  g.translate(cv.width / 2, cv.height / 2);
+  g.scale(TILE * dens, TILE * dens);
+  let n = rm.seed + 7;
+  const rng = () => _hash01(n++ * 2.718);
+  if (rm.kind === "kia") _paintKia(g, rm, rng);
+  else if (rm.kind === "blood") _paintBlood(g, rm, rng);
+  else _paintAid(g, rng);
+  _remainSprites.set(rm, cv);
+  return cv;
+}
+
+function _paintKia(g, rm, rng) {
+  const look = SOLDIER_LOOKS[rm.look] || SOLDIER_LOOKS.assault;
+  const L = kiaLayout(rm);
+  // Macchia scura assorbita dal terreno
+  for (let i = 0; i < 5; i++) {
+    const x = L.body[0] + (rng() - 0.5) * 0.22,
+      y = L.body[1] + (rng() - 0.5) * 0.12;
+    const r = 0.08 + rng() * 0.07;
+    const gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, `rgba(${REMAINS.stainRgb},0.42)`);
+    gr.addColorStop(1, `rgba(${REMAINS.stainRgb},0)`);
+    g.fillStyle = gr;
+    g.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  // Bossoli
+  g.fillStyle = "#c8a24a";
+  for (const [x, y, a] of L.casings) {
+    g.save();
+    g.translate(x, y);
+    g.rotate(a);
+    g.fillRect(-0.012, -0.005, 0.024, 0.01);
+    g.restore();
+  }
+  // Zaino, radio o lanciarazzi
+  const back = look.gear.filter((k) => REMAINS.backGear.includes(k));
+  if (back.length || look.gear.includes("medbag")) {
+    g.save();
+    g.translate(L.pack[0], L.pack[1]);
+    g.rotate(L.pack[2]);
+    g.scale(0.85, 0.85);
+    if (back.length) _backGear(g, { ...look, gear: [back[0]] }, 0);
+    else {
+      _box(g, 0, 0, 0.1, 0.12, "#d9d0ae");
+      _redCross(g, 0, 0, 0.03);
+    }
+    g.restore();
+  }
+  // Arma
+  _gun(g, look.weapon, ...(look.weapon === "pistol" ? _shortGun(L.gun) : L.gun));
+  // Copricapo
+  g.save();
+  g.translate(L.hat[0], L.hat[1]);
+  g.scale(0.85, 0.85);
+  paintDroppedHat(g, look, L.hat[2], L.flip);
+  g.restore();
+}
+
+// Pistola: un quarto della lunghezza del fucile, al centro
+function _shortGun([bx, by, mx, my]) {
+  const cx = (bx + mx) / 2,
+    cy = (by + my) / 2;
+  return [cx - (mx - bx) * 0.15, cy - (my - by) * 0.15, cx + (mx - bx) * 0.15, cy + (my - by) * 0.15];
+}
+
+function _paintBlood(g, rm, rng) {
+  // Gocce allungate nel verso del passo, dalla più grande alle più piccole
+  const ux = Math.cos(rm.ang),
+    uy = Math.sin(rm.ang);
+  g.fillStyle = REMAINS.blood;
+  const n = 4 + Math.floor(rng() * 3);
+  for (let i = 0; i < n; i++) {
+    const t = -0.3 + (i / n) * 0.6 + (rng() - 0.5) * 0.08;
+    const s = (rng() - 0.5) * 0.14;
+    const r = 0.012 + rng() * 0.016;
+    g.beginPath();
+    g.ellipse(ux * t - uy * s, uy * t + ux * s, r * 1.6, r, rm.ang, 0, Math.PI * 2);
+    g.fill();
+  }
+}
+
+function _paintAid(g, rng) {
+  const x = (rng() - 0.5) * 0.5,
+    y = (rng() - 0.5) * 0.5;
+  // Garza sporca srotolata
+  g.strokeStyle = "rgba(232,226,210,0.9)";
+  g.lineWidth = 0.022;
+  g.lineCap = "round";
+  g.beginPath();
+  g.moveTo(x - 0.1, y);
+  g.quadraticCurveTo(x, y - 0.08 + rng() * 0.16, x + 0.1, y + (rng() - 0.5) * 0.08);
+  g.stroke();
+  g.fillStyle = "rgba(120,14,10,0.6)";
+  g.beginPath();
+  g.arc(x + (rng() - 0.5) * 0.08, y + (rng() - 0.5) * 0.04, 0.016, 0, Math.PI * 2);
+  g.fill();
+  // Involucri strappati
+  for (let i = 0; i < 2; i++) {
+    g.save();
+    g.translate(x + (rng() - 0.5) * 0.26, y + (rng() - 0.5) * 0.22);
+    g.rotate(rng() * Math.PI);
+    g.fillStyle = i ? "#d8d2bc" : "#7c8058";
+    g.fillRect(-0.03, -0.018, 0.06, 0.036);
+    g.restore();
+  }
+}
+
+function renderRemains(ctx) {
+  const list = G.missionState?.remains;
+  if (!list?.length) return;
+  const now = performance.now();
+  ctx.save();
+  ctx.translate(G.camX, G.camY);
+  ctx.scale(G.scale, G.scale);
+  for (const rm of list) {
+    const born = _remainBorn.get(rm);
+    if (born !== undefined && now < born) continue;
+    if (!rm.seen) {
+      if (!isTileVisible(rm.col, rm.row)) continue;
+      rm.seen = true;
+    }
+    const cv = _remainSprite(rm);
+    const ext = cv.width / 4; // metà dell'ingombro in unità mondo (densità 2)
+    ctx.globalAlpha = born === undefined ? 1 : Math.min(1, (now - born) / REMAINS.fadeInMs);
+    ctx.drawImage(cv, (rm.col + 0.5) * TILE - ext, (rm.row + 0.5) * TILE - ext, ext * 2, ext * 2);
   }
   ctx.restore();
 }
@@ -3470,13 +3760,20 @@ function _drawDeath(ctx, ts, data, p) {
   // 3) L'unità si accascia di lato fino a terra (postura sdraiata, girata
   // verso il lato della caduta) e svanisce
   // (non su tile nel FOW: l'artiglieria può uccidere VC nascosti)
+  // Copricapo in volo (3b): la figura resta a capo scoperto; non con le
+  // immagini di config.json (unitImages), che non si possono scoprire
+  const rm = data.remain;
+  const [h0, h1] = REMAINS.hatFly;
+  const hat = rm && SOLDIER_LOOKS[rm.look]?.hat;
+  const hatFlies = !!hat && hat !== "none" && !UNIT_IMG_CACHE[cls]?.prone;
+  const bare = hatFlies && p >= h0 ? { bare: true } : null;
   if (cls && typeof drawUnitSprite === "function" && isTileVisible(col, row)) {
     const sa = fadeOut(0.5, 0.9);
     if (sa > 0) {
       ctx.save();
       if (fall < 1) {
         ctx.globalAlpha = sa * (1 - fall);
-        drawUnitSprite(ctx, x, y, ts, cls, false, !!enemy, stance, facing);
+        drawUnitSprite(ctx, x, y, ts, cls, false, !!enemy, stance, facing, 0, bare);
       }
       ctx.globalAlpha = sa * fall;
       drawUnitSprite(
@@ -3490,9 +3787,27 @@ function _drawDeath(ctx, ts, data, p) {
         "prone",
         facing,
         dir * fe * 0.6,
+        bare,
       );
       ctx.restore();
     }
+  }
+
+  // 3b) Il copricapo vola via dalla testa e rotola fin dove resta a terra
+  // (posizione dei resti, kiaLayout); a terra lo sostituisce lo sprite
+  // (resta sopra lo sprite finché questo non è comparso del tutto)
+  if (hatFlies && p >= h0 && p < h1 + 0.26 && isTileVisible(col, row)) {
+    const look = SOLDIER_LOOKS[rm.look];
+    const L = kiaLayout(rm);
+    const k = Math.min(1, (p - h0) / (h1 - h0));
+    const e = 1 - (1 - k) ** 2;
+    const hx = cx + L.hat[0] * ts * e,
+      hy = cy - ts * 0.05 * (1 - e) + L.hat[1] * ts * e - ts * 0.22 * Math.sin(Math.PI * k) * (1 - k * 0.5);
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.scale(ts * 0.85 * (1 + 0.25 * Math.sin(Math.PI * k)), ts * 0.85 * (1 + 0.25 * Math.sin(Math.PI * k)));
+    paintDroppedHat(ctx, look, L.hat[2] * e + (1 - e) * (facing || 0) * (Math.PI / 2), rm.flip && k > 0.6);
+    ctx.restore();
   }
 
   // 4) Polvere sollevata quando il corpo tocca terra

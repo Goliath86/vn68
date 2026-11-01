@@ -546,6 +546,8 @@ function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
   const birdIdx = birdFlushStep(path);
   const enter = (i) => {
     if (i === birdIdx) flushBirds(path[i], path[i - 1]);
+    // Chi perde sangue lascia gocce sui tile che attraversa (animations.js)
+    if (enemy.bleeding) addBloodTrail(path[i - 1], path[i]);
   };
   const finish = () => {
     enemy.facing = facingToward(path[segs - 1], path[segs]) ?? enemy.facing;
@@ -562,7 +564,9 @@ function animateEnemyMove(enemy, fromCol, fromRow, toCol, toRow) {
   }
 
   const stance = ENEMY_CLASSES[enemy.cls] ? pieceStance(enemy) : enemy.stance || "stand";
-  const slow = (MOVE_ANIM.stance[stance] ?? 1) * moveAnimFactor();
+  // Ferito grave: zoppica, quindi va più piano (UNIT_ANIM.limp)
+  const limp = woundLevel(enemy) >= 2 ? UNIT_ANIM.limp.slow : 1;
+  const slow = (MOVE_ANIM.stance[stance] ?? 1) * moveAnimFactor() * limp;
   const segMs = path.slice(1).map((p) => {
     const cost = getTileAt(p.col, p.row)?.moveCost || 1;
     return (MOVE_ANIM.stepMs + MOVE_ANIM.costMs * (cost - 1)) * slow;

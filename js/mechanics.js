@@ -589,6 +589,7 @@ function firstAid(u) {
   }
   sfx("heal");
   unitGesture(u, "bandage");
+  addAidLitter(u.col, u.row, UNIT_GESTURE.bandage.ms * 0.6);
   addFX("heal", { col: u.col, row: u.row, amount: healed }, 1400);
   log(
     t(u.bleeding ? "log.first_aid_bleeding" : "log.first_aid", {

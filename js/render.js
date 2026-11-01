@@ -272,6 +272,8 @@ function renderMap(animFrame = false) {
 
   // Crateri delle esplosioni (animations.js:renderCraters), sopra le chiome
   renderCraters(ctx);
+  // Resti dei caduti, gocce di sangue, bende (animations.js:renderRemains)
+  renderRemains(ctx);
 
   // Indicatori missione
   renderMissionMarkers(ctx, ts);

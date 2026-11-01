@@ -25,6 +25,8 @@ async function handleSpecialAction(col, row) {
       u.ap -= 1;
       u.specialUsed = true;
       unitGesture(u, "bandage");
+      // Bende e involucri a terra dove è stato curato (animations.js)
+      addAidLitter(ally.col, ally.row, UNIT_GESTURE.bandage.ms * 0.6);
       sfx("heal");
       addFX(
         "heal",
