@@ -564,13 +564,15 @@ async function resolveAoeCombat(
     sfx("napalm");
   } else {
     sfxShoot(attacker.cls, weapon);
-    // Lanciarazzi e simili: rinculo di chi spara (le granate sono già partite)
-    if (!weapon.thrown && !hitHidden) unitRecoil(attacker);
+    // Lanciarazzi e simili: rinculo di chi spara (le granate sono già partite,
+    // il mortaio rincula alla partenza, ai.js:mortarFire)
+    if (!weapon.thrown && !weapon.mortar && !hitHidden) unitRecoil(attacker);
     // big: cratere più largo per l'artiglieria (animations.js:addCrater)
     addFX("explosion", { col: tc, row: tr, aoe: weapon.aoe, big: hitHidden }, 1300);
   }
   // Statistiche: esplosivi US, RPG VC (l'artiglieria conta le salve, mechanics.js)
-  if (!hitHidden) statAdd(isEnemyAttacking ? "aoeVc" : "aoeUs");
+  // (i colpi di mortaio li conta ai.js:mortarFire)
+  if (!hitHidden && !weapon.mortar) statAdd(isEnemyAttacking ? "aoeVc" : "aoeUs");
   // Esplosione US: il rumore parte dal punto d'impatto (e il lancio svela chi lancia)
   if (!isEnemyAttacking) {
     const noise = weaponNoise(attacker, weapon);

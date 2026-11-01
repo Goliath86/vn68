@@ -103,6 +103,7 @@
     "vc_ambush": "Ambush shots",
     "vc_flanking": "Flanking moves (started / arrived)",
     "vc_rpg": "RPGs fired",
+    "vc_mortar": "Mortar rounds / off target",
     "sec_logistics": "Ammo",
     "rounds_fired": "Rounds fired",
     "reloads": "Reloads",
@@ -268,7 +269,7 @@
       "Cpl. Diaz",
       "Lt. Burns"
     ],
-    "vc_names": ["Guerrilla", "VC Sniper", "VC Patrol", "VC Commander"],
+    "vc_names": ["Guerrilla", "VC Sniper", "VC Patrol", "VC Commander", "VC Mortarman"],
     "vc_reinforcement_name": "VC Reinforcement",
     "status": {
       "kia": "KIA",
@@ -440,6 +441,10 @@
     "vc_tunnel_trapped": "{name} is trapped in the sealed tunnels",
     "vc_plant_trap": "{name} hides a trap",
     "vc_sniper_reload": "{name} reloads the rifle",
+    "vc_mortar_fire": "💣 {name} fires a mortar round!",
+    "vc_mortar_fire_hidden": "💣 A mortar round is fired from a hidden position!",
+    "vc_mortar_incoming": "INCOMING! Mortar round falling on {target}!",
+    "vc_mortar_defend": "{name} leaves the mortar and fights back with the {weapon}",
     "vc_sniper_reposition": "{name} repositions (distance from {target}: {dist})",
     "attack_prompt": "{attacker} attacks {defender} — ROLL THE DICE",
     "attack_dice_context": "Attack by {name}",
@@ -515,6 +520,7 @@
   "fx": {
     "miss": "MISSED",
     "kia": "KIA",
+    "incoming": "INCOMING!",
     "spot": "!",
     "overwatch": "OW!",
     "suppression": "SUP!",

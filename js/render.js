@@ -653,7 +653,10 @@ function pieceScreenPos(o, pose, ts) {
 function pieceStance(u) {
   if (u.stance) return u.stance;
   if (u.ambush) return "crouch";
-  return ENEMY_CLASSES[u.cls] && enemyRole(u) === "sniper" ? "prone" : "stand";
+  if (!ENEMY_CLASSES[u.cls]) return "stand";
+  const role = enemyRole(u);
+  // Il mortaista sta accucciato accanto al mortaio
+  return role === "sniper" ? "prone" : role === "mortar" ? "crouch" : "stand";
 }
 
 // Freccia sul bordo del tile nella direzione in cui guarda l'unità

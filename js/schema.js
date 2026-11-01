@@ -54,7 +54,7 @@ const SCHEMA_SCHEMA = _sc.str({ d: ["Percorso del JSON Schema per l'editor (es. 
 // Effetti sonori sostituibili (sounds.js:sfx); gli spari si configurano per arma
 const SFX_KEYS = [
   "move", "stance", "hit", "death", "miss", "ambush", "demolition", "disarm", "melee", "reload", "heal",
-  "overwatch", "spawn", "turn_end", "victory", "defeat", "click", "jet", "napalm", "birds",
+  "overwatch", "spawn", "turn_end", "victory", "defeat", "click", "jet", "napalm", "birds", "mortar", "incoming",
 ];
 const TUTORIAL_EVENTS = [
   "select", "move", "rotate", "stance", "attack", "kill", "aoe", "reload", "firstaid", "special",
@@ -109,8 +109,8 @@ const SCHEMA_WEAPON_FIELDS = {
   ] }),
   thrown: _sc.bool({ d: ["Solo armi AoE US. Lancio a mano: animazione ad arco con rimbalzi prima dell'esplosione", "US AoE weapons only. Hand thrown: arc animation with bounces before the explosion"] }),
   scatter: _sc.int({ min: 0, d: [
-    "Solo armi AoE US. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)",
-    "US AoE weapons only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` it is each round's square (default 2 = 5×5, likelier near the centre)",
+    "Solo armi AoE US e mortaio VC. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` e `mortar` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)",
+    "US AoE weapons and VC mortar only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` and `mortar` it is each round's square (default 2 = 5×5, likelier near the centre)",
   ] }),
   scatterChance: SCHEMA_RATE(["Con `scatter`: probabilità di deviare su un altro tile del quadrato; default 0.5", "With `scatter`: chance to deviate to another tile of the square; default 0.5"]),
   napalm: _sc.bool({ d: [
@@ -118,6 +118,10 @@ const SCHEMA_WEAPON_FIELDS = {
     "Napalm air strike: you pick a line of tiles (start and end, diagonals allowed); it lands at the start of the next turn, sets the tiles on fire and hits anyone on them with no terrain cover",
   ] }),
   length: _sc.int({ min: 1, d: ["Con `napalm`: lunghezza massima della linea in tile; default 5", "With `napalm`: maximum line length in tiles; default 5"] }),
+  mortar: _sc.bool({ d: [
+    "Solo armi AoE dei VC di ruolo `mortar`. Mortaio: un colpo per turno su un soldato individuato da un VC, tra `minRange` e `range`, che devia nel quadrato `scatter` (default 2); suoni `mortar` alla partenza e `incoming` prima dell'impatto, `sound` è l'esplosione",
+    "AoE weapons of `mortar`-role VC only. Mortar: one round per turn at a soldier spotted by a VC, between `minRange` and `range`, deviating within the `scatter` square (default 2); `mortar` sound at launch and `incoming` before impact, `sound` is the explosion",
+  ] }),
   shells: _sc.one(_sc.int({ min: 1 }), _sc.arr(_sc.int({ min: 1 }), { len: 2 })),
   sound: _sc.str({ ref: "file", d: ["Suono dello sparo (sostituisce quello sintetizzato)", "Firing sound (replaces the synthesized one)"] }),
 };
@@ -173,9 +177,9 @@ SCHEMA_UNIT_CLASS.fields.special.d = [
 
 const SCHEMA_ENEMY_CLASS = _sc.obj({
   name: _sc.one(_sc.int({ min: 0 }), _sc.map(_sc.str(), SCHEMA_LANGS)),
-  role: _sc.str({ allowed: ["rifleman", "sniper", "commander"], d: [
-    "Comportamento: `rifleman` (pattuglia, piazza trappole, aggira), `sniper` (mimetizzato, salta un turno dopo lo sparo, resta a distanza), `commander` (sempre in agguato, la sua morte fa ripiegare i VC vicini)",
-    "Behaviour: `rifleman` (patrols, plants traps, flanks), `sniper` (camouflaged, skips a turn after firing, keeps its distance), `commander` (always holds in ambush, its death makes nearby VC fall back)",
+  role: _sc.str({ allowed: ["rifleman", "sniper", "commander", "mortar"], d: [
+    "Comportamento: `rifleman` (pattuglia, piazza trappole, aggira), `sniper` (mimetizzato, salta un turno dopo lo sparo, resta a distanza), `commander` (sempre in agguato, la sua morte fa ripiegare i VC vicini), `mortar` (non si muove mai; un colpo per turno con l'arma `mortar` sui soldati visti da un VC qualsiasi, mai su chi è adiacente a un VC; con un soldato entro la gittata della prima arma diretta lascia il mortaio e spara con quella)",
+    "Behaviour: `rifleman` (patrols, plants traps, flanks), `sniper` (camouflaged, skips a turn after firing, keeps its distance), `commander` (always holds in ambush, its death makes nearby VC fall back), `mortar` (never moves; one round per turn with its `mortar` weapon at soldiers seen by any VC, never at one adjacent to a VC; with a soldier within range of its first direct weapon it leaves the mortar and fires that)",
   ] }),
   hp: _sc.int({ min: 1, d: ["Punti ferita", "Hit points"] }),
   ap: _sc.int({ min: 0, d: ["AP per turno", "AP per turn"] }),
@@ -183,7 +187,7 @@ const SCHEMA_ENEMY_CLASS = _sc.obj({
   range: _sc.int({ min: 0, d: ["Gittata senza armi", "Range without weapons"] }),
   defense: _sc.num({ min: 0, d: ["DEF", "DEF"] }),
   move: _sc.int({ min: 0, d: ["Movimento", "Movement"] }),
-  sprite: _sc.str({ allowed: ["grunt", "sniper_vc", "commander", "nva"], d: ["Aspetto del soldato disegnato se `unitImages` non ha un'immagine: quello di una classe VC o `nva` (regolare nordvietnamita: elmetto di sughero, AK, zaino)", "Look of the drawn soldier when `unitImages` has no picture: that of a VC class or `nva` (North Vietnamese regular: pith helmet, AK, pack)"] }),
+  sprite: _sc.str({ allowed: ["grunt", "sniper_vc", "commander", "mortar_vc", "nva"], d: ["Aspetto del soldato disegnato se `unitImages` non ha un'immagine: quello di una classe VC o `nva` (regolare nordvietnamita: elmetto di sughero, AK, zaino)", "Look of the drawn soldier when `unitImages` has no picture: that of a VC class or `nva` (North Vietnamese regular: pith helmet, AK, pack)"] }),
 }, {
   d: ["Classe VC", "VC class"],
 });
@@ -358,6 +362,15 @@ const SCHEMA_MISSION = _sc.obj({
     hold: _sc.bool({ d: ["Sentinella: non pattuglia finché non è allertata", "Sentry: doesn't patrol until alerted"] }),
     hp: _sc.int({ min: 1, d: ["Punti ferita iniziali", "Starting hit points"] }),
   }), { d: ["VC in posizione fissa al posto dello schieramento casuale", "VC at fixed positions instead of random deployment"] }),
+  vcMortars: _sc.arr(_sc.obj({
+    col: SCHEMA_COL(),
+    row: SCHEMA_ROW(),
+    facing: SCHEMA_FACING,
+    cls: _sc.str({ ref: "enemyClass", d: ["Classe VC (di ruolo `mortar`); default `mortar_vc`", "VC class (with the `mortar` role); default `mortar_vc`"] }),
+  }), { d: [
+    "Mortaisti in postazione fissa, in più dello schieramento (non contano in `vcCount`): non si muovono mai. Senza `facing` guardano verso il soldato più vicino",
+    "Mortarmen at fixed positions, in addition to the deployment (not counted in `vcCount`): they never move. Without `facing` they face the nearest soldier",
+  ] }),
   supportedMissions: _sc.arr(_sc.str({ ref: "missionType" }), { d: ["Tipi di missione giocabili sulla mappa", "Mission types playable on the map"] }),
   objectives: _sc.obj({
     recon: _sc.arr(_sc.obj({
@@ -463,7 +476,7 @@ const SCHEMA_CONFIG = _sc.obj({
     ),
     { keyRef: "anyClass", key: ["classe", "class"], d: ["Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi)", "Piece picture per class (US or VC): the soldier seen from above **facing north**, transparent background, rotated by the game toward where the unit faces; without it, a drawn soldier (see the classes' `sprite`)"] },
   ),
-  sounds: _sc.map(_sc.str({ ref: "file" }), { keyValues: SFX_KEYS, key: ["effetto", "effect"], d: ["Effetti sonori; senza, suoni sintetizzati. `birds` (stormo che si alza dalla giungla) non ha un suono sintetizzato: di default cerca `assets/birds.mp3` e, se manca, resta muto", "Sound effects; without them, synthesized sounds. `birds` (flock rising from the jungle) has no synthesized sound: by default it looks for `assets/birds.mp3` and stays silent if it is missing"] }),
+  sounds: _sc.map(_sc.str({ ref: "file" }), { keyValues: SFX_KEYS, key: ["effetto", "effect"], d: ["Effetti sonori; senza, suoni sintetizzati. `birds` (stormo che si alza dalla giungla) non ha un suono sintetizzato: di default cerca `assets/birds.mp3` e, se manca, resta muto. `mortar` (partenza del colpo di mortaio VC) e `incoming` (grido \"INCOMING!\" della squadra prima dell'impatto) cercano di default `assets/mortar.mp3` e `assets/incoming.mp3`; se mancano, tonfo e fischio sintetizzati", "Sound effects; without them, synthesized sounds. `birds` (flock rising from the jungle) has no synthesized sound: by default it looks for `assets/birds.mp3` and stays silent if it is missing. `mortar` (VC mortar round launch) and `incoming` (the squad's \"INCOMING!\" shout before impact) look for `assets/mortar.mp3` and `assets/incoming.mp3` by default; if missing, a synthesized thump and whistle"] }),
   weapons: SCHEMA_WEAPON_LOADOUTS(["Loadout per classe (US o VC); senza, ATK e gittata della classe", "Loadout per class (US or VC); without it, the class ATK and range"]),
   unitClasses: _sc.map(SCHEMA_UNIT_CLASS, { key: ["classe", "class"], d: ["Classi US: i campi scritti cambiano una classe esistente; un nome nuovo aggiunge una classe, che parte dalle statistiche dell'assalto e compare nel briefing (armi in `weapons`, immagine in `unitImages`)", "US classes: the fields written change an existing class; a new name adds a class, starting from the Assault's stats and shown in the briefing (weapons in `weapons`, picture in `unitImages`)"] }),
   enemyClasses: _sc.map(SCHEMA_ENEMY_CLASS, { key: ["classe", "class"], d: ["Classi VC: i campi scritti cambiano una classe esistente; un nome nuovo aggiunge una classe, che parte dai valori del guerrigliero e compare in partita solo se inserita in una composizione (`vcMix`)", "VC classes: the fields written change an existing class; a new name adds a class, starting from the guerrilla's values and appearing in game only when put in a composition (`vcMix`)"] }),

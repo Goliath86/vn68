@@ -152,6 +152,7 @@ const VC_NAMES = [
   "Cecchino VC",
   "Pattuglia VC",
   "Comandante VC",
+  "Mortaista VC",
 ];
 
 // ── CLASSI VC ──────────────────────────────────────────────────────────
@@ -161,7 +162,10 @@ const VC_NAMES = [
 //   name   indice in VC_NAMES (tradotti) oppure { "it": …, "en": … }
 //   role   comportamento: "rifleman" (pattuglia, piazza trappole, aggira),
 //          "sniper" (mimetizzato, salta un turno dopo lo sparo),
-//          "commander" (resta in agguato, la sua morte fa ripiegare i vicini)
+//          "commander" (resta in agguato, la sua morte fa ripiegare i vicini),
+//          "mortar" (non si muove mai; un colpo di mortaio per turno sui
+//          soldati visti da un VC, pistola se la squadra gli arriva addosso:
+//          ai.js, sezione MORTAISTA)
 //   sprite classe VC di cui usare lo sprite disegnato se unitImages non ha
 //          un'immagine per questa classe
 // Le armi stanno in config.json "weapons" sotto lo stesso nome di classe.
@@ -169,6 +173,7 @@ const ENEMY_CLASSES = {
   grunt: { name: 0, role: "rifleman", hp: 5, ap: 2, attack: 2, range: 2, defense: 0, move: 3 },
   sniper_vc: { name: 1, role: "sniper", hp: 6, ap: 2, attack: 3, range: 4, defense: 0, move: 2 },
   commander: { name: 3, role: "commander", hp: 8, ap: 2, attack: 3, range: 2, defense: 1, move: 3 },
+  mortar_vc: { name: 4, role: "mortar", hp: 5, ap: 2, attack: 2, range: 2, defense: 0, move: 0 },
 };
 
 // Composizione dei VC: pesi per classe. Una mappa li sostituisce con

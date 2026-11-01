@@ -186,6 +186,18 @@ function startGame(
     spawned++;
   }
 
+  // Mortaisti in postazione fissa: "vcMortars": [{ col, row, facing?, cls? }],
+  // in più dello schieramento (ai.js, sezione MORTAISTA)
+  for (const [i, m] of (G.mapData.vcMortars || []).entries()) {
+    if (!isTilePassable(m.col, m.row) || G.enemies.some((e) => e.col === m.col && e.row === m.row)) continue;
+    G.enemies.push(
+      makeEnemy("m" + i, m.cls || "mortar_vc", m.col, m.row, {
+        facing: m.facing ?? facingToward(m, nearestLiveUnit(m) ?? m) ?? 2,
+        hold: true,
+      }),
+    );
+  }
+
   // Spawn VC casuale
   const zones = G.mapData.vcSpawnZones;
   const count = G.mapData.enemies ? 0 : G.mapData.vcCount || 6;

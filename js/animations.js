@@ -876,6 +876,7 @@ function addKiaRemains(d, delayMs, durationMs) {
       seed: Math.floor(Math.random() * 1e6),
       look: soldierLook(d.cls, !!d.enemy),
       dir: _deathDir(d.col, d.row),
+      facing: d.facing ?? 0, // per il mortaio, che resta com'era piazzato
       seen: isTileVisible(d.col, d.row),
     },
     delayMs + durationMs * REMAINS.bornAt,
@@ -960,6 +961,14 @@ function _remainSprite(rm) {
 function _paintKia(g, rm, rng) {
   const look = SOLDIER_LOOKS[rm.look] || SOLDIER_LOOKS.assault;
   const L = kiaLayout(rm);
+  // Mortaio rimasto in postazione, orientato com'era
+  if (look.gear.includes("mortar")) {
+    g.save();
+    g.rotate((rm.facing || 0) * (Math.PI / 2));
+    g.scale(SOLDIER_POSES.crouch.scale, SOLDIER_POSES.crouch.scale);
+    _mortarPiece(g, ...MORTAR_PIECE_AT);
+    g.restore();
+  }
   // Macchia scura assorbita dal terreno
   for (let i = 0; i < 5; i++) {
     const x = L.body[0] + (rng() - 0.5) * 0.22,
@@ -2039,6 +2048,7 @@ function _fxHiddenByFow(fx) {
     case "spot":
       return d.kind !== "trap" && !isTileVisible(d.col, d.row);
     case "spawn":
+    case "mortarLaunch":
       return !isTileVisible(d.col, d.row);
     case "hit":
     case "miss":
@@ -2199,7 +2209,87 @@ function _drawEffect(ctx, ts, fx, p) {
       _drawNapalm(ctx, ts, fx.data, p);
       break;
     }
+
+    case "mortarLaunch": {
+      _drawMortarLaunch(ctx, ts, fx.data, p);
+      break;
+    }
+
+    case "incoming": {
+      _drawIncoming(ctx, ts, fx.data, p);
+      break;
+    }
   }
+  ctx.restore();
+}
+
+// ── MORTAIO — partenza e colpo in arrivo (ai.js:mortarFire) ────────────
+// Partenza: lampo alla bocca del tubo (davanti al mortaista, verso il
+// facing) e sbuffo di fumo che sale. In arrivo: "INCOMING!" gridato sopra il
+// soldato preso di mira, e nell'ultimo tratto l'ombra del proiettile che
+// cresce sul tile dove cadrà davvero (anche nel FOW: l'esplosione si vede)
+const MORTAR_FX = {
+  shadowFrom: 0.72, // frazione del volo da cui compare l'ombra
+};
+
+function _drawMortarLaunch(ctx, ts, d, p) {
+  const { x, y } = tileToScreen(d.col, d.row);
+  // Bocca del tubo del mortaio disegnato accanto al mortaista (accucciato)
+  const [ox, oy] = mortarMuzzle(d.facing, SOLDIER_POSES.crouch.scale);
+  const mx = x + ts * (0.5 + ox),
+    my = y + ts * (0.5 + oy);
+  if (p < 0.14) {
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    _smokePuff(ctx, mx, my, ts * 0.32, "255,190,90", 0.9 * (1 - p / 0.14));
+    ctx.restore();
+  }
+  for (let i = 0; i < 3; i++) {
+    const q = Math.max(0, p - i * 0.08);
+    if (q <= 0) continue;
+    _smokePuff(
+      ctx,
+      mx + (i - 1) * ts * 0.06 * q,
+      my - ts * 0.35 * q - i * ts * 0.04,
+      ts * (0.1 + 0.2 * q),
+      i % 2 ? "120,116,108" : "150,146,138",
+      0.5 * (1 - q),
+    );
+  }
+}
+
+function _drawIncoming(ctx, ts, d, p) {
+  // Grido sopra il soldato: compare di scatto e sale piano
+  const { x, y } = tileToScreen(d.col, d.row);
+  const cx = x + ts * 0.5;
+  const pop = Math.min(1, p / 0.08);
+  const a = pop * (1 - Math.max(0, (p - 0.8) / 0.2));
+  const ky = y - ts * 0.12 - ts * 0.2 * p;
+  ctx.save();
+  ctx.translate(cx, ky);
+  ctx.scale(0.7 + 0.3 * pop, 0.7 + 0.3 * pop);
+  ctx.font = `bold ${Math.round(ts * 0.3)}px 'Special Elite'`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(2, ts * 0.06);
+  ctx.strokeStyle = `rgba(40,20,0,${(0.85 * a).toFixed(3)})`;
+  ctx.strokeText(t("fx.incoming"), 0, 0);
+  ctx.fillStyle = `rgba(255,214,90,${a.toFixed(3)})`;
+  ctx.fillText(t("fx.incoming"), 0, 0);
+  ctx.restore();
+
+  // Ombra del proiettile che scende sul punto d'impatto
+  const k = (p - MORTAR_FX.shadowFrom) / (1 - MORTAR_FX.shadowFrom);
+  if (k <= 0) return;
+  const l = tileToScreen(d.landCol, d.landRow);
+  const lx = l.x + ts * 0.5,
+    ly = l.y + ts * 0.5;
+  ctx.save();
+  ctx.fillStyle = `rgba(0,0,0,${(0.15 + 0.3 * k).toFixed(3)})`;
+  ctx.beginPath();
+  ctx.ellipse(lx, ly, ts * (0.04 + 0.1 * k), ts * (0.025 + 0.06 * k), 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }
 
@@ -3766,7 +3856,18 @@ function _drawDeath(ctx, ts, data, p) {
   const [h0, h1] = REMAINS.hatFly;
   const hat = rm && SOLDIER_LOOKS[rm.look]?.hat;
   const hatFlies = !!hat && hat !== "none" && !UNIT_IMG_CACHE[cls]?.prone;
-  const bare = hatFlies && p >= h0 ? { bare: true } : null;
+  // Mortaista: il mortaio resta fermo a terra mentre lui si accascia, finché
+  // non compare lo sprite dei resti che lo contiene
+  const mortar = !!rm && !UNIT_IMG_CACHE[cls] && SOLDIER_LOOKS[rm.look]?.gear.includes("mortar");
+  if (mortar && p < REMAINS.bornAt + 0.25 && isTileVisible(col, row)) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate((facing || 0) * (Math.PI / 2));
+    ctx.scale(ts * SOLDIER_POSES.crouch.scale, ts * SOLDIER_POSES.crouch.scale);
+    _mortarPiece(ctx, ...MORTAR_PIECE_AT);
+    ctx.restore();
+  }
+  const bare = (hatFlies && p >= h0) || mortar ? { bare: true } : null;
   if (cls && typeof drawUnitSprite === "function" && isTileVisible(col, row)) {
     const sa = fadeOut(0.5, 0.9);
     if (sa > 0) {

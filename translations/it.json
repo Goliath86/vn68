@@ -103,6 +103,7 @@
     "vc_ambush": "Spari dall'agguato",
     "vc_flanking": "Aggiramenti (avviati / arrivati)",
     "vc_rpg": "RPG lanciati",
+    "vc_mortar": "Colpi di mortaio / deviati",
     "sec_logistics": "Munizioni",
     "rounds_fired": "Colpi sparati",
     "reloads": "Ricariche",
@@ -272,7 +273,8 @@
       "Guerrigliero",
       "Cecchino VC",
       "Pattuglia VC",
-      "Comandante VC"
+      "Comandante VC",
+      "Mortaista VC"
     ],
     "vc_reinforcement_name": "Rinforzo VC",
     "status": {
@@ -445,6 +447,10 @@
     "vc_tunnel_trapped": "{name} resta intrappolato nei tunnel sigillati",
     "vc_plant_trap": "{name} nasconde una trappola",
     "vc_sniper_reload": "{name} ricarica il fucile",
+    "vc_mortar_fire": "💣 {name} spara un colpo di mortaio!",
+    "vc_mortar_fire_hidden": "💣 Un colpo di mortaio parte da una posizione nascosta!",
+    "vc_mortar_incoming": "INCOMING! Colpo di mortaio in arrivo su {target}!",
+    "vc_mortar_defend": "{name} lascia il mortaio e si difende con la {weapon}",
     "vc_sniper_reposition": "{name} si riposiziona (distanza da {target}: {dist})",
     "attack_prompt": "{attacker} attacca {defender} — LANCIA IL DADO",
     "attack_dice_context": "Attacco di {name}",
@@ -520,6 +526,7 @@
   "fx": {
     "miss": "MANCATO",
     "kia": "KIA",
+    "incoming": "INCOMING!",
     "spot": "!",
     "overwatch": "OW!",
     "suppression": "SUP!",

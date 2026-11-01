@@ -177,13 +177,16 @@ The ATK penalty applies to attacks and overwatch (ATK never drops below 1); the 
 
 ### Viet Cong Enemies
 
-VC move and attack automatically during the enemy phase. Their movement is animated with a smooth transition, making the enemy turn easy to follow at a glance. There are three variants:
+VC move and attack automatically during the enemy phase. Their movement is animated with a smooth transition, making the enemy turn easy to follow at a glance. There are four variants:
 
 | Type | Profile |
 |---|---|
 | Guerrilla | Base unit, ATK 2 (AK-47), range 2 — one per mission also carries RPG-7 (ATK 4, range 4, AoE, 1 shot) |
 | VC Sniper | Dangerous at range, ATK 3 (Mosin), range 4. Skips a turn to reload after every shot; once alerted it won't come closer than 3 tiles, holding near max range and seeking cover |
 | VC Commander | More durable and mobile, ATK 3 (TT-33), DEF 1 |
+| VC Mortarman | Stays in position with a 60 mm mortar (ATK 4, AoE 1, range 3–10) and a Makarov (ATK 2, range 2). Appears only on maps that place one (`vcMortars`) or include it in their composition |
+
+**Mortarman:** never moves, not even when routed. Every VC turn it fires **one mortar round** at a soldier that **any VC** sees and spots (a concealed, unspotted soldier is safe), 3 to 10 tiles away from it; it never fires at a soldier **adjacent to a VC**. The round is **not accurate**: it lands on a random tile of the 5×5 square around the target, likelier near the centre, with an explosion (radius 1, hits anyone, VC included) and a crater. First you hear the launch, then the squad shouts **"INCOMING!"** over the targeted soldier and, just before impact, the round's shadow shows where it will actually land. If no VC sees the squad the mortar stays silent. Firing reveals the mortarman only if it is in sight (otherwise the log says the round comes from a hidden position) and makes as much noise as an explosion. If a soldier it knows about gets **within pistol range** (2 tiles), it leaves the mortar and fights back with the **Makarov**.
 
 **VC special weapons:** only one guerrilla per mission can carry an RPG-7 (1 shot, never below distance 2). They use it when the blast would hit several soldiers, or when it pays off more than the AK-47 (e.g. the target is beyond the AK's reach); they avoid catching other VC in it.
 
@@ -634,6 +637,7 @@ Game sounds (victory, death, movement, etc.) can also be replaced with custom au
 - Shooting sounds (`shoot`, `shoot_vc`) **do not go here** — they are defined in the `sound` field of each weapon
 - If a file fails to load, the game falls back to the synthesized sound automatically
 - `birds` = flock of birds rising from the jungle: it has no synthesized sound. Even when not listed it looks for `assets/birds.mp3`; if the file is missing (or the value is `""`) it stays silent
+- `mortar` = launch of the VC mortarman's round, `incoming` = the squad's "INCOMING!" shout before impact. Even when not listed they look for `assets/mortar.mp3` and `assets/incoming.mp3`; if the file is missing you hear a synthesized thump and whistle. The explosion is the mortar weapon's `sound`
 
 ### Mission-Specific Sound Effects
 
@@ -957,7 +961,7 @@ Traps, tunnels, night, weather, fixed squad and VC, ambushes and reinforcements:
 
 ### Optional fields: weapons, enemies and balance
 
-They apply only to this map's mission: the next mission goes back to the `config.json` and game values.
+They apply only to this map's mission: the next mission goes back to the `config.json` and game values. `vcMortars` places fixed mortarmen in addition to the deployment.
 
 The fields are described in the [field guide](docs/FIELDS_EN.md#map); the values `tuning` can change, group by group, in the [`tuning` groups](docs/FIELDS_EN.md#tuning) section.
 
@@ -968,6 +972,7 @@ The fields are described in the [field guide](docs/FIELDS_EN.md#map); the values
 },
 "vcMix": { "grunt": 2, "nva": 3, "commander": 1 },
 "reinforcementMix": { "nva": 1 },
+"vcMortars": [{ "col": 14, "row": 2 }],
 "tuning": {
   "VC_TACTICS": { "holdChance": 0.8 },
   "ENEMY_CLASSES": { "commander": { "hp": 10 } },

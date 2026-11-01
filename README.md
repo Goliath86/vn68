@@ -176,13 +176,16 @@ Il malus ATK vale per attacchi e overwatch (l'ATK non scende mai sotto 1); il so
 
 ### Nemici Vietcong
 
-I VC si muovono e attaccano automaticamente durante la fase nemica. Il loro spostamento è animato con una transizione fluida, rendendo il turno nemico leggibile a colpo d'occhio. Esistono tre varianti:
+I VC si muovono e attaccano automaticamente durante la fase nemica. Il loro spostamento è animato con una transizione fluida, rendendo il turno nemico leggibile a colpo d'occhio. Esistono quattro varianti:
 
 | Tipo | Comportamento |
 |---|---|
 | Guerrigliero | Unità base, ATK 2 (AK-47), gittata 2 — uno per missione porta anche RPG-7 (ATK 4, gittata 4, AoE, 1 colpo) |
 | Cecchino VC | Pericoloso a distanza, ATK 3 (Mosin), gittata 4. Dopo ogni colpo salta un turno per ricaricare; una volta allertato non si avvicina oltre 3 caselle, resta al limite della gittata cercando copertura |
 | Comandante VC | Più resistente e mobile, ATK 3 (TT-33), DEF 1 |
+| Mortaista VC | Fermo nella sua postazione con un mortaio da 60 mm (ATK 4, AoE 1, gittata 3–10) e una Makarov (ATK 2, gittata 2). Compare solo sulle mappe che lo piazzano (`vcMortars`) o lo includono nella composizione |
+
+**Mortaista:** non si muove mai, nemmeno in rotta. A ogni turno VC tira **un colpo di mortaio** su un soldato che **un VC qualsiasi** vede e individua (un soldato occultato non scoperto è al sicuro), tra 3 e 10 tile da lui; non spara mai su un soldato **adiacente a un VC**. Il colpo **non è preciso**: cade in un tile a caso del quadrato 5×5 attorno al bersaglio, più probabilmente verso il centro, con esplosione (raggio 1, colpisce chiunque, VC compresi) e cratere. Si sente prima la partenza, poi la squadra grida **"INCOMING!"** sopra il soldato preso di mira e, poco prima dell'impatto, l'ombra del proiettile compare dove cadrà davvero. Se nessun VC vede la squadra il mortaio tace. Il mortaista sparando si svela solo se è in vista (altrimenti il log dice che il colpo parte da una posizione nascosta) e fa rumore come un'esplosione. Se un soldato che conosce arriva **a distanza di pistola** (2 tile), lascia il mortaio e si difende con la **Makarov**.
 
 **Armi speciali VC:** un solo guerrigliero per missione può essere equipaggiato con un RPG-7 (1 colpo, mai sotto distanza 2). Lo usa quando l'esplosione colpirebbe più soldati, o quando rende più dell'AK-47 (per esempio se il bersaglio è fuori gittata dell'AK); evita di coinvolgere altri VC.
 
@@ -633,6 +636,7 @@ Anche i suoni di gioco (vittoria, morte, movimento, ecc.) possono essere sostitu
 - I suoni di sparo (`shoot`, `shoot_vc`) **non vanno qui** — si definiscono nel campo `sound` di ogni arma
 - Se il file non è caricabile, il gioco torna automaticamente al sintetizzato
 - `birds` = stormo di uccelli che si alza dalla giungla: non ha un suono sintetizzato. Anche senza indicarlo cerca `assets/birds.mp3`; se il file non c'è (o il valore è `""`) resta muto
+- `mortar` = partenza del colpo del mortaista VC, `incoming` = grido "INCOMING!" della squadra prima dell'impatto. Anche senza indicarli cercano `assets/mortar.mp3` e `assets/incoming.mp3`; se il file non c'è si sentono un tonfo e un fischio sintetizzati. L'esplosione è il `sound` dell'arma mortaio
 
 ### Effetti sonori specifici per missione
 
@@ -956,7 +960,7 @@ Trappole, tunnel, notte, meteo, squadra e VC in posizione fissa, imboscate e rin
 
 ### Campi opzionali: armi, nemici e bilanciamento
 
-Valgono solo per la missione della mappa: alla missione successiva tornano i valori di `config.json` e del gioco.
+Valgono solo per la missione della mappa: alla missione successiva tornano i valori di `config.json` e del gioco. `vcMortars` piazza mortaisti fissi in più dello schieramento.
 
 I campi sono descritti nella [guida ai campi](docs/FIELDS.md#map); i valori modificabili con `tuning`, gruppo per gruppo, nella sezione [Gruppi di `tuning`](docs/FIELDS.md#tuning).
 
@@ -967,6 +971,7 @@ I campi sono descritti nella [guida ai campi](docs/FIELDS.md#map); i valori modi
 },
 "vcMix": { "grunt": 2, "nva": 3, "commander": 1 },
 "reinforcementMix": { "nva": 1 },
+"vcMortars": [{ "col": 14, "row": 2 }],
 "tuning": {
   "VC_TACTICS": { "holdChance": 0.8 },
   "ENEMY_CLASSES": { "commander": { "hp": 10 } },

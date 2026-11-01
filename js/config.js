@@ -1,7 +1,9 @@
-// Suoni senza sintesi di riserva, cercati comunque fra gli asset: se il file
-// manca restano muti (config.json, una mod o la mappa possono cambiare il
-// percorso nel campo "sounds"; "" li spegne)
-const OPTIONAL_SOUNDS = { birds: "assets/birds.mp3" };
+// Suoni cercati comunque fra gli asset anche se config.json non li cita: se
+// il file manca, "birds" resta muto, "mortar" (partenza del colpo) e
+// "incoming" (grido/fischio del colpo in arrivo) si sintetizzano (config.json,
+// una mod o la mappa possono cambiare il percorso nel campo "sounds"; "" li
+// spegne, o li lascia sintetizzati)
+const OPTIONAL_SOUNDS = { birds: "assets/birds.mp3", mortar: "assets/mortar.mp3", incoming: "assets/incoming.mp3" };
 let CONFIG = { sounds: { ...OPTIONAL_SOUNDS } }; // config.json unito alle mod attive (applyConfigData)
 let CONFIG_FILE = null; // config.json così com'è, per il validatore
 let WEAPONS_CONFIG = {}; // cls → [{id, label, atk, range, ammo?, aoe?, maxCarriers?}]

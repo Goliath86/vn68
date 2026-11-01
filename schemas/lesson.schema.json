@@ -142,6 +142,12 @@
         },
         "birds": {
           "type": "string"
+        },
+        "mortar": {
+          "type": "string"
+        },
+        "incoming": {
+          "type": "string"
         }
       },
       "additionalProperties": false
@@ -533,7 +539,8 @@
             "examples": [
               "grunt",
               "sniper_vc",
-              "commander"
+              "commander",
+              "mortar_vc"
             ]
           },
           "col": {
@@ -570,6 +577,51 @@
             "markdownDescription": "Punti ferita iniziali\n\n*Starting hit points*",
             "type": "integer",
             "minimum": 1
+          }
+        },
+        "required": [
+          "col",
+          "row"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "vcMortars": {
+      "description": "Mortaisti in postazione fissa, in più dello schieramento (non contano in `vcCount`): non si muovono mai. Senza `facing` guardano verso il soldato più vicino\n\nMortarmen at fixed positions, in addition to the deployment (not counted in `vcCount`): they never move. Without `facing` they face the nearest soldier",
+      "markdownDescription": "Mortaisti in postazione fissa, in più dello schieramento (non contano in `vcCount`): non si muovono mai. Senza `facing` guardano verso il soldato più vicino\n\n*Mortarmen at fixed positions, in addition to the deployment (not counted in `vcCount`): they never move. Without `facing` they face the nearest soldier*",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "col": {
+            "description": "Colonna (da 0)\n\nColumn (from 0)",
+            "markdownDescription": "Colonna (da 0)\n\n*Column (from 0)*",
+            "type": "integer",
+            "minimum": 0
+          },
+          "row": {
+            "description": "Riga (da 0)\n\nRow (from 0)",
+            "markdownDescription": "Riga (da 0)\n\n*Row (from 0)*",
+            "type": "integer",
+            "minimum": 0
+          },
+          "facing": {
+            "description": "Orientamento: 0 nord, 1 est, 2 sud, 3 ovest\n\nFacing: 0 north, 1 east, 2 south, 3 west",
+            "markdownDescription": "Orientamento: 0 nord, 1 est, 2 sud, 3 ovest\n\n*Facing: 0 north, 1 east, 2 south, 3 west*",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "cls": {
+            "description": "Classe VC (di ruolo `mortar`); default `mortar_vc`\n\nVC class (with the `mortar` role); default `mortar_vc`",
+            "markdownDescription": "Classe VC (di ruolo `mortar`); default `mortar_vc`\n\n*VC class (with the `mortar` role); default `mortar_vc`*",
+            "type": "string",
+            "examples": [
+              "grunt",
+              "sniper_vc",
+              "commander",
+              "mortar_vc"
+            ]
           }
         },
         "required": [
@@ -1007,6 +1059,29 @@
               }
             }
           ]
+        },
+        "mortar_vc": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/weapon"
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/definitions/weaponPatch"
+                  }
+                ]
+              }
+            }
+          ]
         }
       },
       "additionalProperties": {
@@ -1049,6 +1124,10 @@
         "commander": {
           "type": "number",
           "minimum": 0
+        },
+        "mortar_vc": {
+          "type": "number",
+          "minimum": 0
         }
       },
       "additionalProperties": {
@@ -1072,6 +1151,10 @@
         "commander": {
           "type": "number",
           "minimum": 0
+        },
+        "mortar_vc": {
+          "type": "number",
+          "minimum": 0
         }
       },
       "additionalProperties": {
@@ -1093,6 +1176,10 @@
           "minimum": 0
         },
         "commander": {
+          "type": "number",
+          "minimum": 0
+        },
+        "mortar_vc": {
           "type": "number",
           "minimum": 0
         }
@@ -1434,8 +1521,8 @@
           "type": "boolean"
         },
         "scatter": {
-          "description": "Solo armi AoE US. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)\n\nUS AoE weapons only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` it is each round's square (default 2 = 5×5, likelier near the centre)",
-          "markdownDescription": "Solo armi AoE US. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)\n\n*US AoE weapons only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` it is each round's square (default 2 = 5×5, likelier near the centre)*",
+          "description": "Solo armi AoE US e mortaio VC. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` e `mortar` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)\n\nUS AoE weapons and VC mortar only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` and `mortar` it is each round's square (default 2 = 5×5, likelier near the centre)",
+          "markdownDescription": "Solo armi AoE US e mortaio VC. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` e `mortar` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)\n\n*US AoE weapons and VC mortar only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` and `mortar` it is each round's square (default 2 = 5×5, likelier near the centre)*",
           "type": "integer",
           "minimum": 0
         },
@@ -1456,6 +1543,11 @@
           "markdownDescription": "Con `napalm`: lunghezza massima della linea in tile; default 5\n\n*With `napalm`: maximum line length in tiles; default 5*",
           "type": "integer",
           "minimum": 1
+        },
+        "mortar": {
+          "description": "Solo armi AoE dei VC di ruolo `mortar`. Mortaio: un colpo per turno su un soldato individuato da un VC, tra `minRange` e `range`, che devia nel quadrato `scatter` (default 2); suoni `mortar` alla partenza e `incoming` prima dell'impatto, `sound` è l'esplosione\n\nAoE weapons of `mortar`-role VC only. Mortar: one round per turn at a soldier spotted by a VC, between `minRange` and `range`, deviating within the `scatter` square (default 2); `mortar` sound at launch and `incoming` before impact, `sound` is the explosion",
+          "markdownDescription": "Solo armi AoE dei VC di ruolo `mortar`. Mortaio: un colpo per turno su un soldato individuato da un VC, tra `minRange` e `range`, che devia nel quadrato `scatter` (default 2); suoni `mortar` alla partenza e `incoming` prima dell'impatto, `sound` è l'esplosione\n\n*AoE weapons of `mortar`-role VC only. Mortar: one round per turn at a soldier spotted by a VC, between `minRange` and `range`, deviating within the `scatter` square (default 2); `mortar` sound at launch and `incoming` before impact, `sound` is the explosion*",
+          "type": "boolean"
         },
         "shells": {
           "description": "Con `artillery`: colpi della salva, numero o [min, max]; default [5, 6]. `atk` e `aoe` valgono per il singolo colpo\n\nWith `artillery`: rounds in the salvo, a number or [min, max]; default [5, 6]. `atk` and `aoe` apply to each round",
@@ -1617,8 +1709,8 @@
           "type": "boolean"
         },
         "scatter": {
-          "description": "Solo armi AoE US. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)\n\nUS AoE weapons only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` it is each round's square (default 2 = 5×5, likelier near the centre)",
-          "markdownDescription": "Solo armi AoE US. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)\n\n*US AoE weapons only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` it is each round's square (default 2 = 5×5, likelier near the centre)*",
+          "description": "Solo armi AoE US e mortaio VC. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` e `mortar` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)\n\nUS AoE weapons and VC mortar only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` and `mortar` it is each round's square (default 2 = 5×5, likelier near the centre)",
+          "markdownDescription": "Solo armi AoE US e mortaio VC. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: \"full\"`. Con `artillery` e `mortar` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro)\n\n*US AoE weapons and VC mortar only. Radius of the square where the weapon may land instead of the chosen tile (1 = 3×3); never off the map or on tiles with `losBlock: \"full\"`. With `artillery` and `mortar` it is each round's square (default 2 = 5×5, likelier near the centre)*",
           "type": "integer",
           "minimum": 0
         },
@@ -1639,6 +1731,11 @@
           "markdownDescription": "Con `napalm`: lunghezza massima della linea in tile; default 5\n\n*With `napalm`: maximum line length in tiles; default 5*",
           "type": "integer",
           "minimum": 1
+        },
+        "mortar": {
+          "description": "Solo armi AoE dei VC di ruolo `mortar`. Mortaio: un colpo per turno su un soldato individuato da un VC, tra `minRange` e `range`, che devia nel quadrato `scatter` (default 2); suoni `mortar` alla partenza e `incoming` prima dell'impatto, `sound` è l'esplosione\n\nAoE weapons of `mortar`-role VC only. Mortar: one round per turn at a soldier spotted by a VC, between `minRange` and `range`, deviating within the `scatter` square (default 2); `mortar` sound at launch and `incoming` before impact, `sound` is the explosion",
+          "markdownDescription": "Solo armi AoE dei VC di ruolo `mortar`. Mortaio: un colpo per turno su un soldato individuato da un VC, tra `minRange` e `range`, che devia nel quadrato `scatter` (default 2); suoni `mortar` alla partenza e `incoming` prima dell'impatto, `sound` è l'esplosione\n\n*AoE weapons of `mortar`-role VC only. Mortar: one round per turn at a soldier spotted by a VC, between `minRange` and `range`, deviating within the `scatter` square (default 2); `mortar` sound at launch and `incoming` before impact, `sound` is the explosion*",
+          "type": "boolean"
         },
         "shells": {
           "description": "Con `artillery`: colpi della salva, numero o [min, max]; default [5, 6]. `atk` e `aoe` valgono per il singolo colpo\n\nWith `artillery`: rounds in the salvo, a number or [min, max]; default [5, 6]. `atk` and `aoe` apply to each round",

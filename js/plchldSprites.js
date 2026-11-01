@@ -1286,6 +1286,8 @@ const SOLDIER_LOOKS = {
   grunt: { cloth: "#22221d", skin: "#c49565", hat: "cone", hatCol: "#c9aa6a", weapon: "ak", rig: "chicom", feet: "sandals", gear: ["rpg"] },
   sniper_vc: { cloth: "#2b301d", skin: "#b88a5c", hat: "cone", hatCol: "#8d8a52", leaves: true, weapon: "scoped", rig: "belt", feet: "sandals", gear: [] },
   commander: { cloth: "#6e6a45", skin: "#c49565", hat: "pith", hatCol: "#66703f", weapon: "pistol", rig: "belt", gear: ["boards", "mapcase"] },
+  // gear "mortar": mortaio piazzato a terra davanti a sinistra (_mortarPiece)
+  mortar_vc: { cloth: "#2a2a20", skin: "#c49565", hat: "cone", hatCol: "#b49a5e", weapon: "pistol", rig: "belt", feet: "sandals", gear: ["mortar", "pack"] },
   nva: { cloth: "#4f5934", skin: "#c49565", hat: "pith", hatCol: "#5a663a", weapon: "ak", rig: "chicom", gear: ["pack"] },
 };
 
@@ -1619,6 +1621,38 @@ function _backGear(ctx, look, by) {
   }
 }
 
+// Mortaio visto dall'alto in (x, y) (coordinate della figura, rivolta a
+// nord): piastra di base rotonda, bipiede aperto e tubo inclinato verso
+// l'alto in avanti, con la bocca più chiara; a terra due granate di riserva
+const MORTAR_PIECE = { at: [-0.29, -0.14], size: 1.3, muzzle: -0.17 }; // muzzle: bocca del tubo (y, prima di size)
+const MORTAR_PIECE_AT = MORTAR_PIECE.at;
+function _mortarPiece(ctx, x, y) {
+  const steel = "#3c4030";
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(MORTAR_PIECE.size, MORTAR_PIECE.size);
+  _dome(ctx, 0, 0.1, 0.075, 0.065, "#4a4a3a");
+  _dome(ctx, 0, 0.1, 0.045, 0.04, "#33352a");
+  _lines(ctx, [[0, -0.1, -0.08, -0.02], [0, -0.1, 0.07, -0.03]], 0.014, "#2a2c22");
+  _limb(ctx, [[0, 0.1], [0, MORTAR_PIECE.muzzle]], 0.05, steel, 0.25);
+  _dome(ctx, 0, MORTAR_PIECE.muzzle, 0.03, 0.03, "#5a5e48");
+  _dome(ctx, 0, MORTAR_PIECE.muzzle, 0.016, 0.016, "#141410");
+  for (const [dx, dy] of [[-0.06, 0.2], [0.03, 0.22]]) {
+    _dome(ctx, dx, dy, 0.02, 0.036, "#5c6038", 0.4);
+    _dome(ctx, dx + 0.008, dy + 0.03, 0.014, 0.012, "#8a7a4a");
+  }
+  ctx.restore();
+}
+
+// Bocca del tubo in coordinate del tile (dal centro, tile = 1) per una
+// figura girata secondo facing e scalata di `scale` (animations.js:_drawMortarLaunch)
+function mortarMuzzle(facing, scale) {
+  const [x, y] = MORTAR_PIECE.at;
+  const my = y + MORTAR_PIECE.muzzle * MORTAR_PIECE.size;
+  const a = (facing || 0) * (Math.PI / 2);
+  return [(x * Math.cos(a) - my * Math.sin(a)) * scale, (x * Math.sin(a) + my * Math.cos(a)) * scale];
+}
+
 // Tasche, borse e mostrine ai lati del busto
 function _sideGear(ctx, look, [tx, ty, rx, ry]) {
   for (const g of look.gear) {
@@ -1720,6 +1754,8 @@ function _paintSoldierLower(ctx, look, stance) {
 // scarpone (suola e tomaia) o sandalo, oppure il ginocchio piegato.
 // legs: gambe al posto di quelle della posa (camminata, soldierWalkLegs)
 function _paintSoldierLegs(ctx, look, stance, legs = SOLDIER_POSES[stance].legs) {
+  // Mortaio a terra accanto a chi lo serve, sotto tutto il resto della figura
+  if (look.gear.includes("mortar")) _mortarPiece(ctx, ...MORTAR_PIECE_AT);
   const trousers = _shadeHex(look.cloth, -0.12);
   for (const [pts, end] of legs) {
     _limb(ctx, pts, 0.078, trousers, 0.12);
@@ -2032,11 +2068,14 @@ function soldierLook(cls, isEnemy) {
   return SOLDIER_LOOKS[base] ? base : isEnemy ? "grunt" : "assault";
 }
 
-// Stesso aspetto senza copricapo (il caduto a cui vola via l'elmetto,
+// Stesso aspetto senza copricapo e senza mortaio (il caduto a cui vola via
+// l'elmetto e che si accascia lasciando il mortaio dov'è,
 // animations.js:_drawDeath): registrato in SOLDIER_LOOKS alla prima richiesta
 function bareLook(lookId) {
   const id = `${lookId}~bare`;
-  if (!SOLDIER_LOOKS[id] && SOLDIER_LOOKS[lookId]) SOLDIER_LOOKS[id] = { ...SOLDIER_LOOKS[lookId], hat: "none", leaves: false };
+  const base = SOLDIER_LOOKS[lookId];
+  if (!SOLDIER_LOOKS[id] && base)
+    SOLDIER_LOOKS[id] = { ...base, hat: "none", leaves: false, gear: base.gear.filter((g) => g !== "mortar") };
   return SOLDIER_LOOKS[id] ? id : lookId;
 }
 

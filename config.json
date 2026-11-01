@@ -214,6 +214,31 @@
         "rounds": 1,
         "sound": "assets/pistol.mp3"
       }
+    ],
+    "mortar_vc": [
+      {
+        "id": "pistol",
+        "label": "Makarov",
+        "labelEn": "Makarov",
+        "atk": 2,
+        "range": 2,
+        "noise": 3,
+        "rounds": 1,
+        "sound": "assets/pistol.mp3"
+      },
+      {
+        "id": "mortar",
+        "label": "Mortaio 60 mm",
+        "labelEn": "60 mm mortar",
+        "atk": 4,
+        "range": 10,
+        "minRange": 3,
+        "aoe": 1,
+        "mortar": true,
+        "scatter": 2,
+        "noise": 8,
+        "sound": "assets/grenade.mp3"
+      }
     ]
   }
 }

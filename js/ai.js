@@ -348,7 +348,10 @@ async function enemyActivation(enemy) {
     propagateAlert(enemy);
   }
 
-  if (enemy.routed > 0) {
+  if (enemyRole(enemy) === "mortar") {
+    // Mortaista: non si muove mai, nemmeno in rotta (sezione MORTAISTA)
+    await mortarActivation(enemy, stats);
+  } else if (enemy.routed > 0) {
     // Morale a pezzi: ripiega senza attaccare, nei tunnel se ce n'è uno a portata
     if (!(await tryTunnelDive(enemy, stats))) await routedActivation(enemy, stats);
   } else if (enemy.alerted && enemyRole(enemy) === "sniper") {
@@ -446,6 +449,118 @@ async function enemyActivation(enemy) {
     log(t("log.vc_patrol", { name: enemy.name }), "enemy");
   }
   render();
+}
+
+// ── MORTAISTA ──────────────────────────────────────────────────────────
+// VC di ruolo "mortar": resta sempre dove è stato piazzato (campo mappa
+// "vcMortars" o schieramento). A ogni turno VC tira un colpo di mortaio
+// (arma con `mortar: true`) su un soldato che un VC qualsiasi vede e
+// individua, in gittata e non sotto la gittata minima; mai su un soldato
+// adiacente a un VC. Il colpo devia nel quadrato `scatter` attorno al
+// bersaglio (mechanics.js:artilleryLanding, più probabile al centro):
+// partenza (suono "mortar"), grido "incoming" dal lato della squadra, impatto
+// con esplosione e cratere (combat.js:resolveAoeCombat). Senza soldati
+// individuati non spara. Se un soldato che conosce arriva entro la gittata
+// della pistola, lascia il mortaio e si difende con quella.
+const MORTAR = {
+  launchMs: 650, // dalla partenza al grido "INCOMING!"
+  flightMs: 1500, // dal grido all'impatto
+  scatter: 2, // default se l'arma non ha "scatter"
+};
+// Arma di riserva se il loadout della classe non ha un mortaio
+const MORTAR_DEFAULT_WEAPON = {
+  id: "mortar", label: "Mortaio", labelEn: "Mortar",
+  atk: 4, range: 10, minRange: 3, aoe: 1, mortar: true, scatter: 2, noise: 8,
+};
+
+function mortarWeapon(enemy) {
+  return enemy.weapons?.find((w) => w.mortar) ?? MORTAR_DEFAULT_WEAPON;
+}
+
+// Bersaglio del colpo: soldati individuati da almeno un VC (prima i controlli
+// di distanza, così non si tirano avvistamenti inutili), preferendo chi ha
+// più compagni nel raggio dell'esplosione, poi il più vicino
+function mortarTarget(enemy, w) {
+  const vcs = G.enemies.filter((e) => e.alive && !e.inTunnel);
+  const minR = weaponMinRange(w);
+  const cands = G.units.filter((u) => {
+    if (!u.alive) return false;
+    const d = dist(enemy, u);
+    if (d < minR || d > w.range) return false;
+    if (vcs.some((e) => dist(e, u) <= 1)) return false;
+    return vcs.some((e) => vcSees(e, u) && vcDetects(e, u));
+  });
+  if (!cands.length) return null;
+  const score = (u) =>
+    G.units.filter((o) => o.alive && dist(o, u) <= (w.aoe || 0)).length * 10 - dist(enemy, u) * 0.1;
+  return cands.reduce((b, u) => (score(u) > score(b) ? u : b));
+}
+
+async function mortarActivation(enemy, stats) {
+  const sidearm = enemy.weapons?.find((w) => !isAreaWeapon(w)) ?? null;
+  const pistolRange = sidearm?.range ?? stats.range;
+  // Squadra addosso: lascia il mortaio e si difende con la pistola
+  const close = G.units
+    .filter((u) => u.alive && dist(enemy, u) <= pistolRange && vcDetects(enemy, u))
+    .sort((a, b) => dist(enemy, a) - dist(enemy, b));
+  if (close.length) {
+    if (!enemy.alerted) {
+      enemy.alerted = true;
+      propagateAlert(enemy);
+    }
+    if (!enemy.leftMortar && isEnemyVisible(enemy))
+      log(t("log.vc_mortar_defend", { name: enemy.name, weapon: weaponLabel(sidearm) }), "enemy");
+    enemy.leftMortar = true;
+    checkOverwatch(enemy);
+    checkSuppression(enemy);
+    while (enemy.alive && enemy.ap >= 1) {
+      const target = close.find((u) => u.alive && vcCanFireAt(enemy, u, pistolRange));
+      if (!target) break;
+      faceToward(enemy, target);
+      await vcShoot(enemy, target, "log.vc_attack", sidearm);
+    }
+    return;
+  }
+  enemy.leftMortar = false;
+  // In rotta resta al riparo dietro il mortaio senza sparare
+  if (enemy.routed > 0 || enemy.ap < 1) return;
+  const w = mortarWeapon(enemy);
+  if (w.ammo != null && w.ammo <= 0) return;
+  const target = mortarTarget(enemy, w);
+  if (target) await mortarFire(enemy, w, target);
+}
+
+async function mortarFire(enemy, w, target) {
+  // Lo sparo può far scattare overwatch e soppressione, come per il cecchino
+  checkOverwatch(enemy);
+  checkSuppression(enemy);
+  if (!enemy.alive || enemy.ap < 1) return;
+  faceToward(enemy, target);
+  if (w.ammo != null) w.ammo--;
+  enemy.ap = 0; // un colpo per turno
+  enemy.alerted = true;
+  enemy.hasShot = true;
+  enemy.exposed = true;
+  statAdd("vcMortarShells");
+  const seen = isEnemyVisible(enemy);
+  sfx("mortar");
+  if (seen) {
+    unitRecoil(enemy);
+    addFX("mortarLaunch", { col: enemy.col, row: enemy.row, facing: enemy.facing }, 1300);
+  }
+  log(t(seen ? "log.vc_mortar_fire" : "log.vc_mortar_fire_hidden", { name: enemy.name }), "enemy");
+  makeVcNoise(enemy, target, w);
+  render();
+  await sleep(MORTAR.launchMs);
+  // Dove cade davvero: deviazione nel quadrato attorno al bersaglio
+  const land = artilleryLanding(target.col, target.row, w.scatter ?? MORTAR.scatter);
+  sfx("incoming");
+  addFX("incoming", { col: target.col, row: target.row, landCol: land.col, landRow: land.row }, MORTAR.flightMs);
+  log(t("log.vc_mortar_incoming", { target: target.name }), "enemy");
+  await sleep(MORTAR.flightMs);
+  if (G.phase === "gameover") return;
+  if (land.col !== target.col || land.row !== target.row) statAdd("vcMortarScatter");
+  await resolveAoeCombat(enemy, w, land.col, land.row, true);
 }
 
 function spawnReinforcements(count) {

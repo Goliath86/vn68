@@ -46,7 +46,7 @@ I JSON Schema in `schemas/` danno suggerimenti, descrizioni e controlli mentre s
 | `tileSize` | numero | (informativo) lato del tile in pixel. |
 | `image` | testo | Immagine di sfondo in `missions/`, o nella cartella della mod (sostituisce il disegno dei tile). → file in `missions/`. |
 | `ambient` | testo | Musica d'ambiente in loop durante la partita. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
-| `sounds` | oggetto { effetto → testo } | Effetti sonori della mappa (prevalgono su `config.json`). Chiavi: `move`, `stance`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`, `birds`. |
+| `sounds` | oggetto { effetto → testo } | Effetti sonori della mappa (prevalgono su `config.json`). Chiavi: `move`, `stance`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`, `birds`, `mortar`, `incoming`. |
 | `tileTypes` | oggetto { carattere → [Tipo di tile](#tile) } | **Obbligatorio.** Tipi di tile per carattere della griglia. |
 | `grid` | array di testo o array di testo | **Obbligatorio.** Righe della mappa: stringhe (`"JJCCT…"`) o array di caratteri di `tileTypes`. |
 | `playerStart` | array di tile `{ col, row }` | Posizioni di partenza della squadra. |
@@ -94,13 +94,18 @@ I JSON Schema in `schemas/` danno suggerimenti, descrizioni e controlli mentre s
 | `squad[].bleeding` | booleano | Parte con un'emorragia. |
 | `squad[].stance` | `stand` \| `crouch` \| `prone` | Postura iniziale. |
 | `enemies` | array di oggetto | VC in posizione fissa al posto dello schieramento casuale. |
-| `enemies[].cls` | testo | Classe VC. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
+| `enemies[].cls` | testo | Classe VC. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
 | `enemies[].col` | intero ≥ 0 | **Obbligatorio.** Colonna (da 0). |
 | `enemies[].row` | intero ≥ 0 | **Obbligatorio.** Riga (da 0). |
 | `enemies[].facing` | intero 0–3 | Orientamento: 0 nord, 1 est, 2 sud, 3 ovest. |
 | `enemies[].alerted` | booleano | Parte in allerta. |
 | `enemies[].hold` | booleano | Sentinella: non pattuglia finché non è allertata. |
 | `enemies[].hp` | intero ≥ 1 | Punti ferita iniziali. |
+| `vcMortars` | array di oggetto | Mortaisti in postazione fissa, in più dello schieramento (non contano in `vcCount`): non si muovono mai. Senza `facing` guardano verso il soldato più vicino. |
+| `vcMortars[].col` | intero ≥ 0 | **Obbligatorio.** Colonna (da 0). |
+| `vcMortars[].row` | intero ≥ 0 | **Obbligatorio.** Riga (da 0). |
+| `vcMortars[].facing` | intero 0–3 | Orientamento: 0 nord, 1 est, 2 sud, 3 ovest. |
+| `vcMortars[].cls` | testo | Classe VC (di ruolo `mortar`); default `mortar_vc`. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
 | `supportedMissions` | array di testo | Tipi di missione giocabili sulla mappa. → tipo di missione (attuali: `recon`, `search_destroy`, `rescue_pilot`, `capture_objective`). |
 | `objectives` | oggetto | Obiettivi per tipo di missione; servono quelli dei tipi in `supportedMissions`. |
 | `objectives.recon` | array di oggetto | Ricognizione: zone da raggiungere. |
@@ -132,10 +137,10 @@ I JSON Schema in `schemas/` danno suggerimenti, descrizioni e controlli mentre s
 | `tileAnimations[].col` | intero ≥ 0 | **Obbligatorio.** Colonna (da 0). |
 | `tileAnimations[].row` | intero ≥ 0 | **Obbligatorio.** Riga (da 0). |
 | `tileAnimations[].type` | `smoke` \| `fire` \| `fog` | **Obbligatorio.** Fumo, fiamme o nebbia. |
-| `weapons` | oggetto { classe → array di [Arma](#weapon) o oggetto { id arma → `null` o [Arma](#weapon) } } | Armi per classe, solo per questa missione. Un array sostituisce il loadout; un oggetto modifica le armi per `id` (campi uniti all'arma, `null` la toglie, un `id` nuovo la aggiunge in fondo). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
-| `vcMix` | oggetto { classe VC → numero ≥ 0 } | Composizione dello schieramento iniziale e, senza `ambushMix`, dell'imboscata; pesi per classe VC. Default `{ "grunt": 3, "sniper_vc": 1, "commander": 1 }`. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
-| `ambushMix` | oggetto { classe VC → numero ≥ 0 } | Composizione dell'imboscata; default `{ "grunt": 2, "sniper_vc": 1, "commander": 1 }`. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
-| `reinforcementMix` | oggetto { classe VC → numero ≥ 0 } | Composizione dei rinforzi; default `{ "grunt": 1 }`. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
+| `weapons` | oggetto { classe → array di [Arma](#weapon) o oggetto { id arma → `null` o [Arma](#weapon) } } | Armi per classe, solo per questa missione. Un array sostituisce il loadout; un oggetto modifica le armi per `id` (campi uniti all'arma, `null` la toglie, un `id` nuovo la aggiunge in fondo). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
+| `vcMix` | oggetto { classe VC → numero ≥ 0 } | Composizione dello schieramento iniziale e, senza `ambushMix`, dell'imboscata; pesi per classe VC. Default `{ "grunt": 3, "sniper_vc": 1, "commander": 1 }`. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
+| `ambushMix` | oggetto { classe VC → numero ≥ 0 } | Composizione dell'imboscata; default `{ "grunt": 2, "sniper_vc": 1, "commander": 1 }`. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
+| `reinforcementMix` | oggetto { classe VC → numero ≥ 0 } | Composizione dei rinforzi; default `{ "grunt": 1 }`. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
 | `tuning` | oggetto { gruppo → qualsiasi } | Parametri di bilanciamento per questa missione, uniti in profondità ai valori del gioco (numeri e array sostituiti, oggetti uniti), es. `{ "VC_TACTICS": { "holdChance": 0.8 } }`. → gruppo di bilanciamento (vedi [tuning](#tuning)) (attuali: `VC_TACTICS`, `STANCES`, `MELEE`, `ARTILLERY`, `NAPALM`, `ENEMY_CLASSES`, `VC_MIX`). |
 | `translations` | oggetto { lingua → [Testi di una lingua](#translations) } | Testi per lingua (`it`, `en`). |
 | `tutorial` | [Lezione dell'addestramento](#tutorial) |  |
@@ -225,10 +230,11 @@ Campi scritti dal gioco, accettati senza avvisi: `lessonId`.
 | `smoke` | intero ≥ 1 | Solo armi AoE. Fumogeno: nessun danno, fumo nel raggio `aoe` per N turni. |
 | `artillery` | booleano | Solo armi AoE. Richiesta d'artiglieria: la salva cade all'inizio del turno successivo, colpisce anche i VC nascosti e distrugge i tile colpiti. |
 | `thrown` | booleano | Solo armi AoE US. Lancio a mano: animazione ad arco con rimbalzi prima dell'esplosione. |
-| `scatter` | intero ≥ 0 | Solo armi AoE US. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: "full"`. Con `artillery` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro). |
+| `scatter` | intero ≥ 0 | Solo armi AoE US e mortaio VC. Raggio del quadrato in cui l'arma può cadere al posto del tile scelto (1 = 3×3); mai fuori mappa né su tile con `losBlock: "full"`. Con `artillery` e `mortar` è il quadrato di ogni colpo (default 2 = 5×5, più probabile al centro). |
 | `scatterChance` | numero 0–1 | Con `scatter`: probabilità di deviare su un altro tile del quadrato; default 0.5. |
 | `napalm` | booleano | Attacco aereo al napalm: si sceglie una linea di tile (inizio e fine, anche in diagonale); cade all'inizio del turno successivo, incendia i tile e colpisce chi ci si trova senza copertura del terreno. |
 | `length` | intero ≥ 1 | Con `napalm`: lunghezza massima della linea in tile; default 5. |
+| `mortar` | booleano | Solo armi AoE dei VC di ruolo `mortar`. Mortaio: un colpo per turno su un soldato individuato da un VC, tra `minRange` e `range`, che devia nel quadrato `scatter` (default 2); suoni `mortar` alla partenza e `incoming` prima dell'impatto, `sound` è l'esplosione. |
 | `shells` | intero ≥ 1 o array di intero ≥ 1 (2) | Con `artillery`: colpi della salva, numero o [min, max]; default [5, 6]. `atk` e `aoe` valgono per il singolo colpo. |
 | `sound` | testo | Suono dello sparo (sostituisce quello sintetizzato). → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 
@@ -264,14 +270,14 @@ Campi scritti dal gioco, accettati senza avvisi: `name`, `desc`, `specialLabel`.
 | Campo | Tipo | Descrizione |
 |---|---|---|
 | `name` | intero ≥ 0 o oggetto { lingua → testo } | Indice nei nomi VC tradotti (0 Guerrigliero, 1 Cecchino VC, 3 Comandante VC) oppure `{ "it", "en" }`. |
-| `role` | `rifleman` \| `sniper` \| `commander` | Comportamento: `rifleman` (pattuglia, piazza trappole, aggira), `sniper` (mimetizzato, salta un turno dopo lo sparo, resta a distanza), `commander` (sempre in agguato, la sua morte fa ripiegare i VC vicini). |
+| `role` | `rifleman` \| `sniper` \| `commander` \| `mortar` | Comportamento: `rifleman` (pattuglia, piazza trappole, aggira), `sniper` (mimetizzato, salta un turno dopo lo sparo, resta a distanza), `commander` (sempre in agguato, la sua morte fa ripiegare i VC vicini), `mortar` (non si muove mai; un colpo per turno con l'arma `mortar` sui soldati visti da un VC qualsiasi, mai su chi è adiacente a un VC; con un soldato entro la gittata della prima arma diretta lascia il mortaio e spara con quella). |
 | `hp` | intero ≥ 1 | Punti ferita. |
 | `ap` | intero ≥ 0 | AP per turno. |
 | `attack` | numero ≥ 0 | ATK senza armi. |
 | `range` | intero ≥ 0 | Gittata senza armi. |
 | `defense` | numero ≥ 0 | DEF. |
 | `move` | intero ≥ 0 | Movimento. |
-| `sprite` | `grunt` \| `sniper_vc` \| `commander` \| `nva` | Aspetto del soldato disegnato se `unitImages` non ha un'immagine: quello di una classe VC o `nva` (regolare nordvietnamita: elmetto di sughero, AK, zaino). |
+| `sprite` | `grunt` \| `sniper_vc` \| `commander` \| `mortar_vc` \| `nva` | Aspetto del soldato disegnato se `unitImages` non ha un'immagine: quello di una classe VC o `nva` (regolare nordvietnamita: elmetto di sughero, AK, zaino). |
 
 <a id="config"></a>
 
@@ -282,18 +288,18 @@ Campi scritti dal gioco, accettati senza avvisi: `name`, `desc`, `specialLabel`.
 | `$schema` | testo | Percorso del JSON Schema per l'editor (es. `../schemas/mission.schema.json`); ignorato dal gioco. |
 | `menuMusic` | testo | Musica del menu. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 | `menuImage` | testo | Immagine a destra nel menu desktop (sfumata in basso e a sinistra per il titolo); default `assets/menu_hero.jpg`. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
-| `unitImages` | oggetto { classe → testo o oggetto } | Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `unitImages` | oggetto { classe → testo o oggetto } | Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
 | `unitImages.<classe>.stand` | testo | In piedi (anche per le posture non indicate). → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 | `unitImages.<classe>.crouch` | testo | Accovacciato. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 | `unitImages.<classe>.prone` | testo | Sdraiato. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
-| `sounds` | oggetto { effetto → testo } | Effetti sonori; senza, suoni sintetizzati. `birds` (stormo che si alza dalla giungla) non ha un suono sintetizzato: di default cerca `assets/birds.mp3` e, se manca, resta muto. Chiavi: `move`, `stance`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`, `birds`. |
-| `weapons` | oggetto { classe → array di [Arma](#weapon) } | Loadout per classe (US o VC); senza, ATK e gittata della classe. → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `sounds` | oggetto { effetto → testo } | Effetti sonori; senza, suoni sintetizzati. `birds` (stormo che si alza dalla giungla) non ha un suono sintetizzato: di default cerca `assets/birds.mp3` e, se manca, resta muto. `mortar` (partenza del colpo di mortaio VC) e `incoming` (grido "INCOMING!" della squadra prima dell'impatto) cercano di default `assets/mortar.mp3` e `assets/incoming.mp3`; se mancano, tonfo e fischio sintetizzati. Chiavi: `move`, `stance`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`, `birds`, `mortar`, `incoming`. |
+| `weapons` | oggetto { classe → array di [Arma](#weapon) } | Loadout per classe (US o VC); senza, ATK e gittata della classe. → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
 | `unitClasses` | oggetto { classe → [Classe della squadra US](#unit-class) } | Classi US: i campi scritti cambiano una classe esistente; un nome nuovo aggiunge una classe, che parte dalle statistiche dell'assalto e compare nel briefing (armi in `weapons`, immagine in `unitImages`). |
 | `enemyClasses` | oggetto { classe → [Classe VC](#enemy-class) } | Classi VC: i campi scritti cambiano una classe esistente; un nome nuovo aggiunge una classe, che parte dai valori del guerrigliero e compare in partita solo se inserita in una composizione (`vcMix`). |
 | `vcMix` | oggetto | Composizioni VC di default per tutte le mappe. |
-| `vcMix.spawn` | oggetto { classe VC → numero ≥ 0 } | Schieramento iniziale. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
-| `vcMix.ambush` | oggetto { classe VC → numero ≥ 0 } | Imboscata. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
-| `vcMix.reinforcement` | oggetto { classe VC → numero ≥ 0 } | Rinforzi. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
+| `vcMix.spawn` | oggetto { classe VC → numero ≥ 0 } | Schieramento iniziale. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
+| `vcMix.ambush` | oggetto { classe VC → numero ≥ 0 } | Imboscata. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
+| `vcMix.reinforcement` | oggetto { classe VC → numero ≥ 0 } | Rinforzi. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
 | `perks` | oggetto { perk → [Perk](#perk) o `null` } | Perk dei soldati della campagna: i campi scritti cambiano un perk esistente (`steady`, `tough`, `quiet`, `pointman`, `fieldMedic`), un nome nuovo ne aggiunge uno, `null` lo toglie. |
 | `soldierNames` | oggetto | Nomi dei soldati del plotone in campagna; senza, quelli del gioco. |
 | `soldierNames.first` | array di testo | Nomi. |
@@ -354,18 +360,18 @@ Una mod è una cartella `mods/<cartella>/` con questo `mod.json`, elencata in [`
 | `config` | oggetto | Aggiunte a `config.json`, con gli stessi campi: classi e composizioni unite, immagini e suoni sostituiti per chiave. I percorsi dei file partono dalla cartella della mod; `../../` risale alla cartella del gioco (es. `../../assets/footsteps_jungle.mp3`). |
 | `config.menuMusic` | testo | Musica del menu. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 | `config.menuImage` | testo | Immagine a destra nel menu desktop (sfumata in basso e a sinistra per il titolo); default `assets/menu_hero.jpg`. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
-| `config.unitImages` | oggetto { classe → testo o oggetto } | Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `config.unitImages` | oggetto { classe → testo o oggetto } | Immagine della pedina per classe (US o VC): il soldato visto dall'alto **rivolto a nord**, sfondo trasparente, ruotata dal gioco verso dove guarda l'unità; senza, soldato disegnato (vedi `sprite` delle classi). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
 | `config.unitImages.<classe>.stand` | testo | In piedi (anche per le posture non indicate). → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 | `config.unitImages.<classe>.crouch` | testo | Accovacciato. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
 | `config.unitImages.<classe>.prone` | testo | Sdraiato. → percorso di un file dalla cartella del gioco (in una mod e nelle sue mappe: dalla cartella della mod). |
-| `config.sounds` | oggetto { effetto → testo } | Effetti sonori; senza, suoni sintetizzati. `birds` (stormo che si alza dalla giungla) non ha un suono sintetizzato: di default cerca `assets/birds.mp3` e, se manca, resta muto. Chiavi: `move`, `stance`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`, `birds`. |
-| `config.weapons` | oggetto { classe → array di [Arma](#weapon) o oggetto { id arma → `null` o [Arma](#weapon) } } | Armi per classe (US o VC): un array sostituisce il loadout, un oggetto modifica le armi per `id` (`null` la toglie, un `id` nuovo la aggiunge). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`). |
+| `config.sounds` | oggetto { effetto → testo } | Effetti sonori; senza, suoni sintetizzati. `birds` (stormo che si alza dalla giungla) non ha un suono sintetizzato: di default cerca `assets/birds.mp3` e, se manca, resta muto. `mortar` (partenza del colpo di mortaio VC) e `incoming` (grido "INCOMING!" della squadra prima dell'impatto) cercano di default `assets/mortar.mp3` e `assets/incoming.mp3`; se mancano, tonfo e fischio sintetizzati. Chiavi: `move`, `stance`, `hit`, `death`, `miss`, `ambush`, `demolition`, `disarm`, `melee`, `reload`, `heal`, `overwatch`, `spawn`, `turn_end`, `victory`, `defeat`, `click`, `jet`, `napalm`, `birds`, `mortar`, `incoming`. |
+| `config.weapons` | oggetto { classe → array di [Arma](#weapon) o oggetto { id arma → `null` o [Arma](#weapon) } } | Armi per classe (US o VC): un array sostituisce il loadout, un oggetto modifica le armi per `id` (`null` la toglie, un `id` nuovo la aggiunge). → classe US o VC (attuali: `assault`, `sniper`, `engineer`, `medic`, `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
 | `config.unitClasses` | oggetto { classe → [Classe della squadra US](#unit-class) } | Classi US: i campi scritti cambiano una classe esistente; un nome nuovo aggiunge una classe, che parte dalle statistiche dell'assalto e compare nel briefing (armi in `weapons`, immagine in `unitImages`). |
 | `config.enemyClasses` | oggetto { classe → [Classe VC](#enemy-class) } | Classi VC: i campi scritti cambiano una classe esistente; un nome nuovo aggiunge una classe, che parte dai valori del guerrigliero e compare in partita solo se inserita in una composizione (`vcMix`). |
 | `config.vcMix` | oggetto | Composizioni VC di default per tutte le mappe. |
-| `config.vcMix.spawn` | oggetto { classe VC → numero ≥ 0 } | Schieramento iniziale. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
-| `config.vcMix.ambush` | oggetto { classe VC → numero ≥ 0 } | Imboscata. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
-| `config.vcMix.reinforcement` | oggetto { classe VC → numero ≥ 0 } | Rinforzi. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
+| `config.vcMix.spawn` | oggetto { classe VC → numero ≥ 0 } | Schieramento iniziale. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
+| `config.vcMix.ambush` | oggetto { classe VC → numero ≥ 0 } | Imboscata. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
+| `config.vcMix.reinforcement` | oggetto { classe VC → numero ≥ 0 } | Rinforzi. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
 | `config.perks` | oggetto { perk → [Perk](#perk) o `null` } | Perk dei soldati della campagna: i campi scritti cambiano un perk esistente (`steady`, `tough`, `quiet`, `pointman`, `fieldMedic`), un nome nuovo ne aggiunge uno, `null` lo toglie. |
 | `config.soldierNames` | oggetto | Nomi dei soldati del plotone in campagna; senza, quelli del gioco. |
 | `config.soldierNames.first` | array di testo | Nomi. |
@@ -428,7 +434,7 @@ Una campagna (`missions/campaigns/<nome>.json`, elencata in [`missions/campaigns
 | `difficulty` | oggetto | Curva di difficoltà, applicata prima degli `overrides` di ogni operazione. |
 | `difficulty.vcCount` | array di numero (2) | VC iniziali [prima, ultima operazione], interpolati. |
 | `difficulty.reinforcementTurn` | array di numero (2) | Turni tra i rinforzi [prima, ultima]. |
-| `difficulty.vcMix` | array di oggetto { classe VC → numero ≥ 0 } (2) | Composizione VC [prima, ultima]: pesi interpolati. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`). |
+| `difficulty.vcMix` | array di oggetto { classe VC → numero ≥ 0 } (2) | Composizione VC [prima, ultima]: pesi interpolati. → classe VC (attuali: `grunt`, `sniper_vc`, `commander`, `mortar_vc`). |
 | `translations` | oggetto { lingua → oggetto } | Testi per lingua (`it`, `en`). |
 | `translations.<lingua>.name` | testo | Nome della campagna. |
 | `translations.<lingua>.description` | testo | Descrizione nell'elenco. |
@@ -680,6 +686,16 @@ Valori attuali (dopo `config.json`) dei gruppi modificabili con `tuning` nella m
     "range": 2,
     "defense": 1,
     "move": 3
+  },
+  "mortar_vc": {
+    "name": 4,
+    "role": "mortar",
+    "hp": 5,
+    "ap": 2,
+    "attack": 2,
+    "range": 2,
+    "defense": 0,
+    "move": 0
   }
 }
 ```

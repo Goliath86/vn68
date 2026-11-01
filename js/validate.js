@@ -510,9 +510,11 @@ function _checkPlacement(md, grid, cx) {
   }
 
   // VC fissi su tile percorribili; trappole e tunnel avvisano soltanto
-  (md.enemies || []).forEach((e, i) => {
-    if (inMap(e?.col, e?.row) && !passable(e.col, e.row)) cx.add("error", `enemies[${i}]`, "on_impassable");
-  });
+  for (const k of ["enemies", "vcMortars"]) {
+    (md[k] || []).forEach((e, i) => {
+      if (inMap(e?.col, e?.row) && !passable(e.col, e.row)) cx.add("error", `${k}[${i}]`, "on_impassable");
+    });
+  }
   for (const k of ["traps", "tunnels"]) {
     (md[k] || []).forEach((p, i) => {
       if (inMap(p?.col, p?.row) && !passable(p.col, p.row)) cx.add("warning", `${k}[${i}]`, "on_impassable");

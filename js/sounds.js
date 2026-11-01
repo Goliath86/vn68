@@ -167,7 +167,37 @@ function sfx(type) {
     case "napalm":
       _sfxNapalm(ac, out, t0);
       break;
+    case "mortar":
+      _sfxMortar(ac, out, t0);
+      break;
+    case "incoming":
+      _sfxIncoming(ac, out, t0);
+      break;
   }
+}
+
+// Partenza del colpo di mortaio: tonfo sordo del tubo e soffio
+function _sfxMortar(ac, out, t) {
+  _osc(ac, "sine", 110, out, t, 0.32, 0.55, 38);
+  _noise(ac, "lowpass", 260, out, t, 0.22, 0.5);
+  _noise(ac, "bandpass", 700, out, t + 0.02, 0.18, 0.12, 0.8);
+}
+
+// Colpo in arrivo (senza assets/incoming.mp3): fischio che scende di tono
+function _sfxIncoming(ac, out, t) {
+  const dur = MORTAR.flightMs / 1000;
+  const o = ac.createOscillator(),
+    g = ac.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(1500, t);
+  o.frequency.exponentialRampToValueAtTime(520, t + dur);
+  g.gain.setValueAtTime(0.001, t);
+  g.gain.exponentialRampToValueAtTime(0.12, t + dur * 0.7);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g);
+  g.connect(out);
+  o.start(t);
+  o.stop(t + dur + 0.02);
 }
 
 function ambientPlay(url) {
