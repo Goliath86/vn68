@@ -170,6 +170,8 @@ Il malus ATK vale per attacchi e overwatch (l'ATK non scende mai sotto 1); il so
 
 **Primo soccorso (🩹, tasto H):** una sola volta per missione ogni soldato, medico compreso, può medicarsi da solo: **+2 HP** (anche fuori dal panico se supera il 30%), ma **non ferma l'emorragia** e consuma **tutti gli AP rimasti** (serve almeno 1 AP): per quel turno il soldato non può fare altro.
 
+**Sulla mappa:** un soldato ferito gravemente zoppica (si muove più lentamente) e, quando è fermo, tiene una garza premuta sul fianco con l'arma abbassata. Chi sanguina lascia gocce di sangue sui tile che attraversa, e dove il medico o il primo soccorso hanno medicato qualcuno restano a terra bende e involucri. Quando un soldato o un VC cade, il copricapo gli vola via dalla testa e sul posto restano l'arma, l'elmetto o il cappello, lo zaino (o la radio, il lanciarazzi, la borsa del medico), una macchia scura e qualche bossolo; i resti di un VC ucciso fuori vista compaiono quando il tile torna visibile. Sono solo effetti visivi e restano nel salvataggio.
+
 ---
 
 ### Nemici Vietcong

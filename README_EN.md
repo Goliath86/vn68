@@ -171,6 +171,8 @@ The ATK penalty applies to attacks and overwatch (ATK never drops below 1); the 
 
 **First aid (🩹, key H):** once per mission every soldier, medic included, can patch themselves up: **+2 HP** (also lifting panic if back above 30%), but it **doesn't stop the bleeding** and uses **all remaining AP** (at least 1 AP needed): the soldier can't do anything else that turn.
 
+**On the map:** a badly wounded soldier limps (moves more slowly) and, when standing still, keeps a gauze pressed to their side with the weapon lowered. A bleeding soldier leaves drops of blood on the tiles they cross, and bandages and wrappers stay on the ground where the medic or first aid treated someone. When a soldier or a VC falls, the headgear flies off and their weapon, helmet or hat, pack (or radio, rocket launcher, medic bag), a dark stain and a few spent casings stay on the spot; the remains of a VC killed out of sight appear once the tile becomes visible again. These are visual effects only and are kept in the save.
+
 ---
 
 ### Viet Cong Enemies
