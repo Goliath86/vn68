@@ -184,7 +184,7 @@ VC move and attack automatically during the enemy phase. Their movement is anima
 | Guerrilla | Base unit, ATK 2 (AK-47), range 2 — one per mission also carries RPG-7 (ATK 4, range 4, AoE, 1 shot) |
 | VC Sniper | Dangerous at range, ATK 3 (Mosin), range 4. Skips a turn to reload after every shot; once alerted it won't come closer than 3 tiles, holding near max range and seeking cover |
 | VC Commander | More durable and mobile, ATK 3 (TT-33), DEF 1 |
-| VC Mortarman | Stays in position with a 60 mm mortar (ATK 4, AoE 1, range 3–10) and a Makarov (ATK 2, range 2). Appears only on maps that place one (`vcMortars`) or include it in their composition |
+| VC Mortarman | Stays in position with a 60 mm mortar (ATK 4, AoE 1, range 3–10) and a Makarov (ATK 2, range 2). Appears on half of the procedural maps and on maps that place one (`vcMortars`) or include it in their composition |
 
 **Mortarman:** never moves, not even when routed. Every VC turn it fires **one mortar round** at a soldier that **any VC** sees and spots (a concealed, unspotted soldier is safe), 3 to 10 tiles away from it; it never fires at a soldier **adjacent to a VC**. The round is **not accurate**: it lands on a random tile of the 5×5 square around the target, likelier near the centre, with an explosion (radius 1, hits anyone, VC included) and a crater. First you hear the launch, then the squad shouts **"INCOMING!"** over the targeted soldier and, just before impact, the round's shadow shows where it will actually land. If no VC sees the squad the mortar stays silent. Firing reveals the mortarman only if it is in sight (otherwise the log says the round comes from a hidden position) and makes as much noise as an explosion. If a soldier it knows about gets **within pistol range** (2 tiles), it leaves the mortar and fights back with the **Makarov**.
 
@@ -445,6 +445,8 @@ The **🎲 Uncharted Zone** (jungle) and **🎲 Uncharted City** (urban) theater
 | Large | 28×20 | 12–14 / 13–15 |
 
 On bigger maps, traps, obstacles and bunkers also grow in proportion. Reinforcements grow too (3 VC instead of 2), and so do ambushes, which trigger later and bring more VC. The jungle gets a third ford and the city a third bridge. Search & Destroy needs more kills (+2 per size step). The chosen size is remembered for the next games.
+
+On one map in two, at any size, there is also a **VC mortarman** in position, on top of the starting VC: in the VC area, in cover (jungle in the Uncharted Zone, rubble or pagodas in the Uncharted City), at least 8 tiles from the start (more on large maps) and never on an objective. The briefing doesn't mention it: you find out when the first round comes in.
 
 **Uncharted Zone** — delta jungle:
 

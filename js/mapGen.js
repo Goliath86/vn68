@@ -35,7 +35,53 @@ function newMapSeed() {
 function generateProceduralMap(name, seed = newMapSeed(), size = "small") {
   const gen = MAP_GENERATORS[name];
   if (!gen) throw new Error(`unknown map generator: ${name}`);
-  return gen(seed, PROC_SIZES[size] ? size : "small");
+  const md = gen(seed, PROC_SIZES[size] ? size : "small");
+  const mortar = _mortarSite(md, seed);
+  if (mortar) md.vcMortars = [mortar];
+  return md;
+}
+
+// Mortaista VC (ai.js, sezione MORTAISTA): presente con probabilità `chance`,
+// in una zona di schieramento VC, lontano dalla partenza (almeno `minStartDist`
+// tile della mappa piccola, scalati) e dagli obiettivi, su un tile percorribile
+// che non sia acqua, ponte, palude o un tile che blocca la vista; preferisce
+// la copertura. RNG proprio: il resto della mappa resta identico a parità di seed.
+const PROC_MORTAR = {
+  chance: 0.5,
+  minStartDist: 8,
+  avoidIds: ["ford", "bridge", "swamp", "objective"],
+};
+
+function _mortarSite(md, seed) {
+  const rng = _mulberry32(seed * 109 + 11);
+  if (rng() >= PROC_MORTAR.chance) return null;
+  const { sd } = _procScale(md.size || "small");
+  const minStart = sd(PROC_MORTAR.minStartDist);
+  const d = (a, b) => Math.abs(a.col - b.col) + Math.abs(a.row - b.row);
+  const o = md.objectives || {};
+  const keep = [
+    ...(o.recon || []),
+    ...(o.capture_objective || []),
+    o.rescue_pilot && { col: o.rescue_pilot.pilotCol, row: o.rescue_pilot.pilotRow },
+    o.rescue_pilot && { col: o.rescue_pilot.extractCol, row: o.rescue_pilot.extractRow },
+  ].filter(Boolean);
+  const cands = [];
+  for (const z of md.vcSpawnZones || []) {
+    for (let r = z.rowMin; r <= z.rowMax; r++) {
+      for (let c = z.colMin; c <= z.colMax; c++) {
+        const def = md.tileTypes[md.grid[r]?.[c]];
+        if (!def || def.impassable || def.losBlock === "full" || PROC_MORTAR.avoidIds.includes(def.id)) continue;
+        const p = { col: c, row: r };
+        const start = Math.min(...md.playerStart.map((s) => d(s, p)));
+        if (start < minStart || keep.some((k) => d(k, p) <= 1)) continue;
+        if (cands.some((q) => q.col === c && q.row === r)) continue;
+        cands.push({ ...p, score: (def.coverBonus || 0) * 2 + (def.losBlock === "partial" ? 2 : 0) + rng() * 3 });
+      }
+    }
+  }
+  if (!cands.length) return null;
+  const best = cands.reduce((b, q) => (q.score > b.score ? q : b));
+  return { col: best.col, row: best.row };
 }
 
 // I tentativi scartati (mappa non valida) sono derivati dal seed,

@@ -183,7 +183,7 @@ I VC si muovono e attaccano automaticamente durante la fase nemica. Il loro spos
 | Guerrigliero | Unità base, ATK 2 (AK-47), gittata 2 — uno per missione porta anche RPG-7 (ATK 4, gittata 4, AoE, 1 colpo) |
 | Cecchino VC | Pericoloso a distanza, ATK 3 (Mosin), gittata 4. Dopo ogni colpo salta un turno per ricaricare; una volta allertato non si avvicina oltre 3 caselle, resta al limite della gittata cercando copertura |
 | Comandante VC | Più resistente e mobile, ATK 3 (TT-33), DEF 1 |
-| Mortaista VC | Fermo nella sua postazione con un mortaio da 60 mm (ATK 4, AoE 1, gittata 3–10) e una Makarov (ATK 2, gittata 2). Compare solo sulle mappe che lo piazzano (`vcMortars`) o lo includono nella composizione |
+| Mortaista VC | Fermo nella sua postazione con un mortaio da 60 mm (ATK 4, AoE 1, gittata 3–10) e una Makarov (ATK 2, gittata 2). Compare su metà delle mappe procedurali e sulle mappe che lo piazzano (`vcMortars`) o lo includono nella composizione |
 
 **Mortaista:** non si muove mai, nemmeno in rotta. A ogni turno VC tira **un colpo di mortaio** su un soldato che **un VC qualsiasi** vede e individua (un soldato occultato non scoperto è al sicuro), tra 3 e 10 tile da lui; non spara mai su un soldato **adiacente a un VC**. Il colpo **non è preciso**: cade in un tile a caso del quadrato 5×5 attorno al bersaglio, più probabilmente verso il centro, con esplosione (raggio 1, colpisce chiunque, VC compresi) e cratere. Si sente prima la partenza, poi la squadra grida **"INCOMING!"** sopra il soldato preso di mira e, poco prima dell'impatto, l'ombra del proiettile compare dove cadrà davvero. Se nessun VC vede la squadra il mortaio tace. Il mortaista sparando si svela solo se è in vista (altrimenti il log dice che il colpo parte da una posizione nascosta) e fa rumore come un'esplosione. Se un soldato che conosce arriva **a distanza di pistola** (2 tile), lascia il mortaio e si difende con la **Makarov**.
 
@@ -444,6 +444,8 @@ I teatri **🎲 Zona Ignota** (giungla) e **🎲 Città Ignota** (urbano) non us
 | Grande | 28×20 | 12–14 / 13–15 |
 
 Sulle mappe più grandi crescono in proporzione anche trappole, ostacoli e bunker. Aumentano inoltre i rinforzi (3 VC invece di 2) e le imboscate, che scattano più tardi e portano più VC. In giungla c'è un terzo guado, in città un terzo ponte. Per la missione Cerca e distruggi servono più eliminazioni (+2 a dimensione). La dimensione scelta viene ricordata per le partite successive.
+
+Su una mappa su due, a qualsiasi dimensione, c'è anche un **mortaista VC** in postazione, in più dei VC iniziali: nella zona dei VC, al riparo (giungla in Zona Ignota, macerie o pagode in Città Ignota), ad almeno 8 tile dalla partenza (di più sulle mappe grandi) e mai su un obiettivo. Il briefing non lo dice: lo si scopre quando arriva il primo colpo.
 
 **Zona Ignota** — giungla del delta:
 
