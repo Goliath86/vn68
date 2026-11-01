@@ -1,24 +1,27 @@
 // ── AREE EVIDENZIATE SULLA MAPPA ───────────────────────────────────────
 // Quali contorni/aree disegna render.js:renderOverlay e se scriverne
 // l'etichetta (labelOutline). Ogni area si spegne da sola o solo nella sua
-// scritta; scelte in localStorage[vn68_overlay], default tutto acceso.
+// scritta; scelte in localStorage[vn68_overlay] (solo quelle cambiate dal
+// giocatore), altrimenti il default dell'area.
 // Menu: Opzioni → Aree sulla mappa (mainMenu.js) o bottone ▦ nell'header
 const OVERLAY_PREF_KEY = "vn68_overlay";
 
-// id = chiave di translations overlay.areas.*; label: false = area senza scritta
+// id = chiave di translations overlay.areas.*; label: false = area senza
+// scritta; defArea/defLabel = default (se assenti: acceso)
 const OVERLAY_AREAS = [
-  { id: "move" },
-  { id: "targets" },
-  { id: "vision" },
-  { id: "cone" },
-  { id: "range" },
-  { id: "noise" },
+  { id: "move", defLabel: false },
+  { id: "targets", defLabel: false },
+  { id: "vision", defArea: false },
+  { id: "cone", defArea: false },
+  { id: "range", defArea: false },
+  { id: "noise", defLabel: false },
   { id: "overwatch" },
   { id: "suppression" },
   { id: "scatter" },
   { id: "artillery" },
   { id: "spot", label: false },
 ];
+const _overlayDef = (id) => OVERLAY_AREAS.find((a) => a.id === id) || {};
 
 // Etichette di labelOutline che appartengono a un'area con altro nome
 const OVERLAY_LABEL_AREA = { salvo: "scatter" };
@@ -44,13 +47,18 @@ function saveOverlayPrefs() {
 
 // L'area va disegnata?
 function overlayOn(id) {
-  return OVERLAY_PREFS.area[id] !== false;
+  return OVERLAY_PREFS.area[id] ?? _overlayDef(id).defArea !== false;
+}
+
+// Scritta dell'area accesa (scelta del giocatore o default), area a parte
+function _overlayLabelPref(id) {
+  return OVERLAY_PREFS.label[id] ?? _overlayDef(id).defLabel !== false;
 }
 
 // La scritta del contorno `key` (chiave di translations outline.*) va scritta?
 function overlayLabelOn(key) {
   const id = OVERLAY_LABEL_AREA[key] || key;
-  return overlayOn(id) && OVERLAY_PREFS.label[id] !== false;
+  return overlayOn(id) && _overlayLabelPref(id);
 }
 
 function setOverlayPref(kind, id, on) {
@@ -80,7 +88,7 @@ function openOverlayPrefs() {
       <span>${
         a.label === false
           ? ""
-          : `<input type="checkbox" data-kind="label" ${OVERLAY_PREFS.label[a.id] !== false ? "checked" : ""} />`
+          : `<input type="checkbox" data-kind="label" ${_overlayLabelPref(a.id) ? "checked" : ""} />`
       }</span>`;
     const labelBox = row.querySelector('[data-kind="label"]');
     const sync = () => {
